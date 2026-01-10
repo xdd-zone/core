@@ -1,0 +1,42 @@
+/**
+ * 用户角色关联表
+ * 用于支持用户的多角色授权和角色继承
+ */
+model UserRole {
+  /**
+   * 关联ID
+   */
+  id        String   @id @default(cuid())
+  /**
+   * 用户ID
+   */
+  userId    String
+  /**
+   * 角色ID
+   */
+  roleId    String
+  /**
+   * 授权人ID（记录是谁给该用户分配的角色）
+   */
+  assignedBy String?   @map("assigned_by")
+  /**
+   * 授权时间
+   */
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  /**
+   * 关联用户
+   */
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /**
+   * 关联角色
+   */
+  role Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  /**
+   * 联合唯一索引：同一用户不能重复分配同一角色
+   */
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@map("user_roles")
+}

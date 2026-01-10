@@ -1,0 +1,11 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 此文件为 Prisma 7 多文件 schema 配置
+// 模型定义在 models/ 目录下

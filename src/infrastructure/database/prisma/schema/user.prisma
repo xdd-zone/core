@@ -1,0 +1,114 @@
+model User {
+    /**
+     * 用户ID（CUID格式）
+     */
+    id String @id @default(cuid())
+
+    // 认证相关
+    /**
+     * 邮箱地址（主要登录标识）
+     * 唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
+     */
+    email         String?
+
+    /**
+     * 邮箱是否已验证（better-auth 要求字段：boolean）
+     */
+    emailVerified Boolean?  @map("email_verified")
+    /**
+     * 邮箱验证时间（业务扩展字段）
+     */
+    emailVerifiedAt DateTime? @map("email_verified_at")
+
+    /**
+     * 用户名（可选，唯一登录标识）
+     * 唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
+     */
+    username String?
+
+    /**
+     * 显示名称（必要，用于展示）
+     * better-auth 要求字段
+     */
+    name String
+
+    /**
+     * 头像 URL
+     * better-auth 要求字段
+     */
+    image         String?
+    /**
+     * 个人介绍
+     */
+    introduce     String?
+    /**
+     * 手机号
+     * 唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
+     */
+    phone         String?
+
+    /**
+     * 手机号是否已验证
+     */
+    phoneVerified Boolean?  @map("phone_verified")
+    /**
+     * 手机号验证时间（业务扩展字段）
+     */
+    phoneVerifiedAt DateTime? @map("phone_verified_at")
+
+    /**
+     * 最后登录时间
+     */
+    lastLogin   DateTime? @map("last_login")
+    /**
+     * 最后登录 IP 地址
+     */
+    lastLoginIp String?   @map("last_login_ip")
+
+    /**
+     * 用户状态
+     */
+    status UserStatus @default(ACTIVE)
+
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime  @updatedAt @map("updated_at")
+    deletedAt DateTime? @map("deleted_at")
+
+    // Better-auth relations
+    sessions Session[]
+    accounts Account[]
+
+    // RBAC relations
+    /**
+     * 用户角色关联
+     */
+    roles UserRole[]
+
+    // 普通索引用于查询优化
+    @@index([email])
+    @@index([username])
+    @@index([phone])
+
+    // PostgreSQL 部分唯一索引：仅对未删除的用户强制唯一性
+    // 语法：CREATE UNIQUE INDEX users_email_unique ON users(email) WHERE deleted_at IS NULL;
+    // 需要在迁移文件中手动添加或使用 @@unique 配合 Prisma 扩展
+    @@map("users")
+}
+
+/**
+ * 用户状态枚举
+ */
+enum UserStatus {
+    /**
+     * 活跃
+     */
+    ACTIVE
+    /**
+     * 未激活
+     */
+    INACTIVE
+    /**
+     * 已封禁
+     */
+    BANNED
+}

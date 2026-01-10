@@ -1,0 +1,14 @@
+# 应用基础配置
+port: 7788
+prefix: api
+
+# OpenAPI 文档配置
+openapi_enabled: true
+openapi_path: /openapi
+openapi_title: XDD SPACE API
+openapi_description: XDD SPACE API documentation
+openapi_version: 1.0.0
+
+# 日志配置
+logger_level: info # fatal | error | warn | info | debug | trace | silent
+logger_file_path: # logs/app.log 留空则不启用文件日志

@@ -1,0 +1,32 @@
+services:
+  # 测试用 PostgreSQL 数据库
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: xdd-postgres-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: xdd_test_db
+      POSTGRES_USER: xdd_user
+      POSTGRES_PASSWORD: xdd123456
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - '5433:5432' # 使用 5433 端口避免与生产数据库 5432 冲突
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U xdd_user -d xdd_test_db]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test-network
+
+volumes:
+  postgres_test_data:
+    driver: local
+    name: xdd_postgres_test_data
+
+networks:
+  test-network:
+    driver: bridge
+    name: xdd_test_network
