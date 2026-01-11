@@ -28,6 +28,7 @@ bun.lockb
 
 # Database
 /src/infrastructure/database/prisma/generated
+/src/infrastructure/database/prisma/migrations
 
 # Debug
 npm-debug.log*
