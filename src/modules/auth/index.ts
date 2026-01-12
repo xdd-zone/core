@@ -3,6 +3,7 @@ import type { ApiResponse } from '@/core/plugins/response.plugin'
 import { Elysia } from 'elysia'
 import { authGuard, BadRequestError, responsePlugin } from '@/core'
 import { auth } from '@/core/auth'
+import { SignInEmailBodySchema, SignUpEmailBodySchema } from './auth.model'
 import { AuthService } from './auth.service'
 
 /**
@@ -14,30 +15,47 @@ import { AuthService } from './auth.service'
  * 4. 转换为统一格式 {code, message, data}
  * 5. 检测 BetterAuth 错误响应并转换为项目错误格式
  *
- * @param request 原始请求对象
+ * @param request 原始请求对象（可选，用于构造新请求）
+ * @param body 已解析的请求体（可选）
  * @param ok responsePlugin 提供的 ok 函数
  * @param set Elysia 的 set 对象（用于设置 header）
  * @param successMessage 成功消息（默认 "操作成功"）
  */
 async function wrapBetterAuthResponse<T>(
   request: Request,
-  ok: <D>(data: D, message?: string) => ApiResponse<D>,
-  set: { headers: Record<string, string | number | string[]> },
+  body?: unknown,
+  ok?: <D>(data: D, message?: string) => ApiResponse<D>,
+  set?: { headers: Record<string, string | number | string[]> | Headers },
   successMessage: string = '操作成功',
 ): Promise<ApiResponse<T>> {
-  const response = await auth.handler(request)
+  const betterAuthRequest =
+    body !== undefined
+      ? new Request(request.url, {
+          method: request.method,
+          headers: request.headers,
+          body: JSON.stringify(body),
+        })
+      : request
+
+  const response = await auth.handler(betterAuthRequest)
   const data = (await response.json()) as T & { code?: string; message?: string }
 
-  const cookie = response.headers.get('set-cookie')
-  if (cookie) {
-    set.headers['Set-Cookie'] = cookie
+  if (set) {
+    const cookie = response.headers.get('set-cookie')
+    if (cookie) {
+      if (set.headers instanceof Headers) {
+        set.headers.set('Set-Cookie', cookie)
+      } else {
+        set.headers['Set-Cookie'] = cookie
+      }
+    }
   }
 
   if (typeof data === 'object' && data !== null && 'code' in data && typeof data.code === 'string') {
     throw new BadRequestError(data.message || '操作失败')
   }
 
-  return ok(data, successMessage)
+  return ok ? ok(data, successMessage) : ({ code: 0, message: successMessage, data } as unknown as ApiResponse<T>)
 }
 
 /**
@@ -54,101 +72,111 @@ export const authModule = new Elysia({ prefix: '/auth' })
    * BetterAuth 标准端点 - 用户注册
    * POST /api/auth/sign-up/email
    */
-  .post('/sign-up/email', async ({ request, ok, set }) => wrapBetterAuthResponse(request, ok, set, '注册成功'), {
-    detail: {
-      summary: '用户注册',
-      description: '使用邮箱和密码注册新用户。注册成功后会返回用户信息和 token。',
-      tags: ['Auth'],
-      responses: {
-        200: {
-          description: '注册成功',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  code: { type: 'number', example: 0 },
-                  message: { type: 'string', example: '注册成功' },
-                  data: {
-                    type: 'object',
-                    properties: {
-                      user: {
-                        type: 'object',
-                        properties: {
-                          id: { type: 'string', description: '用户 ID' },
-                          email: { type: 'string', description: '用户邮箱' },
-                          name: { type: 'string', description: '用户姓名' },
-                          emailVerified: { type: 'boolean', description: '邮箱是否已验证' },
-                          createdAt: { type: 'string', format: 'date-time' },
-                          updatedAt: { type: 'string', format: 'date-time' },
+  .post(
+    '/sign-up/email',
+    async ({ body, ok, set, request }) => wrapBetterAuthResponse(request, body, ok, set, '注册成功'),
+    {
+      body: SignUpEmailBodySchema,
+      detail: {
+        summary: '用户注册',
+        description: '使用邮箱和密码注册新用户。注册成功后会返回用户信息和 token。',
+        tags: ['Auth'],
+        responses: {
+          200: {
+            description: '注册成功',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    code: { type: 'number', example: 0 },
+                    message: { type: 'string', example: '注册成功' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        user: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'string', description: '用户 ID' },
+                            email: { type: 'string', description: '用户邮箱' },
+                            name: { type: 'string', description: '用户姓名' },
+                            emailVerified: { type: 'boolean', description: '邮箱是否已验证' },
+                            createdAt: { type: 'string', format: 'date-time' },
+                            updatedAt: { type: 'string', format: 'date-time' },
+                          },
                         },
-                      },
-                      token: {
-                        type: 'string',
-                        description: '邮箱验证 token',
+                        token: {
+                          type: 'string',
+                          description: '邮箱验证 token',
+                        },
                       },
                     },
                   },
                 },
               },
             },
-          },
-          headers: {
-            'Set-Cookie': {
-              description: 'Session token cookie (HttpOnly, SameSite=Lax)',
-              schema: { type: 'string' },
+            headers: {
+              'Set-Cookie': {
+                description: 'Session token cookie (HttpOnly, SameSite=Lax)',
+                schema: { type: 'string' },
+              },
             },
           },
         },
       },
     },
-  })
+  )
   /**
    * BetterAuth 标准端点 - 用户登录
    * POST /api/auth/sign-in/email
    */
-  .post('/sign-in/email', async ({ request, ok, set }) => wrapBetterAuthResponse(request, ok, set, '登录成功'), {
-    detail: {
-      summary: '用户登录',
-      description: '使用邮箱和密码登录。登录成功后会自动设置 session cookie（有效期 7 天）。',
-      tags: ['Auth'],
-      responses: {
-        200: {
-          description: '登录成功',
-          headers: {
-            'Set-Cookie': {
-              description: 'Session token cookie (HttpOnly, SameSite=Lax)',
-              schema: { type: 'string' },
+  .post(
+    '/sign-in/email',
+    async ({ body, ok, set, request }) => wrapBetterAuthResponse(request, body, ok, set, '登录成功'),
+    {
+      body: SignInEmailBodySchema,
+      detail: {
+        summary: '用户登录',
+        description: '使用邮箱和密码登录。登录成功后会自动设置 session cookie（有效期 7 天）。',
+        tags: ['Auth'],
+        responses: {
+          200: {
+            description: '登录成功',
+            headers: {
+              'Set-Cookie': {
+                description: 'Session token cookie (HttpOnly, SameSite=Lax)',
+                schema: { type: 'string' },
+              },
             },
-          },
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  code: { type: 'number', example: 0 },
-                  message: { type: 'string', example: '登录成功' },
-                  data: {
-                    type: 'object',
-                    properties: {
-                      user: {
-                        type: 'object',
-                        properties: {
-                          id: { type: 'string' },
-                          email: { type: 'string' },
-                          name: { type: 'string' },
-                          emailVerified: { type: 'boolean' },
-                          createdAt: { type: 'string', format: 'date-time' },
-                          updatedAt: { type: 'string', format: 'date-time' },
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    code: { type: 'number', example: 0 },
+                    message: { type: 'string', example: '登录成功' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        user: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'string' },
+                            email: { type: 'string' },
+                            name: { type: 'string' },
+                            emailVerified: { type: 'boolean' },
+                            createdAt: { type: 'string', format: 'date-time' },
+                            updatedAt: { type: 'string', format: 'date-time' },
+                          },
                         },
-                      },
-                      session: {
-                        type: 'object',
-                        properties: {
-                          id: { type: 'string', description: '会话 ID' },
-                          token: { type: 'string', description: 'Session token' },
-                          userId: { type: 'string', description: '用户 ID' },
-                          expiresAt: { type: 'string', format: 'date-time' },
+                        session: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'string', description: '会话 ID' },
+                            token: { type: 'string', description: 'Session token' },
+                            userId: { type: 'string', description: '用户 ID' },
+                            expiresAt: { type: 'string', format: 'date-time' },
+                          },
                         },
                       },
                     },
@@ -160,12 +188,12 @@ export const authModule = new Elysia({ prefix: '/auth' })
         },
       },
     },
-  })
+  )
   /**
    * BetterAuth 标准端点 - 用户登出
    * POST /api/auth/sign-out
    */
-  .post('/sign-out', async ({ request, ok, set }) => wrapBetterAuthResponse(request, ok, set, '登出成功'), {
+  .post('/sign-out', async ({ request, ok, set }) => wrapBetterAuthResponse(request, undefined, ok, set, '登出成功'), {
     detail: {
       summary: '用户登出',
       description: '清除当前用户的 session cookie',
@@ -193,42 +221,46 @@ export const authModule = new Elysia({ prefix: '/auth' })
    * BetterAuth 标准端点 - 获取会话信息
    * GET /api/auth/get-session
    */
-  .get('/get-session', async ({ request, ok, set }) => wrapBetterAuthResponse(request, ok, set, '获取成功'), {
-    detail: {
-      summary: '获取当前会话',
-      description: '获取当前 session cookie 对应的用户信息和会话详情。需要携带有效的 session cookie。',
-      tags: ['Auth'],
-      responses: {
-        200: {
-          description: '获取成功',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  code: { type: 'number', example: 0 },
-                  message: { type: 'string', example: '获取成功' },
-                  data: {
-                    type: 'object',
-                    properties: {
-                      session: {
-                        type: 'object',
-                        properties: {
-                          id: { type: 'string', description: '会话 ID' },
-                          token: { type: 'string', description: 'Session token' },
-                          userId: { type: 'string', description: '用户 ID' },
-                          expiresAt: { type: 'string', format: 'date-time' },
+  .get(
+    '/get-session',
+    async ({ request, ok, set }) => wrapBetterAuthResponse(request, undefined, ok, set, '获取成功'),
+    {
+      detail: {
+        summary: '获取当前会话',
+        description: '获取当前 session cookie 对应的用户信息和会话详情。需要携带有效的 session cookie。',
+        tags: ['Auth'],
+        responses: {
+          200: {
+            description: '获取成功',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    code: { type: 'number', example: 0 },
+                    message: { type: 'string', example: '获取成功' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        session: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'string', description: '会话 ID' },
+                            token: { type: 'string', description: 'Session token' },
+                            userId: { type: 'string', description: '用户 ID' },
+                            expiresAt: { type: 'string', format: 'date-time' },
+                          },
                         },
-                      },
-                      user: {
-                        type: 'object',
-                        properties: {
-                          id: { type: 'string' },
-                          email: { type: 'string' },
-                          name: { type: 'string' },
-                          emailVerified: { type: 'boolean' },
-                          createdAt: { type: 'string', format: 'date-time' },
-                          updatedAt: { type: 'string', format: 'date-time' },
+                        user: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'string' },
+                            email: { type: 'string' },
+                            name: { type: 'string' },
+                            emailVerified: { type: 'boolean' },
+                            createdAt: { type: 'string', format: 'date-time' },
+                            updatedAt: { type: 'string', format: 'date-time' },
+                          },
                         },
                       },
                     },
@@ -240,7 +272,7 @@ export const authModule = new Elysia({ prefix: '/auth' })
         },
       },
     },
-  })
+  )
   /**
    * 自定义业务端点 - 获取当前用户信息
    * GET /api/auth/me
