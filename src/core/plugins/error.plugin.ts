@@ -1,13 +1,13 @@
 import type { Elysia } from 'elysia'
-import type { Logger } from '@/infrastructure/logger'
+import type { Logger } from '@/infra/logger'
 import {
   PrismaClientInitializationError,
   PrismaClientKnownRequestError,
   PrismaClientRustPanicError,
   PrismaClientUnknownRequestError,
   PrismaClientValidationError,
-} from '@/infrastructure/database/prisma/generated/runtime/client'
-import { createModuleLogger } from '@/infrastructure/logger'
+} from '@/infra/database/prisma/generated/runtime/client'
+import { createModuleLogger } from '@/infra/logger'
 
 const errorLogger: Logger = createModuleLogger('error')
 

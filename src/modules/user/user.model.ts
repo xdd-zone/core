@@ -4,8 +4,8 @@
  */
 
 import { z } from 'zod'
-import { createPaginatedListSchema, PaginationQuerySchema } from '@/infrastructure/database'
-import { UserStatus } from '@/infrastructure/database/prisma/generated/'
+import { createPaginatedListSchema, PaginationQuerySchema } from '@/infra/database'
+import { UserStatus } from '@/infra/database/prisma/generated/'
 
 /**
  * 用户状态枚举 Schema

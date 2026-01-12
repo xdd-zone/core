@@ -1,5 +1,5 @@
-import antfu from '@antfu/eslint-config';
-import eslintConfigPrettier from 'eslint-config-prettier';
+import antfu from '@antfu/eslint-config'
+import eslintConfigPrettier from 'eslint-config-prettier'
 
 export default antfu(
   {
@@ -36,7 +36,7 @@ export default antfu(
       // Generated files
       '*.generated.ts',
       '*.generated.js',
-      'src/infrastructure/database/prisma/generated',
+      'src/infra/database/prisma/generated',
 
       // Environment files
       '.env',
@@ -77,4 +77,4 @@ export default antfu(
     ],
   },
   eslintConfigPrettier,
-);
+)

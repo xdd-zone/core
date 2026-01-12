@@ -4,10 +4,10 @@
  */
 
 import type { UserBaseData, UserWhereInput } from './user.types'
-import type { PaginatedList, PaginationQuery } from '@/infrastructure/database'
-import type { UserStatus } from '@/infrastructure/database/prisma/generated'
-import { prisma } from '@/infrastructure/database'
-import { PrismaService } from '@/infrastructure/database/prisma.service'
+import type { PaginatedList, PaginationQuery } from '@/infra/database'
+import type { UserStatus } from '@/infra/database/prisma/generated'
+import { prisma } from '@/infra/database'
+import { PrismaService } from '@/infra/database/prisma.service'
 import { USER_BASE_SELECT } from './user.constants'
 
 /**

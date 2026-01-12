@@ -25,7 +25,7 @@
     "dev": "bun run --watch src/index.ts",
     "build": "echo \"Error: no build specified\" && exit 1",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "bun run src/infrastructure/database/prisma/seed/seed.ts",
+    "seed": "bun run src/infra/database/prisma/seed/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:reset": "prisma migrate reset",

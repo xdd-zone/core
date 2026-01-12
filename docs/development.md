@@ -61,10 +61,10 @@ export const myModule = new Elysia()
 
 ## 添加数据库模型
 
-1. 在 `src/infrastructure/database/prisma/schema/` 创建新的 `.prisma` 文件：
+1. 在 `src/infra/database/prisma/schema/` 创建新的 `.prisma` 文件：
 
 ```prisma
-// src/infrastructure/database/prisma/schema/post.prisma
+// src/infra/database/prisma/schema/post.prisma
 model Post {
   id        String   @id @default(cuid())
   title     String
@@ -75,7 +75,7 @@ model Post {
 }
 ```
 
-2. 在 `src/infrastructure/database/prisma/schema/schema.prisma` 中导入：
+2. 在 `src/infra/database/prisma/schema/schema.prisma` 中导入：
 
 ```prisma
 import Post from './post.prisma'
@@ -91,7 +91,7 @@ bun run prisma:migrate
 ## 使用日志
 
 ```typescript
-import { createModuleLogger } from '@/infrastructure/logger'
+import { createModuleLogger } from '@/infra/logger'
 
 const logger = createModuleLogger('my-module')
 logger.info({ userId: 123 }, 'User action completed')
@@ -103,7 +103,7 @@ logger.error({ error }, 'Operation failed')
 直接使用 Prisma Client：
 
 ```typescript
-import { prisma } from '@/infrastructure/database'
+import { prisma } from '@/infra/database'
 
 const users = await prisma.user.findMany()
 ```

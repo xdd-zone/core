@@ -11,7 +11,7 @@ import type { Elysia } from 'elysia'
 import { randomUUID } from 'node:crypto'
 import { auth } from '@/core/auth'
 import { errorPlugin, responsePlugin } from '@/core/plugins'
-import { createModuleLogger } from '@/infrastructure/logger'
+import { createModuleLogger } from '@/infra/logger'
 
 const httpLogger = createModuleLogger('http')
 

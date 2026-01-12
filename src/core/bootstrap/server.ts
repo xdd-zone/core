@@ -4,7 +4,7 @@
  */
 import type { Elysia } from 'elysia'
 import { APP_CONFIG, OPENAPI_CONFIG } from '@/core/config'
-import { logger } from '@/infrastructure/logger'
+import { logger } from '@/infra/logger'
 
 export async function startServer(app: Elysia) {
   // 启动服务器

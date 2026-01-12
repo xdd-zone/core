@@ -3,8 +3,8 @@
  * 处理应用启动和关闭事件
  */
 import type { Elysia } from 'elysia'
-import { prisma } from '@/infrastructure/database'
-import { logger } from '@/infrastructure/logger'
+import { prisma } from '@/infra/database'
+import { logger } from '@/infra/logger'
 
 /**
  * 设置生命周期钩子

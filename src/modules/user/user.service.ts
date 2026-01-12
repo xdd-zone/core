@@ -6,7 +6,7 @@
 import type { CreateUserBody, UpdateUserBody, UserListQuery, UserListResponse, UserResponse } from './user.model'
 
 import type { UserWhereInput } from './user.types'
-import { buildKeywordSearch } from '@/infrastructure/database'
+import { buildKeywordSearch } from '@/infra/database'
 import { DEFAULT_USER_STATUS, USER_SEARCH_FIELDS } from './user.constants'
 import { UserRepository } from './user.repository'
 

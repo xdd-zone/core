@@ -1,4 +1,4 @@
-import { prisma } from '@/infrastructure/database/client'
+import { prisma } from '@/infra/database/client'
 
 /**
  * 角色权限关联数据访问层

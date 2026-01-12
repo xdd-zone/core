@@ -1,4 +1,4 @@
-import type { Session, User } from '@/infrastructure/database/prisma/generated'
+import type { Session, User } from '@/infra/database/prisma/generated'
 
 /**
  * 导出 Prisma 生成的类型

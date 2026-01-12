@@ -27,8 +27,8 @@ bun.lockb
 ./logs
 
 # Database
-/src/infrastructure/database/prisma/generated
-/src/infrastructure/database/prisma/migrations
+/src/infra/database/prisma/generated
+/src/infra/database/prisma/migrations
 
 # Debug
 npm-debug.log*

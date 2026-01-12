@@ -60,7 +60,7 @@ src/
 │       │   └── role-permission.repository.ts
 │       ├── rbac.model.ts
 │       └── rbac.types.ts
-├── infrastructure/        # 基础设施
+├── infra/        # 基础设施
 │   ├── database/          # 数据库
 │   │   ├── prisma/
 │   │   │   ├── schema/        # 多文件 schema

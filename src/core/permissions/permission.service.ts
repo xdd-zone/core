@@ -5,7 +5,7 @@
  */
 
 import type { PermissionContext, PermissionString } from './permissions.types'
-import { prisma } from '@/infrastructure/database/client'
+import { prisma } from '@/infra/database/client'
 import { matchPermission, normalizePermission } from './helpers'
 
 /**

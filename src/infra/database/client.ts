@@ -5,8 +5,8 @@
  */
 import { PrismaPg } from '@prisma/adapter-pg'
 import { DATABASE_CONFIG } from '@/core'
-import { PrismaClient } from '@/infrastructure/database/prisma/generated/client'
-import { createModuleLogger } from '@/infrastructure/logger'
+import { PrismaClient } from '@/infra/database/prisma/generated/client'
+import { createModuleLogger } from '@/infra/logger'
 
 const logger = createModuleLogger('prisma')
 

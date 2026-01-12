@@ -1,5 +1,5 @@
-import { prisma } from '@/infrastructure/database/client'
-import { createModuleLogger } from '@/infrastructure/logger'
+import { prisma } from '@/infra/database/client'
+import { createModuleLogger } from '@/infra/logger'
 import { RbacService } from '@/modules/rbac/rbac.service'
 
 const logger = createModuleLogger('auth:assign-default-role-hook')

@@ -4,7 +4,7 @@
  */
 
 import type { USER_BASE_SELECT } from './user.constants'
-import type { Prisma } from '@/infrastructure/database/prisma/generated/client'
+import type { Prisma } from '@/infra/database/prisma/generated/client'
 
 /**
  * 用户基础数据类型（从数据库查询返回）
