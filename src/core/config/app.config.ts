@@ -1,9 +1,6 @@
 import type { RuntimeEnv, YamlConfig } from './utils'
-/**
- * 应用配置（端口、全局前缀、调试与 CORS）
- * - createAppConfig 通过运行环境与 YAML 配置生成最终 AppConfig
- */
 import { z } from 'zod'
+import { parseEnv } from './utils'
 
 export interface AppConfig {
   env: 'development' | 'test' | 'production'
@@ -12,15 +9,17 @@ export interface AppConfig {
   enableCors: boolean
 }
 
-/** 生成应用配置 */
 export function createAppConfig(env: RuntimeEnv, yaml: YamlConfig): AppConfig {
-  const portSchema = z.coerce.number().int().positive().default(7788)
-  const envPort = process.env.PORT ? portSchema.parse(process.env.PORT) : undefined
+  const portSchema = z.coerce.number().int().positive()
+  const prefixSchema = z.string()
+
+  const port = parseEnv(portSchema, process.env.PORT, yaml.port ?? 7788)
+  const prefix = parseEnv(prefixSchema, yaml.prefix, 'api')
 
   return {
     env: env.nodeEnv,
-    port: envPort ?? yaml.port ?? 7788,
-    prefix: yaml.prefix ?? 'api',
+    port,
+    prefix,
     enableCors: env.isDevelopment,
   }
 }

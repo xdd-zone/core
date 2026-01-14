@@ -8,6 +8,7 @@ import {
   PrismaClientValidationError,
 } from '@/infra/database/prisma/generated/runtime/client'
 import { createModuleLogger } from '@/infra/logger'
+import { getEnv } from '../config/utils'
 
 const errorLogger: Logger = createModuleLogger('error')
 
@@ -57,7 +58,8 @@ interface ErrorHandlingResult {
   logContext?: Record<string, unknown>
 }
 
-const isDev = process.env.NODE_ENV === 'development'
+const env = getEnv()
+const isDev = env.isDevelopment
 
 /**
  * 根据日志级别记录日志

@@ -1,9 +1,6 @@
-/**
- * 日志配置（供 pino 使用）
- * - level：日志级别，在生产默认使用 'info'，开发为 'debug'
- * - filePath：可选的日志文件路径，提供则启用文件日志
- */
 import type { LogLevel, YamlConfig } from './utils'
+import { z } from 'zod'
+import { parseEnv } from './utils'
 
 export interface LoggerConfig {
   level: LogLevel
@@ -11,10 +8,14 @@ export interface LoggerConfig {
 }
 
 export function createLoggerConfig(isProd: boolean, yaml: YamlConfig): LoggerConfig {
-  const baseLevel = yaml.logger_level ?? (isProd ? 'info' : 'debug')
+  const levelSchema = z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+  const defaultLevel = isProd ? 'info' : 'debug'
+
+  const level = parseEnv(levelSchema, yaml.logger?.level, defaultLevel)
+  const filePath = yaml.logger?.filePath ?? undefined
 
   return {
-    level: baseLevel,
-    filePath: yaml.logger_file_path ?? undefined,
+    level,
+    filePath,
   }
 }

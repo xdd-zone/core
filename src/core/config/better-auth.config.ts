@@ -1,21 +1,17 @@
-/**
- * BetterAuth配置
- * - createBetterAuthConfig 通过运行环境、YAML 配置与环境变量生成最终 BetterAuthConfig
- */
 import { z } from 'zod'
+import { parseRequiredEnv } from './utils'
 
 export interface BetterAuthConfig {
   secret: string
   url: string
 }
 
-/** 生成 BetterAuth 配置 */
 export function createBetterAuthConfig(): BetterAuthConfig {
-  const secretSchema = z.string().min(1)
-  const urlSchema = z.string().url()
+  const secret = parseRequiredEnv(z.string().min(1), process.env.BETTER_AUTH_SECRET)
+  const url = parseRequiredEnv(z.string().url(), process.env.BETTER_AUTH_URL)
 
   return {
-    secret: secretSchema.parse(process.env.BETTER_AUTH_SECRET),
-    url: urlSchema.parse(process.env.BETTER_AUTH_URL),
+    secret,
+    url,
   }
 }
