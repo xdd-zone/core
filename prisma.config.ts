@@ -1,9 +1,6 @@
 import path from 'node:path'
-import { config } from 'dotenv'
 import { defineConfig, env } from 'prisma/config'
-
-// Load .env file explicitly
-config()
+import 'dotenv/config'
 
 export default defineConfig({
   datasource: {
