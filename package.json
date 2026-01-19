@@ -3,63 +3,45 @@
   "type": "module",
   "version": "0.0.1",
   "private": true,
-  "description": "",
+  "description": "XDD Zone Core - Backend API and Client SDK",
   "author": "xidongdong-153",
   "license": "MIT",
   "homepage": "https://github.com/xdd-zone/core#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xdd-zone/core",
-    "directory": "xdd-zone/core"
+    "url": "https://github.com/xdd-zone/core"
   },
   "bugs": {
     "url": "https://github.com/xdd-zone/core/issues"
   },
-  "keywords": [],
-  "main": "src/index.js",
-  "types": "./dist/index.d.ts",
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "bun": "1.3.5"
   },
   "scripts": {
-    "dev": "NODE_ENV=development bun run --watch src/index.ts",
-    "build": "echo \"Error: no build specified\" && exit 1",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "bun run src/infra/database/prisma/seed/seed.ts",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:reset": "prisma migrate reset",
-    "prisma:push": "prisma db push",
-    "prisma:push:reset": "prisma db push --force-reset",
-    "test-db": "bun scripts/test-db.ts",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --write src",
-    "format:check": "prettier --check src",
-    "type-check": "bun --bun tsc --noEmit"
-  },
-  "dependencies": {
-    "@elysiajs/openapi": "^1.4.13",
-    "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "^7.2.0",
-    "better-auth": "^1.4.10",
-    "dotenv": "^17.2.3",
-    "elysia": "^1.4.19",
-    "js-yaml": "^4.1.1",
-    "pino": "^10.1.0",
-    "pino-pretty": "^13.1.3",
-    "zod": "^4.3.4"
+    "dev": "bun run --filter @xdd-zone/nexus dev",
+    "dev:nexus": "bun run --filter @xdd-zone/nexus dev",
+    "dev:client": "bun run --filter @xdd-zone/client dev",
+    "build": "bun run --filter '*' build",
+    "build:nexus": "bun run --filter @xdd-zone/nexus build",
+    "build:client": "bun run --filter @xdd-zone/client build",
+    "lint": "eslint packages/",
+    "lint:fix": "eslint packages/ --fix",
+    "format": "prettier --write packages/",
+    "format:check": "prettier --check packages/",
+    "type-check": "bun run --filter '*' type-check",
+    "clean": "rm -rf packages/*/node_modules packages/*/dist",
+    "prisma:generate": "bun run --filter @xdd-zone/nexus prisma:generate",
+    "prisma:migrate": "bun run --filter @xdd-zone/nexus prisma:migrate",
+    "prisma:reset": "bun run --filter @xdd-zone/nexus prisma:reset",
+    "prisma:push": "bun run --filter @xdd-zone/nexus prisma:push",
+    "seed": "bun run --filter @xdd-zone/nexus seed"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^6.7.3",
-    "@types/js-yaml": "^4.0.9",
-    "bun-types": "^1.3.5",
     "eslint": "^9.39.2",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-format": "^1.1.0",
-    "eslint-plugin-import": "^2.32.0",
     "prettier": "^3.7.4",
-    "prisma": "^7.2.0",
     "typescript": "^5.9.3"
   }
 }

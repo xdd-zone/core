@@ -1,28 +1,32 @@
-# Dependencies
+# 依赖
 node_modules
 bun.lock
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
 
-# Build outputs
+# 构建输出
 dist
 build
 .next
 out
 .output
 
-# Generated files
+# 生成文件
 *.generated.ts
 *.generated.js
-src/infra/database/prisma/generated
+packages/*/dist
+packages/*/node_modules
 
-# Environment files
+# Prisma 生成文件
+packages/nexus/src/infra/database/prisma/generated
+
+# 环境文件
 .env
 .env.*
 !.env.example
 
-# Logs
+# 日志
 logs
 *.log
 npm-debug.log*
@@ -31,7 +35,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# OS
+# 操作系统
 .DS_Store
 Thumbs.db
 
@@ -42,11 +46,14 @@ Thumbs.db
 *.swo
 *~
 
-# Testing
+# 文档
+**/*.md
+
+# 测试
 coverage
 .nyc_output
 
-# Misc
+# 其他
 .cache
 temp
 tmp

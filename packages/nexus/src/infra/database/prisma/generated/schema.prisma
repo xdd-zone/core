@@ -1,0 +1,373 @@
+// Better-auth Account model (for OAuth)
+model Account {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+/**
+ * 权限表
+ * 定义系统中的所有权限，基于资源-动作-范围模型
+ */
+model Permission {
+  /**
+   * 权限ID
+   */
+  id          String  @id @default(cuid())
+  /**
+   * 资源名称（如 article, user, category）
+   */
+  resource    String
+  /**
+   * 操作动作（如 create, read, update, delete）
+   */
+  action      String
+  /**
+   * 权限范围（own=本人, all=全部, 空字符串=无范围限制，等同于all）
+   */
+  scope       String  @default("")
+  /**
+   * 权限显示名称
+   */
+  displayName String?
+  /**
+   * 权限描述
+   */
+  description String?
+
+  /**
+   * 角色权限关联
+   */
+  roles RolePermission[]
+
+  /**
+   * 创建时间
+   */
+  createdAt DateTime @default(now()) @map("created_at")
+
+  /**
+   * 联合唯一索引：同一资源的同一动作和范围只能有一个权限
+   */
+  @@unique([resource, action, scope])
+  @@index([resource])
+  @@map("permissions")
+}
+
+/**
+ * 角色表
+ * 支持层级化的角色体系，用于 RBAC 权限管理
+ */
+model Role {
+  /**
+   * 角色ID
+   */
+  id          String  @id @default(cuid())
+  /**
+   * 角色名称（英文标识符，如 superAdmin, admin, editor）
+   */
+  name        String  @unique
+  /**
+   * 角色显示名称（中文，如 超级管理员, 编辑）
+   */
+  displayName String?
+  /**
+   * 角色描述
+   */
+  description String?
+  /**
+   * 父角色ID（用于角色层级和权限继承）
+   */
+  parentId    String?
+  /**
+   * 角色层级（用于角色排序和权限计算）
+   */
+  level       Int     @default(0)
+  /**
+   * 是否为系统内置角色（系统角色不可删除）
+   */
+  isSystem    Boolean @default(false)
+
+  /**
+   * 父角色关系
+   */
+  parent      Role?            @relation("RoleHierarchy", fields: [parentId], references: [id])
+  /**
+   * 子角色列表
+   */
+  children    Role[]           @relation("RoleHierarchy")
+  /**
+   * 角色权限关联
+   */
+  permissions RolePermission[]
+  /**
+   * 用户角色关联
+   */
+  userRoles   UserRole[]
+
+  /**
+   * 创建时间
+   */
+  createdAt DateTime @default(now()) @map("created_at")
+  /**
+   * 更新时间
+   */
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([name])
+  @@index([parentId])
+  @@map("roles")
+}
+
+/**
+ * 角色权限关联表
+ * 用于实现角色与权限的多对多关系
+ */
+model RolePermission {
+  /**
+   * 关联ID
+   */
+  id           String @id @default(cuid())
+  /**
+   * 角色ID
+   */
+  roleId       String
+  /**
+   * 权限ID
+   */
+  permissionId String
+
+  /**
+   * 创建时间
+   */
+  createdAt DateTime @default(now()) @map("created_at")
+
+  /**
+   * 关联角色
+   */
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  /**
+   * 关联权限
+   */
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  /**
+   * 联合唯一索引：同一角色不能重复分配同一权限
+   */
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@map("role_permissions")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 此文件为 Prisma 7 多文件 schema 配置
+// 模型定义在 models/ 目录下
+
+// Better-auth Session model
+model Session {
+  id        String   @id
+  expiresAt DateTime @map("expires_at")
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model User {
+  /**
+   * 用户ID（CUID格式）
+   */
+  id String @id @default(cuid())
+
+  // 认证相关
+  /**
+   * /**
+   * 邮箱地址（主要登录标识）
+   * 唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
+   */
+  email String?
+
+  /**
+   * 邮箱是否已验证（better-auth 要求字段：boolean）
+   */
+  emailVerified   Boolean?  @map("email_verified")
+  /**
+   * 邮箱验证时间（业务扩展字段）
+   */
+  emailVerifiedAt DateTime? @map("email_verified_at")
+
+  /**
+   * 用户名（可选，唯一登录标识）
+   * 唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
+   */
+  username String?
+
+  /**
+   * 显示名称（必要，用于展示）
+   * better-auth 要求字段
+   */
+  name String
+
+  /**
+   * 头像 URL
+   * better-auth 要求字段
+   */
+  image     String?
+  /**
+   * 个人介绍
+   */
+  introduce String?
+  /**
+   * 手机号
+   * 唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
+   */
+  phone     String?
+
+  /**
+   * 手机号是否已验证
+   */
+  phoneVerified   Boolean?  @map("phone_verified")
+  /**
+   * 手机号验证时间（业务扩展字段）
+   */
+  phoneVerifiedAt DateTime? @map("phone_verified_at")
+
+  /**
+   * 最后登录时间
+   */
+  lastLogin   DateTime? @map("last_login")
+  /**
+   * 最后登录 IP 地址
+   */
+  lastLoginIp String?   @map("last_login_ip")
+
+  /**
+   * 用户状态
+   */
+  status UserStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  // Better-auth relations
+  sessions Session[]
+  accounts Account[]
+
+  // RBAC relations
+  /**
+   * /**
+   * 用户角色关联
+   */
+  roles UserRole[]
+
+  // 普通索引用于查询优化
+  @@index([email])
+  @@index([username])
+  @@index([phone])
+  // PostgreSQL 部分唯一索引：仅对未删除的用户强制唯一性
+  // 语法：CREATE UNIQUE INDEX users_email_unique ON users(email) WHERE deleted_at IS NULL;
+  // 需要在迁移文件中手动添加或使用 @@unique 配合 Prisma 扩展
+  @@map("users")
+}
+
+/**
+ * 用户状态枚举
+ */
+enum UserStatus {
+  /**
+   * 活跃
+   */
+  ACTIVE
+  /**
+   * 未激活
+   */
+  INACTIVE
+  /**
+   * 已封禁
+   */
+  BANNED
+}
+
+/**
+ * 用户角色关联表
+ * 用于支持用户的多角色授权和角色继承
+ */
+model UserRole {
+  /**
+   * 关联ID
+   */
+  id         String   @id @default(cuid())
+  /**
+   * 用户ID
+   */
+  userId     String
+  /**
+   * 角色ID
+   */
+  roleId     String
+  /**
+   * 授权人ID（记录是谁给该用户分配的角色）
+   */
+  assignedBy String?  @map("assigned_by")
+  /**
+   * 授权时间
+   */
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  /**
+   * 关联用户
+   */
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /**
+   * 关联角色
+   */
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  /**
+   * 联合唯一索引：同一用户不能重复分配同一角色
+   */
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@map("user_roles")
+}
+
+// Better-auth Verification model
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verifications")
+}

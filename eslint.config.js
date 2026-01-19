@@ -1,80 +1,72 @@
-import antfu from '@antfu/eslint-config'
-import eslintConfigPrettier from 'eslint-config-prettier'
+/**
+ * 根目录 ESLint 配置
+ *
+ * 仅用于指定全局忽略规则
+ * 具体的 lint 规则由各子包的配置文件定义
+ */
 
-export default antfu(
+export default [
   {
-    typescript: true,
-    formatters: true,
-    // Disable markdown and other file type checks
-    markdown: false,
-    // Disable Node.js-specific global preferences for Bun runtime
-    node: false,
-    rules: {
-      // Bun provides process and buffer as globals (no need to require)
-      'node/prefer-global/process': 'off',
-      'node/prefer-global/buffer': 'off',
-      // Don't check JSDoc params strictly
-      'jsdoc/check-param-names': 'off',
-      // Disable rules that conflict with Prettier
-      'antfu/if-newline': 'off',
-    },
     ignores: [
-      // Dependencies
-      'node_modules',
-      'bun.lock',
-      'package-lock.json',
-      'pnpm-lock.yaml',
-      'yarn.lock',
+      // 依赖
+      "node_modules",
+      "bun.lock",
+      "package-lock.json",
+      "pnpm-lock.yaml",
+      "yarn.lock",
 
-      // Build outputs
-      'dist',
-      'build',
-      '.next',
-      'out',
-      '.output',
+      // 构建输出
+      "dist",
+      "build",
+      ".next",
+      "out",
+      ".output",
 
-      // Generated files
-      '*.generated.ts',
-      '*.generated.js',
-      'src/infra/database/prisma/generated',
+      // 生成文件
+      "*.generated.ts",
+      "*.generated.js",
+      "packages/*/dist",
+      "packages/*/node_modules",
 
-      // Environment files
-      '.env',
-      '.env.*',
-      '!.env.example',
+      // Prisma 生成文件
+      "**/prisma/generated",
 
-      // Logs
-      'logs',
-      '*.log',
-      'npm-debug.log*',
-      'yarn-debug.log*',
-      'yarn-error.log*',
-      'pnpm-debug.log*',
-      'lerna-debug.log*',
+      // 环境文件
+      ".env",
+      ".env.*",
+      "!.env.example",
 
-      // OS
-      '.DS_Store',
-      'Thumbs.db',
+      // 日志
+      "logs",
+      "*.log",
+      "npm-debug.log*",
+      "yarn-debug.log*",
+      "yarn-error.log*",
+      "pnpm-debug.log*",
+      "lerna-debug.log*",
+
+      // 操作系统
+      ".DS_Store",
+      "Thumbs.db",
 
       // IDE
-      '.vscode',
-      '.idea',
-      '*.swp',
-      '*.swo',
-      '*~',
+      ".vscode",
+      ".idea",
+      "*.swp",
+      "*.swo",
+      "*~",
 
-      // Documentation
-      '**/*.md',
+      // 文档
+      "**/*.md",
 
-      // Testing
-      'coverage',
-      '.nyc_output',
+      // 测试
+      "coverage",
+      ".nyc_output",
 
-      // Misc
-      '.cache',
-      'temp',
-      'tmp',
+      // 其他
+      ".cache",
+      "temp",
+      "tmp",
     ],
   },
-  eslintConfigPrettier,
-)
+];

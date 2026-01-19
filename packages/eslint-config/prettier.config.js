@@ -34,4 +34,4 @@ export default {
 
   // 使用空格缩进（false）而非Tab缩进
   useTabs: false,
-};
+}
