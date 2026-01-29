@@ -1,114 +1,90 @@
+/**
+ * 用户模型
+ *
+ * 存储用户基本信息和认证相关数据，支持邮箱、用户名、手机号多种登录方式
+ */
 model User {
-    /**
-     * 用户ID（CUID格式）
-     */
-    id String @id @default(cuid())
+  /// 用户 ID（CUID 格式）
+  id String @id @default(cuid())
 
-    // 认证相关
-    /**
-     * 邮箱地址（主要登录标识）
-     * 唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
-     */
-    email         String?
+  // 认证相关
+  /// 邮箱地址（主要登录标识），唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
+  email         String?
 
-    /**
-     * 邮箱是否已验证（better-auth 要求字段：boolean）
-     */
-    emailVerified Boolean?  @map("email_verified")
-    /**
-     * 邮箱验证时间（业务扩展字段）
-     */
-    emailVerifiedAt DateTime? @map("email_verified_at")
+  /// 邮箱是否已验证（better-auth 要求字段：boolean）
+  emailVerified Boolean?  @map("email_verified")
 
-    /**
-     * 用户名（可选，唯一登录标识）
-     * 唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
-     */
-    username String?
+  /// 邮箱验证时间（业务扩展字段）
+  emailVerifiedAt DateTime? @map("email_verified_at")
 
-    /**
-     * 显示名称（必要，用于展示）
-     * better-auth 要求字段
-     */
-    name String
+  /// 用户名（可选，唯一登录标识），唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
+  username String?
 
-    /**
-     * 头像 URL
-     * better-auth 要求字段
-     */
-    image         String?
-    /**
-     * 个人介绍
-     */
-    introduce     String?
-    /**
-     * 手机号
-     * 唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
-     */
-    phone         String?
+  /// 显示名称（必要，用于展示），better-auth 要求字段
+  name String
 
-    /**
-     * 手机号是否已验证
-     */
-    phoneVerified Boolean?  @map("phone_verified")
-    /**
-     * 手机号验证时间（业务扩展字段）
-     */
-    phoneVerifiedAt DateTime? @map("phone_verified_at")
+  /// 头像 URL，better-auth 要求字段
+  image         String?
 
-    /**
-     * 最后登录时间
-     */
-    lastLogin   DateTime? @map("last_login")
-    /**
-     * 最后登录 IP 地址
-     */
-    lastLoginIp String?   @map("last_login_ip")
+  /// 个人介绍
+  introduce     String?
 
-    /**
-     * 用户状态
-     */
-    status UserStatus @default(ACTIVE)
+  /// 手机号，唯一性约束仅适用于未删除的用户（deletedAt IS NULL）
+  phone         String?
 
-    createdAt DateTime  @default(now()) @map("created_at")
-    updatedAt DateTime  @updatedAt @map("updated_at")
-    deletedAt DateTime? @map("deleted_at")
+  /// 手机号是否已验证
+  phoneVerified Boolean?  @map("phone_verified")
 
-    // Better-auth relations
-    sessions Session[]
-    accounts Account[]
+  /// 手机号验证时间（业务扩展字段）
+  phoneVerifiedAt DateTime? @map("phone_verified_at")
 
-    // RBAC relations
-    /**
-     * 用户角色关联
-     */
-    roles UserRole[]
+  /// 最后登录时间
+  lastLogin   DateTime? @map("last_login")
 
-    // 普通索引用于查询优化
-    @@index([email])
-    @@index([username])
-    @@index([phone])
+  /// 最后登录 IP 地址
+  lastLoginIp String?   @map("last_login_ip")
 
-    // PostgreSQL 部分唯一索引：仅对未删除的用户强制唯一性
-    // 语法：CREATE UNIQUE INDEX users_email_unique ON users(email) WHERE deleted_at IS NULL;
-    // 需要在迁移文件中手动添加或使用 @@unique 配合 Prisma 扩展
-    @@map("users")
+  /// 用户状态
+  status UserStatus @default(ACTIVE)
+
+  /// 创建时间
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  /// 最后更新时间
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  /// 删除时间（软删除）
+  deletedAt DateTime? @map("deleted_at")
+
+  // Better-auth relations
+  /// 用户会话列表
+  sessions Session[]
+  /// 用户账户列表（OAuth）
+  accounts Account[]
+
+  // RBAC relations
+  /// 用户角色关联
+  roles UserRole[]
+
+  // 普通索引用于查询优化
+  @@index([email])
+  @@index([username])
+  @@index([phone])
+
+  // PostgreSQL 部分唯一索引：仅对未删除的用户强制唯一性
+  // 语法：CREATE UNIQUE INDEX users_email_unique ON users(email) WHERE deleted_at IS NULL;
+  // 需要在迁移文件中手动添加或使用 @@unique 配合 Prisma 扩展
+  @@map("users")
 }
 
 /**
  * 用户状态枚举
  */
 enum UserStatus {
-    /**
-     * 活跃
-     */
-    ACTIVE
-    /**
-     * 未激活
-     */
-    INACTIVE
-    /**
-     * 已封禁
-     */
-    BANNED
+  /// 活跃
+  ACTIVE
+  /// 未激活
+  INACTIVE
+  /// 已封禁
+  BANNED
 }

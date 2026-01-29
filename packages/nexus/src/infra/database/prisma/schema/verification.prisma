@@ -1,10 +1,25 @@
-// Better-auth Verification model
+/**
+ * Better-auth 验证模型
+ *
+ * 用于存储邮箱验证、密码重置等验证信息
+ */
 model Verification {
+  /// 唯一标识符
   id         String   @id
+
+  /// 验证标识符（如邮箱地址、手机号等）
   identifier String
+
+  /// 验证值（如验证码、验证令牌等）
   value      String
+
+  /// 验证过期时间
   expiresAt  DateTime @map("expires_at")
+
+  /// 创建时间
   createdAt  DateTime @default(now()) @map("created_at")
+
+  /// 最后更新时间
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@index([identifier])

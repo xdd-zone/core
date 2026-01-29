@@ -1,46 +1,34 @@
 /**
- * 权限表
+ * 权限模型
+ *
  * 定义系统中的所有权限，基于资源-动作-范围模型
  */
 model Permission {
-  /**
-   * 权限ID
-   */
+  /// 权限 ID
   id        String   @id @default(cuid())
-  /**
-   * 资源名称（如 article, user, category）
-   */
+
+  /// 资源名称（如 article, user, category）
   resource  String
-  /**
-   * 操作动作（如 create, read, update, delete）
-   */
+
+  /// 操作动作（如 create, read, update, delete）
   action    String
-  /**
-   * 权限范围（own=本人, all=全部, 空字符串=无范围限制，等同于all）
-   */
+
+  /// 权限范围（own=本人, all=全部, 空字符串=无范围限制，等同于all）
   scope     String   @default("")
-  /**
-   * 权限显示名称
-   */
+
+  /// 权限显示名称
   displayName String?
-  /**
-   * 权限描述
-   */
+
+  /// 权限描述
   description String?
 
-  /**
-   * 角色权限关联
-   */
+  /// 角色权限关联
   roles RolePermission[]
 
-  /**
-   * 创建时间
-   */
+  /// 创建时间
   createdAt DateTime @default(now()) @map("created_at")
 
-  /**
-   * 联合唯一索引：同一资源的同一动作和范围只能有一个权限
-   */
+  /// 联合唯一索引：同一资源的同一动作和范围只能有一个权限
   @@unique([resource, action, scope])
   @@index([resource])
   @@map("permissions")

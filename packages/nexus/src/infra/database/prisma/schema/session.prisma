@@ -1,12 +1,31 @@
-// Better-auth Session model
+/**
+ * Better-auth 会话模型
+ *
+ * 用于管理用户会话，跟踪登录状态和会话信息
+ */
 model Session {
+  /// 唯一标识符
   id        String   @id
+
+  /// 会话过期时间
   expiresAt DateTime @map("expires_at")
+
+  /// 会话令牌，唯一标识
   token     String   @unique
+
+  /// 会话创建时间
   createdAt DateTime @default(now()) @map("created_at")
+
+  /// 最后更新时间
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  /// 创建会话时的 IP 地址
   ipAddress String?  @map("ip_address")
+
+  /// 创建会话时的用户代理（浏览器信息）
   userAgent String?  @map("user_agent")
+
+  /// 关联的用户 ID
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

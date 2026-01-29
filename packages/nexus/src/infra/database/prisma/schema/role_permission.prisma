@@ -1,38 +1,28 @@
 /**
- * 角色权限关联表
+ * 角色权限关联模型
+ *
  * 用于实现角色与权限的多对多关系
  */
 model RolePermission {
-  /**
-   * 关联ID
-   */
+  /// 关联 ID
   id           String     @id @default(cuid())
-  /**
-   * 角色ID
-   */
+
+  /// 角色 ID
   roleId       String
-  /**
-   * 权限ID
-   */
+
+  /// 权限 ID
   permissionId String
 
-  /**
-   * 创建时间
-   */
+  /// 创建时间
   createdAt    DateTime   @default(now()) @map("created_at")
 
-  /**
-   * 关联角色
-   */
+  /// 关联角色
   role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  /**
-   * 关联权限
-   */
+
+  /// 关联权限
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-  /**
-   * 联合唯一索引：同一角色不能重复分配同一权限
-   */
+  /// 联合唯一索引：同一角色不能重复分配同一权限
   @@unique([roleId, permissionId])
   @@index([roleId])
   @@map("role_permissions")

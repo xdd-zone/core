@@ -1,18 +1,47 @@
-// Better-auth Account model (for OAuth)
+/**
+ * Better-auth 账户模型（用于 OAuth 认证）
+ *
+ * 用于存储第三方 OAuth 提供商（如 Google、GitHub 等）的账户信息
+ */
 model Account {
+  /// 唯一标识符
   id                    String    @id
+
+  /// OAuth 提供商的账户 ID
   accountId             String    @map("account_id")
+
+  /// OAuth 提供商 ID（如 google、github 等）
   providerId            String    @map("provider_id")
+
+  /// 关联的用户 ID
   userId                String    @map("user_id")
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// OAuth 访问令牌
   accessToken           String?   @map("access_token")
+
+  /// OAuth 刷新令牌，用于获取新的访问令牌
   refreshToken          String?   @map("refresh_token")
+
+  /// OAuth ID 令牌，包含用户身份信息
   idToken               String?   @map("id_token")
+
+  /// 访问令牌过期时间
   accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+
+  /// 刷新令牌过期时间
   refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+
+  /// OAuth 授权范围
   scope                 String?
+
+  /// 密码（用于凭证认证）
   password              String?
+
+  /// 创建时间
   createdAt             DateTime  @default(now()) @map("created_at")
+
+  /// 最后更新时间
   updatedAt             DateTime  @updatedAt @map("updated_at")
 
   @@index([userId])
