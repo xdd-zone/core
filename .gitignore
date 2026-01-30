@@ -31,8 +31,8 @@ dist
 ./logs
 
 # Database
-packages/backend/src/infra/database/prisma/generated
-packages/backend/src/infra/database/prisma/migrations
+packages/nexus/src/infra/database/prisma/generated
+packages/nexus/src/infra/database/prisma/migrations
 
 # Debug
 npm-debug.log*

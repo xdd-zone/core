@@ -21,8 +21,8 @@
     "bun": "1.3.5"
   },
   "scripts": {
-    "dev": "bun run --filter @xdd-zone/nexus dev",
-    "dev:nexus": "bun run --filter @xdd-zone/nexus dev",
+    "dev": "bun run --filter @xdd-zone/nexus --elide-lines=0 dev",
+    "dev:nexus": "bun run --filter @xdd-zone/nexus --elide-lines=0 dev",
     "dev:client": "bun run --filter @xdd-zone/client dev",
     "build": "bun run --filter '*' build",
     "build:nexus": "bun run --filter @xdd-zone/nexus build",
@@ -37,7 +37,8 @@
     "prisma:migrate": "bun run --filter @xdd-zone/nexus prisma:migrate",
     "prisma:reset": "bun run --filter @xdd-zone/nexus prisma:reset",
     "prisma:push": "bun run --filter @xdd-zone/nexus prisma:push",
-    "seed": "bun run --filter @xdd-zone/nexus seed"
+    "seed": "bun run --filter @xdd-zone/nexus seed",
+    "test:db": "bun run scripts/test-db.ts"
   },
   "devDependencies": {
     "eslint": "^9.39.2",
