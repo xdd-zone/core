@@ -11,3 +11,11 @@ openapi:
 logger:
   level: info
   filePath: # logs/app.log 留空则不启用文件日志
+
+# Better Auth 信任的请求来源
+trustedOrigins:
+  - http://localhost:2233
+  - http://localhost:7788
+  - http://localhost:7789
+  - http://elysia.xdd.ink
+  - https://elysia.xdd.ink

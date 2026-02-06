@@ -8,6 +8,7 @@
  * 3. 集中管理，便于调试和维护
  */
 import type { Elysia } from 'elysia'
+import { cors } from '@elysiajs/cors'
 import { randomUUID } from 'node:crypto'
 import { auth } from '@/core/auth'
 import { errorPlugin, responsePlugin } from '@/core/plugins'
@@ -65,6 +66,19 @@ function isStandardResponse(response: any): response is Record<string, any> {
  */
 export function setupGlobalHooks(app: Elysia) {
   app
+    // ==================== CORS 配置 ====================
+    // 配置跨域资源共享，支持 Better Auth 的跨域请求
+    .use(
+      cors({
+        origin: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+        exposeHeaders: ['Content-Length', 'X-Requested-With'],
+        maxAge: 86400, // 24小时
+      }),
+    )
+
     // ==================== 全局插件 ====================
     .use(responsePlugin) // 响应格式统一包装
     .use(errorPlugin) // 错误处理和 Zod 验证优化

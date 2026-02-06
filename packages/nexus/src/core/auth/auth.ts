@@ -23,7 +23,7 @@ export const auth = betterAuth({
   socialProviders: {},
 
   // 安全配置 - 允许的来源
-  trustedOrigins: ['http://localhost:3000', 'http://localhost:7788', 'http://elysia.xdd.ink', 'https://elysia.xdd.ink'],
+  trustedOrigins: BETTER_AUTH_CONFIG.trustedOrigins,
 
   // 数据库钩子 - 自动为用户分配默认角色
   databaseHooks: {

@@ -28,6 +28,7 @@ interface YamlConfigRaw {
     level?: z.infer<typeof _logLevelSchema>
     filePath?: string | null
   }
+  trustedOrigins?: string[]
 }
 
 export type LogLevel = z.infer<typeof _logLevelSchema>

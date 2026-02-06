@@ -21,7 +21,7 @@ export const APP_CONFIG: AppConfig = createAppConfig(env, YAML_CONFIG)
 export const OPENAPI_CONFIG: OpenapiConfig = createOpenapiConfig(env, YAML_CONFIG)
 export const LOGGER_CONFIG: LoggerConfig = createLoggerConfig(env.isProduction, YAML_CONFIG)
 export const DATABASE_CONFIG: DatabaseConfig = createDatabaseConfig(env)
-export const BETTER_AUTH_CONFIG: BetterAuthConfig = createBetterAuthConfig()
+export const BETTER_AUTH_CONFIG: BetterAuthConfig = createBetterAuthConfig({}, YAML_CONFIG)
 
 export const CONFIG = {
   app: APP_CONFIG,
