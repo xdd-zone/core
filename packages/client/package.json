@@ -32,7 +32,7 @@
   },
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun --external bun",
+    "build": "tsup",
     "type-check": "bun --bun tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
@@ -40,6 +40,7 @@
   "dependencies": {},
   "devDependencies": {
     "@xdd-zone/eslint-config": "workspace:*",
+    "tsup": "^8.3.0",
     "typescript": "^5.9.3"
   }
 }
