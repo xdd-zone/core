@@ -4,6 +4,8 @@
  * 基于 Eden Treaty 风格的树形语法 API，提供角色权限管理功能
  */
 
+import type { RequestFn } from '../../core/request'
+import type { ApiResult, XDDResponse } from '../../core/types'
 import type {
   PermissionListQuery,
   PermissionListResponse,
@@ -22,209 +24,81 @@ import type {
   AssignRoleToUserBody,
   UserRolesResponse,
   UserPermissionsResponse,
-} from './types'
+} from '../../types/rbac'
 
 /**
- * 请求选项
+ * API 响应类型简写
  */
-interface RequestOptions {
-  params?: Record<string, unknown>
-  body?: BodyInit | null | undefined
-  headers?: Record<string, string>
-  timeout?: number
-  [key: string]: unknown
-}
-
-/**
- * API 统一响应格式
- */
-interface ApiResult<T> {
-  data: T
-  code: number
-  message: string
-}
-
-/**
- * 响应包装类型
- */
-interface ResponseWrapper<T = unknown> {
-  data: T
-  status: number
-  statusText: string
-  headers: Headers
-}
-
-/**
- * 基础请求函数
- */
-async function request<T>(
-  baseURL: string,
-  method: string,
-  path: string,
-  options: RequestOptions | undefined,
-  cookieStore: Map<string, string>,
-): Promise<ResponseWrapper<T>> {
-  const base = baseURL.replace(/\/$/, '')
-  const fullPath = path.startsWith('/') ? path.slice(1) : path
-  const url = new URL(`${base}/${fullPath}`)
-
-  if (options?.params) {
-    Object.entries(options.params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        url.searchParams.append(key, String(value))
-      }
-    })
-  }
-
-  const cookieHeader = Array.from(cookieStore.entries())
-    .map(([name, value]) => `${name}=${value}`)
-    .join('; ')
-
-  let originHeader = ''
-  try {
-    originHeader = new URL(base).origin
-  } catch {
-    // 忽略 URL 解析错误
-  }
-
-  const controller = new AbortController()
-  const timeout = options?.timeout ?? 30000
-  const timeoutId = setTimeout(() => controller.abort(), timeout)
-
-  try {
-    const response = await fetch(url.toString(), {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(originHeader ? { Origin: originHeader } : {}),
-        Cookie: cookieHeader,
-        ...(options?.headers as Record<string, string>),
-      },
-      body: options?.body
-        ? typeof options.body === 'string'
-          ? options.body
-          : JSON.stringify(options.body)
-        : undefined,
-      signal: controller.signal,
-      ...options,
-    })
-
-    clearTimeout(timeoutId)
-
-    const setCookieHeader = response.headers.get('set-cookie')
-    if (setCookieHeader) {
-      const cookieParts = setCookieHeader.split(';')
-      const cookieNameValue = cookieParts[0].trim()
-      const equalsIndex = cookieNameValue.indexOf('=')
-      if (equalsIndex > 0) {
-        const name = cookieNameValue.substring(0, equalsIndex)
-        const value = cookieNameValue.substring(equalsIndex + 1)
-        cookieStore.set(name, value)
-      }
-    }
-
-    let data: T
-    const contentType = response.headers.get('content-type')
-    if (contentType?.includes('application/json')) {
-      data = (await response.json()) as T
-    } else {
-      data = (await response.text()) as T
-    }
-
-    return {
-      data,
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
-    }
-  } catch (error) {
-    clearTimeout(timeoutId)
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`请求超时: ${method} ${path}`)
-    }
-    throw error
-  }
-}
-
-/**
- * API 响应包装类型
- */
-type XDDResponse<T> = Promise<{
-  data: T
-  status: number
-  headers: Headers
-}>
+type Res<T> = Promise<XDDResponse<ApiResult<T>>>
 
 /**
  * Roles 子模块
  */
 interface RoleIdAccessor {
-  get(): XDDResponse<ApiResult<RoleDetailResponse>>
-  patch(body: UpdateRoleBody): XDDResponse<ApiResult<RoleResponse>>
-  delete(): XDDResponse<ApiResult<null>>
+  get(): Res<RoleDetailResponse>
+  patch(body: UpdateRoleBody): Res<RoleResponse>
+  delete(): Res<null>
   permissions: {
-    get(): XDDResponse<ApiResult<RolePermissionsResponse>>
-    post(body: AssignPermissionsToRoleBody): XDDResponse<ApiResult<RolePermissionsResponse>>
-    put(body: ReplaceRolePermissionsBody): XDDResponse<ApiResult<RolePermissionsResponse>>
-    delete(): XDDResponse<ApiResult<RolePermissionsResponse>>
+    get(): Res<RolePermissionsResponse>
+    post(body: AssignPermissionsToRoleBody): Res<RolePermissionsResponse>
+    put(body: ReplaceRolePermissionsBody): Res<RolePermissionsResponse>
+    delete(): Res<RolePermissionsResponse>
   }
   parent: {
-    get(): XDDResponse<ApiResult<RoleResponse>>
-    patch(body: SetRoleParentBody): XDDResponse<ApiResult<RoleResponse>>
+    get(): Res<RoleResponse>
+    patch(body: SetRoleParentBody): Res<RoleResponse>
   }
 }
 
 interface RolesAccessors {
   list: {
-    get(query?: RoleListQuery): XDDResponse<ApiResult<RoleListResponse>>
-    post(body?: unknown): XDDResponse<ApiResult<unknown>>
+    get(query?: RoleListQuery): Res<RoleListResponse>
   }
-  create(body: CreateRoleBody): XDDResponse<ApiResult<RoleResponse>>
+  create(body: CreateRoleBody): Res<RoleResponse>
   (id: string): RoleIdAccessor
-  get(id: string): XDDResponse<ApiResult<RoleDetailResponse>>
-  update(id: string, body: UpdateRoleBody): XDDResponse<ApiResult<RoleResponse>>
-  delete(id: string): XDDResponse<ApiResult<null>>
+  get(id: string): Res<RoleDetailResponse>
+  update(id: string, body: UpdateRoleBody): Res<RoleResponse>
+  delete(id: string): Res<null>
 }
 
 // Permissions 子模块
 interface PermissionIdAccessor {
-  get(): XDDResponse<ApiResult<PermissionResponse>>
-  delete(): XDDResponse<ApiResult<null>>
+  get(): Res<PermissionResponse>
+  delete(): Res<null>
 }
 
 interface PermissionsAccessors {
   list: {
-    get(query?: PermissionListQuery): XDDResponse<ApiResult<PermissionListResponse>>
-    post(body?: unknown): XDDResponse<ApiResult<unknown>>
+    get(query?: PermissionListQuery): Res<PermissionListResponse>
   }
-  create(body: CreatePermissionBody): XDDResponse<ApiResult<PermissionResponse>>
+  create(body: CreatePermissionBody): Res<PermissionResponse>
   (id: string): PermissionIdAccessor
-  get(id: string): XDDResponse<ApiResult<PermissionResponse>>
-  delete(id: string): XDDResponse<ApiResult<null>>
+  get(id: string): Res<PermissionResponse>
+  delete(id: string): Res<null>
 }
 
 // Users 子模块 (rbac/users/:userId/roles)
 interface UserRolesIdAccessor {
-  get(): XDDResponse<ApiResult<UserRolesResponse>>
-  post(body: AssignRoleToUserBody): XDDResponse<ApiResult<UserRolesResponse>>
-  delete(roleId: string): XDDResponse<ApiResult<null>>
+  get(): Res<UserRolesResponse>
+  post(body: AssignRoleToUserBody): Res<UserRolesResponse>
+  delete(roleId: string): Res<null>
 }
 
 // 当前用户权限访问器
 interface UserMeAccessor {
   permissions: {
-    get(): XDDResponse<ApiResult<UserPermissionsResponse>>
+    get(): Res<UserPermissionsResponse>
   }
   roles: {
-    get(): XDDResponse<ApiResult<UserRolesResponse>>
+    get(): Res<UserRolesResponse>
   }
 }
 
 interface RbacUsersAccessors {
   (userId: string): UserRolesIdAccessor
-  get(userId: string): XDDResponse<ApiResult<UserRolesResponse>>
-  assign(userId: string, body: AssignRoleToUserBody): XDDResponse<ApiResult<UserRolesResponse>>
-  remove(userId: string, roleId: string): XDDResponse<ApiResult<null>>
+  get(userId: string): Res<UserRolesResponse>
+  assign(userId: string, body: AssignRoleToUserBody): Res<UserRolesResponse>
+  remove(userId: string, roleId: string): Res<null>
   me: UserMeAccessor
 }
 
@@ -233,51 +107,31 @@ export interface RbacAccessors {
   roles: RolesAccessors
   permissions: PermissionsAccessors
   users: RbacUsersAccessors
-  getUserPermissions(userId: string): XDDResponse<ApiResult<UserPermissionsResponse>>
-}
-
-/**
- * RBAC 访问器配置
- */
-interface RbacAccessorOptions {
-  baseURL: string
-  cookieStore: Map<string, string>
+  getUserPermissions(userId: string): Res<UserPermissionsResponse>
 }
 
 /**
  * 创建 RBAC 模块访问器
  *
- * @param baseURL - API 基础地址
- * @param cookieStore - Cookie 存储
+ * @param request - 统一请求函数
  * @returns RBAC 访问器实例
  */
-export function createRbacAccessor(options: RbacAccessorOptions): RbacAccessors {
-  const { baseURL, cookieStore } = options
-
+export function createRbacAccessor(request: RequestFn): RbacAccessors {
   // Roles
   const rolesListGet = (query?: RoleListQuery) =>
-    request<ApiResult<RoleListResponse>>(
-      baseURL,
-      'GET',
-      '/rbac/roles',
-      { params: query as Record<string, unknown> },
-      cookieStore,
-    )
-
-  const rolesListPost = (body?: unknown) =>
-    request<ApiResult<unknown>>(baseURL, 'POST', '/rbac/roles', { body: JSON.stringify(body) }, cookieStore)
+    request<ApiResult<RoleListResponse>>('GET', 'rbac/roles', {
+      params: query as Record<string, unknown>,
+    })
 
   const rolesCreate = (body: CreateRoleBody) =>
-    request<ApiResult<RoleResponse>>(baseURL, 'POST', '/rbac/roles', { body: JSON.stringify(body) }, cookieStore)
+    request<ApiResult<RoleResponse>>('POST', 'rbac/roles', { body: JSON.stringify(body) })
 
-  const rolesGet = (id: string) =>
-    request<ApiResult<RoleDetailResponse>>(baseURL, 'GET', `/rbac/roles/${id}`, undefined, cookieStore)
+  const rolesGet = (id: string) => request<ApiResult<RoleDetailResponse>>('GET', `rbac/roles/${id}`)
 
   const rolesUpdate = (id: string, body: UpdateRoleBody) =>
-    request<ApiResult<RoleResponse>>(baseURL, 'PATCH', `/rbac/roles/${id}`, { body: JSON.stringify(body) }, cookieStore)
+    request<ApiResult<RoleResponse>>('PATCH', `rbac/roles/${id}`, { body: JSON.stringify(body) })
 
-  const rolesDelete = (id: string) =>
-    request<ApiResult<null>>(baseURL, 'DELETE', `/rbac/roles/${id}`, undefined, cookieStore)
+  const rolesDelete = (id: string) => request<ApiResult<null>>('DELETE', `rbac/roles/${id}`)
 
   const rolesAccessor: RolesAccessors = Object.assign(
     (id: string) => ({
@@ -285,59 +139,27 @@ export function createRbacAccessor(options: RbacAccessorOptions): RbacAccessors 
       patch: (body: UpdateRoleBody) => rolesUpdate(id, body),
       delete: () => rolesDelete(id),
       permissions: {
-        get: () =>
-          request<ApiResult<RolePermissionsResponse>>(
-            baseURL,
-            'GET',
-            `/rbac/roles/${id}/permissions`,
-            undefined,
-            cookieStore,
-          ),
+        get: () => request<ApiResult<RolePermissionsResponse>>('GET', `rbac/roles/${id}/permissions`),
         post: (body: AssignPermissionsToRoleBody) =>
-          request<ApiResult<RolePermissionsResponse>>(
-            baseURL,
-            'POST',
-            `/rbac/roles/${id}/permissions`,
-            {
-              body: JSON.stringify(body),
-            },
-            cookieStore,
-          ),
+          request<ApiResult<RolePermissionsResponse>>('POST', `rbac/roles/${id}/permissions`, {
+            body: JSON.stringify(body),
+          }),
         put: (body: ReplaceRolePermissionsBody) =>
-          request<ApiResult<RolePermissionsResponse>>(
-            baseURL,
-            'PUT',
-            `/rbac/roles/${id}/permissions`,
-            {
-              body: JSON.stringify(body),
-            },
-            cookieStore,
-          ),
-        delete: () =>
-          request<ApiResult<RolePermissionsResponse>>(
-            baseURL,
-            'DELETE',
-            `/rbac/roles/${id}/permissions`,
-            undefined,
-            cookieStore,
-          ),
+          request<ApiResult<RolePermissionsResponse>>('PUT', `rbac/roles/${id}/permissions`, {
+            body: JSON.stringify(body),
+          }),
+        delete: () => request<ApiResult<RolePermissionsResponse>>('DELETE', `rbac/roles/${id}/permissions`),
       },
       parent: {
-        get: () => request<ApiResult<RoleResponse>>(baseURL, 'GET', `/rbac/roles/${id}/parent`, undefined, cookieStore),
+        get: () => request<ApiResult<RoleResponse>>('GET', `rbac/roles/${id}/parent`),
         patch: (body: SetRoleParentBody) =>
-          request<ApiResult<RoleResponse>>(
-            baseURL,
-            'PATCH',
-            `/rbac/roles/${id}/parent`,
-            {
-              body: JSON.stringify(body),
-            },
-            cookieStore,
-          ),
+          request<ApiResult<RoleResponse>>('PATCH', `rbac/roles/${id}/parent`, {
+            body: JSON.stringify(body),
+          }),
       },
     }),
     {
-      list: { get: rolesListGet, post: rolesListPost },
+      list: { get: rolesListGet },
       create: rolesCreate,
       get: rolesGet,
       update: rolesUpdate,
@@ -347,33 +169,18 @@ export function createRbacAccessor(options: RbacAccessorOptions): RbacAccessors 
 
   // Permissions
   const permissionsListGet = (query?: PermissionListQuery) =>
-    request<ApiResult<PermissionListResponse>>(
-      baseURL,
-      'GET',
-      '/rbac/permissions',
-      {
-        params: query as Record<string, unknown>,
-      },
-      cookieStore,
-    )
-
-  const permissionsListPost = (body?: unknown) =>
-    request<ApiResult<unknown>>(baseURL, 'POST', '/rbac/permissions', { body: JSON.stringify(body) }, cookieStore)
+    request<ApiResult<PermissionListResponse>>('GET', 'rbac/permissions', {
+      params: query as Record<string, unknown>,
+    })
 
   const permissionsCreate = (body: CreatePermissionBody) =>
-    request<ApiResult<PermissionResponse>>(
-      baseURL,
-      'POST',
-      '/rbac/permissions',
-      { body: JSON.stringify(body) },
-      cookieStore,
-    )
+    request<ApiResult<PermissionResponse>>('POST', 'rbac/permissions', {
+      body: JSON.stringify(body),
+    })
 
-  const permissionsGet = (id: string) =>
-    request<ApiResult<PermissionResponse>>(baseURL, 'GET', `/rbac/permissions/${id}`, undefined, cookieStore)
+  const permissionsGet = (id: string) => request<ApiResult<PermissionResponse>>('GET', `rbac/permissions/${id}`)
 
-  const permissionsDelete = (id: string) =>
-    request<ApiResult<null>>(baseURL, 'DELETE', `/rbac/permissions/${id}`, undefined, cookieStore)
+  const permissionsDelete = (id: string) => request<ApiResult<null>>('DELETE', `rbac/permissions/${id}`)
 
   const permissionsAccessor: PermissionsAccessors = Object.assign(
     (id: string) => ({
@@ -381,7 +188,7 @@ export function createRbacAccessor(options: RbacAccessorOptions): RbacAccessors 
       delete: () => permissionsDelete(id),
     }),
     {
-      list: { get: permissionsListGet, post: permissionsListPost },
+      list: { get: permissionsListGet },
       create: permissionsCreate,
       get: permissionsGet,
       delete: permissionsDelete,
@@ -389,31 +196,18 @@ export function createRbacAccessor(options: RbacAccessorOptions): RbacAccessors 
   )
 
   // Users (rbac/users/:userId/roles)
-  const getUserRoles = (userId: string) =>
-    request<ApiResult<UserRolesResponse>>(baseURL, 'GET', `/rbac/users/${userId}/roles`, undefined, cookieStore)
+  const getUserRoles = (userId: string) => request<ApiResult<UserRolesResponse>>('GET', `rbac/users/${userId}/roles`)
 
   const assignUserRole = (userId: string, body: AssignRoleToUserBody) =>
-    request<ApiResult<UserRolesResponse>>(
-      baseURL,
-      'POST',
-      `/rbac/users/${userId}/roles`,
-      {
-        body: JSON.stringify(body),
-      },
-      cookieStore,
-    )
+    request<ApiResult<UserRolesResponse>>('POST', `rbac/users/${userId}/roles`, {
+      body: JSON.stringify(body),
+    })
 
   const removeUserRole = (userId: string, roleId: string) =>
-    request<ApiResult<null>>(baseURL, 'DELETE', `/rbac/users/${userId}/roles/${roleId}`, undefined, cookieStore)
+    request<ApiResult<null>>('DELETE', `rbac/users/${userId}/roles/${roleId}`)
 
   const getUserPermissions = (userId: string) =>
-    request<ApiResult<UserPermissionsResponse>>(
-      baseURL,
-      'GET',
-      `/rbac/users/${userId}/permissions`,
-      undefined,
-      cookieStore,
-    )
+    request<ApiResult<UserPermissionsResponse>>('GET', `rbac/users/${userId}/permissions`)
 
   const usersAccessor: RbacUsersAccessors = Object.assign(
     (userId: string) => ({

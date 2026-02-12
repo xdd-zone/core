@@ -120,6 +120,13 @@ export interface RoleListQuery extends PaginationQuery {
 export type RoleResponse = Role
 
 /**
+ * 角色详情响应（带权限列表）
+ */
+export interface RoleDetailResponse extends Role {
+  permissions: PermissionString[]
+}
+
+/**
  * 角色列表数据（不包含包装层）
  */
 export interface RoleListData {

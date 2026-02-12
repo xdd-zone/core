@@ -27,6 +27,7 @@ const DEFAULT_ENABLED = true
  * 从环境变量获取日志级别
  */
 function getLogLevelFromEnv(): LogLevel | null {
+  if (typeof process === 'undefined' || !process.env) return null
   const envLevel = process.env[ENV_LOG_LEVEL]
   if (!envLevel) return null
 

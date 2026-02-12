@@ -3,11 +3,11 @@
  */
 
 import type { ClientOptions, RequestOptions, XDDResponse } from './core/types'
-import { RequestInterceptorChain, ResponseInterceptorChain } from './core/interceptors'
+import { RequestInterceptorChain, ResponseInterceptorChain } from './interceptors'
+import { createRequestFn } from './core/request'
 import { createAuthAccessor, type AuthAccessors } from './modules/auth'
 import { createUserAccessor, type UserAccessors } from './modules/user'
 import { createRbacAccessor, type RbacAccessors } from './modules/rbac'
-import type { SignInEmailBody, SignUpEmailBody, GetSessionResponse, SignOutResponse, AuthResponse } from './types/auth'
 import type { RequestInterceptor, ResponseInterceptor } from './interceptors/types'
 
 /**
@@ -35,9 +35,12 @@ export class XDDClient {
     this.requestInterceptors = new RequestInterceptorChain()
     this.responseInterceptors = new ResponseInterceptorChain()
 
-    this.auth = createAuthAccessor(this.baseURL, this.cookies)
-    this.user = createUserAccessor(this.baseURL, this.cookies)
-    this.rbac = createRbacAccessor({ baseURL: this.baseURL, cookieStore: this.cookies })
+    // 创建统一请求函数，传递给各模块
+    const requestFn = createRequestFn(this.baseURL, this.cookies, this.requestInterceptors, this.responseInterceptors)
+
+    this.auth = createAuthAccessor(requestFn)
+    this.user = createUserAccessor(requestFn)
+    this.rbac = createRbacAccessor(requestFn)
   }
 
   setCookie(header: string | null): void {
@@ -62,33 +65,17 @@ export class XDDClient {
     this.cookies.clear()
   }
 
-  async getSession(): Promise<XDDResponse<GetSessionResponse>> {
-    return this.auth.getSession.get()
-  }
-
-  async signIn(body: SignInEmailBody): Promise<XDDResponse<AuthResponse>> {
-    return this.auth.signIn.post(body) as Promise<XDDResponse<AuthResponse>>
-  }
-
-  async signUp(body: SignUpEmailBody): Promise<XDDResponse<AuthResponse>> {
-    return this.auth.signUp.post(body) as Promise<XDDResponse<AuthResponse>>
-  }
-
-  async signOut(): Promise<XDDResponse<SignOutResponse>> {
-    return this.auth.signOut.post() as Promise<XDDResponse<SignOutResponse>>
-  }
-
   onRequest(
     interceptor:
       | RequestInterceptor
       | ((method: string, path: string, options: RequestOptions) => RequestOptions | void),
   ): this {
-    this.requestInterceptors.use(interceptor as never)
+    this.requestInterceptors.use(interceptor as RequestInterceptor)
     return this
   }
 
   onResponse<T>(interceptor: ResponseInterceptor<T> | ((data: T, status: number, headers: Headers) => T | void)): this {
-    this.responseInterceptors.use(interceptor as never)
+    this.responseInterceptors.use(interceptor as ResponseInterceptor<T>)
     return this
   }
 }

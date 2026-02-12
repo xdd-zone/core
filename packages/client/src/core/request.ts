@@ -1,5 +1,32 @@
 import type { XDDResponse, RequestOptions } from './types'
 import type { RequestInterceptorChain, ResponseInterceptorChain } from '../interceptors'
+import { ApiError, UnauthorizedError, ForbiddenError, NotFoundError } from '../error/api-error'
+import { getLogger } from '../logger'
+
+/**
+ * 统一请求函数类型
+ * 各模块通过此类型接收绑定了上下文的请求函数
+ */
+export type RequestFn = <T>(method: string, path: string, options?: RequestOptions) => Promise<XDDResponse<T>>
+
+/**
+ * 创建绑定上下文的请求函数
+ *
+ * @param baseURL - API 基础地址
+ * @param cookieStore - Cookie 存储
+ * @param requestInterceptors - 请求拦截器链
+ * @param responseInterceptors - 响应拦截器链
+ * @returns 绑定了上下文的请求函数
+ */
+export function createRequestFn(
+  baseURL: string,
+  cookieStore: Map<string, string>,
+  requestInterceptors: RequestInterceptorChain,
+  responseInterceptors: ResponseInterceptorChain,
+): RequestFn {
+  return <T>(method: string, path: string, options?: RequestOptions) =>
+    request<T>(baseURL, method, path, options, cookieStore, requestInterceptors, responseInterceptors)
+}
 
 /**
  * 基础请求函数（内部使用）
@@ -71,6 +98,9 @@ export async function request<T>(
 
     clearTimeout(timeoutId)
 
+    const logger = getLogger()
+    logger.debug(`${method} ${path}`, { status: response.status })
+
     // 解析响应头中的 Set-Cookie 并保存
     const setCookieHeader = response.headers.get('set-cookie')
     if (setCookieHeader) {
@@ -85,8 +115,37 @@ export async function request<T>(
     }
 
     // 解析响应数据
-    let data: T
     const contentType = response.headers.get('content-type')
+
+    // 处理 HTTP 错误状态码
+    if (!response.ok) {
+      let errorBody: Record<string, unknown> | null = null
+      try {
+        if (contentType?.includes('application/json')) {
+          errorBody = (await response.json()) as Record<string, unknown>
+        }
+      } catch {
+        // 忽略解析错误
+      }
+
+      const message = (errorBody?.message as string) || response.statusText
+      const code = errorBody?.code as string | number | undefined
+
+      logger.warn(`${method} ${path} -> ${response.status}`, { message })
+
+      switch (response.status) {
+        case 401:
+          throw new UnauthorizedError(message, errorBody)
+        case 403:
+          throw new ForbiddenError(message, errorBody)
+        case 404:
+          throw new NotFoundError(message, errorBody)
+        default:
+          throw new ApiError(response.status, message, code ?? response.status, errorBody)
+      }
+    }
+
+    let data: T
     if (contentType?.includes('application/json')) {
       data = (await response.json()) as T
     } else {

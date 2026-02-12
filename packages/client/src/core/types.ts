@@ -1,6 +1,3 @@
-import type { RequestInterceptor, ResponseInterceptor } from '../interceptors/types'
-import { RequestInterceptorChain, ResponseInterceptorChain } from '../interceptors'
-
 /**
  * 客户端配置选项
  */

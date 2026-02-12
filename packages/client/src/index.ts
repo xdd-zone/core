@@ -57,8 +57,9 @@ export * from './interceptors'
 // Re-export client classes and functions
 export { XDDClient, createClient } from './client'
 
-// Re-export client types
+// Re-export core types
 export type { ClientOptions, RequestOptions, XDDResponse, ApiResult } from './core/types'
+export type { RequestFn } from './core/request'
 
 // Re-export module accessors and types
 export type { AuthAccessors } from './modules/auth'
