@@ -25,7 +25,6 @@ import type {
   UserRolesResponse,
   UserPermissionsResponse,
   RoleChildrenResponse,
-  UpdateUserRoleBody,
 } from '../../types/rbac'
 
 /**
@@ -86,7 +85,6 @@ interface PermissionsAccessors {
 interface UserRolesIdAccessor {
   get(): Res<UserRolesResponse>
   post(body: AssignRoleToUserBody): Res<UserRolesResponse>
-  patch(body: UpdateUserRoleBody): Res<UserRolesResponse>
   delete(roleId: string): Res<null>
 }
 
@@ -105,7 +103,6 @@ interface RbacUsersAccessors {
   get(userId: string): Res<UserRolesResponse>
   assign(userId: string, body: AssignRoleToUserBody): Res<UserRolesResponse>
   remove(userId: string, roleId: string): Res<null>
-  update(userId: string, roleId: string, body: UpdateUserRoleBody): Res<UserRolesResponse>
   me: UserMeAccessor
 }
 
@@ -216,11 +213,6 @@ export function createRbacAccessor(request: RequestFn): RbacAccessors {
   const removeUserRole = (userId: string, roleId: string) =>
     request<ApiResult<null>>('DELETE', `rbac/users/${userId}/roles/${roleId}`)
 
-  const updateUserRole = (userId: string, roleId: string, body: UpdateUserRoleBody) =>
-    request<ApiResult<UserRolesResponse>>('PATCH', `rbac/users/${userId}/roles/${roleId}`, {
-      body: JSON.stringify(body),
-    })
-
   const getUserPermissions = (userId: string) =>
     request<ApiResult<UserPermissionsResponse>>('GET', `rbac/users/${userId}/permissions`)
 
@@ -228,14 +220,12 @@ export function createRbacAccessor(request: RequestFn): RbacAccessors {
     (userId: string) => ({
       get: () => getUserRoles(userId),
       post: (body: AssignRoleToUserBody) => assignUserRole(userId, body),
-      patch: (body: UpdateUserRoleBody) => updateUserRole(userId, '', body),
       delete: (roleId: string) => removeUserRole(userId, roleId),
     }),
     {
       get: getUserRoles,
       assign: assignUserRole,
       remove: removeUserRole,
-      update: updateUserRole,
       me: {
         permissions: { get: () => getUserPermissions('me') },
         roles: { get: () => getUserRoles('me') },

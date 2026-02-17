@@ -309,7 +309,7 @@ export const rbacModule = createModule({
     },
     {
       beforeHandle: [Require.UserRoleReadOwn()],
-      params: Schemas.UserIdParamsSchema,
+      params: Schemas.RBACUserIdParamsSchema,
       detail: {
         summary: '获取用户角色列表',
         description: '获取指定用户的所有角色（只能查看自己或需要 read_all 权限）',
@@ -328,7 +328,7 @@ export const rbacModule = createModule({
     },
     {
       beforeHandle: [Require.UserRoleCreateAll()],
-      params: Schemas.UserIdParamsSchema,
+      params: Schemas.RBACUserIdParamsSchema,
       body: Schemas.AssignRoleToUserBodySchema,
       detail: {
         summary: '为用户分配角色',
@@ -388,7 +388,7 @@ export const rbacModule = createModule({
     },
     {
       beforeHandle: [Require.UserPermissionReadOwn()],
-      params: Schemas.UserIdParamsSchema,
+      params: Schemas.RBACUserIdParamsSchema,
       detail: {
         summary: '获取用户所有权限',
         description: '获取指定用户的所有权限（含继承）（只能查看自己或需要 read_all 权限）',

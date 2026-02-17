@@ -1,10 +1,46 @@
 /**
  * RBAC 模块类型定义
  *
- * 角色权限相关类型定义，与 nexus rbac 模块保持一致
+ * 角色权限相关类型定义
+ * 基础类型从 @xdd-zone/schema/rbac 导入，client 特有类型手动定义
  */
 
-import type { PaginationQuery } from './api'
+import type {
+  RoleListQuery,
+  CreateRoleBody,
+  UpdateRoleBody,
+  SetRoleParentBody,
+  RoleIdParams,
+  PermissionListQuery,
+  CreatePermissionBody,
+  PermissionIdParams,
+  AssignRoleToUserBody,
+  AssignPermissionsToRoleBody,
+  ReplaceRolePermissionsBody,
+  RBACUserIdParams,
+  UserRoleIdParams,
+  RolePermissionIdParams,
+} from '@xdd-zone/schema/rbac'
+
+// 从 schema 重新导出基础类型
+export type {
+  RoleListQuery,
+  CreateRoleBody,
+  UpdateRoleBody,
+  SetRoleParentBody,
+  RoleIdParams,
+  PermissionListQuery,
+  CreatePermissionBody,
+  PermissionIdParams,
+  AssignRoleToUserBody,
+  AssignPermissionsToRoleBody,
+  ReplaceRolePermissionsBody,
+  RBACUserIdParams,
+  UserRoleIdParams,
+  RolePermissionIdParams,
+}
+
+// ========== Client 特有类型 ==========
 
 /**
  * 权限字符串格式
@@ -26,51 +62,6 @@ export interface Permission {
   description: string | null
   createdAt: Date
   updatedAt: Date
-}
-
-/**
- * 权限列表查询参数
- */
-export interface PermissionListQuery extends PaginationQuery {
-  /** 按资源类型过滤 */
-  resource?: string
-}
-
-/**
- * 权限响应（统一格式）
- */
-export type PermissionResponse = Permission
-
-/**
- * 权限列表数据（不包含包装层）
- */
-export interface PermissionListData {
-  items: Permission[]
-  total: number
-  page: number
-  pageSize: number
-  totalPages: number
-}
-
-/**
- * 权限列表响应（统一格式）
- */
-export type PermissionListResponse = PermissionListData
-
-/**
- * 创建权限请求体
- */
-export interface CreatePermissionBody {
-  /** 资源类型，1-50 字符 */
-  resource: string
-  /** 操作类型，1-50 字符 */
-  action: string
-  /** 权限范围，own/all/空 */
-  scope?: '' | 'own' | 'all'
-  /** 显示名称 */
-  displayName?: string
-  /** 描述 */
-  description?: string
 }
 
 /**
@@ -104,31 +95,25 @@ export interface RoleWithPermissions {
   updatedAt: Date
 }
 
-/**
- * 角色列表查询参数
- */
-export interface RoleListQuery extends PaginationQuery {
-  /** 关键字搜索 */
-  keyword?: string
-  /** 是否包含系统角色 */
-  includeSystem?: boolean
+// 响应包装类型
+export type PermissionResponse = Permission
+
+export interface PermissionListData {
+  items: Permission[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
 }
 
-/**
- * 角色响应（统一格式）
- */
+export type PermissionListResponse = PermissionListData
+
 export type RoleResponse = Role
 
-/**
- * 角色详情响应（带权限列表）
- */
 export interface RoleDetailResponse extends Role {
   permissions: PermissionString[]
 }
 
-/**
- * 角色列表数据（不包含包装层）
- */
 export interface RoleListData {
   items: Role[]
   total: number
@@ -137,74 +122,10 @@ export interface RoleListData {
   totalPages: number
 }
 
-/**
- * 角色列表响应（统一格式）
- */
 export type RoleListResponse = RoleListData
 
-/**
- * 创建角色请求体
- */
-export interface CreateRoleBody {
-  /** 角色标识，1-50 字符 */
-  name: string
-  /** 显示名称，1-100 字符 */
-  displayName?: string
-  /** 描述 */
-  description?: string
-  /** 父角色 ID（继承） */
-  parentId?: string
-}
-
-/**
- * 更新角色请求体
- */
-export interface UpdateRoleBody {
-  displayName?: string | null
-  description?: string | null
-  parentId?: string | null
-}
-
-/**
- * 设置父角色请求体
- */
-export interface SetRoleParentBody {
-  /** 父角色 ID，设为 null 取消父角色 */
-  parentId: string | null
-}
-
-/**
- * 为角色分配权限请求体
- */
-export interface AssignPermissionsToRoleBody {
-  /** 权限 ID 列表，至少 1 个 */
-  permissionIds: string[]
-}
-
-/**
- * 批量替换角色权限请求体
- */
-export interface ReplaceRolePermissionsBody {
-  /** 权限 ID 列表 */
-  permissionIds: string[]
-}
-
-/**
- * 角色权限响应（统一格式）
- */
 export type RolePermissionsResponse = PermissionString[]
 
-/**
- * 为用户分配角色请求体
- */
-export interface AssignRoleToUserBody {
-  /** 角色 ID */
-  roleId: string
-}
-
-/**
- * 用户角色详情
- */
 export interface UserRoleDetail {
   id: string
   userId: string
@@ -214,14 +135,8 @@ export interface UserRoleDetail {
   assignedAt: Date
 }
 
-/**
- * 用户角色列表响应（统一格式）
- */
 export type UserRolesResponse = UserRoleDetail[]
 
-/**
- * 用户权限数据（不包含包装层）
- */
 export interface UserPermissionsData {
   permissions: PermissionString[]
   roles: Array<{
@@ -231,14 +146,8 @@ export interface UserPermissionsData {
   }>
 }
 
-/**
- * 用户权限查询响应
- */
 export type UserPermissionsResponse = UserPermissionsData
 
-/**
- * 角色子角色详情
- */
 export interface RoleChildrenItem {
   id: string
   name: string
@@ -251,12 +160,4 @@ export interface RoleChildrenItem {
   updatedAt: Date
 }
 
-/**
- * 角色子角色列表响应
- */
 export type RoleChildrenResponse = RoleChildrenItem[]
-
-/**
- * 更新用户角色请求体
- */
-export interface UpdateUserRoleBody {}

@@ -13,7 +13,7 @@ import type { PaginatedList, PaginationQuery, PaginationResponse } from '../type
 export function normalizePagination(query: PaginationQuery) {
   const page = typeof query.page === 'number' && Number.isFinite(query.page) && query.page > 0 ? query.page : 1
   const pageSize =
-    typeof query.pageSize === 'number' && Number.isFinite(query.pageSize) && query.pageSize > 0 ? query.pageSize : 10
+    typeof query.pageSize === 'number' && Number.isFinite(query.pageSize) && query.pageSize > 0 ? query.pageSize : 20
 
   return { page, pageSize }
 }

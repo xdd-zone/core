@@ -299,4 +299,4 @@ export const authModule = new Elysia({ prefix: '/auth' })
 
 // 导出类型供其他模块使用
 export type { AuthResponse, SessionResponse } from './auth.types'
-export type { SignInEmailBody, SignUpEmailBody } from './auth.types'
+export type { SignInEmailBody, SignUpEmailBody } from './auth.model'

@@ -1,25 +1,6 @@
 import type { Session, User } from '@/infra/database/prisma/generated'
 
 /**
- * 注册请求体
- */
-export interface SignUpEmailBody {
-  email: string
-  password: string
-  name: string
-  image?: string
-}
-
-/**
- * 登录请求体
- */
-export interface SignInEmailBody {
-  email: string
-  password: string
-  rememberMe?: boolean
-}
-
-/**
  * 认证响应
  */
 export interface AuthResponse {

@@ -47,6 +47,9 @@ yarn-error.log*
 CLAUDE.md
 AGENTS.md
 
+# TypeScript
+*.tsbuildinfo
+
 # Archives
 **/*.trace
 **/*.zip

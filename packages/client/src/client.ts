@@ -2,7 +2,7 @@
  * XDD Zone HTTP Client SDK
  */
 
-import type { ClientOptions, RequestOptions, XDDResponse } from './core/types'
+import type { ClientOptions, RequestOptions } from './core/types'
 import { RequestInterceptorChain, ResponseInterceptorChain } from './interceptors'
 import { createRequestFn } from './core/request'
 import { createAuthAccessor, type AuthAccessors } from './modules/auth'

@@ -37,7 +37,9 @@
     "prepublishOnly": "bun run build"
   },
   "peerDependencies": {},
-  "dependencies": {},
+  "dependencies": {
+    "@xdd-zone/schema": "workspace:*"
+  },
   "devDependencies": {
     "@xdd-zone/eslint-config": "workspace:*",
     "tsup": "^8.3.0",

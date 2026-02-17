@@ -1,60 +1,35 @@
-/**
- * User 模块 Schema 定义
- * 定义用户模块的请求/响应 Schema，用于 API 验证和 OpenAPI 文档生成
- */
-
 import { z } from 'zod'
-import { createPaginatedListSchema, PaginationQuerySchema } from '@/infra/database'
-import { UserStatus } from '@/infra/database/prisma/generated/'
+import {
+  UserIdParamsSchema as UserIdParamsSchemaBase,
+  UserListQuerySchema as UserListQuerySchemaBase,
+  CreateUserBodySchema as CreateUserBodySchemaBase,
+  UpdateUserBodySchema as UpdateUserBodySchemaBase,
+  UserResponseSchema as UserResponseSchemaBase,
+  UserListResponseSchema as UserListResponseSchemaBase,
+} from '@xdd-zone/schema/user'
 
-/**
- * 用户状态枚举 Schema
- */
-export const UserStatusSchema = z.nativeEnum(UserStatus)
+import { UserStatusSchema as UserStatusSchemaBase } from '@xdd-zone/schema/auth'
 
-/**
- * 用户 ID 参数 Schema
- * 用于路由参数验证（如 /user/:id）
- */
-export const UserIdParamsSchema = z.object({
+export { UserStatusSchema } from '@xdd-zone/schema/auth'
+export { UserResponseSchema, UserListResponseSchema } from '@xdd-zone/schema/user'
+
+// 透传类型别名供内部使用
+const UserStatusSchema = UserStatusSchemaBase
+const UserResponseSchema = UserResponseSchemaBase
+const UserListResponseSchema = UserListResponseSchemaBase
+
+export type UserStatus = z.infer<typeof UserStatusSchema>
+export type UserResponse = z.infer<typeof UserResponseSchema>
+export type UserListResponse = z.infer<typeof UserListResponseSchema>
+
+export const UserIdParamsSchema = UserIdParamsSchemaBase.extend({
   id: z.string({
     message: '用户ID必须是字符串',
   }),
 })
-
 export type UserIdParams = z.infer<typeof UserIdParamsSchema>
 
-/**
- * 用户响应 Schema
- * 说明：用于接口返回的用户基础信息（不包含敏感字段如密码）
- * 注意：Date 字段在响应层自动转换为 ISO 字符串
- */
-export const UserResponseSchema = z.object({
-  id: z.string(),
-  username: z.string().nullable(),
-  name: z.string(),
-  email: z.string().nullable(),
-  emailVerified: z.boolean().nullable(),
-  emailVerifiedAt: z.string().or(z.date()).nullable(),
-  introduce: z.string().nullable(),
-  image: z.string().nullable(),
-  phone: z.string().nullable(),
-  phoneVerified: z.boolean().nullable(),
-  phoneVerifiedAt: z.string().or(z.date()).nullable(),
-  lastLogin: z.string().or(z.date()).nullable(),
-  lastLoginIp: z.string().nullable(),
-  status: UserStatusSchema,
-  createdAt: z.string().or(z.date()), // 业务层用 Date，响应层自动转 string
-  updatedAt: z.string().or(z.date()), // 业务层用 Date，响应层自动转 string
-  deletedAt: z.string().or(z.date()).nullable(),
-})
-
-export type UserResponse = z.infer<typeof UserResponseSchema>
-
-/**
- * 用户列表查询参数 Schema
- */
-export const UserListQuerySchema = PaginationQuerySchema.extend({
+export const UserListQuerySchema = UserListQuerySchemaBase.extend({
   status: UserStatusSchema.optional(),
   keyword: z
     .string({
@@ -67,20 +42,9 @@ export const UserListQuerySchema = PaginationQuerySchema.extend({
     })
     .optional(),
 })
-
 export type UserListQuery = z.infer<typeof UserListQuerySchema>
 
-/**
- * 用户列表响应 Schema
- */
-export const UserListResponseSchema = createPaginatedListSchema(UserResponseSchema)
-
-export type UserListResponse = z.infer<typeof UserListResponseSchema>
-
-/**
- * 创建用户请求体 Schema
- */
-export const CreateUserBodySchema = z.object({
+export const CreateUserBodySchema = CreateUserBodySchemaBase.extend({
   username: z
     .string({
       message: '用户名必须是字符串',
@@ -125,14 +89,9 @@ export const CreateUserBodySchema = z.object({
     .optional(),
   status: UserStatusSchema.optional(),
 })
-
 export type CreateUserBody = z.infer<typeof CreateUserBodySchema>
 
-/**
- * 更新用户请求体 Schema
- * 说明：所有字段可选
- */
-export const UpdateUserBodySchema = z.object({
+export const UpdateUserBodySchema = UpdateUserBodySchemaBase.extend({
   username: z
     .string({
       message: '用户名必须是字符串',
@@ -177,5 +136,4 @@ export const UpdateUserBodySchema = z.object({
     .optional(),
   status: UserStatusSchema.optional(),
 })
-
 export type UpdateUserBody = z.infer<typeof UpdateUserBodySchema>

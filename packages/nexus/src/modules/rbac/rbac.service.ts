@@ -1,12 +1,15 @@
 import { PermissionService } from '@/core/permissions/permission.service'
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/core/plugins'
 import { PermissionRepository, RolePermissionRepository, RoleRepository, UserRoleRepository } from './repositories'
+import type { RoleListQuery, PermissionListQuery } from './rbac.model'
 
 export class RbacService {
   // ===== 角色管理 =====
 
-  static async listRoles(query: { page: number; pageSize: number; keyword?: string; includeSystem?: boolean }) {
-    const { page, pageSize, keyword, includeSystem } = query
+  static async listRoles(query: RoleListQuery) {
+    const page = query.page ?? 1
+    const pageSize = query.pageSize ?? 20
+    const { keyword, includeSystem } = query
     const skip = (page - 1) * pageSize
 
     const where: any = {}
@@ -168,8 +171,10 @@ export class RbacService {
 
   // ===== 权限管理 =====
 
-  static async listPermissions(query: { page: number; pageSize: number; resource?: string }) {
-    const { page, pageSize, resource } = query
+  static async listPermissions(query: PermissionListQuery) {
+    const page = query.page ?? 1
+    const pageSize = query.pageSize ?? 20
+    const { resource } = query
     const skip = (page - 1) * pageSize
 
     const where: any = {}
