@@ -24,6 +24,8 @@ import type {
   AssignRoleToUserBody,
   UserRolesResponse,
   UserPermissionsResponse,
+  RoleChildrenResponse,
+  UpdateUserRoleBody,
 } from '../../types/rbac'
 
 /**
@@ -37,16 +39,19 @@ type Res<T> = Promise<XDDResponse<ApiResult<T>>>
 interface RoleIdAccessor {
   get(): Res<RoleDetailResponse>
   patch(body: UpdateRoleBody): Res<RoleResponse>
-  delete(): Res<null>
+  delete(): Res<{ success: boolean }>
   permissions: {
     get(): Res<RolePermissionsResponse>
     post(body: AssignPermissionsToRoleBody): Res<RolePermissionsResponse>
-    put(body: ReplaceRolePermissionsBody): Res<RolePermissionsResponse>
+    patch(body: ReplaceRolePermissionsBody): Res<RolePermissionsResponse>
     delete(): Res<RolePermissionsResponse>
   }
   parent: {
     get(): Res<RoleResponse>
     patch(body: SetRoleParentBody): Res<RoleResponse>
+  }
+  children: {
+    get(): Res<RoleChildrenResponse>
   }
 }
 
@@ -58,7 +63,7 @@ interface RolesAccessors {
   (id: string): RoleIdAccessor
   get(id: string): Res<RoleDetailResponse>
   update(id: string, body: UpdateRoleBody): Res<RoleResponse>
-  delete(id: string): Res<null>
+  delete(id: string): Res<{ success: boolean }>
 }
 
 // Permissions 子模块
@@ -81,6 +86,7 @@ interface PermissionsAccessors {
 interface UserRolesIdAccessor {
   get(): Res<UserRolesResponse>
   post(body: AssignRoleToUserBody): Res<UserRolesResponse>
+  patch(body: UpdateUserRoleBody): Res<UserRolesResponse>
   delete(roleId: string): Res<null>
 }
 
@@ -99,6 +105,7 @@ interface RbacUsersAccessors {
   get(userId: string): Res<UserRolesResponse>
   assign(userId: string, body: AssignRoleToUserBody): Res<UserRolesResponse>
   remove(userId: string, roleId: string): Res<null>
+  update(userId: string, roleId: string, body: UpdateUserRoleBody): Res<UserRolesResponse>
   me: UserMeAccessor
 }
 
@@ -131,7 +138,7 @@ export function createRbacAccessor(request: RequestFn): RbacAccessors {
   const rolesUpdate = (id: string, body: UpdateRoleBody) =>
     request<ApiResult<RoleResponse>>('PATCH', `rbac/roles/${id}`, { body: JSON.stringify(body) })
 
-  const rolesDelete = (id: string) => request<ApiResult<null>>('DELETE', `rbac/roles/${id}`)
+  const rolesDelete = (id: string) => request<ApiResult<{ success: boolean }>>('DELETE', `rbac/roles/${id}`)
 
   const rolesAccessor: RolesAccessors = Object.assign(
     (id: string) => ({
@@ -144,8 +151,8 @@ export function createRbacAccessor(request: RequestFn): RbacAccessors {
           request<ApiResult<RolePermissionsResponse>>('POST', `rbac/roles/${id}/permissions`, {
             body: JSON.stringify(body),
           }),
-        put: (body: ReplaceRolePermissionsBody) =>
-          request<ApiResult<RolePermissionsResponse>>('PUT', `rbac/roles/${id}/permissions`, {
+        patch: (body: ReplaceRolePermissionsBody) =>
+          request<ApiResult<RolePermissionsResponse>>('PATCH', `rbac/roles/${id}/permissions`, {
             body: JSON.stringify(body),
           }),
         delete: () => request<ApiResult<RolePermissionsResponse>>('DELETE', `rbac/roles/${id}/permissions`),
@@ -156,6 +163,9 @@ export function createRbacAccessor(request: RequestFn): RbacAccessors {
           request<ApiResult<RoleResponse>>('PATCH', `rbac/roles/${id}/parent`, {
             body: JSON.stringify(body),
           }),
+      },
+      children: {
+        get: () => request<ApiResult<RoleChildrenResponse>>('GET', `rbac/roles/${id}/children`),
       },
     }),
     {
@@ -206,6 +216,11 @@ export function createRbacAccessor(request: RequestFn): RbacAccessors {
   const removeUserRole = (userId: string, roleId: string) =>
     request<ApiResult<null>>('DELETE', `rbac/users/${userId}/roles/${roleId}`)
 
+  const updateUserRole = (userId: string, roleId: string, body: UpdateUserRoleBody) =>
+    request<ApiResult<UserRolesResponse>>('PATCH', `rbac/users/${userId}/roles/${roleId}`, {
+      body: JSON.stringify(body),
+    })
+
   const getUserPermissions = (userId: string) =>
     request<ApiResult<UserPermissionsResponse>>('GET', `rbac/users/${userId}/permissions`)
 
@@ -213,12 +228,14 @@ export function createRbacAccessor(request: RequestFn): RbacAccessors {
     (userId: string) => ({
       get: () => getUserRoles(userId),
       post: (body: AssignRoleToUserBody) => assignUserRole(userId, body),
+      patch: (body: UpdateUserRoleBody) => updateUserRole(userId, '', body),
       delete: (roleId: string) => removeUserRole(userId, roleId),
     }),
     {
       get: getUserRoles,
       assign: assignUserRole,
       remove: removeUserRole,
+      update: updateUserRole,
       me: {
         permissions: { get: () => getUserPermissions('me') },
         roles: { get: () => getUserRoles('me') },

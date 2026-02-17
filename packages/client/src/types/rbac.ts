@@ -235,3 +235,28 @@ export interface UserPermissionsData {
  * 用户权限查询响应
  */
 export type UserPermissionsResponse = UserPermissionsData
+
+/**
+ * 角色子角色详情
+ */
+export interface RoleChildrenItem {
+  id: string
+  name: string
+  displayName: string | null
+  description: string | null
+  parentId: string | null
+  level: number
+  isSystem: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+/**
+ * 角色子角色列表响应
+ */
+export type RoleChildrenResponse = RoleChildrenItem[]
+
+/**
+ * 更新用户角色请求体
+ */
+export interface UpdateUserRoleBody {}
