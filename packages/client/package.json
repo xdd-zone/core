@@ -1,7 +1,7 @@
 {
   "name": "@xdd-zone/client",
   "type": "module",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": false,
   "description": "XDD Zone HTTP Client SDK",
   "author": "xidongdong-153",
@@ -38,11 +38,12 @@
   },
   "peerDependencies": {},
   "dependencies": {
-    "@xdd-zone/schema": "workspace:*"
+    "@xdd-zone/schema": "workspace:*",
+    "zod": "^4.3.0"
   },
   "devDependencies": {
     "@xdd-zone/eslint-config": "workspace:*",
     "tsup": "^8.3.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.3.0"
   }
 }
