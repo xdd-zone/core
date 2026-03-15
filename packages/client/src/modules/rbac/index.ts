@@ -100,7 +100,7 @@ interface UserRolesIdAccessor {
   get(): Res<UserRoles>
   post(body: AssignRoleToUserBody): Res<UserRoleAssignment>
   delete(roleId: string): Res<void>
-  patch(roleId: string): Res<void>
+  refresh(roleId: string): Res<void>
 }
 
 interface UserMeAccessor {
@@ -249,7 +249,7 @@ export function createRbacAccessor(request: RequestFn): RbacAccessors {
       get: () => getUserRoles(userId),
       post: (body: AssignRoleToUserBody) => assignUserRole(userId, body),
       delete: (roleId: string) => removeUserRole(userId, roleId),
-      patch: (roleId: string) => refreshUserRole(userId, roleId),
+      refresh: (roleId: string) => refreshUserRole(userId, roleId),
     }),
     {
       get: getUserRoles,

@@ -84,3 +84,4 @@
 - [development.md](/Users/wuwanzhu/Code/xdd/core/docs/development.md)：开发流程
 - [testing.md](/Users/wuwanzhu/Code/xdd/core/docs/testing.md)：测试与回归
 - [faq.md](/Users/wuwanzhu/Code/xdd/core/docs/faq.md)：常见问题
+- [skills.md](/Users/wuwanzhu/Code/xdd/core/docs/skills.md)：项目级 Skill 与代码生成约定

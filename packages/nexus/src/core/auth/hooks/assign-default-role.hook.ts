@@ -4,6 +4,11 @@ import { RbacService } from '@/modules/rbac/rbac.service'
 
 const logger = createModuleLogger('auth:assign-default-role-hook')
 
+interface CreatedUser {
+  id: string
+  email?: string | null
+}
+
 /**
  * BetterAuth 数据库钩子，自动为用户分配默认角色
  *
@@ -15,7 +20,7 @@ const logger = createModuleLogger('auth:assign-default-role-hook')
  * @param user - 刚创建的用户对象
  * @param _context - BetterAuth 上下文（此钩子中未使用）
  */
-export async function assignDefaultRoleToUser(user: Record<string, any>, _context: any) {
+export async function assignDefaultRoleToUser(user: CreatedUser, _context: unknown) {
   try {
     // 检查是否为第一个用户（创建后的计数应该为 1）
     const userCount = await prisma.user.count()
@@ -32,7 +37,7 @@ export async function assignDefaultRoleToUser(user: Record<string, any>, _contex
       }
 
       // 分配具有完全访问权限的 superAdmin 角色
-      await RbacService.assignRoleToUser(user.id as string, superAdminRole.id, {})
+      await RbacService.assignRoleToUser(user.id as string, superAdminRole.id)
 
       logger.info({ userId: user.id, email: user.email }, '第一个用户已分配 superAdmin 角色')
       return
@@ -49,7 +54,7 @@ export async function assignDefaultRoleToUser(user: Record<string, any>, _contex
     }
 
     // 分配普通用户角色
-    await RbacService.assignRoleToUser(user.id as string, userRole.id, {})
+    await RbacService.assignRoleToUser(user.id as string, userRole.id)
 
     logger.info({ userId: user.id, email: user.email }, '用户已分配默认 user 角色')
   } catch (error) {

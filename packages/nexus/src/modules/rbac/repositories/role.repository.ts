@@ -1,4 +1,5 @@
 import { prisma } from '@/infra/database/client'
+import type { Prisma } from '@/infra/database/prisma/generated'
 
 /**
  * 角色数据访问层
@@ -28,7 +29,7 @@ export class RoleRepository {
    * )
    * ```
    */
-  static async findMany(where: any, skip: number, take: number) {
+  static async findMany(where: Prisma.RoleWhereInput, skip: number, take: number) {
     const [roles, total] = await Promise.all([
       prisma.role.findMany({
         where,
@@ -132,8 +133,8 @@ export class RoleRepository {
    * })
    * ```
    */
-  static async create(data: any) {
-    // Calculate level based on parent
+  static async create(data: Prisma.RoleUncheckedCreateInput) {
+    // 根据父角色自动计算层级
     let level = 0
     if (data.parentId) {
       const parent = await prisma.role.findUnique({
@@ -174,11 +175,11 @@ export class RoleRepository {
    * })
    * ```
    */
-  static async update(id: string, data: any) {
-    // Recalculate level if parent changed
+  static async update(id: string, data: Prisma.RoleUncheckedUpdateInput) {
+    // 修改父角色时重新计算层级
     if (data.parentId !== undefined) {
       let level = 0
-      if (data.parentId) {
+      if (typeof data.parentId === 'string' && data.parentId) {
         const parent = await prisma.role.findUnique({
           where: { id: data.parentId },
         })

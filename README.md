@@ -130,6 +130,7 @@ bun run test:db reset
 - [架构说明](./docs/architecture.md)
 - [API 指南](./docs/api.md)
 - [开发指南](./docs/development.md)
+- [项目 Skill](./docs/skills.md)
 
 ## 包文档
 

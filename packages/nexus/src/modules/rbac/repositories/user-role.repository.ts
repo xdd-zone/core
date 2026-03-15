@@ -79,28 +79,6 @@ export class UserRoleRepository {
   }
 
   /**
-   * 更新用户角色
-   *
-   * @param userId - 用户 ID
-   * @param roleId - 角色 ID
-   * @returns Prisma BatchPayload 包含更新的记录数
-   *
-   * @example
-   * ```ts
-   * const result = await UserRoleRepository.updateUserRole('user_id', 'role_id', {})
-   * ```
-   */
-  static async updateUserRole(userId: string, roleId: string, _data: Record<string, never>) {
-    return await prisma.userRole.updateMany({
-      where: {
-        userId,
-        roleId,
-      },
-      data: {},
-    })
-  }
-
-  /**
    * 查询用户及其所有角色和权限
    *
    * 说明：

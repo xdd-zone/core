@@ -11,11 +11,7 @@
  * xidongdong@gmail.com | xidongdong123..
  */
 
-import {
-  ForbiddenError,
-  UnauthorizedError,
-  createClient,
-} from './src/index'
+import { ForbiddenError, UnauthorizedError, createClient } from './src/index'
 import { ApiError } from './src/error/api-error'
 
 const BASE_URL = 'http://localhost:7788/api'
@@ -108,6 +104,7 @@ async function runTests() {
   let tempClient: ReturnType<typeof createClient> | null = null
   let tempUserId: string | null = null
   let adminUserId: string | null = null
+  let tempUserRoleId: string | null = null
 
   console.log('=== Nexus HTTP Client 集成测试 ===')
   console.log(`管理员账号: ${ADMIN_USER.email}`)
@@ -121,21 +118,33 @@ async function runTests() {
       throw new Error('管理员登录失败，无法继续执行集成测试')
     }
 
-    const adminMe = await expectSuccess(context, '管理员获取当前用户成功', () => adminClient!.auth.me.get(), (me) => {
-      if (!me.user?.id) {
-        throw new Error('管理员信息未返回 user.id')
-      }
-    })
+    const adminMe = await expectSuccess(
+      context,
+      '管理员获取当前用户成功',
+      () => adminClient!.auth.me.get(),
+      (me) => {
+        if (!me.user?.id) {
+          throw new Error('管理员信息未返回 user.id')
+        }
+      },
+    )
 
     adminUserId = adminMe?.user?.id ?? null
 
-    await expectSuccess(context, '管理员获取用户列表成功', () => adminClient!.user.list.get({ page: 1, pageSize: 10 }), (users) => {
-      if (!Array.isArray(users.items)) {
-        throw new Error('用户列表缺少 items')
-      }
-    })
+    await expectSuccess(
+      context,
+      '管理员获取用户列表成功',
+      () => adminClient!.user.list.get({ page: 1, pageSize: 10 }),
+      (users) => {
+        if (!Array.isArray(users.items)) {
+          throw new Error('用户列表缺少 items')
+        }
+      },
+    )
 
-    await expectSuccess(context, '管理员获取角色列表成功', () => adminClient!.rbac.roles.list.get({ page: 1, pageSize: 10 }))
+    await expectSuccess(context, '管理员获取角色列表成功', () =>
+      adminClient!.rbac.roles.list.get({ page: 1, pageSize: 10 }),
+    )
 
     await expectSuccess(
       context,
@@ -165,11 +174,16 @@ async function runTests() {
 
     logStep('2. 注册临时普通用户')
     tempClient = createClient({ baseURL: BASE_URL })
-    const signUpResult = await expectSuccess(context, '临时用户注册成功', () => tempClient!.auth.signUp.post(tempUser), (result) => {
-      if (!result.user?.id) {
-        throw new Error('注册结果未返回 user.id')
-      }
-    })
+    const signUpResult = await expectSuccess(
+      context,
+      '临时用户注册成功',
+      () => tempClient!.auth.signUp.post(tempUser),
+      (result) => {
+        if (!result.user?.id) {
+          throw new Error('注册结果未返回 user.id')
+        }
+      },
+    )
 
     tempUserId = signUpResult?.user?.id ?? null
 
@@ -178,29 +192,49 @@ async function runTests() {
     }
 
     logStep('3. 普通用户 own / me 成功路径')
-    await expectSuccess(context, '普通用户获取 session 成功', () => tempClient!.auth.getSession.get(), (session) => {
-      if (!session.isAuthenticated) {
-        throw new Error('普通用户 session 未认证')
-      }
-    })
+    await expectSuccess(
+      context,
+      '普通用户获取 session 成功',
+      () => tempClient!.auth.getSession.get(),
+      (session) => {
+        if (!session.isAuthenticated) {
+          throw new Error('普通用户 session 未认证')
+        }
+      },
+    )
 
-    await expectSuccess(context, '普通用户获取 /auth/me 成功', () => tempClient!.auth.me.get(), (me) => {
-      if (me.user?.id !== tempUserId) {
-        throw new Error('普通用户 /auth/me 返回的 user.id 不匹配')
-      }
-    })
+    await expectSuccess(
+      context,
+      '普通用户获取 /auth/me 成功',
+      () => tempClient!.auth.me.get(),
+      (me) => {
+        if (me.user?.id !== tempUserId) {
+          throw new Error('普通用户 /auth/me 返回的 user.id 不匹配')
+        }
+      },
+    )
 
-    await expectSuccess(context, '普通用户获取自己的用户详情成功', () => tempClient!.user.get(tempUserId!), (user) => {
-      if (user.id !== tempUserId) {
-        throw new Error('普通用户 user.get(self) 返回的 id 不匹配')
-      }
-    })
+    await expectSuccess(
+      context,
+      '普通用户获取自己的用户详情成功',
+      () => tempClient!.user.get(tempUserId!),
+      (user) => {
+        if (user.id !== tempUserId) {
+          throw new Error('普通用户 user.get(self) 返回的 id 不匹配')
+        }
+      },
+    )
 
-    await expectSuccess(context, '普通用户获取自己的角色成功', () => tempClient!.rbac.users.me.roles.get(), (result) => {
-      if (!Array.isArray(result.roles)) {
-        throw new Error('当前用户角色结果缺少 roles')
-      }
-    })
+    await expectSuccess(
+      context,
+      '普通用户获取自己的角色成功',
+      () => tempClient!.rbac.users.me.roles.get(),
+      (result) => {
+        if (!Array.isArray(result.roles)) {
+          throw new Error('当前用户角色结果缺少 roles')
+        }
+      },
+    )
 
     await expectSuccess(
       context,
@@ -213,11 +247,18 @@ async function runTests() {
       },
     )
 
-    await expectSuccess(context, '普通用户获取自己的角色列表成功', () => tempClient!.rbac.users.get(tempUserId!), (result) => {
-      if (!Array.isArray(result)) {
-        throw new Error('用户角色列表返回值不是数组')
-      }
-    })
+    await expectSuccess(
+      context,
+      '普通用户获取自己的角色列表成功',
+      () => tempClient!.rbac.users.get(tempUserId!),
+      (result) => {
+        if (!Array.isArray(result)) {
+          throw new Error('用户角色列表返回值不是数组')
+        }
+
+        tempUserRoleId = result[0]?.roleId ?? null
+      },
+    )
 
     await expectSuccess(
       context,
@@ -229,6 +270,12 @@ async function runTests() {
         }
       },
     )
+
+    if (tempUserRoleId) {
+      await expectSuccess(context, '管理员刷新临时用户角色缓存成功', () =>
+        adminClient!.rbac.users.refresh(tempUserId!, tempUserRoleId!),
+      )
+    }
 
     logStep('4. 普通用户权限拒绝路径')
     await expectError(context, '普通用户访问 /user 列表返回 403', ForbiddenError, async () => {

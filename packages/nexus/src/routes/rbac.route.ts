@@ -192,7 +192,7 @@ export const rbacRoutes = new Elysia({
   })
   .post(
     '/users/:userId/roles',
-    async ({ body, params }) => await RbacService.assignRoleToUser(params.userId, body.roleId, {}),
+    async ({ body, params }) => await RbacService.assignRoleToUser(params.userId, body.roleId),
     {
       beforeHandle: [permit.permission(Permissions.USER_ROLE.CREATE_ALL)],
       params: Schemas.RBACUserIdParamsSchema,
@@ -226,15 +226,15 @@ export const rbacRoutes = new Elysia({
   .patch(
     '/users/:userId/roles/:roleId',
     async ({ params, set }) => {
-      await RbacService.updateUserRole(params.userId, params.roleId, {})
+      await RbacService.refreshUserRoleCache(params.userId, params.roleId)
       set.status = 204
     },
     {
       beforeHandle: [permit.permission(Permissions.USER_ROLE.UPDATE_ALL)],
       params: Schemas.UserRoleIdParamsSchema,
       detail: apiDetail({
-        summary: '更新用户角色',
-        description: '刷新用户角色缓存',
+        summary: '刷新用户角色缓存',
+        description: '校验指定用户角色关联存在后刷新该用户的权限缓存',
         successStatus: 204,
         responseDescription: '用户角色缓存已刷新',
         errors: [401, 403, 404],

@@ -177,6 +177,7 @@ await client.rbac.roles('role-id').get()
 await client.rbac.permissions.list.get({ page: 1 })
 await client.rbac.users.me.roles.get()
 await client.rbac.users.me.permissions.get()
+await client.rbac.users.refresh('user-id', 'role-id')
 ```
 
 ## 集成脚本

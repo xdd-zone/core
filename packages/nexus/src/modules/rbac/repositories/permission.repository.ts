@@ -1,4 +1,5 @@
 import { prisma } from '@/infra/database/client'
+import type { Permission, Prisma } from '@/infra/database/prisma/generated'
 
 /**
  * 权限数据访问层
@@ -28,7 +29,7 @@ export class PermissionRepository {
    * )
    * ```
    */
-  static async findMany(where: any, skip: number, take: number) {
+  static async findMany(where: Prisma.PermissionWhereInput, skip: number, take: number) {
     const [permissions, total] = await Promise.all([
       prisma.permission.findMany({
         where,
@@ -100,7 +101,7 @@ export class PermissionRepository {
    * })
    * ```
    */
-  static async create(data: any) {
+  static async create(data: Prisma.PermissionCreateInput) {
     return await prisma.permission.create({
       data,
     })
@@ -121,7 +122,7 @@ export class PermissionRepository {
    * })
    * ```
    */
-  static async update(id: string, data: any) {
+  static async update(id: string, data: Prisma.PermissionUpdateInput) {
     return await prisma.permission.update({
       where: { id },
       data,
@@ -179,7 +180,7 @@ export class PermissionRepository {
       orderBy: [{ resource: 'asc' }, { action: 'asc' }],
     })
 
-    // Group by resource
+    // 按资源进行分组
     const grouped = permissions.reduce(
       (acc, perm) => {
         if (!acc[perm.resource]) {
@@ -188,10 +189,10 @@ export class PermissionRepository {
         acc[perm.resource].push(perm)
         return acc
       },
-      {} as Record<string, any[]>,
+      {} as Record<string, Permission[]>,
     )
 
-    // Convert to array format
+    // 转换为前端权限树所需结构
     return Object.entries(grouped).map(([resource, permissions]) => ({
       resource,
       permissions: permissions.map((p) => ({

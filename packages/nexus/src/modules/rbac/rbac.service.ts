@@ -1,3 +1,4 @@
+import type { Prisma } from '@/infra/database/prisma/generated'
 import { PermissionService } from '@/core/permissions/permission.service'
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/core/plugins'
 import { createPaginatedResponse } from '@/infra/database'
@@ -13,7 +14,7 @@ export class RbacService {
     const { keyword, includeSystem } = query
     const skip = (page - 1) * pageSize
 
-    const where: any = {}
+    const where: Prisma.RoleWhereInput = {}
 
     if (keyword) {
       where.OR = [
@@ -38,7 +39,7 @@ export class RbacService {
       throw new NotFoundError('角色不存在')
     }
 
-    // Extract permission strings
+    // 转换为权限字符串列表
     const permissions = role.permissions.map((rp) => {
       const perm = rp.permission
       return perm.scope ? `${perm.resource}:${perm.action}:${perm.scope}` : `${perm.resource}:${perm.action}`
@@ -51,7 +52,7 @@ export class RbacService {
   }
 
   static async createRole(data: { name: string; displayName?: string; description?: string; parentId?: string }) {
-    // Check if name already exists
+    // 检查角色名是否已存在
     const existing = await RoleRepository.findByName(data.name)
     if (existing) {
       throw new BadRequestError('角色名称已存在')
@@ -79,12 +80,12 @@ export class RbacService {
       throw new NotFoundError('角色不存在')
     }
 
-    // System role protection
+    // 系统角色不允许修改层级
     if (role.isSystem && data.parentId !== undefined && data.parentId !== role.parentId) {
       throw new ForbiddenError('系统角色不能修改层级')
     }
 
-    // Validate parent hierarchy if changing parent
+    // 修改父角色时校验层级关系
     if (data.parentId !== undefined) {
       if (data.parentId === id) {
         throw new BadRequestError('不能将角色设置为自己的父角色')
@@ -110,7 +111,7 @@ export class RbacService {
       throw new NotFoundError('角色不存在')
     }
 
-    // System role protection
+    // 系统角色不允许删除
     if (role.isSystem) {
       throw new ForbiddenError('系统角色不能删除')
     }
@@ -128,7 +129,7 @@ export class RbacService {
       throw new NotFoundError('角色不存在')
     }
 
-    // System role protection
+    // 系统角色不允许修改层级
     if (role.isSystem) {
       throw new ForbiddenError('系统角色不能修改层级')
     }
@@ -139,7 +140,7 @@ export class RbacService {
         throw new BadRequestError('无效的角色层级：检测到循环')
       }
 
-      // Verify parent exists
+      // 校验父角色是否存在
       const parent = await RoleRepository.findById(parentId)
       if (!parent) {
         throw new NotFoundError('父角色不存在')
@@ -170,7 +171,7 @@ export class RbacService {
     const { resource } = query
     const skip = (page - 1) * pageSize
 
-    const where: any = {}
+    const where: Prisma.PermissionWhereInput = {}
     if (resource) {
       where.resource = resource
     }
@@ -230,7 +231,7 @@ export class RbacService {
 
     await RolePermissionRepository.batchAssign(roleId, permissionIds)
 
-    // Clear cache for all users with this role
+    // 角色权限变更后清理关联用户缓存
     const users = await UserRoleRepository.findUsersByRole(roleId)
     users.forEach((user) => PermissionService.clearCache(user.id))
 
@@ -245,7 +246,7 @@ export class RbacService {
 
     await RolePermissionRepository.removePermission(roleId, permissionId)
 
-    // Clear cache for all users with this role
+    // 角色权限变更后清理关联用户缓存
     const users = await UserRoleRepository.findUsersByRole(roleId)
     users.forEach((user) => PermissionService.clearCache(user.id))
   }
@@ -258,7 +259,7 @@ export class RbacService {
 
     await RolePermissionRepository.replacePermissions(roleId, permissionIds)
 
-    // Clear cache for all users with this role
+    // 角色权限变更后清理关联用户缓存
     const users = await UserRoleRepository.findUsersByRole(roleId)
     users.forEach((user) => PermissionService.clearCache(user.id))
 
@@ -279,7 +280,7 @@ export class RbacService {
     }))
   }
 
-  static async assignRoleToUser(userId: string, roleId: string, _options: Record<string, never>) {
+  static async assignRoleToUser(userId: string, roleId: string) {
     const role = await RoleRepository.findById(roleId)
     if (!role) {
       throw new NotFoundError('角色不存在')
@@ -287,7 +288,7 @@ export class RbacService {
 
     const userRole = await UserRoleRepository.assignRole(userId, roleId)
 
-    // Clear cache immediately
+    // 角色分配后立即清理用户权限缓存
     PermissionService.clearCache(userId)
 
     return userRole
@@ -296,14 +297,29 @@ export class RbacService {
   static async removeRoleFromUser(userId: string, roleId: string) {
     await UserRoleRepository.removeRole(userId, roleId)
 
-    // Clear cache immediately
+    // 角色移除后立即清理用户权限缓存
     PermissionService.clearCache(userId)
   }
 
-  static async updateUserRole(userId: string, roleId: string, _options: Record<string, never>) {
-    await UserRoleRepository.updateUserRole(userId, roleId, {})
+  /**
+   * 刷新指定用户角色关联的权限缓存
+   *
+   * 说明：
+   * - 该接口不修改用户角色关系
+   * - 仅校验指定角色关联存在后清理权限缓存
+   *
+   * @param userId 用户 ID
+   * @param roleId 角色 ID
+   */
+  static async refreshUserRoleCache(userId: string, roleId: string) {
+    const userRoles = await UserRoleRepository.findByUser(userId)
+    const hasRole = userRoles.some((userRole) => userRole.roleId === roleId)
 
-    // Clear cache immediately
+    if (!hasRole) {
+      throw new NotFoundError('用户角色关联不存在')
+    }
+
+    // 角色关联存在时清理用户权限缓存
     PermissionService.clearCache(userId)
   }
 
@@ -369,11 +385,11 @@ export class RbacService {
 
     while (currentId) {
       if (currentId === childId) {
-        return true // Cycle detected
+        return true
       }
 
       if (visited.has(currentId)) {
-        return true // Cycle detected
+        return true
       }
       visited.add(currentId)
 

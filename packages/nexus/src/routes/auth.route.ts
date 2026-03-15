@@ -1,11 +1,18 @@
+import type { BetterAuthOptions } from 'better-auth'
+import type { Session as PrismaSession } from '@/infra/database/prisma/generated'
+
 import { Elysia } from 'elysia'
+import { getCookieCache, getCookies } from 'better-auth/cookies'
 import { BadRequestError } from '@/core/plugins'
 import { auth } from '@/core/auth'
+import { prisma } from '@/infra'
 import { authPlugin, protectedPlugin } from '@/plugins'
 import { apiDetail } from '@/shared'
+import { AuthService } from '@/modules/auth/auth.service'
 import { AuthSessionSchema, SessionSchema, SignInEmailBodySchema, SignUpEmailBodySchema } from '@/modules/auth'
 
 type MutableHeaders = Headers | Record<string, string | number | string[]>
+const betterAuthOptions = auth.options as BetterAuthOptions
 
 /**
  * 将 Better Auth 响应转译成项目业务响应，并透传 Set-Cookie。
@@ -41,32 +48,112 @@ async function wrapBetterAuthResponse<T>(request: Request, body?: unknown, heade
   return data as T
 }
 
-async function forwardBetterAuth(request: Request, headers?: MutableHeaders) {
-  const response = await auth.handler(request)
+/**
+ * 向响应头追加 Set-Cookie，兼容 Headers 与普通对象两种写法。
+ */
+function appendSetCookie(headers: MutableHeaders | undefined, value: string) {
+  if (!headers) {
+    return
+  }
 
-  if (headers) {
-    const cookie = response.headers.get('set-cookie')
-    if (cookie) {
-      if (headers instanceof Headers) {
-        headers.set('Set-Cookie', cookie)
-      } else {
-        headers['Set-Cookie'] = cookie
-      }
+  if (headers instanceof Headers) {
+    headers.append('Set-Cookie', value)
+    return
+  }
+
+  const currentValue = headers['Set-Cookie']
+
+  if (Array.isArray(currentValue)) {
+    headers['Set-Cookie'] = [...currentValue, value]
+    return
+  }
+
+  if (typeof currentValue === 'string') {
+    headers['Set-Cookie'] = [currentValue, value]
+    return
+  }
+
+  headers['Set-Cookie'] = value
+}
+
+/**
+ * 清理 Better Auth 相关 cookie，确保登出接口对已失效会话保持幂等。
+ */
+function clearBetterAuthCookies(headers?: MutableHeaders) {
+  const cookies = getCookies(betterAuthOptions)
+
+  appendSetCookie(headers, `${cookies.sessionToken.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
+  appendSetCookie(headers, `${cookies.sessionData.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
+  appendSetCookie(headers, `${cookies.dontRememberToken.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
+}
+
+interface CachedSessionPayload {
+  session: PrismaSession & Record<string, unknown>
+  user: {
+    id: string
+    createdAt: Date
+    updatedAt: Date
+    email: string
+    emailVerified: boolean
+    name: string
+    image?: string | null
+  } & Record<string, unknown>
+  updatedAt: number
+  version?: string
+}
+
+/**
+ * 从请求中解析当前会话标识。
+ *
+ * 优先使用服务端实时会话，其次回退到 Better Auth 的 session_data cookie，
+ * 以覆盖数据库记录已被级联删除但 cookie 尚未清理的场景。
+ */
+async function resolveSessionIdentifiers(request: Request) {
+  const currentSession = await AuthService.getSession(request.headers)
+  if (currentSession.session) {
+    return {
+      sessionId: currentSession.session.id,
+      sessionToken: currentSession.session.token,
     }
   }
 
-  if (!response.ok) {
-    let message = '操作失败'
-    try {
-      const data = (await response.json()) as { message?: string; code?: string }
-      if (data.code) {
-        message = data.message || message
-      }
-    } catch {
-      // ignore malformed error payload
-    }
+  const cachedSession = await getCookieCache<CachedSessionPayload>(request.headers, {
+    cookiePrefix: betterAuthOptions.advanced?.cookiePrefix || 'better-auth',
+    isSecure: getCookies(betterAuthOptions).sessionData.attributes.secure,
+    secret: betterAuthOptions.secret,
+    strategy: betterAuthOptions.session?.cookieCache?.strategy,
+    version: betterAuthOptions.session?.cookieCache?.version,
+  })
 
-    throw new BadRequestError(message)
+  return {
+    sessionId: cachedSession?.session?.id ?? null,
+    sessionToken: cachedSession?.session?.token ?? null,
+  }
+}
+
+/**
+ * 幂等删除会话。
+ *
+ * 当会话已被删除时，deleteMany 会返回 0，不会抛出 Prisma P2025。
+ */
+async function revokeSession(request: Request) {
+  const { sessionId, sessionToken } = await resolveSessionIdentifiers(request)
+
+  if (sessionId) {
+    await prisma.session.deleteMany({
+      where: {
+        id: sessionId,
+      },
+    })
+    return
+  }
+
+  if (sessionToken) {
+    await prisma.session.deleteMany({
+      where: {
+        token: sessionToken,
+      },
+    })
   }
 }
 
@@ -99,7 +186,9 @@ export const authRoutes = new Elysia({
   .post(
     '/sign-out',
     async ({ request, set }) => {
-      await forwardBetterAuth(request, set.headers)
+      await revokeSession(request)
+      clearBetterAuthCookies(set.headers)
+
       set.status = 204
     },
     {

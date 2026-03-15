@@ -1,0 +1,4 @@
+interface:
+  display_name: "XDD Zone Codegen"
+  short_description: "生成符合 XDD Zone Core 风格的标准代码"
+  default_prompt: "按当前 XDD Zone Core 项目的 Elysia-first 风格生成或修改代码，并保持 schema、nexus、client 与文档一致。"

@@ -25,6 +25,20 @@ bun run seed
 - `packages/schema/src/domains/*`：领域对象
 - `packages/client/src/modules/*`：SDK 访问器
 
+## AI 生成代码建议
+
+如果通过 AI 在当前仓库生成或修改代码，优先使用 `xdd-zone-codegen` 项目 Skill。
+
+它会约束生成顺序与风格：
+
+- 先补 `packages/schema`
+- 再实现 `packages/nexus`
+- 公开 API 再决定是否补 `packages/client`
+- route 保持轻量，service / repository 保持职责清晰
+- 禁止用 `any` 占位，类型优先从 schema 与 Prisma 推导
+
+详细说明见 [skills.md](/Users/wuwanzhu/Code/xdd/core/docs/skills.md)。
+
 ## 新增 route 的推荐流程
 
 ### 1. 先定义 schema
