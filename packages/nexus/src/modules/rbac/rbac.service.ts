@@ -1,5 +1,6 @@
 import { PermissionService } from '@/core/permissions/permission.service'
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/core/plugins'
+import { createPaginatedResponse } from '@/infra/database'
 import { PermissionRepository, RolePermissionRepository, RoleRepository, UserRoleRepository } from './repositories'
 import type { RoleListQuery, PermissionListQuery } from './rbac.model'
 
@@ -27,13 +28,7 @@ export class RbacService {
 
     const { roles, total } = await RoleRepository.findMany(where, skip, pageSize)
 
-    return {
-      items: roles,
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
-    }
+    return createPaginatedResponse(roles, total, page, pageSize)
   }
 
   static async getRoleDetail(id: string) {
@@ -121,8 +116,6 @@ export class RbacService {
     }
 
     await RoleRepository.delete(id)
-
-    return { success: true }
   }
 
   static async setRoleParent(roleId: string, parentId: string | null) {
@@ -184,13 +177,7 @@ export class RbacService {
 
     const { permissions, total } = await PermissionRepository.findMany(where, skip, pageSize)
 
-    return {
-      items: permissions,
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
-    }
+    return createPaginatedResponse(permissions, total, page, pageSize)
   }
 
   static async getPermissionDetail(id: string) {
@@ -261,8 +248,6 @@ export class RbacService {
     // Clear cache for all users with this role
     const users = await UserRoleRepository.findUsersByRole(roleId)
     users.forEach((user) => PermissionService.clearCache(user.id))
-
-    return { success: true }
   }
 
   static async replaceRolePermissions(roleId: string, permissionIds: string[]) {
@@ -313,8 +298,6 @@ export class RbacService {
 
     // Clear cache immediately
     PermissionService.clearCache(userId)
-
-    return { success: true }
   }
 
   static async updateUserRole(userId: string, roleId: string, _options: Record<string, never>) {
@@ -322,8 +305,6 @@ export class RbacService {
 
     // Clear cache immediately
     PermissionService.clearCache(userId)
-
-    return { success: true }
   }
 
   // ===== 用户权限查询 =====

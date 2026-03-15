@@ -1,75 +1,72 @@
 /**
  * User 模块访问器
- *
- * 用户相关 API 操作的访问器实现
  */
 
+import {
+  CreateUserBodySchema,
+  UpdateUserBodySchema,
+  UserListQuerySchema,
+  UserListSchema,
+  UserSchema,
+} from '@xdd-zone/schema/contracts/user'
 import type { RequestFn } from '../../core/request'
-import type { XDDResponse, ApiResult } from '../../core/types'
 import type {
-  UserListResponse,
+  UserList,
   UserListQuery,
   CreateUserBody,
   UpdateUserBody,
   CreateUserResponse,
   GetUserResponse,
-  DeleteUserResponse,
 } from '../../types/user'
 
 /**
  * User ID 访问器接口
- * 用于访问特定用户的操作
  */
 export interface UserIdAccessor {
-  /** 获取用户详情 */
-  get(): Promise<XDDResponse<ApiResult<GetUserResponse>>>
-  /** 更新用户信息 */
-  patch(body: UpdateUserBody): Promise<XDDResponse<ApiResult<GetUserResponse>>>
-  /** 删除用户 */
-  delete(): Promise<XDDResponse<ApiResult<DeleteUserResponse>>>
+  get(): Promise<GetUserResponse>
+  patch(body: UpdateUserBody): Promise<GetUserResponse>
+  delete(): Promise<void>
 }
 
 /**
  * User 模块访问器接口
- * 提供用户相关的所有 API 操作
  */
 export interface UserAccessors {
-  /** 用户列表操作 */
   list: {
-    /** 获取用户列表 */
-    get(query?: UserListQuery): Promise<XDDResponse<ApiResult<UserListResponse>>>
+    get(query?: UserListQuery): Promise<UserList>
   }
-  /** 创建用户 */
-  create(body: CreateUserBody): Promise<XDDResponse<ApiResult<CreateUserResponse>>>
-  /** 根据 ID 访问用户操作 */
+  create(body: CreateUserBody): Promise<CreateUserResponse>
   (id: string): UserIdAccessor
-  /** 获取单个用户 */
-  get(id: string): Promise<XDDResponse<ApiResult<GetUserResponse>>>
-  /** 更新用户 */
-  update(id: string, body: UpdateUserBody): Promise<XDDResponse<ApiResult<GetUserResponse>>>
-  /** 删除用户 */
-  delete(id: string): Promise<XDDResponse<ApiResult<DeleteUserResponse>>>
+  get(id: string): Promise<GetUserResponse>
+  update(id: string, body: UpdateUserBody): Promise<GetUserResponse>
+  delete(id: string): Promise<void>
 }
 
 /**
  * 创建 User 模块访问器
- *
- * @param request - 统一请求函数
- * @returns User 访问器对象
  */
 export function createUserAccessor(request: RequestFn): UserAccessors {
   const listGet = (query?: UserListQuery) =>
-    request<ApiResult<UserListResponse>>('GET', 'user', { params: query as Record<string, unknown> })
+    request<UserList>('GET', 'user', {
+      params: query ? (UserListQuerySchema.parse(query) as Record<string, unknown>) : undefined,
+      responseSchema: UserListSchema,
+    })
 
   const create = (body: CreateUserBody) =>
-    request<ApiResult<CreateUserResponse>>('POST', 'user', { body: JSON.stringify(body) })
+    request<CreateUserResponse>('POST', 'user', {
+      body: CreateUserBodySchema.parse(body),
+      responseSchema: UserSchema,
+    })
 
-  const get = (id: string) => request<ApiResult<GetUserResponse>>('GET', `user/${id}`)
+  const get = (id: string) => request<GetUserResponse>('GET', `user/${id}`, { responseSchema: UserSchema })
 
   const update = (id: string, body: UpdateUserBody) =>
-    request<ApiResult<GetUserResponse>>('PATCH', `user/${id}`, { body: JSON.stringify(body) })
+    request<GetUserResponse>('PATCH', `user/${id}`, {
+      body: UpdateUserBodySchema.parse(body),
+      responseSchema: UserSchema,
+    })
 
-  const del = (id: string) => request<ApiResult<DeleteUserResponse>>('DELETE', `user/${id}`)
+  const del = (id: string) => request<void>('DELETE', `user/${id}`)
 
   const accessor = Object.assign(
     (id: string) => ({

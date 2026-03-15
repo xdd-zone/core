@@ -4,7 +4,7 @@
 
 import type { ClientOptions, RequestOptions } from './core/types'
 import { RequestInterceptorChain, ResponseInterceptorChain } from './interceptors'
-import { createRequestFn } from './core/request'
+import { createRequestFn, createRequestRawFn, type RequestRawFn } from './core/request'
 import { createAuthAccessor, type AuthAccessors } from './modules/auth'
 import { createUserAccessor, type UserAccessors } from './modules/user'
 import { createRbacAccessor, type RbacAccessors } from './modules/rbac'
@@ -25,6 +25,7 @@ export class XDDClient {
   readonly auth: AuthAccessors
   readonly user: UserAccessors
   readonly rbac: RbacAccessors
+  readonly requestRaw: RequestRawFn
 
   constructor(options: ClientOptions) {
     this.baseURL = options.baseURL.replace(/\/$/, '')
@@ -36,7 +37,24 @@ export class XDDClient {
     this.responseInterceptors = new ResponseInterceptorChain()
 
     // 创建统一请求函数，传递给各模块
-    const requestFn = createRequestFn(this.baseURL, this.cookies, this.requestInterceptors, this.responseInterceptors)
+    const defaultRequestOptions = {
+      headers: this.headers,
+      timeout: this.timeout,
+    }
+    const requestFn = createRequestFn(
+      this.baseURL,
+      this.cookies,
+      this.requestInterceptors,
+      this.responseInterceptors,
+      defaultRequestOptions,
+    )
+    this.requestRaw = createRequestRawFn(
+      this.baseURL,
+      this.cookies,
+      this.requestInterceptors,
+      this.responseInterceptors,
+      defaultRequestOptions,
+    )
 
     this.auth = createAuthAccessor(requestFn)
     this.user = createUserAccessor(requestFn)

@@ -1,4 +1,4 @@
-import type { SessionResponse } from './auth.types'
+import type { Session } from './auth.types'
 import { auth } from '@/core/auth'
 
 /**
@@ -11,10 +11,10 @@ export class AuthService {
   /**
    * 获取当前会话
    */
-  static async getSession(headers: Headers): Promise<SessionResponse> {
+  static async getSession(headers: Headers | HeadersInit): Promise<Session> {
     try {
       const session = await auth.api.getSession({
-        headers,
+        headers: headers instanceof Headers ? headers : new Headers(headers),
       })
 
       return {
@@ -23,9 +23,9 @@ export class AuthService {
               ...session.session,
               ipAddress: session.session.ipAddress ?? null,
               userAgent: session.session.userAgent ?? null,
-            } as SessionResponse['session'])
+            } as Session['session'])
           : null,
-        user: (session?.user as SessionResponse['user']) ?? null,
+        user: (session?.user as Session['user']) ?? null,
         isAuthenticated: !!session?.session,
       }
     } catch {

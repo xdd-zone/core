@@ -1,10 +1,17 @@
-/**
- * Elysia 应用实例创建与组装
- * 分离应用创建和服务器启动，便于测试
- */
 import { Elysia } from 'elysia'
-import { bootstrap } from './core/bootstrap'
+import { setupAppPlugin } from './plugins'
+import { routes } from './routes'
 
-export const app = new Elysia()
+/**
+ * 创建应用实例。
+ */
+export function createApp() {
+  const app = new Elysia()
 
-bootstrap(app)
+  setupAppPlugin(app)
+  app.use(routes)
+
+  return app
+}
+
+export const app = createApp()

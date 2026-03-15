@@ -1,61 +1,89 @@
-# 认证系统
+# 认证说明
 
-项目使用 Better Auth 作为认证解决方案。
+项目使用 Better Auth 处理登录态，HTTP 层通过 Elysia 插件把认证能力按成本分层。
 
-## 特性
+## 当前职责划分
 
-- **基于 Session**: 使用 HttpOnly Cookie 存储 session token
-- **自动刷新**: Session 有效期 7 天，自动续期
-- **邮箱验证**: 支持邮箱验证流程
-- **标准端点**: 提供标准的认证端点（sign-up, sign-in, sign-out）
-
-## Session 机制
-
-- 登录成功后，服务器返回 `Set-Cookie` header
-- 客户端自动携带 cookie 访问需要认证的接口
-- Session 存储在数据库中（`session` 表）
+- `authPlugin`
+  - 提供 `getAuth(request)`
+  - 提供 `requireAuth(request)`
+  - 适合公开接口读取可选 session
+- `protectedPlugin`
+  - 进入路由前执行 `requireAuth(request)`
+  - 适合所有必须登录的接口
+- `permissionPlugin`
+  - 组合 `protectedPlugin`
+  - 在已登录前提下继续做权限判定
 
 ## 认证流程
 
-1. **注册**: POST `/api/auth/sign-up/email`
-2. **登录**: POST `/api/auth/sign-in/email` → 返回 session cookie
-3. **访问受保护资源**: 自动携带 session cookie
-4. **登出**: POST `/api/auth/sign-out` → 清除 session cookie
+1. `POST /api/auth/sign-up/email`
+2. `POST /api/auth/sign-in/email`
+3. 服务端返回 `Set-Cookie`
+4. 后续请求自动携带 session cookie
+5. `POST /api/auth/sign-out` 清理会话，返回 `204`
 
-## API 端点
+## Auth API
 
-| 方法 | 路径                      | 描述                       |
-| ---- | ------------------------- | -------------------------- |
-| POST | `/api/auth/sign-up/email` | 用户注册（邮箱密码）       |
-| POST | `/api/auth/sign-in/email` | 用户登录（邮箱密码）       |
-| POST | `/api/auth/sign-out`      | 用户登出                   |
-| GET  | `/api/auth/get-session`   | 获取当前会话               |
-| GET  | `/api/auth/me`            | 获取当前用户信息（需认证） |
+| 方法 | 路径 | 描述 |
+| ---- | ---- | ---- |
+| POST | `/api/auth/sign-up/email` | 注册 |
+| POST | `/api/auth/sign-in/email` | 登录 |
+| POST | `/api/auth/sign-out` | 登出 |
+| GET | `/api/auth/get-session` | 获取当前 session |
+| GET | `/api/auth/me` | 获取当前登录用户 |
 
-## 添加认证保护
+## 路由写法
 
-使用 `authGuard` 守卫保护需要登录的路由：
+### 读取可选 session
 
-```typescript
-import { authGuard } from '@/core'
-
-export const myModule = new Elysia()
-  .use(authGuard({ required: true })) // 需要认证
-  .get('/protected', () => '需要登录才能访问')
+```ts
+export const authAwareRoutes = new Elysia()
+  .use(authPlugin)
+  .get('/session', async ({ getAuth, request }) => {
+    return await getAuth(request)
+  })
 ```
+
+### 强制要求登录
+
+```ts
+export const protectedRoutes = new Elysia()
+  .use(protectedPlugin)
+  .get('/profile', async ({ request, requireAuth }) => {
+    const auth = await requireAuth(request)
+    return auth.user
+  })
+```
+
+## 状态码语义
+
+- 未登录：`401`
+- 已登录但无权限：`403`
+
+这一区分已经在 `protectedPlugin / permissionPlugin` 中统一收敛。
+
+## client 行为
+
+`@xdd-zone/client` 默认会：
+
+- 自动保存登录返回的 cookie
+- 后续请求自动附带 cookie
+- 对 `401` 抛出 `UnauthorizedError`
+- 对 `403` 抛出 `ForbiddenError`
 
 ## 配置
 
-在 `.env` 文件中配置：
+至少需要：
 
 ```env
-# Better Auth 配置
-BETTER_AUTH_SECRET="your-secret-key-here"
 BETTER_AUTH_URL="http://localhost:7788"
+BETTER_AUTH_SECRET="replace-with-a-secure-secret"
 ```
 
-## 故障排查
+## 排查建议
 
-1. 确保在请求中正确携带 cookie
-2. 检查 `BETTER_AUTH_SECRET` 和 `BETTER_AUTH_URL` 配置
-3. 使用 `/api/auth/get-session` 端点验证 session 状态
+1. 用 `/api/auth/get-session` 确认当前 cookie 是否有效
+2. 检查请求是否带上了 session cookie
+3. 检查 `BETTER_AUTH_URL` 与实际服务地址是否一致
+4. 检查 client 自定义 headers 是否错误覆盖了 cookie

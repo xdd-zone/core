@@ -1,5 +1,4 @@
-export * from "./standard";
 export * from "./shared";
-export * from "./user";
-export * from "./auth";
-export * from "./rbac";
+export * from "./adapters";
+export * as domains from "./domains";
+export * as contracts from "./contracts";

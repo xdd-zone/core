@@ -14,20 +14,21 @@ export interface PaginationQuery {
  * 分页响应结构
  */
 export interface PaginationResponse {
-  currentPage: number
-  hasNextPage: boolean
-  hasPrevPage: boolean
-  size: number
+  page: number
+  pageSize: number
   total: number
-  totalPage: number
+  totalPages: number
 }
 
 /**
  * 分页列表响应
  */
 export interface PaginatedList<T> {
-  list: T[]
-  pagination: PaginationResponse
+  items: T[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
 }
 
 /**

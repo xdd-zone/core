@@ -22,18 +22,13 @@ export function normalizePagination(query: PaginationQuery) {
  * 计算分页元数据
  */
 export function calculatePagination(total: number, page: number, pageSize: number): PaginationResponse {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
-  const currentPage = Math.min(page, totalPages)
-  const hasPrevPage = currentPage > 1
-  const hasNextPage = currentPage < totalPages
+  const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize)
 
   return {
-    currentPage,
-    hasNextPage,
-    hasPrevPage,
-    size: pageSize,
+    page,
+    pageSize,
     total,
-    totalPage: totalPages,
+    totalPages,
   }
 }
 
@@ -42,8 +37,8 @@ export function calculatePagination(total: number, page: number, pageSize: numbe
  */
 export function createPaginatedResponse<T>(list: T[], total: number, page: number, pageSize: number): PaginatedList<T> {
   return {
-    list,
-    pagination: calculatePagination(total, page, pageSize),
+    items: list,
+    ...calculatePagination(total, page, pageSize),
   }
 }
 

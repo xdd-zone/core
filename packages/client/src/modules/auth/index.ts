@@ -1,64 +1,64 @@
 /**
  * Auth 模块访问器
- *
- * 认证相关 API 操作的访问器实现
  */
 
+import {
+  AuthSessionSchema,
+  SessionSchema,
+  SignInEmailBodySchema,
+  SignUpEmailBodySchema,
+} from '@xdd-zone/schema/contracts/auth'
 import type { RequestFn } from '../../core/request'
-import type { XDDResponse } from '../../core/types'
-import type {
-  SignInEmailBody,
-  SignUpEmailBody,
-  GetSessionResponse,
-  SignOutResponse,
-  AuthResponse,
-} from '../../types/auth'
+import type { AuthSession, GetSessionResponse, SignInEmailBody, SignUpEmailBody } from '../../types/auth'
 
 /**
  * Auth 模块访问器接口
  */
 export interface AuthAccessors {
   signIn: {
-    post(body: SignInEmailBody): Promise<XDDResponse<AuthResponse>>
+    post(body: SignInEmailBody): Promise<AuthSession>
   }
   signUp: {
-    post(body: SignUpEmailBody): Promise<XDDResponse<AuthResponse>>
+    post(body: SignUpEmailBody): Promise<AuthSession>
   }
   getSession: {
-    get(): Promise<XDDResponse<GetSessionResponse>>
+    get(): Promise<GetSessionResponse>
   }
   signOut: {
-    post(): Promise<XDDResponse<SignOutResponse>>
+    post(): Promise<void>
   }
   me: {
-    get(): Promise<XDDResponse<GetSessionResponse>>
+    get(): Promise<GetSessionResponse>
   }
 }
 
 /**
  * 创建 Auth 模块访问器
- *
- * @param request - 统一请求函数
- * @returns Auth 访问器对象
  */
 export function createAuthAccessor(request: RequestFn): AuthAccessors {
   return {
     signIn: {
       post: (body: SignInEmailBody) =>
-        request<AuthResponse>('POST', 'auth/sign-in/email', { body: JSON.stringify(body) }),
+        request<AuthSession>('POST', 'auth/sign-in/email', {
+          body: SignInEmailBodySchema.parse(body),
+          responseSchema: AuthSessionSchema,
+        }),
     },
     signUp: {
       post: (body: SignUpEmailBody) =>
-        request<AuthResponse>('POST', 'auth/sign-up/email', { body: JSON.stringify(body) }),
+        request<AuthSession>('POST', 'auth/sign-up/email', {
+          body: SignUpEmailBodySchema.parse(body),
+          responseSchema: AuthSessionSchema,
+        }),
     },
     getSession: {
-      get: () => request<GetSessionResponse>('GET', 'auth/get-session'),
+      get: () => request<GetSessionResponse>('GET', 'auth/get-session', { responseSchema: SessionSchema }),
     },
     signOut: {
-      post: () => request<SignOutResponse>('POST', 'auth/sign-out'),
+      post: () => request<void>('POST', 'auth/sign-out'),
     },
     me: {
-      get: () => request<GetSessionResponse>('GET', 'auth/me'),
+      get: () => request<GetSessionResponse>('GET', 'auth/me', { responseSchema: SessionSchema }),
     },
   }
 }

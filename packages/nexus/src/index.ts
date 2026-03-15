@@ -1,5 +1,4 @@
-/**
- * 应用入口（极简）
- * 仅负责导入并启动应用
- */
-import './app'
+import { app } from './app'
+import { startServer } from './server'
+
+startServer(app)

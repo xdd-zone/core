@@ -3,7 +3,7 @@
  * 业务逻辑层：处理用户相关的业务逻辑
  */
 
-import type { CreateUserBody, UpdateUserBody, UserListQuery, UserListResponse, UserResponse } from './user.model'
+import type { CreateUserBody, UpdateUserBody, UserList, UserListQuery, User } from './user.model'
 
 import type { UserWhereInput } from './user.types'
 import { buildKeywordSearch } from '@/infra/database'
@@ -44,7 +44,7 @@ export class UserService {
    * @param query 查询参数
    * @returns 分页用户列表
    */
-  static async list(query: UserListQuery): Promise<UserListResponse> {
+  static async list(query: UserListQuery): Promise<UserList> {
     // 构建查询条件
     const where = this.buildWhereConditions(query)
 
@@ -57,7 +57,7 @@ export class UserService {
    * @param id 用户 ID
    * @returns 用户信息或 null
    */
-  static async findById(id: string): Promise<UserResponse | null> {
+  static async findById(id: string): Promise<User | null> {
     return await UserRepository.findById(id)
   }
 
@@ -66,7 +66,7 @@ export class UserService {
    * @param data 用户数据
    * @returns 创建的用户信息
    */
-  static async create(data: CreateUserBody): Promise<UserResponse> {
+  static async create(data: CreateUserBody): Promise<User> {
     return await UserRepository.create({
       username: data.username,
       name: data.name,
@@ -84,7 +84,7 @@ export class UserService {
    * @param data 更新数据
    * @returns 更新后的用户信息
    */
-  static async update(id: string, data: UpdateUserBody): Promise<UserResponse> {
+  static async update(id: string, data: UpdateUserBody): Promise<User> {
     return await UserRepository.update(id, {
       username: data.username ?? undefined,
       name: data.name,
@@ -101,7 +101,7 @@ export class UserService {
    * @param id 用户 ID
    * @returns 被删除的用户信息
    */
-  static async delete(id: string): Promise<UserResponse> {
+  static async delete(id: string): Promise<User> {
     return await UserRepository.delete(id)
   }
 }

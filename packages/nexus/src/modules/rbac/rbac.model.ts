@@ -1,49 +1,59 @@
-import { z } from 'zod'
-import {
-  RoleListQuerySchema,
-  PermissionListQuerySchema,
-  CreateRoleBodySchema,
-  UpdateRoleBodySchema,
-  SetRoleParentBodySchema,
-  RoleIdParamsSchema,
-  CreatePermissionBodySchema,
-  PermissionIdParamsSchema,
-  AssignRoleToUserBodySchema,
-  AssignPermissionsToRoleBodySchema,
-  ReplaceRolePermissionsBodySchema,
-  RBACUserIdParamsSchema,
-  UserRoleIdParamsSchema,
-  RolePermissionIdParamsSchema,
-} from '@/shared/validator'
-
 export {
-  RoleListQuerySchema,
-  PermissionListQuerySchema,
-  CreateRoleBodySchema,
-  UpdateRoleBodySchema,
-  SetRoleParentBodySchema,
-  RoleIdParamsSchema,
-  CreatePermissionBodySchema,
-  PermissionIdParamsSchema,
-  AssignRoleToUserBodySchema,
   AssignPermissionsToRoleBodySchema,
-  ReplaceRolePermissionsBodySchema,
+  AssignRoleToUserBodySchema,
+  CreatePermissionBodySchema,
+  CreateRoleBodySchema,
+  CurrentUserPermissionsSchema,
+  CurrentUserRolesSchema,
+  OperationResultSchema,
+  PermissionIdParamsSchema,
+  PermissionListQuerySchema,
+  PermissionListSchema,
+  PermissionSchema,
+  PermissionSummarySchema,
   RBACUserIdParamsSchema,
-  UserRoleIdParamsSchema,
+  ReplaceRolePermissionsBodySchema,
+  RoleChildrenSchema,
+  RoleDetailSchema,
+  RoleIdParamsSchema,
+  RoleListQuerySchema,
+  RoleListSchema,
   RolePermissionIdParamsSchema,
-}
-
-export type RoleListQuery = z.infer<typeof RoleListQuerySchema>
-export type PermissionListQuery = z.infer<typeof PermissionListQuerySchema>
-export type CreateRoleBody = z.infer<typeof CreateRoleBodySchema>
-export type UpdateRoleBody = z.infer<typeof UpdateRoleBodySchema>
-export type SetRoleParentBody = z.infer<typeof SetRoleParentBodySchema>
-export type RoleIdParams = z.infer<typeof RoleIdParamsSchema>
-export type CreatePermissionBody = z.infer<typeof CreatePermissionBodySchema>
-export type PermissionIdParams = z.infer<typeof PermissionIdParamsSchema>
-export type AssignRoleToUserBody = z.infer<typeof AssignRoleToUserBodySchema>
-export type AssignPermissionsToRoleBody = z.infer<typeof AssignPermissionsToRoleBodySchema>
-export type ReplaceRolePermissionsBody = z.infer<typeof ReplaceRolePermissionsBodySchema>
-export type RBACUserIdParams = z.infer<typeof RBACUserIdParamsSchema>
-export type UserRoleIdParams = z.infer<typeof UserRoleIdParamsSchema>
-export type RolePermissionIdParams = z.infer<typeof RolePermissionIdParamsSchema>
+  RolePermissionsSchema,
+  RoleSchema,
+  SetRoleParentBodySchema,
+  UpdateRoleBodySchema,
+  UserPermissionsSchema,
+  UserRoleAssignmentSchema,
+  UserRoleIdParamsSchema,
+  UserRoleItemSchema,
+  UserRolesSchema,
+  type AssignPermissionsToRoleBody,
+  type AssignRoleToUserBody,
+  type CreatePermissionBody,
+  type CreateRoleBody,
+  type CurrentUserPermissions,
+  type CurrentUserRoles,
+  type OperationResult,
+  type Permission,
+  type PermissionIdParams,
+  type PermissionList,
+  type PermissionListQuery,
+  type RBACUserIdParams,
+  type ReplaceRolePermissionsBody,
+  type Role,
+  type RoleChildren,
+  type RoleDetail,
+  type RoleIdParams,
+  type RoleList,
+  type RoleListQuery,
+  type RolePermissionIdParams,
+  type RolePermissions,
+  type SetRoleParentBody,
+  type UpdateRoleBody,
+  type UserPermissions,
+  type UserRoleAssignment,
+  type UserRoleIdParams,
+  type UserRoleItem,
+  type UserRoles,
+} from '@xdd-zone/schema/contracts/rbac'

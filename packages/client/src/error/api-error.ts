@@ -1,19 +1,11 @@
 /**
  * API 错误类与错误处理
  *
- * 提供 ApiError 类和 ApiResponse 错误解析功能
+ * 提供 ApiError 类和错误响应解析功能
  */
 
-import type { ApiResponse } from '../types/api'
-import {
-  HttpStatusCode,
-  ErrorCodes,
-  ErrorMessages,
-  isSuccessCode,
-  isAuthError,
-  isClientError,
-  isServerError,
-} from './error-codes'
+import type { ApiError as ApiErrorResponse } from '../types/api'
+import { HttpStatusCode, ErrorCodes, ErrorMessages, isAuthError, isClientError, isServerError } from './error-codes'
 
 /**
  * API 错误类
@@ -50,11 +42,6 @@ export class ApiError extends Error {
     this.status = status
     this.code = code
     this.details = details
-
-    // 保留完整堆栈跟踪（V8 引擎支持）
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ApiError)
-    }
   }
 
   /**
@@ -154,17 +141,12 @@ export class InternalServerError extends ApiError {
 }
 
 /**
- * 解析 ApiResponse 错误
+ * 解析服务端错误响应
  *
- * @param response - API 响应对象
- * @throws ApiError 当响应表示错误时
- * @returns 成功时返回 undefined
+ * @param response - 错误响应对象
+ * @throws ApiError
  */
-export function parseApiError<T>(response: ApiResponse<T>): T | never {
-  if (isSuccessCode(response.code)) {
-    return response.data
-  }
-
+export function parseApiError(response: ApiErrorResponse): never {
   const status = response.code || HttpStatusCode.INTERNAL_SERVER_ERROR
   const message = response.message || ErrorMessages[status.toString()] || '未知错误'
   const code = response.code || status

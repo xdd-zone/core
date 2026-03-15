@@ -1,95 +1,191 @@
 # 项目架构
 
+## 架构结论
+
+当前核心原则：
+
+- route 直接表达 HTTP 结构
+- plugin 只承载框架级能力
+- module 只承载业务逻辑
+- schema 作为唯一契约源
+- client 默认直接返回业务数据
+
 ## 目录结构
 
-```
+`packages/nexus/src/`：
+
+```text
 src/
-├── core/                  # 核心基础设施
-│   ├── bootstrap/         # 应用启动流程
-│   │   ├── index.ts       # Bootstrap 入口
-│   │   ├── openapi.ts     # OpenAPI 设置
-│   │   ├── plugins.ts     # 全局插件注册
-│   │   ├── routes.ts      # 路由注册
-│   │   ├── lifecycle.ts   # 生命周期钩子
-│   │   └── server.ts      # 服务器启动
-│   ├── config/            # 配置管理
-│   │   ├── index.ts       # 配置聚合
-│   │   ├── app.config.ts  # 应用配置
-│   │   ├── database.config.ts  # 数据库配置
-│   │   ├── logger.config.ts     # 日志配置
-│   │   ├── openapi.config.ts    # OpenAPI 配置
-│   │   └── better-auth.config.ts # Better Auth 配置
-│   ├── plugins/           # Elysia 插件
-│   │   ├── index.ts       # 插件聚合
-│   │   ├── response.plugin.ts  # 统一响应格式
-│   │   ├── error.plugin.ts     # 错误处理
-│   │   └── module.plugin.ts    # 模块工厂
-│   ├── guards/            # 守卫和装饰器
-│   │   ├── index.ts
-│   │   ├── auth.guard.ts  # 认证守卫
-│   │   ├── permission.guard.ts # 权限守卫
-│   │   └── permission.decorator.ts # 权限装饰器
-│   ├── permissions/       # 权限系统
-│   │   ├── index.ts
-│   │   ├── permissions.ts      # 权限定义
-│   │   ├── permission.service.ts # 权限服务
-│   │   ├── helpers.ts          # 权限助手
-│   │   └── permissions.types.ts # 权限类型
-│   ├── decorators/        # 装饰器
-│   └── index.ts           # 核心导出
-├── modules/               # 业务模块
-│   ├── auth/              # 认证模块（Better Auth）
-│   │   ├── index.ts       # 路由定义
-│   │   ├── auth.service.ts    # 业务逻辑
-│   │   ├── auth.model.ts      # Zod 验证模型
-│   │   └── auth.types.ts      # 类型定义
-│   ├── user/              # 用户模块
-│   │   ├── index.ts
-│   │   ├── user.service.ts
-│   │   ├── user.repository.ts
-│   │   ├── user.model.ts
-│   │   └── user.types.ts
-│   └── rbac/              # RBAC 权限模块
-│       ├── index.ts
-│       ├── rbac.service.ts
-│       ├── repositories/      # 数据访问层
-│       │   ├── index.ts
-│       │   ├── role.repository.ts
-│       │   ├── permission.repository.ts
-│       │   ├── user-role.repository.ts
-│       │   └── role-permission.repository.ts
-│       ├── rbac.model.ts
-│       └── rbac.types.ts
-├── infra/        # 基础设施
-│   ├── database/          # 数据库
-│   │   ├── prisma/
-│   │   │   ├── schema/        # 多文件 schema
-│   │   │   │   ├── user.prisma
-│   │   │   │   ├── account.prisma
-│   │   │   │   ├── session.prisma
-│   │   │   │   ├── verification.prisma
-│   │   │   │   ├── role.prisma
-│   │   │   │   ├── permission.prisma
-│   │   │   │   ├── user-role.prisma
-│   │   │   │   └── role-permission.prisma
-│   │   │   ├── migrations/    # 数据库迁移
-│   │   │   ├── seed/          # 种子数据
-│   │   │   └── generated/     # Prisma 生成
-│   │   └── index.ts
-│   ├── logger/            # 日志系统
-│   └── index.ts
-├── shared/                # 共享工具和常量
-├── app.ts                 # Elysia 应用实例
-└── index.ts               # 应用入口
+├── app.ts
+├── server.ts
+├── index.ts
+├── plugins/
+├── routes/
+├── modules/
+├── core/
+├── infra/
+└── shared/
 ```
 
-## 技术栈
+## 启动链路
 
-- **运行时**: [Bun](https://bun.sh/) 1.3.5
-- **框架**: [Elysia](https://elysiajs.com/) 1.4.19
-- **认证**: [Better Auth](https://www.better-auth.com/) 1.4.10
-- **数据库**: [PostgreSQL](https://www.postgresql.org/) + [Prisma ORM](https://www.prisma.io/) 7.2.0
-- **验证**: [Zod](https://zod.dev/) 4.3.4
-- **日志**: [Pino](https://getpino.io/) 10.1.0
-- **API 文档**: [OpenAPI (Swagger)](https://swagger.io/)
-- **代码质量**: [ESLint](https://eslint.org/) + [Prettier](https://prettier.io/)
+### `app.ts`
+
+负责创建 `Elysia` 实例并装配：
+
+- 全局插件
+- 路由聚合
+
+不负责：
+
+- 监听端口
+- 优雅关闭
+- 启动日志
+
+### `server.ts`
+
+负责：
+
+- `app.listen(...)`
+- 启动日志
+- 进程关闭与优雅退出
+
+### `index.ts`
+
+只做启动入口。
+
+## 插件层
+
+`plugins/` 只保留框架级能力组合。
+
+### `app.plugin.ts`
+
+聚合全局插件：
+
+- CORS
+- OpenAPI
+- 统一错误处理
+- 请求日志
+
+### `auth.plugin.ts`
+
+提供：
+
+- `getAuth(request)`
+- `requireAuth(request)`
+
+它解决“你是谁”。
+
+### `protected.plugin.ts`
+
+在进入路由前执行 `requireAuth(request)`。
+
+它解决“你是否必须已登录”。
+
+### `permission.plugin.ts`
+
+在 `protectedPlugin` 基础上导出统一权限 API：
+
+- `Permissions`
+- `permit.permission(...)`
+- `permit.own(...)`
+- `permit.me(...)`
+
+它解决“你能做什么”。
+
+## 路由层
+
+`routes/*.route.ts` 只负责：
+
+1. prefix / tags
+2. plugin 组合
+3. request schema / response schema
+4. 调用 service
+
+典型写法：
+
+```ts
+export const userRoutes = new Elysia({
+  prefix: '/user',
+  tags: ['User'],
+})
+  .use(permissionPlugin)
+  .get('/', async ({ query }) => await UserService.list(query), {
+    query: UserListQuerySchema,
+    beforeHandle: [permit.permission(Permissions.USER.READ_ALL)],
+    detail: apiDetail({
+      summary: '获取用户列表',
+      response: UserListSchema,
+      errors: [400, 401, 403],
+    }),
+  })
+```
+
+## 模块层
+
+`modules/*` 是纯业务层。
+
+通常由这些文件组成：
+
+- `*.model.ts`
+- `*.service.ts`
+- `*.repository.ts`
+- `*.types.ts`
+- `index.ts`
+
+模块层只承载 Elysia route 之外的业务能力。
+
+## core / infra / shared
+
+### `core/`
+
+只保留真正跨业务的核心能力：
+
+- 认证
+- 配置
+- 权限系统
+- 错误插件
+
+### `infra/`
+
+基础设施实现：
+
+- Prisma / DB helpers
+- logger
+- seed / schema
+
+### `shared/`
+
+轻量公共工具，例如 `apiDetail(...)`。
+
+## 协议层
+
+### 服务端
+
+- 成功响应直接返回业务数据
+- 删除类接口返回 `204`
+- 错误响应统一由错误插件处理
+
+### schema
+
+`@xdd-zone/schema` 是唯一契约源，分为：
+
+- `domains/*`
+- `contracts/*`
+- `shared/*`
+- `adapters/*`
+
+### client
+
+- 默认返回业务数据
+- `requestRaw()` 才返回状态码与 headers
+- 默认 headers / timeout 全局生效
+- 自定义 headers 与内部 `Cookie` / `Origin` / `Content-Type` 合并
+
+## 当前实现摘要
+
+- API 服务使用 `app.ts + server.ts + plugins/ + routes/ + modules/`
+- 鉴权边界使用 `authPlugin / protectedPlugin / permissionPlugin`
+- 成功响应直接返回业务数据
+- 分页结构统一为 `items / total / page / pageSize / totalPages`
+- client 与 schema 使用同一套成功契约与错误契约

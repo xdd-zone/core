@@ -1,5 +1,6 @@
 import type { XDDResponse, RequestOptions } from './types'
 import type { RequestInterceptorChain, ResponseInterceptorChain } from '../interceptors'
+import { parseResponse } from '@xdd-zone/schema/adapters/client'
 import { ApiError, UnauthorizedError, ForbiddenError, NotFoundError } from '../error/api-error'
 import { getLogger } from '../logger'
 
@@ -7,7 +8,73 @@ import { getLogger } from '../logger'
  * 统一请求函数类型
  * 各模块通过此类型接收绑定了上下文的请求函数
  */
-export type RequestFn = <T>(method: string, path: string, options?: RequestOptions) => Promise<XDDResponse<T>>
+export type RequestFn = <T>(method: string, path: string, options?: RequestOptions) => Promise<T>
+export type RequestRawFn = <T>(method: string, path: string, options?: RequestOptions) => Promise<XDDResponse<T>>
+
+type DefaultRequestOptions = {
+  headers?: Record<string, string>
+  timeout?: number
+}
+
+function serializeRequestBody(body: unknown): BodyInit | undefined {
+  if (body === undefined || body === null) {
+    return undefined
+  }
+
+  if (
+    typeof body === 'string' ||
+    body instanceof FormData ||
+    body instanceof URLSearchParams ||
+    body instanceof Blob ||
+    body instanceof ArrayBuffer ||
+    body instanceof ReadableStream
+  ) {
+    return body
+  }
+
+  if (ArrayBuffer.isView(body)) {
+    return body as unknown as BodyInit
+  }
+
+  if (typeof body === 'object') {
+    return JSON.stringify(body)
+  }
+
+  return String(body)
+}
+
+function normalizeHeaders(headers?: HeadersInit): Record<string, string> {
+  if (!headers) {
+    return {}
+  }
+
+  if (headers instanceof Headers) {
+    return Object.fromEntries(headers.entries())
+  }
+
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers)
+  }
+
+  return Object.fromEntries(
+    Object.entries(headers).map(([key, value]) => [key, String(value)]),
+  )
+}
+
+function mergeRequestOptions(defaults: DefaultRequestOptions, options?: RequestOptions): RequestOptions | undefined {
+  if (!options && !defaults.timeout && (!defaults.headers || Object.keys(defaults.headers).length === 0)) {
+    return options
+  }
+
+  return {
+    ...options,
+    timeout: options?.timeout ?? defaults.timeout,
+    headers: {
+      ...defaults.headers,
+      ...normalizeHeaders(options?.headers),
+    },
+  }
+}
 
 /**
  * 创建绑定上下文的请求函数
@@ -23,9 +90,37 @@ export function createRequestFn(
   cookieStore: Map<string, string>,
   requestInterceptors: RequestInterceptorChain,
   responseInterceptors: ResponseInterceptorChain,
+  defaults: DefaultRequestOptions = {},
 ): RequestFn {
   return <T>(method: string, path: string, options?: RequestOptions) =>
-    request<T>(baseURL, method, path, options, cookieStore, requestInterceptors, responseInterceptors)
+    request<T>(
+      baseURL,
+      method,
+      path,
+      mergeRequestOptions(defaults, options),
+      cookieStore,
+      requestInterceptors,
+      responseInterceptors,
+    )
+}
+
+export function createRequestRawFn(
+  baseURL: string,
+  cookieStore: Map<string, string>,
+  requestInterceptors: RequestInterceptorChain,
+  responseInterceptors: ResponseInterceptorChain,
+  defaults: DefaultRequestOptions = {},
+): RequestRawFn {
+  return <T>(method: string, path: string, options?: RequestOptions) =>
+    requestRaw<T>(
+      baseURL,
+      method,
+      path,
+      mergeRequestOptions(defaults, options),
+      cookieStore,
+      requestInterceptors,
+      responseInterceptors,
+    )
 }
 
 /**
@@ -33,6 +128,32 @@ export function createRequestFn(
  * 支持 Cookie 自动管理和拦截器
  */
 export async function request<T>(
+  baseURL: string,
+  method: string,
+  path: string,
+  options: RequestOptions | undefined,
+  cookieStore: Map<string, string>,
+  requestInterceptors?: RequestInterceptorChain,
+  responseInterceptors?: ResponseInterceptorChain,
+): Promise<T> {
+  const response = await requestRaw<T>(
+    baseURL,
+    method,
+    path,
+    options,
+    cookieStore,
+    requestInterceptors,
+    responseInterceptors,
+  )
+
+  return response.data
+}
+
+/**
+ * 基础请求函数（内部使用）
+ * 支持 Cookie 自动管理和拦截器，并保留原始响应元信息
+ */
+export async function requestRaw<T>(
   baseURL: string,
   method: string,
   path: string,
@@ -79,21 +200,24 @@ export async function request<T>(
   const timeoutId = setTimeout(() => controller.abort(), timeout)
 
   try {
+    const { params: _params, responseSchema, body: requestBody, headers: requestHeaders, ...requestInit } = processedOptions ?? {}
+
+    const mergedHeaders: Record<string, string> = {
+      ...normalizeHeaders(requestHeaders as HeadersInit | undefined),
+      ...(originHeader ? { Origin: originHeader } : {}),
+      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+    }
+
+    if (!('Content-Type' in mergedHeaders) && !('content-type' in mergedHeaders)) {
+      mergedHeaders['Content-Type'] = 'application/json'
+    }
+
     const response = await fetch(url.toString(), {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(originHeader ? { Origin: originHeader } : {}),
-        Cookie: cookieHeader,
-        ...(processedOptions?.headers as Record<string, string>),
-      },
-      body: processedOptions?.body
-        ? typeof processedOptions.body === 'string'
-          ? processedOptions.body
-          : JSON.stringify(processedOptions.body)
-        : undefined,
+      headers: mergedHeaders,
+      body: serializeRequestBody(requestBody),
       signal: controller.signal,
-      ...processedOptions,
+      ...requestInit,
     })
 
     clearTimeout(timeoutId)
@@ -146,8 +270,11 @@ export async function request<T>(
     }
 
     let data: T
-    if (contentType?.includes('application/json')) {
-      data = (await response.json()) as T
+    if (response.status === 204) {
+      data = undefined as T
+    } else if (contentType?.includes('application/json')) {
+      const rawData = await response.json()
+      data = responseSchema ? ((await parseResponse(responseSchema, rawData)) as T) : (rawData as T)
     } else {
       data = (await response.text()) as T
     }

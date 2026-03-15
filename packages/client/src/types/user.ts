@@ -1,20 +1,14 @@
-import type { UserResponse, UserListQuery, CreateUserBody, UpdateUserBody, UserIdParams } from '@xdd-zone/schema/user'
-import type { UserStatus } from '@xdd-zone/schema/auth'
-import type { PaginatedList } from './api'
+import type {
+  CreateUserBody,
+  UpdateUserBody,
+  User,
+  UserIdParams,
+  UserList,
+  UserListQuery,
+} from '@xdd-zone/schema/contracts/user'
+import type { UserStatus } from '@xdd-zone/schema/domains/auth'
 
-export type { UserResponse, UserListQuery, CreateUserBody, UpdateUserBody, UserIdParams }
-export type { UserStatus }
+export type { CreateUserBody, UpdateUserBody, User, UserIdParams, UserList, UserListQuery, UserStatus }
 
-export type UserListResponse = PaginatedList<UserResponse>
-
-export interface CreateUserResponse {
-  data: UserResponse
-}
-
-export interface GetUserResponse {
-  data: UserResponse
-}
-
-export interface DeleteUserResponse {
-  data: null
-}
+export type CreateUserResponse = User
+export type GetUserResponse = User

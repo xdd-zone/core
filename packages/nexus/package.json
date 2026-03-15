@@ -22,6 +22,7 @@
   "scripts": {
     "dev": "NODE_ENV=development bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
+    "test": "NODE_ENV=test DATABASE_URL=postgresql://postgres:postgres@localhost:5432/xdd_test BETTER_AUTH_URL=http://localhost:7788 BETTER_AUTH_SECRET=dev-only-test-secret-with-minimum-length-32 bun test src/**/*.test.ts",
     "seed": "bun run src/infra/database/prisma/seed/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

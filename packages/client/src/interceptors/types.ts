@@ -4,6 +4,8 @@
  * 定义请求拦截器和响应拦截器的类型
  */
 
+import type { RequestOptions } from '../core/types'
+
 /**
  * 请求上下文
  */
@@ -89,15 +91,4 @@ export type ResponseInterceptorFn<T = unknown> = (
   path: string,
 ) => Promise<T | void> | T | void
 
-/**
- * 请求选项
- */
-export interface RequestOptions {
-  /** 查询参数 */
-  params?: Record<string, unknown>
-  /** 请求体数据 */
-  body?: BodyInit | null | undefined
-  /** 其他 Fetch API 选项 */
-  headers?: HeadersInit
-  [key: string]: unknown
-}
+export type { RequestOptions }

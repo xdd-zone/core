@@ -1,25 +1,6 @@
-import type { UserStatus, SignUpEmailBody, SignInEmailBody } from '@xdd-zone/schema/auth'
-import type { UserBase, Session, SessionData, AuthSessionData } from '@xdd-zone/schema/auth'
+import type { AuthSession, Session, SignInEmailBody, SignUpEmailBody } from '@xdd-zone/schema/contracts/auth'
+import type { AuthUser, UserBase, UserStatus } from '@xdd-zone/schema/domains/auth'
 
-export type { UserStatus, SignUpEmailBody, SignInEmailBody }
-export type { UserBase, Session, SessionData, AuthSessionData }
+export type { AuthSession, AuthUser, Session, SignInEmailBody, SignUpEmailBody, UserBase, UserStatus }
 
-export interface AuthResponse {
-  code: number
-  message: string
-  data: AuthSessionData
-}
-
-export interface SessionResponse {
-  code: number
-  message: string
-  data: SessionData
-}
-
-export type GetSessionResponse = SessionResponse
-
-export interface SignOutResponse {
-  code: number
-  message: string
-  data: null
-}
+export type GetSessionResponse = Session

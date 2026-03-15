@@ -1,3 +1,5 @@
+import type { ZodTypeAny } from 'zod'
+
 /**
  * 客户端配置选项
  */
@@ -13,17 +15,19 @@ export interface ClientOptions {
 /**
  * 请求选项
  */
-export interface RequestOptions extends RequestInit {
+export type RequestOptions = Omit<RequestInit, 'body'> & {
   /** 查询参数 */
   params?: Record<string, unknown>
   /** 请求体数据 */
-  body?: BodyInit | null | undefined
+  body?: unknown
+  /** 响应校验 Schema */
+  responseSchema?: ZodTypeAny
   /** 索引签名 */
   [key: string]: unknown
 }
 
 /**
- * 统一响应包装
+ * 原始 HTTP 响应包装
  */
 export interface XDDResponse<T = unknown> {
   /** 响应数据 */
@@ -37,18 +41,6 @@ export interface XDDResponse<T = unknown> {
 }
 
 /**
- * API 统一响应格式
- */
-export interface ApiResult<T> {
-  /** 业务数据 */
-  data: T
-  /** 0 表示成功 */
-  code: number
-  /** 消息描述 */
-  message: string
-}
-
-/**
  * HTTP 方法类型
  */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
@@ -57,22 +49,22 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
  * 端点访问器接口
  */
 export interface EndpointAccessor<T = unknown> {
-  get(): Promise<XDDResponse<T>>
-  post(body?: unknown): Promise<XDDResponse<T>>
-  put(body?: unknown): Promise<XDDResponse<T>>
-  patch(body?: unknown): Promise<XDDResponse<T>>
-  delete(): Promise<XDDResponse<T>>
+  get(): Promise<T>
+  post(body?: unknown): Promise<T>
+  put(body?: unknown): Promise<T>
+  patch(body?: unknown): Promise<T>
+  delete(): Promise<T>
 }
 
 /**
  * 带参数的端点访问器
  */
 export interface ParamEndpointAccessor<T = unknown> {
-  get(query?: unknown): Promise<XDDResponse<T>>
-  post(body?: unknown): Promise<XDDResponse<T>>
-  put(body?: unknown): Promise<XDDResponse<T>>
-  patch(body?: unknown): Promise<XDDResponse<T>>
-  delete(): Promise<XDDResponse<T>>
+  get(query?: unknown): Promise<T>
+  post(body?: unknown): Promise<T>
+  put(body?: unknown): Promise<T>
+  patch(body?: unknown): Promise<T>
+  delete(): Promise<T>
 }
 
 /**

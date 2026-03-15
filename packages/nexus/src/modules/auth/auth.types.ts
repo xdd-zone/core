@@ -1,52 +1,27 @@
-import type { Session, User } from '@/infra/database/prisma/generated'
+import type { Session as PrismaSession, User } from '@/infra/database/prisma/generated'
 
 /**
  * 认证响应
  */
-export interface AuthResponse {
+export interface AuthSession {
   user: User
-  session: Session | null
+  session: PrismaSession | null
 }
 
 /**
  * 会话响应
  */
-export interface SessionResponse {
+export interface Session {
   user: User | null
-  session: Session | null
+  session: PrismaSession | null
   isAuthenticated: boolean
 }
 
 /**
- * 统一格式的认证响应
+ * 已认证会话响应。
  */
-export interface AuthResponseUnified {
-  code: number
-  message: string
-  data: {
-    user: User
-    token?: string
-    session?: Session | null
-  }
-}
-
-/**
- * 统一格式的会话响应
- */
-export interface SessionResponseUnified {
-  code: number
-  message: string
-  data: {
-    session: Session | null
-    user: User | null
-  }
-}
-
-/**
- * 统一格式的登出响应
- */
-export interface SignOutResponse {
-  code: number
-  message: string
-  data: null
+export interface AuthenticatedSession extends Session {
+  user: User
+  session: PrismaSession
+  isAuthenticated: true
 }

@@ -1,44 +1,84 @@
-# 测试数据库
+# 测试指南
 
-项目内置 Docker 测试数据库支持，用于开发测试。
+## 测试分层
 
-## 使用方式
+当前仓库主要有 3 类验证：
+
+### 1. 静态检查
 
 ```bash
-# 启动测试数据库（端口 5433）
-bun run test-db start
-
-# 查看测试数据库状态
-bun run test-db status
-
-# 重置测试数据库
-bun run test-db reset
-
-# 停止测试数据库
-bun run test-db stop
-
-# 交互式菜单
-bun run test-db
+bun run lint
+bun run format:check
+bun run type-check
 ```
 
-## 配置
+### 2. 单元 / 插件 / schema 测试
 
-使用测试数据库时，修改 `.env`：
-
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/test_db"
+```bash
+bun run --filter @xdd-zone/nexus test
+bun test packages/schema/test/contracts.test.ts
+bun test packages/client/src/core/request.test.ts
 ```
 
-## 数据库信息
+### 3. 集成脚本
 
-- **主机**: localhost
-- **端口**: 5433
-- **用户名**: postgres
-- **密码**: postgres
-- **数据库名**: test_db
+```bash
+bun packages/client/test-integration.ts
+```
 
-## 注意事项
+该脚本当前覆盖：
 
-- 测试数据库与生产数据库使用不同的端口
-- 重置测试数据库会删除所有数据
-- 开发时可以使用测试数据库进行快速迭代
+- 管理员 happy path
+- 匿名访问 `401`
+- 普通用户 own/me 成功路径
+- 普通用户访问管理员接口 `403`
+- 临时账号创建与清理
+
+## 测试数据库
+
+仓库提供测试数据库管理脚本：
+
+```bash
+bun run test:db
+bun run test:db start
+bun run test:db stop
+bun run test:db reset
+```
+
+默认测试数据库信息：
+
+- host: `localhost`
+- port: `5433`
+- user: `postgres`
+- password: `postgres`
+
+## 推荐回归流程
+
+### 协议或 client 变更
+
+```bash
+bun test packages/client/src/core/request.test.ts
+bun packages/client/test-integration.ts
+```
+
+### 权限或 auth 变更
+
+```bash
+bun run --filter @xdd-zone/nexus test
+bun packages/client/test-integration.ts
+```
+
+### schema 变更
+
+```bash
+bun test packages/schema/test/contracts.test.ts
+bun run type-check
+```
+
+## 提交前最小检查
+
+```bash
+bun run format
+bun run lint
+bun run type-check
+```

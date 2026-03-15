@@ -8,7 +8,7 @@
 
 // Re-export base types
 export type {
-  ApiResponse,
+  ApiError,
   PaginationQuery,
   PaginationResponse,
   PaginatedList,
@@ -19,26 +19,24 @@ export type {
 // Re-export auth types
 export type {
   UserStatus,
+  AuthUser,
   UserBase,
   Session,
   SignUpEmailBody,
   SignInEmailBody,
-  AuthResponse,
-  SessionResponse,
+  AuthSession,
   GetSessionResponse,
-  SignOutResponse,
 } from './types/auth'
 
 // Re-export user types
 export type {
-  UserResponse,
-  UserListResponse,
+  User,
+  UserList,
   UserListQuery,
   CreateUserBody,
   UpdateUserBody,
   CreateUserResponse,
   GetUserResponse,
-  DeleteUserResponse,
 } from './types/user'
 
 // Re-export rbac types
@@ -58,8 +56,8 @@ export * from './interceptors'
 export { XDDClient, createClient } from './client'
 
 // Re-export core types
-export type { ClientOptions, RequestOptions, XDDResponse, ApiResult } from './core/types'
-export type { RequestFn } from './core/request'
+export type { ClientOptions, RequestOptions, XDDResponse } from './core/types'
+export type { RequestFn, RequestRawFn } from './core/request'
 
 // Re-export module accessors and types
 export type { AuthAccessors } from './modules/auth'

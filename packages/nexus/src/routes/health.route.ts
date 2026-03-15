@@ -1,0 +1,24 @@
+import { Elysia } from 'elysia'
+import { z } from 'zod'
+import { apiDetail } from '@/shared'
+
+const HealthSchema = z.object({
+  status: z.literal('ok'),
+})
+
+/**
+ * 基础健康检查路由。
+ */
+export const healthRoutes = new Elysia({ prefix: '/health' }).get(
+  '/',
+  () => ({
+    status: 'ok',
+  }),
+  {
+    detail: apiDetail({
+      summary: '健康检查',
+      description: '返回服务当前可用状态',
+      response: HealthSchema,
+    }),
+  },
+)
