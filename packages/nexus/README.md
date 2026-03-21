@@ -2,29 +2,32 @@
 
 `@xdd-zone/nexus` 是 XDD Zone Core 的 Elysia API 服务。
 
-## 当前架构
+## 架构
 
-服务端已经切换到 Elysia-first 结构：
+服务端采用 Elysia-first 结构：
 
 ```text
 src/
+├── index.ts
 ├── app.ts
 ├── server.ts
-├── plugins/
 ├── routes/
 ├── modules/
 ├── core/
 ├── infra/
-└── shared/
+├── shared/
+└── eden/
 ```
 
 职责划分：
 
-- `plugins/`：框架级能力
 - `routes/`：HTTP 路由
 - `modules/`：业务逻辑
-- `core/`：认证、配置、权限、错误处理
+- `core/http/`：HTTP 基础能力与应用装配
+- `core/access-control/`：鉴权与权限声明
+- `core/`：认证、配置、权限、错误处理等核心能力
 - `infra/`：数据库与日志
+- `eden/`：仓库内联调与 smoke test
 
 ## 运行
 
@@ -35,7 +38,8 @@ bun run dev
 默认地址：
 
 - API: `http://localhost:7788/api`
-- OpenAPI: `http://localhost:7788/openapi`
+- OpenAPI UI: `http://localhost:7788/openapi`
+- OpenAPI JSON: `http://localhost:7788/openapi/json`
 
 ## 常用命令
 
@@ -53,11 +57,11 @@ bun run seed
 
 ## 鉴权与权限
 
-当前职责边界：
+职责边界：
 
-- `authPlugin`：获取会话
-- `protectedPlugin`：要求登录
-- `permissionPlugin + permit`：权限判断
+- `authPlugin`：获取会话，并支持 `auth: 'required'`
+- `permissionPlugin`：组合 `authPlugin`，并负责 `permission`、`own`、`me` 判断
+- `permit.*`：权限宏内部复用的低层工具，不作为 route 主入口
 
 语义：
 
@@ -72,7 +76,9 @@ bun run seed
 
 ## 开发约定
 
-- route 中直接使用 schema + service
+- route 中直接使用 contract schema + service
+- 全局应用装配通过 `core/http` 收口
+- 路由鉴权优先使用 `auth: 'required'`、`permission`、`own`、`me`
 - OpenAPI 统一使用 `apiDetail(...)`
 
 ## 相关文档

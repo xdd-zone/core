@@ -2,45 +2,58 @@
 
 ## 架构结论
 
-当前核心原则：
+仓库的主要边界可以概括成 5 条：
 
-- route 直接表达 HTTP 结构
-- plugin 只承载框架级能力
-- module 只承载业务逻辑
-- schema 作为唯一契约源
-- client 默认直接返回业务数据
+- `packages/nexus` 是服务端 HTTP 契约真相源
+- route 层直接表达 HTTP 语义，不维护额外的 schema 镜像层
+- access control 通过声明式 route 配置表达
+- OpenAPI 是服务端对外协议导出物
+- Eden 是仓库内联调与 smoke test 的内部类型基线
 
-## 目录结构
+## 包边界
 
-`packages/nexus/src/`：
+### `@xdd-zone/nexus`
+
+负责：
+
+- Elysia app / route / plugin 组合
+- 模块 contract、OpenAPI、权限与认证
+- Prisma、日志、配置等基础设施
+- Eden internal smoke test
+
+不负责：
+
+- 维护第二套独立 HTTP 契约源
+
+### `@xdd-zone/eslint-config`
+
+负责共享 lint / format 规则，不参与业务协议链路。
+
+## 服务端结构
+
+`packages/nexus/src/` 按下面的职责组织：
 
 ```text
 src/
 ├── app.ts
 ├── server.ts
 ├── index.ts
-├── plugins/
 ├── routes/
 ├── modules/
 ├── core/
 ├── infra/
-└── shared/
+├── shared/
+└── eden/
 ```
-
-## 启动链路
 
 ### `app.ts`
 
-负责创建 `Elysia` 实例并装配：
+负责创建 Elysia app，并装配：
 
-- 全局插件
-- 路由聚合
+- `core/http` 全局插件
+- API 路由聚合
 
-不负责：
-
-- 监听端口
-- 优雅关闭
-- 启动日志
+它不负责监听端口，也不负责优雅关闭。
 
 ### `server.ts`
 
@@ -48,144 +61,148 @@ src/
 
 - `app.listen(...)`
 - 启动日志
-- 进程关闭与优雅退出
+- Prisma 断连与进程退出
 
 ### `index.ts`
 
-只做启动入口。
+只负责启动入口。
 
-## 插件层
+## Route / Module / Core 的边界
 
-`plugins/` 只保留框架级能力组合。
+### `routes/`
 
-### `app.plugin.ts`
-
-聚合全局插件：
-
-- CORS
-- OpenAPI
-- 统一错误处理
-- 请求日志
-
-### `auth.plugin.ts`
-
-提供：
-
-- `getAuth(request)`
-- `requireAuth(request)`
-
-它解决“你是谁”。
-
-### `protected.plugin.ts`
-
-在进入路由前执行 `requireAuth(request)`。
-
-它解决“你是否必须已登录”。
-
-### `permission.plugin.ts`
-
-在 `protectedPlugin` 基础上导出统一权限 API：
-
-- `Permissions`
-- `permit.permission(...)`
-- `permit.own(...)`
-- `permit.me(...)`
-
-它解决“你能做什么”。
-
-## 路由层
-
-`routes/*.route.ts` 只负责：
+每个 `*.route.ts` 只负责：
 
 1. prefix / tags
-2. plugin 组合
-3. request schema / response schema
-4. 调用 service
+2. route 级 schema 绑定
+3. 声明式鉴权与权限
+4. `apiDetail(...)`
+5. 调用 service
 
-典型写法：
+### `modules/`
 
-```ts
-export const userRoutes = new Elysia({
-  prefix: '/user',
-  tags: ['User'],
-})
-  .use(permissionPlugin)
-  .get('/', async ({ query }) => await UserService.list(query), {
-    query: UserListQuerySchema,
-    beforeHandle: [permit.permission(Permissions.USER.READ_ALL)],
-    detail: apiDetail({
-      summary: '获取用户列表',
-      response: UserListSchema,
-      errors: [400, 401, 403],
-    }),
-  })
-```
+业务模块以 `auth / user / rbac` 为主，推荐包含：
 
-## 模块层
-
-`modules/*` 是纯业务层。
-
-通常由这些文件组成：
-
-- `*.model.ts`
+- `*.contract.ts`
 - `*.service.ts`
 - `*.repository.ts`
 - `*.types.ts`
+- `*.constants.ts`
 - `index.ts`
 
-模块层只承载 Elysia route 之外的业务能力。
+其中：
 
-## core / infra / shared
+- `*.contract.ts`
+  - 定义 HTTP body / query / params / response
+- `*.service.ts`
+  - 承担业务编排
+- `*.repository.ts`
+  - 承担 Prisma 访问
 
 ### `core/`
 
-只保留真正跨业务的核心能力：
+只放跨业务框架能力：
 
-- 认证
-- 配置
-- 权限系统
-- 错误插件
+- `core/http/`
+  - CORS
+  - OpenAPI
+  - 统一错误处理
+  - 请求日志
+- `core/access-control/`
+  - `authPlugin`
+  - `permissionPlugin`
+- `core/auth/`
+  - Better Auth 配置与适配
+- `core/permissions/`
+  - 权限常量、权限服务、辅助判断
 
 ### `infra/`
 
 基础设施实现：
 
-- Prisma / DB helpers
+- Prisma 客户端
+- Prisma schema / seed
 - logger
-- seed / schema
 
 ### `shared/`
 
-轻量公共工具，例如 `apiDetail(...)`。
+轻量共享能力：
 
-## 协议层
+- `shared/schema/`
+  - `ApiErrorSchema`
+  - 分页 schema
+  - query helpers
+  - 常见 primitives
+- `shared/openapi/`
+  - `apiDetail(...)`
 
-### 服务端
+## 鉴权与权限模型
 
-- 成功响应直接返回业务数据
-- 删除类接口返回 `204`
-- 错误响应统一由错误插件处理
+access control 的统一入口是 `core/access-control/`。
 
-### schema
+route 层优先使用下面 4 种声明式配置：
 
-`@xdd-zone/schema` 是唯一契约源，分为：
+- `auth: 'required'`
+  - 只要求登录
+- `permission`
+  - 要求显式权限
+- `own`
+  - 自己可访问，或具备 `:all` 权限
+- `me`
+  - 登录用户访问自己的 `/me` 类接口
 
-- `domains/*`
-- `contracts/*`
-- `shared/*`
-- `adapters/*`
+当 handler 需要直接消费已认证的 `auth` 上下文时，推荐同时显式声明：
 
-### client
+- `auth: 'required'`
 
-- 默认返回业务数据
-- `requestRaw()` 才返回状态码与 headers
-- 默认 headers / timeout 全局生效
-- 自定义 headers 与内部 `Cookie` / `Origin` / `Content-Type` 合并
+新代码应统一从 `@/core/access-control` 与 `@/core/http` 导入。
 
-## 当前实现摘要
+## 协议与生成链路
 
-- API 服务使用 `app.ts + server.ts + plugins/ + routes/ + modules/`
-- 鉴权边界使用 `authPlugin / protectedPlugin / permissionPlugin`
-- 成功响应直接返回业务数据
-- 分页结构统一为 `items / total / page / pageSize / totalPages`
-- client 与 schema 使用同一套成功契约与错误契约
+协议链路如下：
+
+```text
+Nexus contract / route
+  -> OpenAPI 导出
+  -> Eden / 测试 / 外部集成消费
+```
+
+具体落点：
+
+- contract 源：
+  - `packages/nexus/src/modules/*/*.contract.ts`
+- OpenAPI 导出：
+  - `packages/nexus/scripts/export-openapi.ts`
+  - `packages/nexus/openapi/openapi.json`
+
+## 内部验证链路
+
+仓库内有两条验证链：
+
+### Eden internal
+
+用途：
+
+- route 类型漂移检查
+- 登录态 / own / me 的 typed smoke test
+
+位置：
+
+- `packages/nexus/src/eden/eden-smoke.test.ts`
+
+### OpenAPI export
+
+用途：
+
+- 验证 OpenAPI 文档可导出，并覆盖关键路径
+
+位置：
+
+- `packages/nexus/src/eden/openapi-smoke.test.ts`
+
+## 实现摘要
+
+- 服务端只维护一套 HTTP 契约源
+- route 风格保持 Elysia-native 的声明式写法
+- Better Auth 适配位于 `core/auth`
+- Eden 位于 Nexus 测试集中，并覆盖匿名、登录态、own、me

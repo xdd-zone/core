@@ -3,11 +3,12 @@
  * 业务逻辑层：处理用户相关的业务逻辑
  */
 
-import type { CreateUserBody, UpdateUserBody, UserList, UserListQuery, User } from './user.model'
+import type { CreateUserBody, UpdateUserBody, UserList, UserListQuery, User } from './user.contract'
 
 import type { UserWhereInput } from './user.types'
 import { buildKeywordSearch } from '@/infra/database'
 import { DEFAULT_USER_STATUS, USER_SEARCH_FIELDS } from './user.constants'
+import { UserListSchema, UserSchema } from './user.contract'
 import { UserRepository } from './user.repository'
 
 /**
@@ -49,7 +50,7 @@ export class UserService {
     const where = this.buildWhereConditions(query)
 
     // 使用通用分页方法查询（Date 字段已由中间件自动转换）
-    return await UserRepository.paginate(where, query)
+    return UserListSchema.parse(await UserRepository.paginate(where, query))
   }
 
   /**
@@ -58,7 +59,9 @@ export class UserService {
    * @returns 用户信息或 null
    */
   static async findById(id: string): Promise<User | null> {
-    return await UserRepository.findById(id)
+    const user = await UserRepository.findById(id)
+
+    return user ? UserSchema.parse(user) : null
   }
 
   /**
@@ -67,7 +70,7 @@ export class UserService {
    * @returns 创建的用户信息
    */
   static async create(data: CreateUserBody): Promise<User> {
-    return await UserRepository.create({
+    return UserSchema.parse(await UserRepository.create({
       username: data.username,
       name: data.name,
       email: data.email,
@@ -75,7 +78,7 @@ export class UserService {
       introduce: data.introduce,
       image: data.image,
       status: data.status ?? DEFAULT_USER_STATUS,
-    })
+    }))
   }
 
   /**
@@ -85,7 +88,7 @@ export class UserService {
    * @returns 更新后的用户信息
    */
   static async update(id: string, data: UpdateUserBody): Promise<User> {
-    return await UserRepository.update(id, {
+    return UserSchema.parse(await UserRepository.update(id, {
       username: data.username ?? undefined,
       name: data.name,
       email: data.email ?? undefined,
@@ -93,7 +96,7 @@ export class UserService {
       introduce: data.introduce ?? undefined,
       image: data.image ?? undefined,
       status: data.status,
-    })
+    }))
   }
 
   /**
@@ -102,6 +105,6 @@ export class UserService {
    * @returns 被删除的用户信息
    */
   static async delete(id: string): Promise<User> {
-    return await UserRepository.delete(id)
+    return UserSchema.parse(await UserRepository.delete(id))
   }
 }

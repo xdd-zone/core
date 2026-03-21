@@ -1,28 +1,28 @@
 # XDD Zone 代码骨架
 
-这个文件只提供当前仓库的高频骨架与补漏清单。生成代码时，优先参考现有同类文件，再按这里的结构补齐。
+这个文件提供仓库内常见代码骨架与补漏清单。生成代码时，优先参考现有同类文件，再按这里的结构补齐。
 
 ## 分层落点
 
 新增一个公开 API 时，通常涉及四层：
 
-1. `packages/schema/src/contracts/<domain>/`
+1. `packages/nexus/src/modules/<domain>/<domain>.contract.ts`
 2. `packages/nexus/src/modules/<domain>/`
 3. `packages/nexus/src/routes/*.route.ts`
-4. `packages/client/src/modules/<domain>/index.ts`
+4. `packages/nexus/openapi/openapi.json` 或相关导出
 
 ## 类型来源优先级
 
 生成代码时，按下面顺序取类型：
 
-1. schema 推导类型
+1. contract / shared schema 推导类型
 2. Prisma 生成类型
 3. 现有基础泛型
 4. 新增语义化模块类型
 
 不要跳过前两层直接写宽泛对象，更不要用 `any` 占位。
 
-## schema 骨架
+## contract 骨架
 
 ```ts
 import { z } from 'zod'
@@ -35,8 +35,12 @@ export type ExampleIdParams = z.infer<typeof ExampleIdParamsSchema>
 ```
 
 ```ts
-import { createPaginatedListSchema } from '../../shared/models/paginated-list.schema'
-import { ExampleSchema } from './example-response.schema'
+import { createPaginatedListSchema } from '@/shared/schema'
+
+export const ExampleSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+})
 
 export const ExampleListSchema = createPaginatedListSchema(ExampleSchema)
 
@@ -49,8 +53,8 @@ export type ExampleList = typeof ExampleListSchema._output
 
 ```ts
 import { Elysia } from 'elysia'
-import { Permissions, permit, permissionPlugin } from '@/plugins'
-import { apiDetail } from '@/shared'
+import { Permissions, permissionPlugin } from '@/core/access-control'
+import { apiDetail } from '@/shared/openapi'
 import * as Schemas from '@/modules/example'
 import { ExampleService } from '@/modules/example'
 
@@ -60,8 +64,9 @@ export const exampleRoutes = new Elysia({
 })
   .use(permissionPlugin)
   .get('/', async ({ query }) => await ExampleService.list(query), {
-    beforeHandle: [permit.permission(Permissions.EXAMPLE.READ_ALL)],
+    permission: Permissions.EXAMPLE.READ_ALL,
     query: Schemas.ExampleListQuerySchema,
+    response: Schemas.ExampleListSchema,
     detail: apiDetail({
       summary: '获取示例列表',
       response: Schemas.ExampleListSchema,
@@ -75,7 +80,7 @@ export const exampleRoutes = new Elysia({
 ## service 骨架
 
 ```ts
-import type { ExampleList, ExampleListQuery } from './example.model'
+import type { ExampleList, ExampleListQuery } from './example.contract'
 import { ExampleRepository } from './example.repository'
 
 /**
@@ -96,14 +101,20 @@ service 负责业务编排、参数转换和调用 repository。
 ## repository 骨架
 
 ```ts
-import type { ExampleBaseData, ExampleWhereInput } from './example.types'
-import type { PaginatedList, PaginationQuery } from '@/infra/database'
+import type { Prisma } from '@/infra/database/prisma/generated'
+
+import type { ExampleListQuery } from './example.contract'
+import type { ExampleBaseData } from './example.types'
+import type { PaginatedList } from '@/infra/database'
 import { PrismaService } from '@/infra/database/prisma.service'
 
 export class ExampleRepository {
-  static async paginate(where: ExampleWhereInput, query: PaginationQuery): Promise<PaginatedList<ExampleBaseData>> {
-    return PrismaService.paginate<ExampleBaseData>('example', where, query, {
-      orderBy: { id: 'desc' },
+  static async paginate(
+    where: Prisma.ExampleWhereInput,
+    query: ExampleListQuery,
+  ): Promise<PaginatedList<ExampleBaseData>> {
+    return await PrismaService.paginate<ExampleBaseData>('example', where, query, {
+      orderBy: { createdAt: 'desc' },
     })
   }
 }
@@ -111,30 +122,6 @@ export class ExampleRepository {
 
 如果只是轻量封装，也保持 repository 独立，避免 route / service 直接写 Prisma。
 即使是示例骨架，也不要用 `object`、`any` 这类无意义类型占位。
-
-## client accessor 骨架
-
-```ts
-import { ExampleListQuerySchema, ExampleListSchema, ExampleSchema } from '@xdd-zone/schema/contracts/example'
-import type { RequestFn } from '../../core/request'
-import type { ExampleList, ExampleListQuery, GetExampleResponse } from '../../types/example'
-
-export function createExampleAccessor(request: RequestFn) {
-  return {
-    list: {
-      get: (query?: ExampleListQuery) =>
-        request<ExampleList>('GET', 'example', {
-          params: query ? (ExampleListQuerySchema.parse(query) as Record<string, unknown>) : undefined,
-          responseSchema: ExampleListSchema,
-        }),
-    },
-    get: (id: string) =>
-      request<GetExampleResponse>('GET', `example/${id}`, {
-        responseSchema: ExampleSchema,
-      }),
-  }
-}
-```
 
 ## 常见坏味道与替代写法
 
@@ -178,13 +165,12 @@ type Query = ExampleListQuery
 
 ## 生成完成后的检查清单
 
-- schema 是否先于 route / client 更新
+- contract 是否先于 route 更新
 - `index.ts` 导出是否补齐
-- route 是否使用正确 plugin
+- route 是否使用正确 plugin 与声明式权限字段
 - OpenAPI 是否统一用 `apiDetail(...)`
 - 成功响应是否直接返回业务数据
 - 删除接口是否返回 `204`
-- client 是否只在公开 API 场景下新增
 - 是否补了中文 JSDoc
 - 是否残留 `any`、`as any`、`Promise<any>`、`Record<string, any>`
 - 类型名是否表达业务语义，而不是 `Data`、`Result` 这类空泛命名

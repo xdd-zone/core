@@ -1,0 +1,24 @@
+name: xdd-core-db-local
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: xdd-core-db-local
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: xdd_core_local
+      POSTGRES_USER: xdd
+      POSTGRES_PASSWORD: xdd_local_dev
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "55432:5432"
+    volumes:
+      - xdd_core_db_local_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xdd -d xdd_core_local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  xdd_core_db_local_data:

@@ -1,7 +1,16 @@
-import type { Elysia } from 'elysia'
 import { APP_CONFIG, OPENAPI_CONFIG } from '@/core/config'
 import { prisma } from '@/infra/database'
 import { logger } from '@/infra/logger'
+
+interface StartableApp {
+  listen(port: number): unknown
+  server?:
+    | {
+        hostname?: string
+        port?: number
+      }
+    | null
+}
 
 let lifecycleRegistered = false
 
@@ -32,7 +41,7 @@ function registerLifecycle() {
 /**
  * 启动 HTTP 服务。
  */
-export function startServer(application: Elysia) {
+export function startServer<const TApp extends StartableApp>(application: TApp) {
   registerLifecycle()
 
   application.listen(APP_CONFIG.port)

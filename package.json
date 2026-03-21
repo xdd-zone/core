@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "private": true,
-  "description": "XDD Zone Core - Backend API and Client SDK",
+  "description": "XDD Zone Core - Backend API",
   "author": "xidongdong-153",
   "license": "MIT",
   "homepage": "https://github.com/xdd-zone/core#readme",
@@ -23,10 +23,8 @@
   "scripts": {
     "dev": "bun run --filter @xdd-zone/nexus --elide-lines=0 dev",
     "dev:nexus": "bun run --filter @xdd-zone/nexus --elide-lines=0 dev",
-    "dev:client": "bun run --filter @xdd-zone/client dev",
     "build": "bun run --filter '*' build",
     "build:nexus": "bun run --filter @xdd-zone/nexus build",
-    "build:client": "bun run --filter @xdd-zone/client build",
     "lint": "eslint packages/",
     "lint:fix": "eslint packages/ --fix",
     "format": "prettier --write packages/",
@@ -38,7 +36,14 @@
     "prisma:reset": "bun run --filter @xdd-zone/nexus prisma:reset",
     "prisma:push": "bun run --filter @xdd-zone/nexus prisma:push",
     "seed": "bun run --filter @xdd-zone/nexus seed",
-    "test:db": "bun run scripts/test-db.ts"
+    "db:local": "bun run scripts/db/local.ts",
+    "db:local:up": "bun run scripts/db/local.ts up",
+    "db:local:down": "bun run scripts/db/local.ts down",
+    "db:local:reset": "bun run scripts/db/local.ts reset",
+    "db:local:status": "bun run scripts/db/local.ts status",
+    "db:local:url": "bun run scripts/db/local.ts url",
+    "db:local:logs": "bun run scripts/db/local.ts logs",
+    "db:local:prepare": "bun run scripts/db/local.ts prepare"
   },
   "devDependencies": {
     "eslint": "^9.39.2",

@@ -12,9 +12,10 @@ const HealthSchema = z.object({
 export const healthRoutes = new Elysia({ prefix: '/health' }).get(
   '/',
   () => ({
-    status: 'ok',
+    status: 'ok' as const,
   }),
   {
+    response: HealthSchema,
     detail: apiDetail({
       summary: '健康检查',
       description: '返回服务当前可用状态',

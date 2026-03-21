@@ -1,5 +1,5 @@
 import { Elysia, NotFoundError } from 'elysia'
-import { Permissions, permit, permissionPlugin } from '@/plugins'
+import { Permissions, permissionPlugin } from '@/core/access-control'
 import { apiDetail } from '@/shared'
 import {
   CreateUserBodySchema,
@@ -20,8 +20,9 @@ export const userRoutes = new Elysia({
 })
   .use(permissionPlugin)
   .get('/', async ({ query }) => await UserService.list(query), {
-    beforeHandle: [permit.permission(Permissions.USER.READ_ALL)],
+    permission: Permissions.USER.READ_ALL,
     query: UserListQuerySchema,
+    response: UserListSchema,
     detail: apiDetail({
       summary: '获取用户列表',
       description: '支持分页、关键字搜索、状态过滤、软删除过滤',
@@ -30,8 +31,9 @@ export const userRoutes = new Elysia({
     }),
   })
   .post('/', async ({ body }) => await UserService.create(body), {
-    beforeHandle: [permit.permission(Permissions.USER.CREATE)],
+    permission: Permissions.USER.CREATE,
     body: CreateUserBodySchema,
+    response: UserSchema,
     detail: apiDetail({
       summary: '创建用户',
       description: '创建新用户账号',
@@ -50,8 +52,9 @@ export const userRoutes = new Elysia({
       return user
     },
     {
-      beforeHandle: [permit.own(Permissions.USER.READ_OWN)],
+      own: Permissions.USER.READ_OWN,
       params: UserIdParamsSchema,
+      response: UserSchema,
       detail: apiDetail({
         summary: '获取用户信息',
         description: '根据用户 ID 获取用户详细信息。普通用户只能查看自己的信息，管理员可以查看所有用户。',
@@ -61,9 +64,10 @@ export const userRoutes = new Elysia({
     },
   )
   .patch('/:id', async ({ body, params }) => await UserService.update(params.id, body), {
-    beforeHandle: [permit.own(Permissions.USER.UPDATE_OWN)],
+    own: Permissions.USER.UPDATE_OWN,
     params: UserIdParamsSchema,
     body: UpdateUserBodySchema,
+    response: UserSchema,
     detail: apiDetail({
       summary: '更新用户信息',
       description: '更新用户基本信息（不包含密码）。普通用户只能更新自己的信息，管理员可以更新所有用户。',
@@ -78,7 +82,7 @@ export const userRoutes = new Elysia({
       set.status = 204
     },
     {
-      beforeHandle: [permit.own(Permissions.USER.DELETE_OWN)],
+      own: Permissions.USER.DELETE_OWN,
       params: UserIdParamsSchema,
       detail: apiDetail({
         summary: '删除用户',

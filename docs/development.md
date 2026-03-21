@@ -3,7 +3,7 @@
 ## 开发前提
 
 - Bun 1.3.5
-- PostgreSQL 可用
+- Docker 可用
 - `.env` 已配置 `DATABASE_URL`、`BETTER_AUTH_URL`、`BETTER_AUTH_SECRET`
 
 常用初始化命令：
@@ -11,110 +11,197 @@
 ```bash
 bun install
 bun run prisma:generate
-bun run prisma:push
-bun run seed
+bun run db:local:prepare
 ```
 
-## 当前开发模型
+## 标准开发动作
 
-新增能力时，优先按下面的职责拆分：
+新增或修改公共 API 时，默认按下面顺序推进：
 
-- `packages/nexus/src/routes/*`：HTTP 路由
-- `packages/nexus/src/modules/*`：业务逻辑
-- `packages/schema/src/contracts/*`：请求与 HTTP 成功契约
-- `packages/schema/src/domains/*`：领域对象
-- `packages/client/src/modules/*`：SDK 访问器
+1. 改 Nexus contract
+2. 改 service / repository
+3. 改 route
+4. 导出 OpenAPI
+5. 完成 Eden / OpenAPI / 权限回归
 
-## AI 生成代码建议
+也就是：
 
-如果通过 AI 在当前仓库生成或修改代码，优先使用 `xdd-zone-codegen` 项目 Skill。
+```text
+packages/nexus
+  -> export openapi
+  -> 验证
+```
 
-它会约束生成顺序与风格：
+## 代码放哪一层
 
-- 先补 `packages/schema`
-- 再实现 `packages/nexus`
-- 公开 API 再决定是否补 `packages/client`
-- route 保持轻量，service / repository 保持职责清晰
-- 禁止用 `any` 占位，类型优先从 schema 与 Prisma 推导
+### `packages/nexus/src/modules/*/*.contract.ts`
 
-详细说明见 [skills.md](/Users/wuwanzhu/Code/xdd/core/docs/skills.md)。
-
-## 新增 route 的推荐流程
-
-### 1. 先定义 schema
-
-在 `packages/schema` 中补齐：
+放：
 
 - body / query / params schema
-- response schema
+- 成功 response schema
+- route 可复用的 HTTP 边界类型
 
-### 2. 实现 module
+### `packages/nexus/src/routes/*.route.ts`
 
-在 `packages/nexus/src/modules/<name>/` 中实现：
+放：
 
-- `*.model.ts`
-- `*.service.ts`
-- `*.repository.ts`
-- `*.types.ts`
-- `index.ts`
+- prefix / tags
+- route schema 绑定
+- `apiDetail(...)`
+- `auth / permission / own / me`
+- 调用 service
 
-### 3. 实现 route
+不要在这里放：
 
-在 `packages/nexus/src/routes/*.route.ts` 中注册：
+- Prisma 查询
+- 散落的业务权限逻辑
+- Better Auth glue code
+- `AuthService.getSession(request.headers)` 这类会话解析
+
+route handler 优先直接消费：
+
+- `auth`
+- `currentUser`
+- `currentSession`
+
+### `packages/nexus/src/modules/*/*.service.ts`
+
+放：
+
+- 业务编排
+- 资源存在性校验
+- 领域层判断
+
+### `packages/nexus/src/modules/*/*.repository.ts`
+
+放：
+
+- Prisma 查询与写入
+- 数据选择与持久化细节
+
+## 新增接口的推荐流程
+
+### 第 1 步：定义 contract
+
+推荐位置：
+
+- `packages/nexus/src/modules/<name>/<name>.contract.ts`
+
+至少明确：
+
+- body
+- query
+- params
+- response
+
+### 第 2 步：实现 service / repository
+
+如果涉及数据库访问：
+
+- Prisma 访问下沉到 repository
+- service 只保留业务编排
+
+### 第 3 步：实现 route
+
+推荐 route 写法：
 
 ```ts
-export const postRoutes = new Elysia({
-  prefix: '/posts',
-  tags: ['Post'],
+export const userRoutes = new Elysia({
+  prefix: '/user',
+  tags: ['User'],
 })
   .use(permissionPlugin)
-  .get('/', async ({ query }) => await PostService.list(query), {
-    query: PostListQuerySchema,
-    beforeHandle: [permit.permission(Permissions.POST.READ_ALL)],
+  .get('/', async ({ query }) => await UserService.list(query), {
+    permission: Permissions.USER.READ_ALL,
+    query: UserListQuerySchema,
+    response: UserListSchema,
     detail: apiDetail({
-      summary: '获取文章列表',
-      response: PostListSchema,
+      summary: '获取用户列表',
+      response: UserListSchema,
       errors: [400, 401, 403],
     }),
   })
 ```
 
-### 4. 在 `routes/index.ts` 聚合
+必须登录但不做权限判断时：
 
 ```ts
-export const routes = new Elysia({
-  prefix: `/${APP_CONFIG.prefix}`,
+.get('/me', ({ auth }) => SessionSchema.parse(auth), {
+  auth: 'required',
+  response: SessionSchema,
 })
-  .use(postRoutes)
 ```
 
-## 插件选择
+own / me 场景时：
 
-### 公开接口，只读取可选会话
+```ts
+.get('/:id', handler, {
+  own: Permissions.USER.READ_OWN,
+})
+
+.get('/users/me/permissions', handler, {
+  auth: 'required',
+  me: Permissions.USER_PERMISSION.READ_OWN,
+})
+```
+
+### route 层禁止项
+
+看到下面这些写法时，默认说明分层又开始回漂了：
+
+- 在 route handler 里直接调用 `AuthService.getSession(...)`
+- 在 route handler 里手写 `401 / 403` 判断
+- 在 route handler 里写 Prisma 查询
+- 为了“方便”重新绕回低层鉴权 helper
+
+### 第 4 步：导出 OpenAPI
+
+执行：
+
+```bash
+bun run --filter @xdd-zone/nexus export:openapi
+```
+
+这会完成：
+
+- 导出最新的 OpenAPI JSON 产物
+- 校验默认输出路径不依赖已删除目录
+
+### 第 5 步：回归验证
+
+至少考虑：
+
+- happy path
+- 参数错误
+- `401`
+- `403`
+- `204`
+- own / me
+
+## 插件与权限选择
+
+### 公开接口，只想读取可选 session
 
 使用 `authPlugin`。
 
-### 必须登录但不做权限判定
+### 必须登录，但没有权限分层
 
-使用 `protectedPlugin`。
-
-### 既要登录又要权限判定
-
-使用 `permissionPlugin`。
-
-## 权限写法
+优先直接在 route 上使用：
 
 ```ts
-beforeHandle: [permit.permission(Permissions.USER.CREATE)]
-beforeHandle: [permit.own(Permissions.USER.READ_OWN)]
-beforeHandle: [permit.me(Permissions.USER_PERMISSION.READ_OWN)]
+auth: 'required'
 ```
 
-语义：
+需要一组路由都要求登录时，也优先使用 `authPlugin`，并在每个 route 上显式声明 `auth: 'required'`。
 
-- `permit.permission(...)`：要求显式权限
-- `permit.own(...)`：自己或具备 `:all` 权限
-- `permit.me(...)`：当前用户 `/me` 类接口
+### 需要权限判断
+
+使用 `permissionPlugin`，并在 route 配置里声明：
+
+- `permission`
+- `own`
+- `me`
 
 ## 响应约定
 
@@ -150,22 +237,9 @@ detail: apiDetail({
 })
 ```
 
-## 数据库变更
-
-```bash
-bun run prisma:generate
-bun run prisma:migrate
-```
-
-开发环境快速同步：
-
-```bash
-bun run prisma:push
-```
-
 ## 本地验证建议
 
-提交前至少执行：
+### 最小检查
 
 ```bash
 bun run format
@@ -173,31 +247,50 @@ bun run lint
 bun run type-check
 ```
 
-涉及权限或协议调整时，额外执行：
+### 改了 contract / route / OpenAPI
+
+```bash
+bun run --filter @xdd-zone/nexus export:openapi
+bun run --filter @xdd-zone/nexus type-check
+bun run --filter @xdd-zone/nexus test
+```
+
+### 改了 auth / permission / own / me
 
 ```bash
 bun run --filter @xdd-zone/nexus test
-bun test packages/client/src/core/request.test.ts
-bun packages/client/test-integration.ts
+bun run --filter @xdd-zone/nexus export:openapi
 ```
 
-## 常用命令
+## 本地数据库
+
+仓库提供统一的本地数据库入口：
 
 ```bash
-bun run dev
-bun run build
-bun run lint
-bun run lint:fix
-bun run format
-bun run format:check
-bun run type-check
-bun run prisma:generate
-bun run prisma:migrate
-bun run prisma:push
-bun run prisma:reset
-bun run seed
-bun run test:db
-bun run test:db start
-bun run test:db stop
-bun run test:db reset
+bun run db:local:up
+bun run db:local:down
+bun run db:local:reset
+bun run db:local:status
+bun run db:local:prepare
 ```
+
+默认连接信息：
+
+- host: `localhost`
+- port: `55432`
+- database: `xdd_core_local`
+- user: `xdd`
+- password: `xdd_local_dev`
+
+`packages/nexus` 的测试与 Prisma 操作可直接复用这套本地数据库配置。
+
+## AI 生成代码建议
+
+如果通过 AI 在仓库中生成或修改代码，优先使用 `xdd-zone-codegen` 项目 Skill。
+
+建议按下面的顺序推进：
+
+- 先定义 Nexus contract
+- 再写 route / service / repository
+- 公共 API 变更后同步检查 OpenAPI 导出与 Nexus 测试
+- 避免重新制造第二套契约源

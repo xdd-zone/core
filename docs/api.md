@@ -3,16 +3,24 @@
 ## 基础信息
 
 - Base URL: `http://localhost:7788/api`
-- OpenAPI: `http://localhost:7788/openapi`
+- OpenAPI UI: `http://localhost:7788/openapi`
+- OpenAPI JSON: `http://localhost:7788/openapi/json`
 - Health: `GET /api/health`
+
+HTTP 契约的定义位置：
+
+- `packages/nexus/src/modules/*/*.contract.ts`
+- `packages/nexus/src/shared/schema/*`
+
+OpenAPI 作为服务端协议导出物保留，供文档、调试与外部集成使用。
 
 ## 响应协议
 
 ### 成功响应
 
-成功响应直接返回业务数据。
+成功响应直接返回业务数据，不包 `{ code, message, data }`。
 
-示例：
+单对象示例：
 
 ```json
 {
@@ -34,7 +42,9 @@
 }
 ```
 
-无 body 操作统一返回 `204 No Content`。
+无 body 操作统一返回：
+
+- `204 No Content`
 
 ### 错误响应
 
@@ -52,14 +62,42 @@
 
 常见状态码：
 
-- `400`：参数错误或业务校验失败
-- `401`：未登录
-- `403`：已登录但无权限
-- `404`：资源不存在
-- `409`：资源冲突
-- `500`：服务端错误
+- `400`
+  - 参数错误或业务校验失败
+- `401`
+  - 未登录
+- `403`
+  - 已登录但无权限
+- `404`
+  - 资源不存在
+- `409`
+  - 资源冲突
+- `500`
+  - 服务端错误
+
+## 鉴权语义
+
+鉴权相关接口遵守以下语义：
+
+- `401`
+  - 没有有效登录态
+- `403`
+  - 有登录态，但不满足权限要求
+
+own / me 语义：
+
+- `own`
+  - 资源属于当前用户，或当前用户具备对应 `:all` 权限
+- `me`
+  - 登录用户访问自己的 `/me` 类接口
 
 ## 模块概览
+
+### Health
+
+| 方法 | 路径 | 描述 |
+| ---- | ---- | ---- |
+| GET | `/api/health` | 健康检查 |
 
 ### Auth
 
@@ -68,8 +106,8 @@
 | POST | `/api/auth/sign-up/email` | 注册用户 |
 | POST | `/api/auth/sign-in/email` | 登录 |
 | POST | `/api/auth/sign-out` | 登出，返回 `204` |
-| GET | `/api/auth/get-session` | 获取当前 session |
-| GET | `/api/auth/me` | 获取当前登录用户 |
+| GET | `/api/auth/get-session` | 获取 session |
+| GET | `/api/auth/me` | 获取登录用户 |
 
 ### User
 
@@ -97,26 +135,43 @@
 | POST | `/api/rbac/permissions` | 创建权限 |
 | GET | `/api/rbac/roles/:id/permissions` | 获取角色权限 |
 | POST | `/api/rbac/roles/:id/permissions` | 为角色分配权限 |
-| PATCH | `/api/rbac/roles/:id/permissions` | 替换角色权限 |
+| PATCH | `/api/rbac/roles/:id/permissions` | 批量替换角色权限 |
 | DELETE | `/api/rbac/roles/:id/permissions/:permissionId` | 移除角色权限，返回 `204` |
 | GET | `/api/rbac/users/:userId/roles` | 获取用户角色 |
 | POST | `/api/rbac/users/:userId/roles` | 为用户分配角色 |
 | DELETE | `/api/rbac/users/:userId/roles/:roleId` | 移除用户角色，返回 `204` |
 | PATCH | `/api/rbac/users/:userId/roles/:roleId` | 刷新用户角色缓存，返回 `204` |
 | GET | `/api/rbac/users/:userId/permissions` | 获取用户权限 |
-| GET | `/api/rbac/users/me/roles` | 获取当前用户角色 |
-| GET | `/api/rbac/users/me/permissions` | 获取当前用户权限 |
+| GET | `/api/rbac/users/me/roles` | 获取登录用户角色 |
+| GET | `/api/rbac/users/me/permissions` | 获取登录用户权限 |
 
-## 权限语义
+## 协议来源与消费方式
 
-- 未登录访问受保护接口：`401`
-- 已登录但无权限：`403`
-- `permit.own(...)`：自己可访问，带 `:all` 权限的管理员也可访问
-- `permit.me(...)`：访问 `/me` 类接口
-- `permit.permission(...)`：要求显式权限
+### 服务端
+
+服务端 route 会把真实 `response` schema 挂到 Elysia 配置中，并通过 `apiDetail(...)` 进入 OpenAPI。
+
+### 内部开发
+
+内部联调优先使用 Eden：
+
+- 直接基于 `createApp()` 的 route 类型
+- 用于 smoke test 与类型漂移检查
+
+### OpenAPI 导出
+
+```text
+Nexus contract / route
+  -> OpenAPI JSON
+  -> 文档、调试与外部集成消费 
+```
 
 ## 调试建议
 
-- 优先以 OpenAPI 文档为准查看实际 schema
-- 鉴权相关问题先检查 `/api/auth/get-session`
-- 分页接口统一检查 `items/total/page/pageSize/totalPages`
+优先按下面顺序排查：
+
+1. OpenAPI 文档是否已更新
+2. route 是否声明了正确的 `response`
+3. `/api/auth/get-session` 是否符合预期
+4. 问题属于 `400 / 401 / 403 / 404 / 409` 中的哪一种
+5. Eden smoke 与 Nexus 测试是否能复现

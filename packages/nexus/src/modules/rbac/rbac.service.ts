@@ -1,9 +1,25 @@
 import type { Prisma } from '@/infra/database/prisma/generated'
 import { PermissionService } from '@/core/permissions/permission.service'
-import { BadRequestError, ForbiddenError, NotFoundError } from '@/core/plugins'
+import { BadRequestError, ForbiddenError, NotFoundError } from '@/core/http'
 import { createPaginatedResponse } from '@/infra/database'
 import { PermissionRepository, RolePermissionRepository, RoleRepository, UserRoleRepository } from './repositories'
-import type { RoleListQuery, PermissionListQuery } from './rbac.model'
+import {
+  CurrentUserPermissionsSchema,
+  CurrentUserRolesSchema,
+  OperationResultSchema,
+  PermissionListSchema,
+  PermissionSchema,
+  RoleChildrenSchema,
+  RoleDetailSchema,
+  RoleListSchema,
+  RolePermissionsSchema,
+  RoleSchema,
+  UserPermissionsSchema,
+  UserRoleAssignmentSchema,
+  UserRolesSchema,
+  type PermissionListQuery,
+  type RoleListQuery,
+} from './rbac.contract'
 
 export class RbacService {
   // ===== 角色管理 =====
@@ -29,7 +45,7 @@ export class RbacService {
 
     const { roles, total } = await RoleRepository.findMany(where, skip, pageSize)
 
-    return createPaginatedResponse(roles, total, page, pageSize)
+    return RoleListSchema.parse(createPaginatedResponse(roles, total, page, pageSize))
   }
 
   static async getRoleDetail(id: string) {
@@ -45,10 +61,10 @@ export class RbacService {
       return perm.scope ? `${perm.resource}:${perm.action}:${perm.scope}` : `${perm.resource}:${perm.action}`
     })
 
-    return {
+    return RoleDetailSchema.parse({
       ...role,
       permissions,
-    }
+    })
   }
 
   static async createRole(data: { name: string; displayName?: string; description?: string; parentId?: string }) {
@@ -63,7 +79,7 @@ export class RbacService {
       isSystem: false,
     })
 
-    return role
+    return RoleSchema.parse(role)
   }
 
   static async updateRole(
@@ -101,7 +117,7 @@ export class RbacService {
 
     const updated = await RoleRepository.update(id, data)
 
-    return updated
+    return RoleSchema.parse(updated)
   }
 
   static async deleteRole(id: string) {
@@ -149,7 +165,7 @@ export class RbacService {
 
     const updated = await RoleRepository.update(roleId, { parentId })
 
-    return updated
+    return RoleSchema.parse(updated)
   }
 
   static async getRoleChildren(roleId: string) {
@@ -160,7 +176,7 @@ export class RbacService {
 
     const children = await RoleRepository.findChildren(roleId)
 
-    return children
+    return RoleChildrenSchema.parse(children)
   }
 
   // ===== 权限管理 =====
@@ -178,7 +194,7 @@ export class RbacService {
 
     const { permissions, total } = await PermissionRepository.findMany(where, skip, pageSize)
 
-    return createPaginatedResponse(permissions, total, page, pageSize)
+    return PermissionListSchema.parse(createPaginatedResponse(permissions, total, page, pageSize))
   }
 
   static async getPermissionDetail(id: string) {
@@ -188,7 +204,7 @@ export class RbacService {
       throw new NotFoundError('权限不存在')
     }
 
-    return permission
+    return PermissionSchema.parse(permission)
   }
 
   static async createPermission(data: {
@@ -200,7 +216,7 @@ export class RbacService {
   }) {
     const permission = await PermissionRepository.create(data)
 
-    return permission
+    return PermissionSchema.parse(permission)
   }
 
   // ===== 角色权限分配 =====
@@ -220,7 +236,7 @@ export class RbacService {
       displayName: rp.permission.displayName,
     }))
 
-    return permissions
+    return RolePermissionsSchema.parse(permissions)
   }
 
   static async assignPermissionsToRole(roleId: string, permissionIds: string[]) {
@@ -235,7 +251,7 @@ export class RbacService {
     const users = await UserRoleRepository.findUsersByRole(roleId)
     users.forEach((user) => PermissionService.clearCache(user.id))
 
-    return { success: true, count: permissionIds.length }
+    return OperationResultSchema.parse({ success: true, count: permissionIds.length })
   }
 
   static async removePermissionFromRole(roleId: string, permissionId: string) {
@@ -263,7 +279,7 @@ export class RbacService {
     const users = await UserRoleRepository.findUsersByRole(roleId)
     users.forEach((user) => PermissionService.clearCache(user.id))
 
-    return { success: true, count: permissionIds.length }
+    return OperationResultSchema.parse({ success: true, count: permissionIds.length })
   }
 
   // ===== 用户角色管理 =====
@@ -271,13 +287,13 @@ export class RbacService {
   static async getUserRoles(userId: string) {
     const userRoles = await UserRoleRepository.findByUser(userId)
 
-    return userRoles.map((ur) => ({
+    return UserRolesSchema.parse(userRoles.map((ur) => ({
       id: ur.id,
       roleId: ur.roleId,
       roleName: ur.role.name,
       roleDisplayName: ur.role.displayName,
       assignedAt: ur.assignedAt,
-    }))
+    })))
   }
 
   static async assignRoleToUser(userId: string, roleId: string) {
@@ -291,7 +307,7 @@ export class RbacService {
     // 角色分配后立即清理用户权限缓存
     PermissionService.clearCache(userId)
 
-    return userRole
+    return UserRoleAssignmentSchema.parse(userRole)
   }
 
   static async removeRoleFromUser(userId: string, roleId: string) {
@@ -328,9 +344,9 @@ export class RbacService {
   static async getUserPermissions(userId: string) {
     const permissions = await PermissionService.getUserPermissions(userId)
 
-    return {
+    return UserPermissionsSchema.parse({
       permissions,
-    }
+    })
   }
 
   static async getCurrentUserPermissions(userId: string) {
@@ -348,23 +364,23 @@ export class RbacService {
       displayName: ur.role.displayName,
     }))
 
-    return {
+    return CurrentUserPermissionsSchema.parse({
       permissions,
       roles,
-    }
+    })
   }
 
   static async getCurrentUserRoles(userId: string) {
     const userRoles = await UserRoleRepository.findByUser(userId)
 
-    return {
+    return CurrentUserRolesSchema.parse({
       roles: userRoles.map((ur) => ({
         id: ur.role.id,
         name: ur.role.name,
         displayName: ur.role.displayName,
         assignedAt: ur.assignedAt,
       })),
-    }
+    })
   }
 
   // ===== 缓存管理 =====

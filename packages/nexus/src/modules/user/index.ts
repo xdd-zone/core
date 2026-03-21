@@ -1,5 +1,5 @@
 export * from './user.constants'
-export * from './user.model'
+export * from './user.contract'
 export { UserRepository } from './user.repository'
 export { UserService } from './user.service'
 export * from './user.types'

@@ -57,6 +57,6 @@ export {
   type UserRoleIdParams,
   type UserRoleItem,
   type UserRoles,
-} from './rbac.model'
+} from './rbac.contract'
 export { RbacService } from './rbac.service'
 export type { PermissionGrouped, RoleWithPermissions, UserPermissionsResponse, UserRoleWithDetails } from './rbac.types'
