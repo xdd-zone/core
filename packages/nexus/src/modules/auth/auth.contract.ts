@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { UserStatusSchema } from '@/modules/user/user.contract'
 import { DateTimeSchema } from '@/shared/schema'
 
 export const AuthSessionRecordSchema = z.object({
@@ -27,7 +28,7 @@ export const AuthUserSchema = z.object({
   phoneVerifiedAt: DateTimeSchema.nullable().optional(),
   lastLogin: DateTimeSchema.nullable().optional(),
   lastLoginIp: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
+  status: UserStatusSchema.nullable().optional(),
   createdAt: DateTimeSchema,
   updatedAt: DateTimeSchema,
   deletedAt: DateTimeSchema.nullable().optional(),

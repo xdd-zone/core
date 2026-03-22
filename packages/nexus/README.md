@@ -68,6 +68,13 @@ bun run seed
 - 未登录：`401`
 - 已登录但无权限：`403`
 
+使用约束：
+
+- 固定角色只保留 `superAdmin / admin / user`
+- 权限以当前系统内置权限为准
+- `own` 只用于用户自己的资料场景
+- 角色接口用于角色列表、用户角色分配、用户角色查看与用户权限查看
+
 ## 响应约定
 
 - 成功响应直接返回业务数据
@@ -77,9 +84,38 @@ bun run seed
 ## 开发约定
 
 - route 中直接使用接口定义 schema + service
-- 全局应用装配通过 `core/http` 收口
+- 全局应用装配通过 `core/http` 统一管理
 - 路由鉴权优先使用 `auth: 'required'`、`permission`、`own`、`me`
 - OpenAPI 统一使用 `apiDetail(...)`
+
+## 接口概览
+
+认证：
+
+- `POST /api/auth/sign-up/email`
+- `POST /api/auth/sign-in/email`
+- `POST /api/auth/sign-out`
+- `GET /api/auth/get-session`
+- `GET /api/auth/me`
+
+用户：
+
+- `GET /api/user/me`
+- `PATCH /api/user/me`
+- `GET /api/user`
+- `GET /api/user/:id`
+- `PATCH /api/user/:id`
+- `PATCH /api/user/:id/status`
+
+RBAC：
+
+- `GET /api/rbac/roles`
+- `GET /api/rbac/users/:userId/roles`
+- `POST /api/rbac/users/:userId/roles`
+- `DELETE /api/rbac/users/:userId/roles/:roleId`
+- `GET /api/rbac/users/:userId/permissions`
+- `GET /api/rbac/users/me/roles`
+- `GET /api/rbac/users/me/permissions`
 
 ## 相关文档
 

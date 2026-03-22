@@ -87,7 +87,7 @@ OpenAPI 作为服务端接口说明导出物保留，供文档、调试与外部
 own / me 语义：
 
 - `own`
-  - 资源属于当前用户，或当前用户具备对应 `:all` 权限
+  - 仅用于用户自己的资料场景，或当前用户具备对应 `:all` 权限
 - `me`
   - 登录用户访问自己的 `/me` 类接口
 
@@ -113,34 +113,21 @@ own / me 语义：
 
 | 方法 | 路径 | 描述 |
 | ---- | ---- | ---- |
+| GET | `/api/user/me` | 获取当前用户资料 |
+| PATCH | `/api/user/me` | 更新当前用户资料 |
 | GET | `/api/user` | 获取用户列表 |
-| POST | `/api/user` | 创建用户 |
 | GET | `/api/user/:id` | 获取用户详情 |
 | PATCH | `/api/user/:id` | 更新用户 |
-| DELETE | `/api/user/:id` | 删除用户，返回 `204` |
+| PATCH | `/api/user/:id/status` | 更新用户状态 |
 
 ### RBAC
 
 | 方法 | 路径 | 描述 |
 | ---- | ---- | ---- |
 | GET | `/api/rbac/roles` | 获取角色列表 |
-| POST | `/api/rbac/roles` | 创建角色 |
-| GET | `/api/rbac/roles/:id` | 获取角色详情 |
-| PATCH | `/api/rbac/roles/:id` | 更新角色 |
-| DELETE | `/api/rbac/roles/:id` | 删除角色，返回 `204` |
-| PATCH | `/api/rbac/roles/:id/parent` | 设置父角色 |
-| GET | `/api/rbac/roles/:id/children` | 获取子角色 |
-| GET | `/api/rbac/permissions` | 获取权限列表 |
-| GET | `/api/rbac/permissions/:id` | 获取权限详情 |
-| POST | `/api/rbac/permissions` | 创建权限 |
-| GET | `/api/rbac/roles/:id/permissions` | 获取角色权限 |
-| POST | `/api/rbac/roles/:id/permissions` | 为角色分配权限 |
-| PATCH | `/api/rbac/roles/:id/permissions` | 批量替换角色权限 |
-| DELETE | `/api/rbac/roles/:id/permissions/:permissionId` | 移除角色权限，返回 `204` |
 | GET | `/api/rbac/users/:userId/roles` | 获取用户角色 |
 | POST | `/api/rbac/users/:userId/roles` | 为用户分配角色 |
 | DELETE | `/api/rbac/users/:userId/roles/:roleId` | 移除用户角色，返回 `204` |
-| PATCH | `/api/rbac/users/:userId/roles/:roleId` | 刷新用户角色缓存，返回 `204` |
 | GET | `/api/rbac/users/:userId/permissions` | 获取用户权限 |
 | GET | `/api/rbac/users/me/roles` | 获取登录用户角色 |
 | GET | `/api/rbac/users/me/permissions` | 获取登录用户权限 |

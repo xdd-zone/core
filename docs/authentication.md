@@ -1,6 +1,6 @@
 # 认证说明
 
-项目使用 Better Auth 处理登录态，Elysia 层通过 `core/access-control` 将认证能力按成本分层。
+项目使用 Better Auth 处理登录态，Elysia 层通过 `core/access-control` 将认证能力按成本分层。认证能力主要服务于用户资料访问与后台授权能力。
 
 ## 职责划分
 
@@ -32,6 +32,12 @@
 适合：
 
 - 需要 RBAC 的接口
+
+使用约束：
+
+- `own` 只用于用户自己的资料场景
+- 资源归属判断由具体业务模块自行处理
+- 固定角色只保留 `superAdmin / admin / user`
 
 ## Better Auth 适配位置
 
@@ -68,6 +74,30 @@ Better Auth 的 HTTP 适配位于：
 | POST | `/api/auth/sign-out` | 登出 |
 | GET | `/api/auth/get-session` | 获取 session |
 | GET | `/api/auth/me` | 获取登录用户 |
+
+## 接口边界
+
+用户资料：
+
+- `GET /api/user/me`
+- `PATCH /api/user/me`
+
+后台用户管理：
+
+- `GET /api/user`
+- `GET /api/user/:id`
+- `PATCH /api/user/:id`
+- `PATCH /api/user/:id/status`
+
+RBAC 底座：
+
+- `GET /api/rbac/roles`
+- `GET /api/rbac/users/:userId/roles`
+- `POST /api/rbac/users/:userId/roles`
+- `DELETE /api/rbac/users/:userId/roles/:roleId`
+- `GET /api/rbac/users/:userId/permissions`
+- `GET /api/rbac/users/me/roles`
+- `GET /api/rbac/users/me/permissions`
 
 ## 推荐路由写法
 
@@ -155,3 +185,6 @@ BETTER_AUTH_SECRET="replace-with-a-secure-secret"
 
 - 如果 route handler 需要直接消费已认证的 `auth.user` / `auth.session`
 - 即使已经声明 `permission / own / me`，也推荐同时显式写上 `auth: 'required'`
+- 当前用户资料接口优先使用 `me`
+- 指定用户资料接口才使用 `own`
+- 后台管理接口优先使用 `permission`

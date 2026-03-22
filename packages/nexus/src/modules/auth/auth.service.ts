@@ -4,8 +4,9 @@ import { auth } from '@/core/auth'
 /**
  * 认证服务类
  *
- * 注意: BetterAuth 标准端点 (sign-up, sign-in, sign-out, get-session) 直接使用 auth.handler()
- * 本服务仅用于自定义业务端点 (如 /api/auth/me)
+ * 注意：
+ * - Better Auth 标准端点（注册、登录、登出、获取会话）直接通过适配层透传
+ * - 本服务只负责读取当前会话，供底座型自定义端点复用
  */
 export class AuthService {
   /**

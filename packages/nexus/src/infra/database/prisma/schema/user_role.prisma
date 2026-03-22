@@ -1,7 +1,7 @@
 /**
  * 用户角色关联模型
  *
- * 用于支持用户的多角色授权和角色继承
+ * 用于记录用户被授予的固定系统角色。
  */
 model UserRole {
   /// 关联 ID
@@ -13,7 +13,7 @@ model UserRole {
   /// 角色 ID
   roleId    String
 
-  /// 授权人 ID（记录是谁给该用户分配的角色）
+  /// 授权人 ID（记录是谁执行了分配动作）
   assignedBy String?   @map("assigned_by")
 
   /// 授权时间

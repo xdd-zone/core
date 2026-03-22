@@ -32,8 +32,3 @@ export const USER_BASE_SELECT = {
  * 说明：定义支持关键字搜索的字段列表
  */
 export const USER_SEARCH_FIELDS = ['username', 'email', 'name'] as const
-
-/**
- * 默认用户状态
- */
-export const DEFAULT_USER_STATUS = 'ACTIVE' as const

@@ -1,14 +1,9 @@
+import type { AuthSession } from '@/modules/auth'
 import { Elysia } from 'elysia'
-import { clearBetterAuthCookies, forwardBetterAuthResponse, revokeBetterAuthSession } from '@/core/auth'
 import { authPlugin } from '@/core/access-control'
+import { clearBetterAuthCookies, forwardBetterAuthResponse, revokeBetterAuthSession } from '@/core/auth'
+import { AuthSessionSchema, SessionSchema, SignInEmailBodySchema, SignUpEmailBodySchema } from '@/modules/auth'
 import { apiDetail } from '@/shared'
-import {
-  AuthSessionSchema,
-  SessionSchema,
-  SignInEmailBodySchema,
-  SignUpEmailBodySchema,
-  type AuthSession,
-} from '@/modules/auth'
 
 /**
  * 认证路由。
@@ -20,7 +15,8 @@ export const authRoutes = new Elysia({
   .use(authPlugin)
   .post(
     '/sign-up/email',
-    async ({ body, request, set }) => AuthSessionSchema.parse(await forwardBetterAuthResponse<AuthSession>(request, { body, headers: set.headers })),
+    async ({ body, request, set }) =>
+      AuthSessionSchema.parse(await forwardBetterAuthResponse<AuthSession>(request, { body, headers: set.headers })),
     {
       body: SignUpEmailBodySchema,
       response: AuthSessionSchema,
@@ -34,7 +30,8 @@ export const authRoutes = new Elysia({
   )
   .post(
     '/sign-in/email',
-    async ({ body, request, set }) => AuthSessionSchema.parse(await forwardBetterAuthResponse<AuthSession>(request, { body, headers: set.headers })),
+    async ({ body, request, set }) =>
+      AuthSessionSchema.parse(await forwardBetterAuthResponse<AuthSession>(request, { body, headers: set.headers })),
     {
       body: SignInEmailBodySchema,
       response: AuthSessionSchema,

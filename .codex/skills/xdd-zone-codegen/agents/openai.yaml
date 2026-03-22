@@ -1,4 +1,4 @@
 interface:
   display_name: "XDD Zone Codegen"
-  short_description: "按 XDD Zone Core 约定生成标准代码"
-  default_prompt: "按 XDD Zone Core 的 Elysia-first 约定生成或修改代码，保持 contract、nexus、OpenAPI 与文档口径一致。"
+  short_description: "按仓库现有边界生成标准后端代码"
+  default_prompt: "使用 $xdd-zone-codegen 按当前仓库边界生成或修改代码，优先复用现有 contract、权限、路由和文档约定。"

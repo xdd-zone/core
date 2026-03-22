@@ -53,7 +53,7 @@ model User {
   /// 最后更新时间
   updatedAt DateTime  @updatedAt @map("updated_at")
 
-  /// 删除时间（软删除）
+  /// 归档时间（仅用于逻辑归档，不作为日常管理入口）
   deletedAt DateTime? @map("deleted_at")
 
   // Better-auth relations

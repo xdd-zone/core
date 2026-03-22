@@ -22,10 +22,4 @@ export { PrismaService } from './prisma.service'
 export * from './schemas'
 
 // 导出类型
-export type {
-  KeywordSearchOptions,
-  PaginatedList,
-  PaginationQuery,
-  PaginationResponse,
-  SoftDeleteOptions,
-} from './types'
+export type { KeywordSearchOptions, PaginatedList, PaginationQuery, PaginationResponse } from './types'

@@ -10,6 +10,15 @@
 - OpenAPI 是服务端对外的接口说明导出物
 - Eden 是仓库内联调与 smoke test 的内部类型基线
 
+当前系统采用固定角色和固定权限的后台管理模型。
+
+这意味着：
+
+- 固定系统角色只保留 `superAdmin / admin / user`
+- 权限以当前系统内置权限为准
+- 角色能力围绕角色列表、用户角色分配与用户权限查看展开
+- `own` 只用于用户自己的资料场景，不作为通用资源归属判断器
+
 ## 包边界
 
 ### `@xdd-zone/nexus`
@@ -116,6 +125,12 @@ src/
 - `core/permissions/`
   - 权限常量、权限服务、辅助判断
 
+其中：
+
+- `core/access-control/` 只负责登录态与声明式权限判断
+- `core/permissions/` 只负责权限常量与用户权限计算
+- `core/permissions` 负责基于固定角色计算用户权限
+
 ### `infra/`
 
 基础设施实现：
@@ -147,7 +162,7 @@ route 层优先使用下面 4 种声明式配置：
 - `permission`
   - 要求显式权限
 - `own`
-  - 自己可访问，或具备 `:all` 权限
+  - 仅用于用户自己的资料场景，或具备 `:all` 权限
 - `me`
   - 登录用户访问自己的 `/me` 类接口
 
@@ -156,6 +171,20 @@ route 层优先使用下面 4 种声明式配置：
 - `auth: 'required'`
 
 新代码应统一从 `@/core/access-control` 与 `@/core/http` 导入。
+
+当前权限列表包括：
+
+- `user:read:own`
+- `user:update:own`
+- `user:read:all`
+- `user:update:all`
+- `user:disable:all`
+- `role:read:all`
+- `user_role:assign:all`
+- `user_role:revoke:all`
+- `user_permission:read:own`
+- `user_permission:read:all`
+- `system:manage`
 
 ## 接口定义与导出流程
 

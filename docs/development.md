@@ -32,6 +32,8 @@ packages/nexus
   -> 验证
 ```
 
+当前实现采用固定角色、固定权限和用户资料管理的接口模型，新增接口时优先复用现有角色、权限和资料边界。
+
 ## 代码放哪一层
 
 ### `packages/nexus/src/modules/*/*.contract.ts`
@@ -166,7 +168,7 @@ bun run --filter @xdd-zone/nexus export:openapi
 这会完成：
 
 - 导出最新的 OpenAPI JSON 产物
-- 校验默认输出路径不依赖已删除目录
+- 校验导出产物写入默认 OpenAPI 目录
 
 ### 第 5 步：回归验证
 
@@ -230,10 +232,9 @@ set.status = 204
 
 ```ts
 detail: apiDetail({
-  summary: '删除用户',
-  successStatus: 204,
-  responseDescription: '删除成功',
-  errors: [401, 403, 404],
+  summary: '更新用户状态',
+  response: UserSchema,
+  errors: [400, 401, 403, 404],
 })
 ```
 
@@ -260,6 +261,14 @@ bun run --filter @xdd-zone/nexus test
 ```bash
 bun run --filter @xdd-zone/nexus test
 bun run --filter @xdd-zone/nexus export:openapi
+```
+
+### 改了 RBAC / 用户底座
+
+```bash
+bun run --filter @xdd-zone/nexus test
+bun run --filter @xdd-zone/nexus export:openapi
+bun run --filter @xdd-zone/nexus type-check
 ```
 
 ## 本地数据库

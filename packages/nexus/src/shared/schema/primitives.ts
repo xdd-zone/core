@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-const coercePositiveInt = (field: string) =>
-  z.preprocess(
+function coercePositiveInt(field: string) {
+  return z.preprocess(
     (value) => {
       if (value === undefined) return undefined
       if (typeof value === 'number') return value
@@ -12,12 +12,9 @@ const coercePositiveInt = (field: string) =>
 
       return value
     },
-    z
-      .number()
-      .int(`${field} 必须是整数`)
-      .min(1, `${field} 必须大于 0`)
-      .optional(),
+    z.number().int(`${field} 必须是整数`).min(1, `${field} 必须大于 0`).optional(),
   )
+}
 
 export const DateTimeSchema = z.preprocess(
   (value) => {
@@ -42,9 +39,7 @@ export type Phone = z.infer<typeof PhoneSchema>
 
 export const PaginationQuerySchema = z.object({
   page: coercePositiveInt('page').default(1),
-  pageSize: coercePositiveInt('pageSize')
-    .default(20)
-    .pipe(z.number().max(100, 'pageSize 不能超过 100')),
+  pageSize: coercePositiveInt('pageSize').default(20).pipe(z.number().max(100, 'pageSize 不能超过 100')),
 })
 
 export type PaginationQuery = z.infer<typeof PaginationQuerySchema>

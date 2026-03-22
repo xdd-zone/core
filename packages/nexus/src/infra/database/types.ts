@@ -32,13 +32,6 @@ export interface PaginatedList<T> {
 }
 
 /**
- * 软删除查询选项
- */
-export interface SoftDeleteOptions {
-  includeDeleted?: boolean
-}
-
-/**
  * 关键字搜索选项
  */
 export interface KeywordSearchOptions {

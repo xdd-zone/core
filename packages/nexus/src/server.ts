@@ -3,13 +3,11 @@ import { prisma } from '@/infra/database'
 import { logger } from '@/infra/logger'
 
 interface StartableApp {
-  listen(port: number): unknown
-  server?:
-    | {
-        hostname?: string
-        port?: number
-      }
-    | null
+  listen: (port: number) => unknown
+  server?: {
+    hostname?: string
+    port?: number
+  } | null
 }
 
 let lifecycleRegistered = false

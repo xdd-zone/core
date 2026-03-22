@@ -1,11 +1,12 @@
 /**
  * 权限服务
  *
- * 核心权限检查逻辑，支持角色继承和缓存
+ * 核心权限检查逻辑，负责固定角色与权限计算。
  */
 
 import type { PermissionContext, PermissionString } from './permissions.types'
 import { prisma } from '@/infra/database/client'
+import { Permissions, SYSTEM_PERMISSION_KEYS } from './permissions'
 import { matchPermission, normalizePermission } from './helpers'
 
 /**
@@ -37,29 +38,36 @@ export class PermissionService {
   }
 
   /**
-   * 从数据库加载权限上下文，包含角色继承
+   * 从数据库加载权限上下文。
    */
   static async loadPermissionContext(userId: string): Promise<PermissionContext> {
-    // 获取所有用户角色
     const userRoles = await prisma.userRole.findMany({
       where: { userId },
       include: {
         role: {
           include: {
-            // 包含父角色以实现继承
-            parent: true,
+            permissions: {
+              include: {
+                permission: true,
+              },
+            },
           },
         },
       },
+      orderBy: { assignedAt: 'desc' },
     })
 
     if (userRoles.length === 0) {
-      return { permissions: new Set(), roles: [] }
+      return {
+        permissions: new Set(),
+        isSuperAdmin: false,
+        roles: [],
+      }
     }
 
-    // 收集所有角色ID，包括父角色
-    const roleIds = new Set<string>()
     const roles: PermissionContext['roles'] = []
+    const permissions = new Set<PermissionString>()
+    let isSuperAdmin = false
 
     for (const userRole of userRoles) {
       const { role } = userRole
@@ -68,40 +76,36 @@ export class PermissionService {
         name: role.name,
         displayName: role.displayName,
       })
-      roleIds.add(role.id)
 
-      // 添加父角色ID以实现继承
-      let currentRole = role
-      while (currentRole.parentId) {
-        roleIds.add(currentRole.parentId)
-        const parentRole = await prisma.role.findUnique({
-          where: { id: currentRole.parentId },
-          select: { id: true, parentId: true },
+      if (role.name === 'superAdmin') {
+        isSuperAdmin = true
+      }
+
+      for (const rolePermission of role.permissions) {
+        const scope =
+          rolePermission.permission.scope === 'own' || rolePermission.permission.scope === 'all'
+            ? rolePermission.permission.scope
+            : undefined
+
+        const permission = normalizePermission({
+          resource: rolePermission.permission.resource,
+          action: rolePermission.permission.action,
+          scope,
         })
-        if (!parentRole) break
-        currentRole = parentRole as typeof currentRole & { parentId: string | null }
+
+        permissions.add(permission)
       }
     }
 
-    // 获取这些角色的所有权限
-    const rolePermissions = await prisma.rolePermission.findMany({
-      where: {
-        roleId: { in: Array.from(roleIds) },
-      },
-      include: {
-        permission: true,
-      },
-    })
-
-    // 构建权限集合
-    const permissions = new Set<PermissionString>()
-    for (const rp of rolePermissions) {
-      const { resource, action, scope } = rp.permission
-      const perm = scope ? `${resource}:${action}:${scope}` : `${resource}:${action}`
-      permissions.add(perm as PermissionString)
+    if (isSuperAdmin) {
+      permissions.add(Permissions.SYSTEM.MANAGE)
     }
 
-    return { permissions, roles }
+    return {
+      permissions,
+      isSuperAdmin,
+      roles,
+    }
   }
 
   /**
@@ -110,16 +114,14 @@ export class PermissionService {
   static async hasPermission(userId: string, permission: PermissionString | string): Promise<boolean> {
     const context = await this.getPermissionContext(userId)
 
-    // 检查是否为超级管理员
-    if (context.permissions.has('*')) {
+    if (context.isSuperAdmin || context.permissions.has(Permissions.SYSTEM.MANAGE)) {
       return true
     }
 
     const normalizedPerm = normalizePermission(permission as PermissionString)
 
-    // 检查精确匹配或通配符匹配
     for (const perm of context.permissions) {
-      if (matchPermission(normalizedPerm, perm as PermissionString)) {
+      if (matchPermission(normalizedPerm, perm)) {
         return true
       }
     }
@@ -162,7 +164,11 @@ export class PermissionService {
    */
   static async getUserPermissions(userId: string): Promise<string[]> {
     const context = await this.getPermissionContext(userId)
-    return Array.from(context.permissions) as string[]
+    if (context.isSuperAdmin) {
+      return [...SYSTEM_PERMISSION_KEYS]
+    }
+
+    return Array.from(context.permissions)
   }
 
   /**

@@ -2,14 +2,14 @@
  * 权限类型定义
  *
  * 格式: resource:action:scope
- * - resource: 资源名称 (如: article, user)
- * - action: 操作名称 (如: create, read, update, delete)
- * - scope: 数据范围 (own=本人, all=全部, 空=无范围限制等同于all)
+ * - resource: 资源名称 (如: user, role)
+ * - action: 操作名称 (如: read, update, manage)
+ * - scope: 数据范围 (own=本人, all=全部)
  */
 
-export type PermissionScope = 'own' | 'all' | ''
+export type PermissionScope = 'own' | 'all'
 
-export type PermissionString = `${string}:${string}:${PermissionScope}` | `${string}:${string}` | '*'
+export type PermissionString = `${string}:${string}:${PermissionScope}` | `${string}:${string}`
 
 export interface Permission {
   resource: string
@@ -18,7 +18,8 @@ export interface Permission {
 }
 
 export interface PermissionContext {
-  permissions: Set<string>
+  permissions: Set<PermissionString>
+  isSuperAdmin: boolean
   roles: Array<{
     id: string
     name: string

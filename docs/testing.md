@@ -26,13 +26,19 @@ bun run --filter @xdd-zone/nexus test
   - `/api/health`
   - 匿名 `/api/auth/get-session`
   - 登录态 `/api/auth/me`
+  - own `/api/user/me`
   - own `/api/user/:id`
-  - own `/api/rbac/users/:userId/permissions`
+  - 管理员 `/api/user`
+  - 管理员 `/api/user/:id`
+  - 管理员 `/api/user/:id/status`
+  - `/api/rbac/users/:userId/roles`
+  - `/api/rbac/users/:userId/permissions`
   - me `/api/rbac/users/me/roles`
   - me `/api/rbac/users/me/permissions`
 - OpenAPI smoke：
   - `/openapi/json` 可导出
   - 关键路径进入导出物
+  - 导出物只包含当前角色与权限相关路径
 
 ### 3. OpenAPI 导出验证
 
@@ -43,8 +49,9 @@ bun run --filter @xdd-zone/nexus export:openapi
 主要覆盖：
 
 - OpenAPI 可正常导出
-- 不再写入已删除目录
+- 导出产物写入默认目录
 - 导出产物落到 `packages/nexus/openapi/openapi.json`
+- 导出结果与当前 RBAC 路由一致
 
 ## 本地数据库
 
@@ -91,6 +98,13 @@ bun run --filter @xdd-zone/nexus test
 ```
 
 ### 改了 auth / permission / own / me
+
+```bash
+bun run --filter @xdd-zone/nexus test
+bun run --filter @xdd-zone/nexus export:openapi
+```
+
+### 改了 RBAC / 用户底座
 
 ```bash
 bun run --filter @xdd-zone/nexus test

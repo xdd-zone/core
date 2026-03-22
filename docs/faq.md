@@ -35,6 +35,8 @@ API 前缀默认是 `/api`。
 
 这两个状态码在 `auth: 'required'` 与 `permission / own / me` 的声明式 access control 中有明确区分。
 
+当前约定里，`own` 只用于用户自己的资料场景，通用资源归属由具体业务模块判断。
+
 ## Prisma Client 未生成怎么办？
 
 ```bash

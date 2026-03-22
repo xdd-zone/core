@@ -1,46 +1,47 @@
+import type { RoleListQuery } from './rbac.contract'
 import type { Prisma } from '@/infra/database/prisma/generated'
+import { NotFoundError } from '@/core/http'
 import { PermissionService } from '@/core/permissions/permission.service'
-import { BadRequestError, ForbiddenError, NotFoundError } from '@/core/http'
 import { createPaginatedResponse } from '@/infra/database'
-import { PermissionRepository, RolePermissionRepository, RoleRepository, UserRoleRepository } from './repositories'
+import { UserRepository } from '@/modules/user'
 import {
   CurrentUserPermissionsSchema,
   CurrentUserRolesSchema,
-  OperationResultSchema,
-  PermissionListSchema,
-  PermissionSchema,
-  RoleChildrenSchema,
-  RoleDetailSchema,
   RoleListSchema,
-  RolePermissionsSchema,
-  RoleSchema,
   UserPermissionsSchema,
   UserRoleAssignmentSchema,
   UserRolesSchema,
-  type PermissionListQuery,
-  type RoleListQuery,
 } from './rbac.contract'
+import { RoleRepository, UserRoleRepository } from './repositories'
 
+/**
+ * RBAC 服务类。
+ */
 export class RbacService {
-  // ===== 角色管理 =====
+  /**
+   * 断言用户存在且未归档。
+   */
+  private static async assertUserExists(userId: string) {
+    const user = await UserRepository.findById(userId)
+    if (!user) {
+      throw new NotFoundError('用户不存在')
+    }
+  }
 
+  /**
+   * 获取固定角色列表。
+   */
   static async listRoles(query: RoleListQuery) {
     const page = query.page ?? 1
     const pageSize = query.pageSize ?? 20
-    const { keyword, includeSystem } = query
     const skip = (page - 1) * pageSize
 
     const where: Prisma.RoleWhereInput = {}
-
-    if (keyword) {
+    if (query.keyword) {
       where.OR = [
-        { name: { contains: keyword, mode: 'insensitive' } },
-        { displayName: { contains: keyword, mode: 'insensitive' } },
+        { name: { contains: query.keyword, mode: 'insensitive' } },
+        { displayName: { contains: query.keyword, mode: 'insensitive' } },
       ]
-    }
-
-    if (includeSystem === false) {
-      where.isSystem = false
     }
 
     const { roles, total } = await RoleRepository.findMany(where, skip, pageSize)
@@ -48,300 +49,63 @@ export class RbacService {
     return RoleListSchema.parse(createPaginatedResponse(roles, total, page, pageSize))
   }
 
-  static async getRoleDetail(id: string) {
-    const role = await RoleRepository.findById(id)
-
-    if (!role) {
-      throw new NotFoundError('角色不存在')
-    }
-
-    // 转换为权限字符串列表
-    const permissions = role.permissions.map((rp) => {
-      const perm = rp.permission
-      return perm.scope ? `${perm.resource}:${perm.action}:${perm.scope}` : `${perm.resource}:${perm.action}`
-    })
-
-    return RoleDetailSchema.parse({
-      ...role,
-      permissions,
-    })
-  }
-
-  static async createRole(data: { name: string; displayName?: string; description?: string; parentId?: string }) {
-    // 检查角色名是否已存在
-    const existing = await RoleRepository.findByName(data.name)
-    if (existing) {
-      throw new BadRequestError('角色名称已存在')
-    }
-
-    const role = await RoleRepository.create({
-      ...data,
-      isSystem: false,
-    })
-
-    return RoleSchema.parse(role)
-  }
-
-  static async updateRole(
-    id: string,
-    data: {
-      displayName?: string
-      description?: string
-      parentId?: string | null
-    },
-  ) {
-    const role = await RoleRepository.findById(id)
-
-    if (!role) {
-      throw new NotFoundError('角色不存在')
-    }
-
-    // 系统角色不允许修改层级
-    if (role.isSystem && data.parentId !== undefined && data.parentId !== role.parentId) {
-      throw new ForbiddenError('系统角色不能修改层级')
-    }
-
-    // 修改父角色时校验层级关系
-    if (data.parentId !== undefined) {
-      if (data.parentId === id) {
-        throw new BadRequestError('不能将角色设置为自己的父角色')
-      }
-
-      if (data.parentId !== null) {
-        const hasCycle = await this.validateRoleHierarchy(data.parentId, id)
-        if (hasCycle) {
-          throw new BadRequestError('无效的角色层级：检测到循环')
-        }
-      }
-    }
-
-    const updated = await RoleRepository.update(id, data)
-
-    return RoleSchema.parse(updated)
-  }
-
-  static async deleteRole(id: string) {
-    const role = await RoleRepository.findById(id)
-
-    if (!role) {
-      throw new NotFoundError('角色不存在')
-    }
-
-    // 系统角色不允许删除
-    if (role.isSystem) {
-      throw new ForbiddenError('系统角色不能删除')
-    }
-
-    await RoleRepository.delete(id)
-  }
-
-  static async setRoleParent(roleId: string, parentId: string | null) {
-    if (parentId === roleId) {
-      throw new BadRequestError('不能将角色设置为自己的父角色')
-    }
-
-    const role = await RoleRepository.findById(roleId)
-    if (!role) {
-      throw new NotFoundError('角色不存在')
-    }
-
-    // 系统角色不允许修改层级
-    if (role.isSystem) {
-      throw new ForbiddenError('系统角色不能修改层级')
-    }
-
-    if (parentId !== null) {
-      const hasCycle = await this.validateRoleHierarchy(parentId, roleId)
-      if (hasCycle) {
-        throw new BadRequestError('无效的角色层级：检测到循环')
-      }
-
-      // 校验父角色是否存在
-      const parent = await RoleRepository.findById(parentId)
-      if (!parent) {
-        throw new NotFoundError('父角色不存在')
-      }
-    }
-
-    const updated = await RoleRepository.update(roleId, { parentId })
-
-    return RoleSchema.parse(updated)
-  }
-
-  static async getRoleChildren(roleId: string) {
-    const role = await RoleRepository.findById(roleId)
-    if (!role) {
-      throw new NotFoundError('角色不存在')
-    }
-
-    const children = await RoleRepository.findChildren(roleId)
-
-    return RoleChildrenSchema.parse(children)
-  }
-
-  // ===== 权限管理 =====
-
-  static async listPermissions(query: PermissionListQuery) {
-    const page = query.page ?? 1
-    const pageSize = query.pageSize ?? 20
-    const { resource } = query
-    const skip = (page - 1) * pageSize
-
-    const where: Prisma.PermissionWhereInput = {}
-    if (resource) {
-      where.resource = resource
-    }
-
-    const { permissions, total } = await PermissionRepository.findMany(where, skip, pageSize)
-
-    return PermissionListSchema.parse(createPaginatedResponse(permissions, total, page, pageSize))
-  }
-
-  static async getPermissionDetail(id: string) {
-    const permission = await PermissionRepository.findById(id)
-
-    if (!permission) {
-      throw new NotFoundError('权限不存在')
-    }
-
-    return PermissionSchema.parse(permission)
-  }
-
-  static async createPermission(data: {
-    resource: string
-    action: string
-    scope?: string
-    displayName?: string
-    description?: string
-  }) {
-    const permission = await PermissionRepository.create(data)
-
-    return PermissionSchema.parse(permission)
-  }
-
-  // ===== 角色权限分配 =====
-
-  static async getRolePermissions(roleId: string) {
-    const role = await RoleRepository.findWithPermissions(roleId)
-
-    if (!role) {
-      throw new NotFoundError('角色不存在')
-    }
-
-    const permissions = role.permissions.map((rp) => ({
-      id: rp.permission.id,
-      resource: rp.permission.resource,
-      action: rp.permission.action,
-      scope: rp.permission.scope,
-      displayName: rp.permission.displayName,
-    }))
-
-    return RolePermissionsSchema.parse(permissions)
-  }
-
-  static async assignPermissionsToRole(roleId: string, permissionIds: string[]) {
-    const role = await RoleRepository.findById(roleId)
-    if (!role) {
-      throw new NotFoundError('角色不存在')
-    }
-
-    await RolePermissionRepository.batchAssign(roleId, permissionIds)
-
-    // 角色权限变更后清理关联用户缓存
-    const users = await UserRoleRepository.findUsersByRole(roleId)
-    users.forEach((user) => PermissionService.clearCache(user.id))
-
-    return OperationResultSchema.parse({ success: true, count: permissionIds.length })
-  }
-
-  static async removePermissionFromRole(roleId: string, permissionId: string) {
-    const role = await RoleRepository.findById(roleId)
-    if (!role) {
-      throw new NotFoundError('角色不存在')
-    }
-
-    await RolePermissionRepository.removePermission(roleId, permissionId)
-
-    // 角色权限变更后清理关联用户缓存
-    const users = await UserRoleRepository.findUsersByRole(roleId)
-    users.forEach((user) => PermissionService.clearCache(user.id))
-  }
-
-  static async replaceRolePermissions(roleId: string, permissionIds: string[]) {
-    const role = await RoleRepository.findById(roleId)
-    if (!role) {
-      throw new NotFoundError('角色不存在')
-    }
-
-    await RolePermissionRepository.replacePermissions(roleId, permissionIds)
-
-    // 角色权限变更后清理关联用户缓存
-    const users = await UserRoleRepository.findUsersByRole(roleId)
-    users.forEach((user) => PermissionService.clearCache(user.id))
-
-    return OperationResultSchema.parse({ success: true, count: permissionIds.length })
-  }
-
-  // ===== 用户角色管理 =====
-
+  /**
+   * 获取指定用户的角色列表。
+   */
   static async getUserRoles(userId: string) {
+    await this.assertUserExists(userId)
+
     const userRoles = await UserRoleRepository.findByUser(userId)
 
-    return UserRolesSchema.parse(userRoles.map((ur) => ({
-      id: ur.id,
-      roleId: ur.roleId,
-      roleName: ur.role.name,
-      roleDisplayName: ur.role.displayName,
-      assignedAt: ur.assignedAt,
-    })))
+    return UserRolesSchema.parse(
+      userRoles.map((userRole) => ({
+        id: userRole.id,
+        roleId: userRole.roleId,
+        roleName: userRole.role.name,
+        roleDisplayName: userRole.role.displayName,
+        assignedBy: userRole.assignedBy,
+        assignedAt: userRole.assignedAt,
+      })),
+    )
   }
 
-  static async assignRoleToUser(userId: string, roleId: string) {
+  /**
+   * 为指定用户分配角色。
+   */
+  static async assignRoleToUser(userId: string, roleId: string, assignedBy: string | null = null) {
+    await this.assertUserExists(userId)
+
     const role = await RoleRepository.findById(roleId)
     if (!role) {
       throw new NotFoundError('角色不存在')
     }
 
-    const userRole = await UserRoleRepository.assignRole(userId, roleId)
-
-    // 角色分配后立即清理用户权限缓存
+    const userRole = await UserRoleRepository.assignRole(userId, roleId, assignedBy)
     PermissionService.clearCache(userId)
 
     return UserRoleAssignmentSchema.parse(userRole)
   }
 
+  /**
+   * 移除指定用户角色。
+   */
   static async removeRoleFromUser(userId: string, roleId: string) {
-    await UserRoleRepository.removeRole(userId, roleId)
+    await this.assertUserExists(userId)
 
-    // 角色移除后立即清理用户权限缓存
+    const result = await UserRoleRepository.removeRole(userId, roleId)
+    if (result.count === 0) {
+      throw new NotFoundError('用户角色关联不存在')
+    }
+
     PermissionService.clearCache(userId)
   }
 
   /**
-   * 刷新指定用户角色关联的权限缓存
-   *
-   * 说明：
-   * - 该接口不修改用户角色关系
-   * - 仅校验指定角色关联存在后清理权限缓存
-   *
-   * @param userId 用户 ID
-   * @param roleId 角色 ID
+   * 获取指定用户的有效权限。
    */
-  static async refreshUserRoleCache(userId: string, roleId: string) {
-    const userRoles = await UserRoleRepository.findByUser(userId)
-    const hasRole = userRoles.some((userRole) => userRole.roleId === roleId)
-
-    if (!hasRole) {
-      throw new NotFoundError('用户角色关联不存在')
-    }
-
-    // 角色关联存在时清理用户权限缓存
-    PermissionService.clearCache(userId)
-  }
-
-  // ===== 用户权限查询 =====
-
   static async getUserPermissions(userId: string) {
+    await this.assertUserExists(userId)
+
     const permissions = await PermissionService.getUserPermissions(userId)
 
     return UserPermissionsSchema.parse({
@@ -349,73 +113,43 @@ export class RbacService {
     })
   }
 
+  /**
+   * 获取当前用户的有效权限与角色。
+   */
   static async getCurrentUserPermissions(userId: string) {
     const userWithRoles = await UserRoleRepository.findUserWithRoles(userId)
-
-    if (!userWithRoles) {
+    if (!userWithRoles || userWithRoles.deletedAt) {
       throw new NotFoundError('用户不存在')
     }
 
     const permissions = await PermissionService.getUserPermissions(userId)
 
-    const roles = userWithRoles.roles.map((ur) => ({
-      id: ur.role.id,
-      name: ur.role.name,
-      displayName: ur.role.displayName,
-    }))
-
     return CurrentUserPermissionsSchema.parse({
       permissions,
-      roles,
-    })
-  }
-
-  static async getCurrentUserRoles(userId: string) {
-    const userRoles = await UserRoleRepository.findByUser(userId)
-
-    return CurrentUserRolesSchema.parse({
-      roles: userRoles.map((ur) => ({
-        id: ur.role.id,
-        name: ur.role.name,
-        displayName: ur.role.displayName,
-        assignedAt: ur.assignedAt,
+      roles: userWithRoles.roles.map((userRole) => ({
+        id: userRole.role.id,
+        name: userRole.role.name,
+        displayName: userRole.role.displayName,
       })),
     })
   }
 
-  // ===== 缓存管理 =====
+  /**
+   * 获取当前用户的角色列表。
+   */
+  static async getCurrentUserRoles(userId: string) {
+    await this.assertUserExists(userId)
 
-  static clearUserPermissionCache(userId: string) {
-    PermissionService.clearCache(userId)
-  }
+    const userRoles = await UserRoleRepository.findByUser(userId)
 
-  static clearAllPermissionCache() {
-    PermissionService.clearAllCache()
-  }
-
-  // ===== 辅助方法 =====
-
-  private static async validateRoleHierarchy(parentId: string, childId: string): Promise<boolean> {
-    let currentId = parentId
-    const visited = new Set<string>()
-
-    while (currentId) {
-      if (currentId === childId) {
-        return true
-      }
-
-      if (visited.has(currentId)) {
-        return true
-      }
-      visited.add(currentId)
-
-      const role = await RoleRepository.findById(currentId)
-      if (!role || !role.parentId) {
-        break
-      }
-      currentId = role.parentId
-    }
-
-    return false
+    return CurrentUserRolesSchema.parse({
+      roles: userRoles.map((userRole) => ({
+        id: userRole.role.id,
+        name: userRole.role.name,
+        displayName: userRole.role.displayName,
+        assignedBy: userRole.assignedBy,
+        assignedAt: userRole.assignedAt,
+      })),
+    })
   }
 }

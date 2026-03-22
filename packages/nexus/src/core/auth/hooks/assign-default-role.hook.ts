@@ -1,6 +1,6 @@
 import { prisma } from '@/infra/database/client'
 import { createModuleLogger } from '@/infra/logger'
-import { RbacService } from '@/modules/rbac/rbac.service'
+import { DEFAULT_ROLE_NAME, FIRST_USER_ROLE_NAME, RbacService } from '@/modules/rbac'
 
 const logger = createModuleLogger('auth:assign-default-role-hook')
 
@@ -14,8 +14,8 @@ interface CreatedUser {
  *
  * 该钩子在数据库中创建用户后运行。它检查这是否是系统中的第一个用户，
  * 并自动分配相应的角色：
- * - 第一个用户：分配 superAdmin 角色（拥有所有权限）
- * - 后续用户：分配 user 角色（普通用户，只能管理自己的数据）
+ * - 第一个用户：分配 superAdmin 角色
+ * - 后续用户：分配 user 角色
  *
  * @param user - 刚创建的用户对象
  * @param _context - BetterAuth 上下文（此钩子中未使用）
@@ -28,16 +28,15 @@ export async function assignDefaultRoleToUser(user: CreatedUser, _context: unkno
     // 第一个用户 → 分配 superAdmin 角色
     if (userCount === 1) {
       const superAdminRole = await prisma.role.findUnique({
-        where: { name: 'superAdmin' },
+        where: { name: FIRST_USER_ROLE_NAME },
       })
 
       if (!superAdminRole) {
-        logger.warn('未找到 superAdmin 角色 - 可能未运行种子数据')
+        logger.warn({ roleName: FIRST_USER_ROLE_NAME }, '未找到首个用户默认角色，可能尚未执行种子数据')
         return
       }
 
-      // 分配具有完全访问权限的 superAdmin 角色
-      await RbacService.assignRoleToUser(user.id as string, superAdminRole.id)
+      await RbacService.assignRoleToUser(user.id, superAdminRole.id, null)
 
       logger.info({ userId: user.id, email: user.email }, '第一个用户已分配 superAdmin 角色')
       return
@@ -45,16 +44,15 @@ export async function assignDefaultRoleToUser(user: CreatedUser, _context: unkno
 
     // 后续用户 → 分配默认 user 角色
     const userRole = await prisma.role.findUnique({
-      where: { name: 'user' },
+      where: { name: DEFAULT_ROLE_NAME },
     })
 
     if (!userRole) {
-      logger.warn('未找到 user 角色 - 可能未运行种子数据')
+      logger.warn({ roleName: DEFAULT_ROLE_NAME }, '未找到默认用户角色，可能尚未执行种子数据')
       return
     }
 
-    // 分配普通用户角色
-    await RbacService.assignRoleToUser(user.id as string, userRole.id)
+    await RbacService.assignRoleToUser(user.id, userRole.id, null)
 
     logger.info({ userId: user.id, email: user.email }, '用户已分配默认 user 角色')
   } catch (error) {

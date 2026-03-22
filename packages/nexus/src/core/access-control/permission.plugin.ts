@@ -1,8 +1,8 @@
 import { Elysia } from 'elysia'
 import type { AuthenticatedSession } from '@/modules/auth'
-import type { PermissionString } from '@/core/permissions'
+import type { PermissionString } from '@/core/permissions/permissions.types'
 import { PermissionService } from '@/core/permissions/permission.service'
-import { Permissions } from '@/core/permissions'
+import { Permissions } from '@/core/permissions/permissions'
 import { ForbiddenError } from '@/core/http'
 import { AuthService } from '@/modules/auth'
 import { assertAuthenticated, authPlugin } from './auth.plugin'
@@ -11,6 +11,8 @@ type RoutePermission = PermissionString | string
 
 /**
  * own 权限配置。
+ *
+ * 说明：当前仅用于“用户自己的资料”场景，不作为通用资源归属判断器。
  */
 export interface OwnPermissionConfig {
   permission: RoutePermission
@@ -117,14 +119,8 @@ export const permit = {
     return async (context: PermissionGuardContext) => {
       const user = await resolveAuthenticatedUser(context)
 
-      const basePermission = permission.replace(/:(own|all)$/, '')
-      const hasBasePermission = await PermissionService.hasPermission(user.id, basePermission)
-      if (hasBasePermission) {
-        return
-      }
-
-      const hasOwnPermission = await PermissionService.hasPermission(user.id, `${basePermission}:own`)
-      if (!hasOwnPermission) {
+      const hasPermission = await PermissionService.hasPermission(user.id, permission)
+      if (!hasPermission) {
         throw new ForbiddenError('权限不足')
       }
     }
@@ -134,48 +130,46 @@ export const permit = {
 /**
  * 权限插件。
  */
-export const permissionPlugin = new Elysia({ name: 'permission' })
-  .use(authPlugin)
-  .macro({
-    permission(permission: RoutePermission | undefined) {
-      if (!permission) {
-        return
-      }
+export const permissionPlugin = new Elysia({ name: 'permission' }).use(authPlugin).macro({
+  permission(permission: RoutePermission | undefined) {
+    if (!permission) {
+      return
+    }
 
-      const beforeHandle = permit.permission(permission)
+    const beforeHandle = permit.permission(permission)
 
-      return {
-        resolve: resolveProtectedContext,
-        beforeHandle,
-        onBeforeHandle: beforeHandle,
-      }
-    },
-    own(input: OwnPermissionConfig | RoutePermission | undefined) {
-      if (!input) {
-        return
-      }
+    return {
+      resolve: resolveProtectedContext,
+      beforeHandle,
+      onBeforeHandle: beforeHandle,
+    }
+  },
+  own(input: OwnPermissionConfig | RoutePermission | undefined) {
+    if (!input) {
+      return
+    }
 
-      const beforeHandle = permit.own(input)
+    const beforeHandle = permit.own(input)
 
-      return {
-        resolve: resolveProtectedContext,
-        beforeHandle,
-        onBeforeHandle: beforeHandle,
-      }
-    },
-    me(permission: RoutePermission | undefined) {
-      if (!permission) {
-        return
-      }
+    return {
+      resolve: resolveProtectedContext,
+      beforeHandle,
+      onBeforeHandle: beforeHandle,
+    }
+  },
+  me(permission: RoutePermission | undefined) {
+    if (!permission) {
+      return
+    }
 
-      const beforeHandle = permit.me(permission)
+    const beforeHandle = permit.me(permission)
 
-      return {
-        resolve: resolveProtectedContext,
-        beforeHandle,
-        onBeforeHandle: beforeHandle,
-      }
-    },
-  })
+    return {
+      resolve: resolveProtectedContext,
+      beforeHandle,
+      onBeforeHandle: beforeHandle,
+    }
+  },
+})
 
 export { Permissions }

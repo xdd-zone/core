@@ -2,27 +2,43 @@
  * RBAC 模块常量配置
  *
  * 说明：
- * - 定义系统角色名称
+ * - 定义固定系统角色与角色权限映射
  *
  * @module rbac.constants
  */
 
 /**
- * 系统内置角色名称列表
- *
- * 说明：
- * - 这些角色由系统初始化时创建
- * - 系统角色不允许删除
- * - 系统角色的 name 字段不允许修改
- *
- * @constant
- * @type {string[]}
- *
- * @example
- * ```ts
- * if (SYSTEM_ROLE_NAMES.includes(role.name)) {
- *   throw new ForbiddenError('系统角色不能删除')
- * }
- * ```
+ * 固定系统角色名称。
  */
-export const SYSTEM_ROLE_NAMES = ['superAdmin', 'admin', 'user']
+import { Permissions } from '@/core/permissions/permissions'
+
+export const SYSTEM_ROLE_NAMES = ['superAdmin', 'admin', 'user'] as const
+
+export type SystemRoleName = (typeof SYSTEM_ROLE_NAMES)[number]
+
+/**
+ * 默认注册角色。
+ */
+export const DEFAULT_ROLE_NAME: SystemRoleName = 'user'
+
+/**
+ * 首个用户默认角色。
+ */
+export const FIRST_USER_ROLE_NAME: SystemRoleName = 'superAdmin'
+
+/**
+ * 固定角色权限映射。
+ */
+export const SYSTEM_ROLE_PERMISSION_KEYS: Record<SystemRoleName, readonly string[]> = {
+  superAdmin: [Permissions.SYSTEM.MANAGE],
+  admin: [
+    Permissions.USER.READ_ALL,
+    Permissions.USER.UPDATE_ALL,
+    Permissions.USER.DISABLE_ALL,
+    Permissions.ROLE.READ_ALL,
+    Permissions.USER_ROLE.ASSIGN_ALL,
+    Permissions.USER_ROLE.REVOKE_ALL,
+    Permissions.USER_PERMISSION.READ_ALL,
+  ],
+  user: [Permissions.USER.READ_OWN, Permissions.USER.UPDATE_OWN, Permissions.USER_PERMISSION.READ_OWN],
+} as const
