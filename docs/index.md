@@ -56,6 +56,7 @@
 再看代码目录：
 
 - `packages/console/src/app/router`
+- `packages/console/src/app/query-client.ts`
 - `packages/console/src/app/navigation`
 - `packages/console/src/modules/auth`
 - `packages/console/src/layout`

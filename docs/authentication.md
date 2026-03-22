@@ -166,16 +166,16 @@ export const profileRoutes = new Elysia()
 
 当前后台前端统一按下面方式消费认证接口：
 
-- 启动时调用 `/api/auth/get-session`
-- 登录时调用 `/api/auth/sign-in/email`
-- 登录成功后再次调用 `/api/auth/get-session`
-- 登出时调用 `/api/auth/sign-out`
+- TanStack Query 用 query 维护 `/api/auth/get-session`
+- 登录 mutation 调用 `/api/auth/sign-in/email`，成功后刷新并写回 session
+- 登出 mutation 调用 `/api/auth/sign-out`，随后清空 session cache
+- TanStack Router 在 `beforeLoad` 中确保受保护页面进入前已完成 session 检查
 
 并遵守：
 
 - 请求默认使用 `credentials: 'include'`
 - 是否已登录只看 `/api/auth/get-session`
-- 未登录访问后台路由时跳转 `/login`
+- 未登录访问后台路由时，由路由层重定向到 `/login`
 - 页面级 `403` 由页面本身处理
 
 ## 配置

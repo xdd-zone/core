@@ -17,9 +17,10 @@ packages/console
 
 - 管理后台页面与布局
 - 前端路由、导航与标签页组织
+- 认证请求、会话缓存与登录态消费
 - 状态管理、主题切换、国际化
 - 与后端 API 的联调与展示
-- 基于 `nexus` session 的登录态初始化与登录/登出流程
+- 基于 `nexus` session 的登录、登出与会话恢复流程
 
 不负责：
 
@@ -33,7 +34,8 @@ packages/console
 - React 19
 - TypeScript 5.9
 - Vite 7
-- React Router 7
+- TanStack Router 1.x
+- TanStack Query 5.x
 - Zustand
 - Ant Design 6
 - Tailwind CSS 4
@@ -57,10 +59,12 @@ packages/console
 - TypeScript 继承根目录 `tsconfig.base.json`
 - 可通过根目录脚本与后端一起联调
 
-当前前端架构采用：
+前端架构采用：
 
-- public / protected 两段式路由
-- `/api/auth/get-session` 作为登录态唯一真相源
+- 集中式 `routeTree`
+- 路由 `beforeLoad` 处理登录态校验与重定向
+- `staticData` 统一维护页面标题、TabBar、面包屑元信息
+- TanStack Query 管理 `/api/auth/get-session`、登录与登出
 - 独立导航配置
 - 细粒度权限以后端 `401 / 403` 语义为准
 
@@ -167,11 +171,13 @@ src/
 其中当前重点目录为：
 
 - `src/app/router`
-  - 应用级路由与守卫
+  - TanStack Router 路由树、重定向与路由元信息
+- `src/app/query-client.ts`
+  - QueryClient 初始化
 - `src/app/navigation`
   - 独立导航配置
 - `src/modules/auth`
-  - session 请求与 auth store
+  - session API、auth query 与 auth store
 
 ## 开发约定
 
@@ -214,7 +220,7 @@ bun run build:console
 如果改动涉及联调，还应确认：
 
 - 页面能正常访问后端接口
-- 登录与路由守卫行为正确
+- 登录与路由 `beforeLoad` 行为正确
 - 菜单、主题、标签页状态没有回退
 - 刷新页面后能通过 `/api/auth/get-session` 恢复登录态
 

@@ -1,6 +1,6 @@
+import { useNavigate } from '@tanstack/react-router'
 import { Button, Result, Space } from 'antd'
 import { Home, Search } from 'lucide-react'
-import { useNavigate } from 'react-router'
 
 import { Pattern } from '@/components/ui'
 
@@ -11,11 +11,11 @@ export function NotFound() {
   const navigate = useNavigate()
 
   const handleGoHome = () => {
-    navigate('/')
+    void navigate({ to: '/' })
   }
 
   const handleGoBack = () => {
-    navigate(-1)
+    window.history.back()
   }
 
   return (

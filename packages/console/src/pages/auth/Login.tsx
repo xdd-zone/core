@@ -1,12 +1,13 @@
 import type { SignInEmailBody } from '@/modules/auth'
+import { useNavigate, useRouter, useSearch } from '@tanstack/react-router'
 
 import { App as AntdApp, Button, Divider, Form, Input } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { AiFillWechat, AiOutlineGoogle } from 'react-icons/ai'
-import { useLocation, useNavigate } from 'react-router'
 
+import { DASHBOARD_ROUTE_PATH, sanitizeRedirectPath } from '@/app/router/guards'
 import { AuthContainer } from '@/components/business'
-import { AuthRequestError, useAuthStore } from '@/modules/auth'
+import { AuthRequestError, useLoginMutation } from '@/modules/auth'
 
 /**
  * 登录页
@@ -15,18 +16,25 @@ export function Login() {
   const { t } = useTranslation()
   const { message } = AntdApp.useApp()
   const navigate = useNavigate()
-  const location = useLocation()
-  const { login, loginPending } = useAuthStore()
+  const router = useRouter()
+  const { redirect } = useSearch({ from: '/login' })
+  const loginMutation = useLoginMutation()
 
   const handleLogin = async (values: SignInEmailBody) => {
     try {
-      await login(values)
+      await loginMutation.mutateAsync(values)
       message.success(t('auth.loginSuccess'))
 
-      const params = new URLSearchParams(location.search)
-      const redirect = params.get('redirect')
+      const redirectPath = sanitizeRedirectPath(redirect)
+      if (redirectPath) {
+        router.history.push(redirectPath)
+        return
+      }
 
-      navigate(redirect || '/dashboard', { replace: true })
+      await navigate({
+        replace: true,
+        to: DASHBOARD_ROUTE_PATH,
+      })
     } catch (error) {
       const errorMessage = error instanceof AuthRequestError ? error.message : t('auth.loginFailed')
       message.error(errorMessage)
@@ -73,7 +81,12 @@ export function Login() {
         </div>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" loading={loginPending} className="h-12 w-full rounded-lg font-medium">
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loginMutation.isPending}
+            className="h-12 w-full rounded-lg font-medium"
+          >
             {t('auth.login')}
           </Button>
         </Form.Item>

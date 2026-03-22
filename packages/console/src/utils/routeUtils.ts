@@ -1,57 +1,31 @@
-import type { AppRouteHandle } from '@/app/router/types'
 import type { Tab } from '@/stores'
 
-import { router } from '@/app/router'
+import { resolveRouteMeta } from '@/app/router/types'
 
-import { findRouteByPath, generateTabId, hasActualComponent } from './pathUtils'
+import { generateTabId } from './pathUtils'
+
+interface RouteMatchSnapshot {
+  pathname: string
+  staticData: unknown
+}
 
 /**
- * 从路由配置中获取标签页信息
- * @param path 路由路径
- * @returns Tab对象或null
+ * 根据当前匹配的路由生成标签页信息。
  */
-export function getTabFromRoute(path: string): Tab | null {
-  // 获取所有路由配置
-  const allRoutes = router.routes
+export function getTabFromMatch(match: RouteMatchSnapshot): Tab | null {
+  const meta = resolveRouteMeta(match.staticData)
 
-  // 查找匹配的路由
-  const matchedRoute = findRouteByPath(allRoutes, path)
-
-  if (!matchedRoute?.handle) {
-    // 如果没有找到路由配置，尝试生成默认标签页
-    const segments = path.split('/').filter(Boolean)
-    if (segments.length === 0) return null
-
-    const label = segments[segments.length - 1]
-      .split('-')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
-
-    return {
-      closable: true,
-      id: generateTabId(path),
-      label,
-      path,
-    }
-  }
-
-  const handle = matchedRoute.handle as AppRouteHandle
-
-  if (!handle.title || handle.tab === false) {
+  if (!meta.title || meta.tab === false) {
     return null
   }
 
-  // 检查路由是否有实际的组件
-  // 如果没有实际组件（只是重定向或容器路由），不创建标签
-  if (!hasActualComponent(matchedRoute)) {
-    return null
-  }
+  const path = match.pathname
 
   return {
     closable: path !== '/dashboard', // 仪表盘不可关闭
-    icon: handle.icon?.name, // 获取图标名称
+    icon: meta.icon?.name,
     id: generateTabId(path),
-    label: handle.title,
+    label: meta.title,
     path,
   }
 }

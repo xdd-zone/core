@@ -1,12 +1,12 @@
-import type { AppRouteHandle } from '@/app/router/types'
+import { useMatches } from '@tanstack/react-router'
 
-import { useMatches } from 'react-router'
+import { resolveRouteMeta } from '@/app/router/types'
 
 /**
- * 返回当前路由（最后一个 match）的 handle
+ * 返回当前路由（最后一个 match）的静态元信息。
  */
 export function useCurrentHandle() {
   const matches = useMatches()
   const last = matches[matches.length - 1]
-  return (last?.handle as AppRouteHandle | undefined) ?? {}
+  return resolveRouteMeta(last?.staticData)
 }

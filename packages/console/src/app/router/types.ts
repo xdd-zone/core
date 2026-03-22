@@ -4,7 +4,7 @@ import type { ComponentType } from 'react'
 /**
  * 简化后的路由元信息。
  */
-export interface AppRouteHandle {
+export interface AppRouteMeta {
   /**
    * 面包屑标题。
    */
@@ -25,4 +25,15 @@ export interface AppRouteHandle {
    * @default true
    */
   tab?: boolean
+}
+
+/**
+ * 解析 TanStack Router 的 staticData 为业务路由元信息。
+ */
+export function resolveRouteMeta(staticData: unknown): AppRouteMeta {
+  if (!staticData || typeof staticData !== 'object') {
+    return {}
+  }
+
+  return staticData as AppRouteMeta
 }

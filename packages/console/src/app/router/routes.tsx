@@ -1,165 +1,171 @@
-import type { RouteObject } from 'react-router'
+import type { QueryClient } from '@tanstack/react-query'
 
+import { createRootRouteWithContext, createRoute, lazyRouteComponent, Outlet } from '@tanstack/react-router'
 import { BarChart3, Crop, Folder, List, MessageCircle, Settings, Tag } from 'lucide-react'
-import { Navigate } from 'react-router'
 
 import { ErrorBoundary } from '@/components/ui'
-import { HydrateFallback } from '@/components/ui/HydrateFallback'
 import { RootLayout } from '@/layout'
 import { Login } from '@/pages/auth/Login'
 import { Forbidden } from '@/pages/error/Forbidden'
 import { NotFound } from '@/pages/error/NotFound'
 
-import { GuestOnly, RequireAuth, RootIndexRedirect } from './guards'
+import { redirectFromRoot, requireAuth, requireGuest, validateLoginSearch } from './guards'
 
-const protectedRoutes: RouteObject[] = [
-  {
-    handle: {
-      icon: BarChart3,
-      title: 'menu.dashboard',
-    },
-    lazy: async () => {
-      const [{ Dashboard }] = await Promise.all([import('@/pages/dashboard/Dashboard')])
+export interface RouterContext {
+  queryClient: QueryClient
+}
 
-      return { Component: Dashboard }
-    },
-    path: 'dashboard',
+const rootRoute = createRootRouteWithContext<RouterContext>()({
+  component: Outlet,
+  errorComponent: ErrorBoundary,
+  notFoundComponent: NotFound,
+})
+
+const rootIndexRoute = createRoute({
+  beforeLoad: async ({ context }) => {
+    await redirectFromRoot(context.queryClient)
   },
-  {
-    handle: {
-      icon: List,
-      title: 'menu.articleList',
-    },
-    lazy: async () => {
-      const { ArticleList } = await import('@/pages/article/list/ArticleList')
+  getParentRoute: () => rootRoute,
+  path: '/',
+})
 
-      return { Component: ArticleList }
-    },
-    path: 'articles',
+const loginRoute = createRoute({
+  beforeLoad: async ({ context }) => {
+    await requireGuest(context.queryClient)
   },
-  {
-    handle: {
-      icon: Folder,
-      title: 'menu.categoryManagement',
-    },
-    lazy: async () => {
-      const { CategoryList } = await import('@/pages/article/category/CategoryList')
+  component: Login,
+  getParentRoute: () => rootRoute,
+  path: 'login',
+  staticData: {
+    tab: false,
+    title: 'auth.loginTitle',
+  },
+  validateSearch: validateLoginSearch,
+})
 
-      return { Component: CategoryList }
-    },
-    path: 'categories',
+const forbiddenRoute = createRoute({
+  component: Forbidden,
+  getParentRoute: () => rootRoute,
+  path: '403',
+  staticData: {
+    tab: false,
+    title: '403 禁止访问',
   },
-  {
-    handle: {
-      icon: Tag,
-      title: 'menu.tagManagement',
-    },
-    lazy: async () => {
-      const { TagList } = await import('@/pages/article/tag/TagList')
+})
 
-      return { Component: TagList }
-    },
-    path: 'tags',
+const notFoundRoute = createRoute({
+  component: NotFound,
+  getParentRoute: () => rootRoute,
+  path: '404',
+  staticData: {
+    tab: false,
+    title: '404 页面不存在',
   },
-  {
-    handle: {
-      icon: MessageCircle,
-      title: 'menu.commentManagement',
-    },
-    lazy: async () => {
-      const { CommentList } = await import('@/pages/article/comment/CommentList')
+})
 
-      return { Component: CommentList }
-    },
-    path: 'comments',
+const protectedRoute = createRoute({
+  beforeLoad: async ({ context, location }) => {
+    await requireAuth(context.queryClient, location.href)
   },
-  {
-    handle: {
-      icon: Settings,
-      title: 'menu.articleSettings',
-    },
-    lazy: async () => {
-      const { ArticleSettings } = await import('@/pages/article/settings/ArticleSettings')
+  getParentRoute: () => rootRoute,
+  id: 'protected',
+})
 
-      return { Component: ArticleSettings }
-    },
-    path: 'article-settings',
-  },
-  {
-    handle: {
-      icon: Crop,
-      title: 'menu.imageCrop',
-    },
-    lazy: async () => {
-      const { ImageCropExample } = await import('@/pages/example/ImageCropExample')
+const appLayoutRoute = createRoute({
+  component: RootLayout,
+  getParentRoute: () => protectedRoute,
+  id: 'app-layout',
+})
 
-      return { Component: ImageCropExample }
-    },
-    path: 'image-crop',
+const dashboardRoute = createRoute({
+  component: lazyRouteComponent(() => import('@/pages/dashboard/Dashboard'), 'Dashboard'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'dashboard',
+  staticData: {
+    icon: BarChart3,
+    title: 'menu.dashboard',
   },
-]
+})
+
+const articleListRoute = createRoute({
+  component: lazyRouteComponent(() => import('@/pages/article/list/ArticleList'), 'ArticleList'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'articles',
+  staticData: {
+    icon: List,
+    title: 'menu.articleList',
+  },
+})
+
+const categoryListRoute = createRoute({
+  component: lazyRouteComponent(() => import('@/pages/article/category/CategoryList'), 'CategoryList'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'categories',
+  staticData: {
+    icon: Folder,
+    title: 'menu.categoryManagement',
+  },
+})
+
+const tagListRoute = createRoute({
+  component: lazyRouteComponent(() => import('@/pages/article/tag/TagList'), 'TagList'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'tags',
+  staticData: {
+    icon: Tag,
+    title: 'menu.tagManagement',
+  },
+})
+
+const commentListRoute = createRoute({
+  component: lazyRouteComponent(() => import('@/pages/article/comment/CommentList'), 'CommentList'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'comments',
+  staticData: {
+    icon: MessageCircle,
+    title: 'menu.commentManagement',
+  },
+})
+
+const articleSettingsRoute = createRoute({
+  component: lazyRouteComponent(() => import('@/pages/article/settings/ArticleSettings'), 'ArticleSettings'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'article-settings',
+  staticData: {
+    icon: Settings,
+    title: 'menu.articleSettings',
+  },
+})
+
+const imageCropRoute = createRoute({
+  component: lazyRouteComponent(() => import('@/pages/example/ImageCropExample'), 'ImageCropExample'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'image-crop',
+  staticData: {
+    icon: Crop,
+    title: 'menu.imageCrop',
+  },
+})
+
+const protectedRouteTree = protectedRoute.addChildren([
+  appLayoutRoute.addChildren([
+    dashboardRoute,
+    articleListRoute,
+    categoryListRoute,
+    tagListRoute,
+    commentListRoute,
+    articleSettingsRoute,
+    imageCropRoute,
+  ]),
+])
 
 /**
- * 应用路由。
+ * TanStack Router 路由树。
  */
-export const appRoutes: RouteObject[] = [
-  {
-    children: [
-      {
-        element: <RootIndexRedirect />,
-        index: true,
-      },
-      {
-        children: [
-          {
-            Component: Login,
-            handle: {
-              tab: false,
-              title: 'auth.loginTitle',
-            },
-            path: 'login',
-          },
-        ],
-        element: <GuestOnly />,
-      },
-      {
-        children: [
-          {
-            HydrateFallback,
-            children: [
-              {
-                element: <Navigate to="/dashboard" replace />,
-                index: true,
-              },
-              ...protectedRoutes,
-            ],
-            element: <RootLayout />,
-          },
-        ],
-        element: <RequireAuth />,
-      },
-      {
-        Component: Forbidden,
-        handle: {
-          tab: false,
-          title: '403 禁止访问',
-        },
-        path: '403',
-      },
-      {
-        Component: NotFound,
-        handle: {
-          tab: false,
-          title: '404 页面不存在',
-        },
-        path: '404',
-      },
-      {
-        element: <Navigate to="/404" replace />,
-        path: '*',
-      },
-    ],
-    errorElement: <ErrorBoundary />,
-    path: '/',
-  },
-]
+export const routeTree = rootRoute.addChildren([
+  rootIndexRoute,
+  loginRoute,
+  forbiddenRoute,
+  notFoundRoute,
+  protectedRouteTree,
+])

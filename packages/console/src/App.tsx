@@ -1,9 +1,10 @@
+import { QueryClientProvider } from '@tanstack/react-query'
+import { RouterProvider } from '@tanstack/react-router'
 import { App as AntdApp, ConfigProvider } from 'antd'
-import { useEffect, useRef } from 'react'
-import { RouterProvider } from 'react-router'
+import { useEffect } from 'react'
 
+import { queryClient } from '@/app/query-client'
 import { router } from '@/app/router'
-import { useAuthStore } from '@/modules/auth'
 import { getPrimaryColorByTheme, hexToRgb } from '@/utils/theme'
 
 import { useSettingStore } from './stores'
@@ -12,8 +13,6 @@ import './i18n' // 初始化 i18n
 
 export function App() {
   const { catppuccinTheme } = useSettingStore()
-  const bootstrapSession = useAuthStore((state) => state.bootstrapSession)
-  const hasBootstrapped = useRef(false)
 
   // 获取 Catppuccin 主题配置
   const themeConfig = getAntdThemeConfig(catppuccinTheme)
@@ -29,15 +28,6 @@ export function App() {
     document.documentElement.style.setProperty('--primary-color-rgb', rgbString)
   }, [primaryColor])
 
-  useEffect(() => {
-    if (hasBootstrapped.current) {
-      return
-    }
-
-    hasBootstrapped.current = true
-    void bootstrapSession()
-  }, [bootstrapSession])
-
   return (
     <ConfigProvider
       theme={{
@@ -49,7 +39,9 @@ export function App() {
       }}
     >
       <AntdApp>
-        <RouterProvider router={router} />
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
       </AntdApp>
     </ConfigProvider>
   )

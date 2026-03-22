@@ -1,10 +1,10 @@
 import type { BreadcrumbItemType } from 'antd/es/breadcrumb/Breadcrumb'
 
-import type { AppRouteHandle } from '@/app/router/types'
+import { Link, useMatches } from '@tanstack/react-router'
 import { Breadcrumb as AntBreadcrumb } from 'antd'
 import { useTranslation } from 'react-i18next'
 
-import { Link, useMatches } from 'react-router'
+import { resolveRouteMeta } from '@/app/router/types'
 
 /**
  * 动态面包屑组件
@@ -16,12 +16,11 @@ export function Breadcrumb() {
 
   // 过滤出有效的路由匹配，排除根路由和索引路由
   const validMatches = matches.filter((match) => {
-    const handle = match.handle as AppRouteHandle | undefined
-    const hasTitle = handle?.title || handle?.breadcrumbTitle
+    const meta = resolveRouteMeta(match.staticData)
+    const hasTitle = meta.title || meta.breadcrumbTitle
     const isNotRoot = match.pathname !== '/'
-    const isNotIndex = !match.pathname.endsWith('/')
 
-    return hasTitle && isNotRoot && isNotIndex
+    return hasTitle && isNotRoot
   })
 
   // 构建面包屑项目
@@ -29,8 +28,8 @@ export function Breadcrumb() {
 
   // 添加路由层级
   validMatches.forEach((match, index) => {
-    const handle = match.handle as AppRouteHandle
-    const title = handle.breadcrumbTitle || handle.title || t('unknownPage')
+    const meta = resolveRouteMeta(match.staticData)
+    const title = meta.breadcrumbTitle || meta.title || 'common.loading'
     const isLast = index === validMatches.length - 1
 
     breadcrumbItems.push({

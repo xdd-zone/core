@@ -1,11 +1,11 @@
 import type { MenuProps } from 'antd'
+import { useNavigate } from '@tanstack/react-router'
 
 import { Avatar, Dropdown } from 'antd'
 import { LogOut, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
 
-import { useAuthStore } from '@/modules/auth'
+import { useAuthStore, useLogoutMutation } from '@/modules/auth'
 import { useTabBarStore } from '@/stores'
 
 /**
@@ -14,13 +14,14 @@ import { useTabBarStore } from '@/stores'
 export function UserAvatar() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { logout, user } = useAuthStore()
+  const logoutMutation = useLogoutMutation()
+  const user = useAuthStore((state) => state.user)
   const resetTabs = useTabBarStore((state) => state.reset)
 
   const handleLogout = async () => {
-    await logout()
+    await logoutMutation.mutateAsync()
     resetTabs()
-    navigate('/login', { replace: true })
+    await navigate({ replace: true, to: '/login' })
   }
 
   const menuItems: MenuProps['items'] = [

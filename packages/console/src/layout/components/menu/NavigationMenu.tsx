@@ -1,10 +1,8 @@
 import type { MenuProps } from 'antd'
-
 import type { MenuItem } from '@/utils/pathUtils'
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import { ConfigProvider, Menu, theme } from 'antd'
 import { useMemo } from 'react'
-
-import { useLocation, useNavigate } from 'react-router'
 
 import { useSettingStore } from '@/stores'
 import { findMatchingMenuKey } from '@/utils/pathUtils'
@@ -57,7 +55,7 @@ export function NavigationMenu({
     // 执行路由跳转
     const path = e.key
     if (path && typeof path === 'string' && path.startsWith('/')) {
-      navigate(path)
+      void navigate({ to: path })
     }
   }
 

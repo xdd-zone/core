@@ -75,20 +75,23 @@ src/
 其中：
 
 - `app/router/`
-  - public / protected 路由配置与守卫
+  - TanStack Router 路由树、`beforeLoad` 认证边界与 `staticData` 元信息
+- `app/query-client.ts`
+  - TanStack Query 的 QueryClient 初始化
 - `app/navigation/`
   - 独立导航配置
 - `modules/auth/`
-  - `get-session / sign-in / sign-out` 的前端消费封装
+  - `get-session / sign-in / sign-out` 的 API、query、store 封装
 - `layout/`
   - 后台外壳、侧边栏、头部、TabBar、设置抽屉
 
 当前前端架构的约束是：
 
 - 是否允许进入后台，只由 `nexus` session 决定
+- 会话初始化和认证 mutation 交给 TanStack Query 处理
 - 菜单负责导航组织
 - 页面级权限以服务端返回的 `401 / 403` 为准
-- 根路径会根据登录态重定向到 `/login` 或 `/dashboard`
+- 根路径与受保护页面在路由 `beforeLoad` 阶段完成重定向
 
 ## 服务端结构
 

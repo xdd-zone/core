@@ -1,29 +1,22 @@
-import type { AuthSessionRecord, AuthUser, SessionPayload, SignInEmailBody } from './auth.types'
+import type { AuthSessionRecord, AuthUser, SessionPayload } from './auth.types'
 
 import { create } from 'zustand'
 
-import { authApi } from './auth.api'
-
 export interface AuthState {
-  bootstrapSession: () => Promise<void>
   clearAuth: () => void
   isAuthenticated: boolean
-  isBootstrapping: boolean
-  login: (payload: SignInEmailBody) => Promise<void>
-  loginPending: boolean
-  logout: () => Promise<void>
+  setSessionPayload: (payload: SessionPayload) => void
   session: AuthSessionRecord | null
   user: AuthUser | null
 }
 
-const EMPTY_AUTH_STATE: Pick<AuthState, 'isAuthenticated' | 'loginPending' | 'session' | 'user'> = {
+const EMPTY_AUTH_STATE: Pick<AuthState, 'isAuthenticated' | 'session' | 'user'> = {
   isAuthenticated: false,
-  loginPending: false,
   session: null,
   user: null,
 }
 
-function resolveSessionState(payload: SessionPayload) {
+function resolveSessionState(payload: SessionPayload): Pick<AuthState, 'isAuthenticated' | 'session' | 'user'> {
   return {
     isAuthenticated: payload.isAuthenticated,
     session: payload.session,
@@ -31,61 +24,37 @@ function resolveSessionState(payload: SessionPayload) {
   }
 }
 
+export const EMPTY_SESSION_PAYLOAD: SessionPayload = {
+  isAuthenticated: false,
+  session: null,
+  user: null,
+}
+
 /**
  * 认证状态管理。
  */
 export const useAuthStore = create<AuthState>()((set) => ({
   ...EMPTY_AUTH_STATE,
-  bootstrapSession: async () => {
-    set({ isBootstrapping: true })
-
-    try {
-      const session = await authApi.getSession()
-      set({
-        ...resolveSessionState(session),
-        isBootstrapping: false,
-      })
-    } catch {
-      set({
-        ...EMPTY_AUTH_STATE,
-        isBootstrapping: false,
-      })
-    }
-  },
   clearAuth: () => {
-    set({
-      ...EMPTY_AUTH_STATE,
-      isBootstrapping: false,
-    })
+    set(EMPTY_AUTH_STATE)
   },
-  isBootstrapping: true,
-  login: async (payload) => {
-    set({ loginPending: true })
-
-    try {
-      await authApi.signIn(payload)
-      const session = await authApi.getSession()
-
-      set({
-        ...resolveSessionState(session),
-        isBootstrapping: false,
-        loginPending: false,
-      })
-    } catch (error) {
-      set({ loginPending: false })
-      throw error
-    }
-  },
-  logout: async () => {
-    try {
-      await authApi.signOut()
-    } finally {
-      set({
-        ...EMPTY_AUTH_STATE,
-        isBootstrapping: false,
-      })
-    }
+  setSessionPayload: (payload) => {
+    set(resolveSessionState(payload))
   },
   session: null,
   user: null,
 }))
+
+/**
+ * 将服务端 session 数据同步到 auth store。
+ */
+export function applySessionPayload(payload: SessionPayload) {
+  useAuthStore.getState().setSessionPayload(payload)
+}
+
+/**
+ * 清空当前 auth store。
+ */
+export function clearAuthState() {
+  useAuthStore.getState().clearAuth()
+}

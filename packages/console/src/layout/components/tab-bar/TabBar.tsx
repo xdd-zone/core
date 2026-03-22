@@ -1,8 +1,8 @@
+import { useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 import { X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
 
 import { useMobile } from '@/hooks/useMobile'
 import { useTabBarStore } from '@/stores'
@@ -22,7 +22,7 @@ export function TabBar() {
   // 处理标签页点击
   const handleTabClick = (tabId: string, path: string) => {
     setActiveTab(tabId)
-    navigate(path)
+    void navigate({ to: path })
   }
 
   // 处理标签页关闭
@@ -47,7 +47,7 @@ export function TabBar() {
       }
 
       if (targetTab) {
-        navigate(targetTab.path)
+        void navigate({ to: targetTab.path })
       }
     }
 

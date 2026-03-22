@@ -55,15 +55,27 @@ packages/nexus 认证与接口边界
 
 放：
 
-- public / protected 路由
-- 登录守卫
+- TanStack Router 路由树
+- `beforeLoad` 登录校验与重定向
 - 根路径重定向
-- 路由元信息
+- 路由元信息（`staticData`）
 
 不要在这里放：
 
 - 业务接口请求
 - 角色/权限枚举裁剪逻辑
+
+### `packages/console/src/app/query-client.ts`
+
+放：
+
+- QueryClient 初始化
+- query 默认策略
+
+不要在这里放：
+
+- 业务页面 query 定义
+- 页面组件逻辑
 
 ### `packages/console/src/app/navigation/*`
 
@@ -84,7 +96,8 @@ packages/nexus 认证与接口边界
 - `/api/auth/get-session`
 - `/api/auth/sign-in/email`
 - `/api/auth/sign-out`
-- auth store
+- auth query
+- auth store 中的会话快照消费边界
 
 不要在这里放：
 

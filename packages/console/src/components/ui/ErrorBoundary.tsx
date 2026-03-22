@@ -1,14 +1,11 @@
-import { useRouteError } from 'react-router'
+import type { ErrorComponentProps } from '@tanstack/react-router'
 
 import { Pattern } from './Pattern'
 
 /**
  * 错误边界组件，用于捕获并处理子组件抛出的错误。
  */
-export function ErrorBoundary() {
-  const error = useRouteError()
-
-  // 处理其他类型的错误
+export function ErrorBoundary({ error }: ErrorComponentProps) {
   const errorMessage = error instanceof Error ? error.message : '发生未知错误'
 
   return (

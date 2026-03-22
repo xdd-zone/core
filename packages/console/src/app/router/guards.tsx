@@ -1,62 +1,93 @@
-import { Navigate, Outlet, useLocation } from 'react-router'
+import type { QueryClient } from '@tanstack/react-query'
 
-import { Loading } from '@/components/ui'
-import { useAuthStore } from '@/modules/auth'
+import { redirect } from '@tanstack/react-router'
 
-function FullscreenLoading() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <Loading />
-    </div>
-  )
+import { ensureAuthSession } from '@/modules/auth'
+
+export interface LoginRouteSearch {
+  redirect?: string
 }
 
 /**
- * 游客路由守卫。
+ * 登录页路径。
  */
-export function GuestOnly() {
-  const { isAuthenticated, isBootstrapping } = useAuthStore()
+export const LOGIN_ROUTE_PATH = '/login'
 
-  if (isBootstrapping) {
-    return <FullscreenLoading />
+/**
+ * 后台首页路径。
+ */
+export const DASHBOARD_ROUTE_PATH = '/dashboard'
+
+/**
+ * 解析登录页 search。
+ */
+export function validateLoginSearch(search: Record<string, unknown>): LoginRouteSearch {
+  return {
+    redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
   }
-
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />
-  }
-
-  return <Outlet />
 }
 
 /**
- * 受保护路由守卫。
+ * 过滤重定向地址，避免跳出当前站点。
  */
-export function RequireAuth() {
-  const location = useLocation()
-  const { isAuthenticated, isBootstrapping } = useAuthStore()
-
-  if (isBootstrapping) {
-    return <FullscreenLoading />
+export function sanitizeRedirectPath(redirectPath?: string): string | undefined {
+  if (!redirectPath) {
+    return undefined
   }
 
-  if (!isAuthenticated) {
-    const redirect = `${location.pathname}${location.search}`
+  try {
+    const baseOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
+    const url = new URL(redirectPath, baseOrigin)
 
-    return <Navigate to={`/login?redirect=${encodeURIComponent(redirect)}`} replace />
+    if (url.origin !== baseOrigin) {
+      return undefined
+    }
+
+    return `${url.pathname}${url.search}${url.hash}`
+  } catch {
+    return undefined
   }
-
-  return <Outlet />
 }
 
 /**
- * 根路径重定向守卫。
+ * 仅允许游客访问。
  */
-export function RootIndexRedirect() {
-  const { isAuthenticated, isBootstrapping } = useAuthStore()
+export async function requireGuest(queryClient: QueryClient) {
+  const session = await ensureAuthSession(queryClient)
 
-  if (isBootstrapping) {
-    return <FullscreenLoading />
+  if (session.isAuthenticated) {
+    throw redirect({
+      replace: true,
+      to: DASHBOARD_ROUTE_PATH,
+    })
   }
+}
 
-  return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />
+/**
+ * 仅允许已登录用户访问。
+ */
+export async function requireAuth(queryClient: QueryClient, locationHref: string) {
+  const session = await ensureAuthSession(queryClient)
+
+  if (!session.isAuthenticated) {
+    throw redirect({
+      replace: true,
+      search: {
+        redirect: sanitizeRedirectPath(locationHref),
+      },
+      to: LOGIN_ROUTE_PATH,
+    })
+  }
+}
+
+/**
+ * 根路径按登录态自动跳转。
+ */
+export async function redirectFromRoot(queryClient: QueryClient) {
+  const session = await ensureAuthSession(queryClient)
+
+  throw redirect({
+    replace: true,
+    to: session.isAuthenticated ? DASHBOARD_ROUTE_PATH : LOGIN_ROUTE_PATH,
+  })
 }
