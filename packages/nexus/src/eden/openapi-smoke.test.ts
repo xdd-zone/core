@@ -11,7 +11,7 @@ describe('openapi smoke', () => {
     const document = (await response.json()) as {
       paths?: Record<string, unknown>
     }
-    type OpenapiPathItem = {
+    interface OpenapiPathItem {
       get?: unknown
       post?: unknown
       patch?: unknown

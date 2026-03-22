@@ -1,7 +1,6 @@
-import type { RuntimeEnv } from './utils'
+import type { RuntimeEnv, YamlConfig  } from './utils'
 import { z } from 'zod'
-import { parseRequiredEnv, parseOptionalEnv } from './utils'
-import type { YamlConfig } from './utils'
+import { parseOptionalEnv, parseRequiredEnv } from './utils'
 
 export interface BetterAuthConfig {
   secret: string

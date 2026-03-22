@@ -1,12 +1,12 @@
 export {
+  type AuthSessionRecord,
   AuthSessionSchema,
   AuthUserSchema,
   SessionSchema,
-  SignInEmailBodySchema,
-  SignUpEmailBodySchema,
-  type AuthSessionRecord,
   type SignInEmailBody,
+  SignInEmailBodySchema,
   type SignUpEmailBody,
+  SignUpEmailBodySchema,
 } from './auth.contract'
 export { AuthService } from './auth.service'
-export type { AuthSession, AuthenticatedSession, Session } from './auth.types'
+export type { AuthenticatedSession, AuthSession, Session } from './auth.types'

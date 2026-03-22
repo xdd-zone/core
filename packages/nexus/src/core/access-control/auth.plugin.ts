@@ -1,5 +1,5 @@
-import { Elysia } from 'elysia'
 import type { AuthenticatedSession, Session } from '@/modules/auth'
+import { Elysia } from 'elysia'
 import { UnauthorizedError } from '@/core/http'
 import { AuthService } from '@/modules/auth'
 

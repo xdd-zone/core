@@ -1,5 +1,5 @@
-import { Elysia } from 'elysia'
 import { openapi } from '@elysiajs/openapi'
+import { Elysia } from 'elysia'
 import z from 'zod'
 import { OPENAPI_CONFIG } from '@/core/config'
 

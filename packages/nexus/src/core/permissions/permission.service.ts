@@ -6,8 +6,8 @@
 
 import type { PermissionContext, PermissionString } from './permissions.types'
 import { prisma } from '@/infra/database/client'
-import { Permissions, SYSTEM_PERMISSION_KEYS } from './permissions'
 import { matchPermission, normalizePermission } from './helpers'
+import { Permissions, SYSTEM_PERMISSION_KEYS } from './permissions'
 
 /**
  * 内存权限缓存

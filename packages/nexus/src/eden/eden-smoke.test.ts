@@ -1,5 +1,5 @@
-import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { edenTreaty } from '@elysiajs/eden'
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { createApp } from '@/app'
 import { prisma } from '@/infra/database'
 
@@ -88,19 +88,19 @@ const emptyRequest = {
 } as const
 
 type RequestBody<T> = T & {
-  $query: {}
-  $headers: {}
+  $query: Record<string, never>
+  $headers: Record<string, never>
 }
 
-type RoleSummary = {
+interface RoleSummary {
   name: string
 }
 
-type RoleAssignmentSummary = {
+interface RoleAssignmentSummary {
   roleId: string
 }
 
-type UserRoleStatusResponse = {
+interface UserRoleStatusResponse {
   id: string
   status: 'ACTIVE' | 'INACTIVE' | 'BANNED'
 }

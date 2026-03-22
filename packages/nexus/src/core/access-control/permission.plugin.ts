@@ -1,9 +1,9 @@
-import { Elysia } from 'elysia'
-import type { AuthenticatedSession } from '@/modules/auth'
 import type { PermissionString } from '@/core/permissions/permissions.types'
+import type { AuthenticatedSession } from '@/modules/auth'
+import { Elysia } from 'elysia'
+import { ForbiddenError } from '@/core/http'
 import { PermissionService } from '@/core/permissions/permission.service'
 import { Permissions } from '@/core/permissions/permissions'
-import { ForbiddenError } from '@/core/http'
 import { AuthService } from '@/modules/auth'
 import { assertAuthenticated, authPlugin } from './auth.plugin'
 
@@ -19,7 +19,7 @@ export interface OwnPermissionConfig {
   paramKey?: string
 }
 
-type PermissionGuardContext = {
+interface PermissionGuardContext {
   params?: Record<string, string | undefined>
   request: Request
 }

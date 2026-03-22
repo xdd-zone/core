@@ -23,7 +23,7 @@ export function createPaginatedListSchema<TItem extends z.ZodTypeAny>(itemSchema
   })
 }
 
-export type PaginatedList<T> = {
+export interface PaginatedList<T> {
   items: T[]
   total: number
   page: number
