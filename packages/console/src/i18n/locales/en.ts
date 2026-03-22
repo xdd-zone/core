@@ -32,6 +32,7 @@ export default {
     register: 'Register',
     registerFailed: 'Registration failed',
     registerNow: 'Register now',
+    registerUnavailable: 'Registration is not available yet',
     registerSuccess: 'Registration successful',
     registerTitle: 'Register',
     username: 'Username',

@@ -16,14 +16,16 @@ packages/console
 `@xdd-zone/console` 负责：
 
 - 管理后台页面与布局
-- 前端路由与菜单组织
+- 前端路由、导航与标签页组织
 - 状态管理、主题切换、国际化
 - 与后端 API 的联调与展示
+- 基于 `nexus` session 的登录态初始化与登录/登出流程
 
 不负责：
 
 - 维护服务端接口定义的唯一来源
 - 维护独立于 monorepo 的工程配置体系
+- 解释或复制服务端已有的认证、权限与接口规则
 
 ## 技术栈
 
@@ -54,6 +56,13 @@ packages/console
 - 复用 `@xdd-zone/eslint-config`
 - TypeScript 继承根目录 `tsconfig.base.json`
 - 可通过根目录脚本与后端一起联调
+
+当前前端架构采用：
+
+- public / protected 两段式路由
+- `/api/auth/get-session` 作为登录态唯一真相源
+- 独立导航配置
+- 细粒度权限以后端 `401 / 403` 语义为准
 
 ## 快速开始
 
@@ -142,17 +151,27 @@ packages/console/
 ```text
 src/
 ├── assets/
+├── app/
 ├── components/
 ├── config/
 ├── hooks/
 ├── i18n/
 ├── layout/
+├── modules/
 ├── pages/
-├── router/
 ├── stores/
 ├── types/
 └── utils/
 ```
+
+其中当前重点目录为：
+
+- `src/app/router`
+  - 应用级路由与守卫
+- `src/app/navigation`
+  - 独立导航配置
+- `src/modules/auth`
+  - session 请求与 auth store
 
 ## 开发约定
 
@@ -171,6 +190,8 @@ src/
 - 接口结构优先参考 `packages/nexus` 的接口定义 / OpenAPI
 - 认证与权限行为以后端实现为准
 - 页面联调优先通过根目录 `bun run dev` 完成
+- 本地开发默认通过 `/api` 代理到 `nexus`
+- Better Auth 需要信任前端来源，例如 `http://localhost:2333`
 
 ### 验证建议
 
@@ -182,15 +203,25 @@ bun run type-check
 bun run build
 ```
 
+只改前端时也可以执行：
+
+```bash
+bun run lint:console
+bun run --filter @xdd-zone/console type-check
+bun run build:console
+```
+
 如果改动涉及联调，还应确认：
 
 - 页面能正常访问后端接口
 - 登录与路由守卫行为正确
-- 菜单、主题、持久化状态没有回退
+- 菜单、主题、标签页状态没有回退
+- 刷新页面后能通过 `/api/auth/get-session` 恢复登录态
 
 ## 文档入口
 
-- [仓库根 README](/Users/wuwanzhu/Code/xdd/core/README.md)
-- [架构说明](/Users/wuwanzhu/Code/xdd/core/docs/architecture.md)
-- [开发指南](/Users/wuwanzhu/Code/xdd/core/docs/development.md)
-- [API 指南](/Users/wuwanzhu/Code/xdd/core/docs/api.md)
+- [仓库根 README](../../README.md)
+- [Console 前端指南](../../docs/console.md)
+- [架构说明](../../docs/architecture.md)
+- [开发指南](../../docs/development.md)
+- [API 指南](../../docs/api.md)

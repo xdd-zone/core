@@ -162,6 +162,22 @@ export const profileRoutes = new Elysia()
 - 匿名 `/api/auth/get-session`
 - 登录态 `/api/auth/me`
 
+### `console` 前端约定
+
+当前后台前端统一按下面方式消费认证接口：
+
+- 启动时调用 `/api/auth/get-session`
+- 登录时调用 `/api/auth/sign-in/email`
+- 登录成功后再次调用 `/api/auth/get-session`
+- 登出时调用 `/api/auth/sign-out`
+
+并遵守：
+
+- 请求默认使用 `credentials: 'include'`
+- 是否已登录只看 `/api/auth/get-session`
+- 未登录访问后台路由时跳转 `/login`
+- 页面级 `403` 由页面本身处理
+
 ## 配置
 
 至少需要：
@@ -171,6 +187,10 @@ BETTER_AUTH_URL="http://localhost:7788"
 BETTER_AUTH_SECRET="replace-with-a-secure-secret"
 ```
 
+如果有后台前端联调，还需要确保 Better Auth 的信任来源包含前端地址，例如：
+
+- `http://localhost:2333`
+
 ## 排查建议
 
 建议按下面顺序排查：
@@ -178,8 +198,9 @@ BETTER_AUTH_SECRET="replace-with-a-secure-secret"
 1. 用 `/api/auth/get-session` 确认当前 cookie 是否有效
 2. 检查请求是否真的带上了 session cookie
 3. 检查 `BETTER_AUTH_URL` 是否与实际服务地址一致
-4. 检查 route 用的是 `auth: 'required'` 还是 `permission / own / me`
-5. 检查是否被权限层拦截成 `403`
+4. 检查 Better Auth `trustedOrigins` 是否包含前端来源，例如 `http://localhost:2333`
+5. 检查 route 用的是 `auth: 'required'` 还是 `permission / own / me`
+6. 检查是否被权限层拦截成 `403`
 
 补充约定：
 

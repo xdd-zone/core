@@ -5,7 +5,8 @@ import { LogOut, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
-import { useAuthStore } from '@/stores'
+import { useAuthStore } from '@/modules/auth'
+import { useTabBarStore } from '@/stores'
 
 /**
  * 用户头像组件 (简化版)
@@ -13,11 +14,13 @@ import { useAuthStore } from '@/stores'
 export function UserAvatar() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { logout } = useAuthStore()
+  const { logout, user } = useAuthStore()
+  const resetTabs = useTabBarStore((state) => state.reset)
 
-  const handleLogout = () => {
-    logout()
-    navigate('/', { replace: true })
+  const handleLogout = async () => {
+    await logout()
+    resetTabs()
+    navigate('/login', { replace: true })
   }
 
   const menuItems: MenuProps['items'] = [
@@ -26,7 +29,7 @@ export function UserAvatar() {
       key: 'user-info',
       label: (
         <div className="py-2">
-          <div className="text-cat font-medium">Guest</div>
+          <div className="text-cat font-medium">{user?.name || user?.email || 'Guest'}</div>
         </div>
       ),
     },
@@ -38,7 +41,9 @@ export function UserAvatar() {
       icon: <LogOut size={20} />,
       key: 'logout',
       label: t('user.logout'),
-      onClick: handleLogout,
+      onClick: () => {
+        void handleLogout()
+      },
     },
   ]
 

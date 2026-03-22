@@ -1,9 +1,8 @@
 import { Drawer } from 'antd'
 import { useTranslation } from 'react-i18next'
 
-import { router } from '@/router'
+import { buildNavigationMenuItems } from '@/app/navigation/navigation'
 import { useSettingStore } from '@/stores'
-import { generateAntdMenuItems } from '@/utils/routeUtils'
 
 import { NavigationMenu } from '../menu/NavigationMenu'
 
@@ -15,7 +14,7 @@ export function MobileDrawer() {
   const { t } = useTranslation()
   const { isMobileMenuOpen, setMobileMenuOpen } = useSettingStore()
 
-  const menuItems = generateAntdMenuItems(router.routes, t)
+  const menuItems = buildNavigationMenuItems(t)
 
   const onClose = () => setMobileMenuOpen(false)
 

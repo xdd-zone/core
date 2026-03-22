@@ -1,14 +1,37 @@
-import { Button, Divider, Form, Input } from 'antd'
+import type { SignInEmailBody } from '@/modules/auth'
+
+import { App as AntdApp, Button, Divider, Form, Input } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { AiFillWechat, AiOutlineGoogle } from 'react-icons/ai'
+import { useLocation, useNavigate } from 'react-router'
 
 import { AuthContainer } from '@/components/business'
+import { AuthRequestError, useAuthStore } from '@/modules/auth'
 
 /**
  * 登录页
  */
 export function Login() {
   const { t } = useTranslation()
+  const { message } = AntdApp.useApp()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { login, loginPending } = useAuthStore()
+
+  const handleLogin = async (values: SignInEmailBody) => {
+    try {
+      await login(values)
+      message.success(t('auth.loginSuccess'))
+
+      const params = new URLSearchParams(location.search)
+      const redirect = params.get('redirect')
+
+      navigate(redirect || '/dashboard', { replace: true })
+    } catch (error) {
+      const errorMessage = error instanceof AuthRequestError ? error.message : t('auth.loginFailed')
+      message.error(errorMessage)
+    }
+  }
 
   return (
     <AuthContainer>
@@ -19,13 +42,16 @@ export function Login() {
       </div>
 
       {/* 登录表单 */}
-      <Form name="login" layout="vertical" size="large" className="gap-y-4">
+      <Form<SignInEmailBody> name="login" layout="vertical" size="large" className="gap-y-4" onFinish={handleLogin}>
         <Form.Item
-          label={t('auth.username')}
-          name="username"
-          rules={[{ message: t('auth.usernameRequired'), required: true }]}
+          label={t('auth.email')}
+          name="email"
+          rules={[
+            { message: t('auth.emailRequired'), required: true },
+            { message: t('auth.emailInvalid'), type: 'email' },
+          ]}
         >
-          <Input placeholder={t('auth.usernamePlaceholder')} className="rounded-lg" autoComplete="username" />
+          <Input placeholder={t('auth.emailPlaceholder')} className="rounded-lg" autoComplete="email" />
         </Form.Item>
 
         <Form.Item
@@ -47,7 +73,7 @@ export function Login() {
         </div>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" className="h-12 w-full rounded-lg font-medium">
+          <Button type="primary" htmlType="submit" loading={loginPending} className="h-12 w-full rounded-lg font-medium">
             {t('auth.login')}
           </Button>
         </Form.Item>
@@ -62,12 +88,14 @@ export function Login() {
       <div className="flex gap-4">
         <Button
           icon={<AiFillWechat />}
+          disabled
           className="border-border text-fg-muted hover:border-success hover:text-success h-12 flex-1 rounded-lg bg-transparent transition-colors"
         >
           {t('auth.wechatLogin')}
         </Button>
         <Button
           icon={<AiOutlineGoogle />}
+          disabled
           className="border-border text-fg-muted hover:border-error hover:text-error h-12 flex-1 rounded-lg bg-transparent transition-colors"
         >
           {t('auth.googleLogin')}
@@ -76,10 +104,7 @@ export function Login() {
 
       {/* 注册链接 */}
       <div className="mt-6 text-center">
-        <span className="text-fg-muted text-sm">{t('auth.noAccount')}</span>
-        <a href="#" className="text-primary-cat hover:text-primary-hover ml-1 text-sm transition-colors">
-          {t('auth.registerNow')}
-        </a>
+        <span className="text-fg-muted text-sm">{t('auth.registerUnavailable')}</span>
       </div>
     </AuthContainer>
   )

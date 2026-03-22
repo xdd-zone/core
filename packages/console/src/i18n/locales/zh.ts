@@ -32,6 +32,7 @@ export default {
     register: '注册',
     registerFailed: '注册失败',
     registerNow: '立即注册',
+    registerUnavailable: '注册功能暂未开放',
     registerSuccess: '注册成功',
     registerTitle: '注册',
     username: '用户名',

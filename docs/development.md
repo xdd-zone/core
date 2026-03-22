@@ -32,9 +32,64 @@ packages/nexus
   -> 验证
 ```
 
+修改后台前端时，默认按下面顺序推进：
+
+1. 确认 `nexus` 现有接口和登录态边界
+2. 改 `console` 的 `app/router`、`app/navigation` 或 `modules/auth`
+3. 对齐登录页、导航或页面入口
+4. 完成 `lint / type-check / build`
+
+也就是：
+
+```text
+packages/nexus 认证与接口边界
+  -> packages/console 路由 / 导航 / auth
+  -> 验证
+```
+
 当前实现采用固定角色、固定权限和用户资料管理的接口模型，新增接口时优先复用现有角色、权限和资料边界。
 
 ## 代码放哪一层
+
+### `packages/console/src/app/router/*`
+
+放：
+
+- public / protected 路由
+- 登录守卫
+- 根路径重定向
+- 路由元信息
+
+不要在这里放：
+
+- 业务接口请求
+- 角色/权限枚举裁剪逻辑
+
+### `packages/console/src/app/navigation/*`
+
+放：
+
+- 侧边栏与移动端菜单配置
+- 菜单分组与展示顺序
+
+不要在这里放：
+
+- 登录态判断
+- 业务接口权限判断
+
+### `packages/console/src/modules/auth/*`
+
+放：
+
+- `/api/auth/get-session`
+- `/api/auth/sign-in/email`
+- `/api/auth/sign-out`
+- auth store
+
+不要在这里放：
+
+- 页面渲染逻辑
+- 业务页面数据请求
 
 ### `packages/nexus/src/modules/*/*.contract.ts`
 
@@ -247,6 +302,21 @@ bun run format
 bun run lint
 bun run type-check
 ```
+
+### 只改 `console`
+
+```bash
+bun run lint:console
+bun run --filter @xdd-zone/console type-check
+bun run build:console
+```
+
+联调时额外确认：
+
+- `/login` 是否可访问
+- 登录后是否跳转 `/dashboard`
+- 刷新页面后是否仍能通过 `/api/auth/get-session` 恢复 session
+- 退出登录后是否回到 `/login`
 
 ### 改了接口定义 / route / OpenAPI
 

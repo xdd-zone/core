@@ -129,7 +129,12 @@ export default defineConfig(({ mode }) => {
       host: true,
       open: true,
       port: 2333,
-      // proxy 配置已移除，不再需要后端 API
+      proxy: {
+        '/api': {
+          changeOrigin: true,
+          target: env.VITE_API_PROXY_TARGET || 'http://localhost:7788',
+        },
+      },
     },
   }
 })

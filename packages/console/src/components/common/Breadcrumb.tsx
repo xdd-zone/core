@@ -1,6 +1,6 @@
 import type { BreadcrumbItemType } from 'antd/es/breadcrumb/Breadcrumb'
 
-import type { RouteHandle } from '@/router/types'
+import type { AppRouteHandle } from '@/app/router/types'
 import { Breadcrumb as AntBreadcrumb } from 'antd'
 import { useTranslation } from 'react-i18next'
 
@@ -16,7 +16,7 @@ export function Breadcrumb() {
 
   // 过滤出有效的路由匹配，排除根路由和索引路由
   const validMatches = matches.filter((match) => {
-    const handle = match.handle as RouteHandle | undefined
+    const handle = match.handle as AppRouteHandle | undefined
     const hasTitle = handle?.title || handle?.breadcrumbTitle
     const isNotRoot = match.pathname !== '/'
     const isNotIndex = !match.pathname.endsWith('/')
@@ -29,7 +29,7 @@ export function Breadcrumb() {
 
   // 添加路由层级
   validMatches.forEach((match, index) => {
-    const handle = match.handle as RouteHandle
+    const handle = match.handle as AppRouteHandle
     const title = handle.breadcrumbTitle || handle.title || t('unknownPage')
     const isLast = index === validMatches.length - 1
 

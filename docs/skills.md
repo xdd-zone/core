@@ -6,7 +6,7 @@
 
 位置：
 
-`/Users/wuwanzhu/Code/xdd/core/.codex/skills/xdd-zone-codegen/SKILL.md`
+`../.codex/skills/xdd-zone-codegen/SKILL.md`
 
 适用场景：
 
@@ -29,20 +29,20 @@
 
 触发这个 Skill 前，先看：
 
-1. [README.md](/Users/wuwanzhu/Code/xdd/core/README.md)
-2. [architecture.md](/Users/wuwanzhu/Code/xdd/core/docs/architecture.md)
-3. [development.md](/Users/wuwanzhu/Code/xdd/core/docs/development.md)
+1. [README.md](../README.md)
+2. [architecture.md](./architecture.md)
+3. [development.md](./development.md)
 4. 目标包 README
 
 最常用的参考实现：
 
-- [user.route.ts](/Users/wuwanzhu/Code/xdd/core/packages/nexus/src/routes/user.route.ts)
-- [user.service.ts](/Users/wuwanzhu/Code/xdd/core/packages/nexus/src/modules/user/user.service.ts)
-- [user.contract.ts](/Users/wuwanzhu/Code/xdd/core/packages/nexus/src/modules/user/user.contract.ts)
+- [user.route.ts](../packages/nexus/src/routes/user.route.ts)
+- [user.service.ts](../packages/nexus/src/modules/user/user.service.ts)
+- [user.contract.ts](../packages/nexus/src/modules/user/user.contract.ts)
 
 ## 维护建议
 
 如果后续项目结构或风格发生变化，更新下面两处即可：
 
-- Skill 本体：`/Users/wuwanzhu/Code/xdd/core/.codex/skills/xdd-zone-codegen/`
-- 项目说明：`/Users/wuwanzhu/Code/xdd/core/AGENTS.md`
+- Skill 本体：`../.codex/skills/xdd-zone-codegen/`
+- 项目说明：`../AGENTS.md`

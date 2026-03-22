@@ -26,7 +26,7 @@ export function useRouteListener() {
     const currentPath = location.pathname
 
     // 跳过登录页面和错误页面
-    if (currentPath.startsWith('/login') || currentPath.startsWith('/error')) {
+    if (currentPath === '/login' || currentPath === '/403' || currentPath === '/404') {
       return
     }
 

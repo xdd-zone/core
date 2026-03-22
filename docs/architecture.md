@@ -21,6 +21,21 @@
 
 ## 包边界
 
+### `@xdd-zone/console`
+
+负责：
+
+- 后台管理前端页面与布局
+- 应用路由、导航与标签页
+- 登录态初始化、登录、登出与会话恢复
+- 消费 `@xdd-zone/nexus` 暴露的认证与业务接口
+
+不负责：
+
+- 维护服务端接口定义的唯一来源
+- 在前端单独维护权限计算规则
+- 用菜单承担业务权限判定
+
 ### `@xdd-zone/nexus`
 
 负责：
@@ -37,6 +52,43 @@
 ### `@xdd-zone/eslint-config`
 
 负责共享 lint / format 规则，不参与业务接口流程。
+
+## 前端结构
+
+`packages/console/src/` 当前按下面的职责组织：
+
+```text
+src/
+├── app/
+│   ├── navigation/
+│   └── router/
+├── modules/
+│   └── auth/
+├── pages/
+├── layout/
+├── components/
+├── hooks/
+├── stores/
+└── utils/
+```
+
+其中：
+
+- `app/router/`
+  - public / protected 路由配置与守卫
+- `app/navigation/`
+  - 独立导航配置
+- `modules/auth/`
+  - `get-session / sign-in / sign-out` 的前端消费封装
+- `layout/`
+  - 后台外壳、侧边栏、头部、TabBar、设置抽屉
+
+当前前端架构的约束是：
+
+- 是否允许进入后台，只由 `nexus` session 决定
+- 菜单负责导航组织
+- 页面级权限以服务端返回的 `401 / 403` 为准
+- 根路径会根据登录态重定向到 `/login` 或 `/dashboard`
 
 ## 服务端结构
 

@@ -3,7 +3,7 @@ import type { LucideProps } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { RouteObject } from 'react-router'
 
-import type { RouteHandle } from '@/router/types'
+import type { AppRouteHandle } from '@/app/router/types'
 
 import React from 'react'
 
@@ -70,7 +70,7 @@ export function findRouteByPath(
   routes: RouteObject[],
   targetPath: string,
   parentPath = '',
-): (RouteObject & { handle?: RouteHandle }) | null {
+): (RouteObject & { handle?: AppRouteHandle }) | null {
   for (const route of routes) {
     const routePath = route.path || ''
 
@@ -79,7 +79,7 @@ export function findRouteByPath(
 
     // 检查是否匹配目标路径
     if (fullPath === targetPath) {
-      return route as RouteObject & { handle?: RouteHandle }
+      return route as RouteObject & { handle?: AppRouteHandle }
     }
 
     // 递归查找子路由

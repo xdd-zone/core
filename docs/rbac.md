@@ -28,7 +28,7 @@ RBAC 模型如下：
 
 统一定义在：
 
-[permissions.ts](/Users/wuwanzhu/Code/xdd/core/packages/nexus/src/core/permissions/permissions.ts)
+[permissions.ts](../packages/nexus/src/core/permissions/permissions.ts)
 
 route 中应使用常量，不直接写裸字符串。
 

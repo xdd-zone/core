@@ -14,6 +14,7 @@ logger:
 
 # Better Auth 信任的请求来源
 trustedOrigins:
+  - http://localhost:2333
   - http://localhost:2233
   - http://localhost:7788
   - http://localhost:7789

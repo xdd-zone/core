@@ -1,4 +1,4 @@
-import type { RouteHandle } from '@/router/types'
+import type { AppRouteHandle } from '@/app/router/types'
 
 import { useMatches } from 'react-router'
 
@@ -8,5 +8,5 @@ import { useMatches } from 'react-router'
 export function useCurrentHandle() {
   const matches = useMatches()
   const last = matches[matches.length - 1]
-  return (last?.handle as RouteHandle | undefined) ?? {}
+  return (last?.handle as AppRouteHandle | undefined) ?? {}
 }

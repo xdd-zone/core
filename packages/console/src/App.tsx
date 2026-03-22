@@ -1,9 +1,10 @@
 import { App as AntdApp, ConfigProvider } from 'antd'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { RouterProvider } from 'react-router'
 
+import { router } from '@/app/router'
+import { useAuthStore } from '@/modules/auth'
 import { getPrimaryColorByTheme, hexToRgb } from '@/utils/theme'
-import { router } from './router'
 
 import { useSettingStore } from './stores'
 import { getAntdThemeConfig } from './utils/catppuccin.antd'
@@ -11,6 +12,8 @@ import './i18n' // 初始化 i18n
 
 export function App() {
   const { catppuccinTheme } = useSettingStore()
+  const bootstrapSession = useAuthStore((state) => state.bootstrapSession)
+  const hasBootstrapped = useRef(false)
 
   // 获取 Catppuccin 主题配置
   const themeConfig = getAntdThemeConfig(catppuccinTheme)
@@ -25,6 +28,15 @@ export function App() {
     document.documentElement.style.setProperty('--primary-color', primaryColor)
     document.documentElement.style.setProperty('--primary-color-rgb', rgbString)
   }, [primaryColor])
+
+  useEffect(() => {
+    if (hasBootstrapped.current) {
+      return
+    }
+
+    hasBootstrapped.current = true
+    void bootstrapSession()
+  }, [bootstrapSession])
 
   return (
     <ConfigProvider
