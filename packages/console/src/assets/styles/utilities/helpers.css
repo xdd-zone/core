@@ -1,0 +1,14 @@
+/* 工具类样式 */
+@layer utilities {
+  /* 隐藏滚动条 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  /* 这里可以添加自定义的工具类 */
+  /* 例如：特殊的间距、颜色、动画等工具类 */
+}

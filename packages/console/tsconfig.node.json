@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "incremental": true,
+    "lib": ["ES2023"],
+    "moduleDetection": "force",
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "noFallthroughCasesInSwitch": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["vite.config.ts"]
+}

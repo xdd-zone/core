@@ -1,0 +1,104 @@
+/* 布局组件主题样式 - Catppuccin */
+
+/* ========== 标签栏样式 ========== */
+.guide-tab-bar .tab-item {
+  border-color: var(--cat-border);
+  background-color: var(--cat-bg-secondary);
+  color: var(--cat-text-muted);
+  transition: all 0.2s ease;
+}
+
+.guide-tab-bar .tab-item:hover {
+  border-color: var(--cat-primary) !important;
+  background-color: var(--cat-bg-tertiary) !important;
+  color: var(--cat-text) !important;
+}
+
+.guide-tab-bar .tab-item.active {
+  border-color: var(--cat-primary) !important;
+  background-color: var(--cat-bg-tertiary) !important;
+  color: var(--cat-primary) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* ========== 侧边栏样式 ========== */
+.admin-layout-sider {
+  background: var(--cat-bg-secondary);
+  border-right: 1px solid var(--cat-border);
+}
+
+/* 侧边栏菜单项 */
+.admin-layout-sider .ant-menu {
+  background: transparent;
+  border-right: none;
+}
+
+.admin-layout-sider .ant-menu-item {
+  color: var(--cat-text-muted);
+  border-radius: 6px;
+  margin: 4px 8px;
+}
+
+.admin-layout-sider .ant-menu-item:hover {
+  color: var(--cat-primary);
+  background: rgb(30 102 245 / 0.1);
+}
+
+.admin-layout-sider .ant-menu-item-selected {
+  color: var(--cat-primary);
+  background: rgb(30 102 245 / 0.1);
+}
+
+.admin-layout-sider .ant-menu-item-selected::after {
+  border-right-color: var(--cat-primary);
+}
+
+/* ========== 头部样式 ========== */
+.admin-layout-header {
+  background: var(--cat-bg-secondary);
+  border-bottom: 1px solid var(--cat-border);
+  color: var(--cat-text);
+}
+
+/* ========== 内容区域样式 ========== */
+.admin-layout-content {
+  background: var(--cat-bg-primary);
+  color: var(--cat-text);
+}
+
+/* ========== 暗色主题（Frappé、Macchiato、Mocha） ========== */
+[data-theme='frappe'] .admin-layout-sider,
+[data-theme='macchiato'] .admin-layout-sider,
+[data-theme='mocha'] .admin-layout-sider {
+  background: var(--cat-bg-secondary);
+  border-right-color: var(--cat-border);
+}
+
+[data-theme='frappe'] .admin-layout-sider .ant-menu-item:hover,
+[data-theme='macchiato'] .admin-layout-sider .ant-menu-item:hover,
+[data-theme='mocha'] .admin-layout-sider .ant-menu-item:hover {
+  color: var(--cat-primary);
+  background: rgb(137 180 250 / 0.1);
+}
+
+[data-theme='frappe'] .admin-layout-sider .ant-menu-item-selected,
+[data-theme='macchiato'] .admin-layout-sider .ant-menu-item-selected,
+[data-theme='mocha'] .admin-layout-sider .ant-menu-item-selected {
+  color: var(--cat-primary);
+  background: rgb(137 180 250 / 0.1);
+}
+
+[data-theme='frappe'] .admin-layout-header,
+[data-theme='macchiato'] .admin-layout-header,
+[data-theme='mocha'] .admin-layout-header {
+  background: var(--cat-bg-secondary);
+  border-bottom-color: var(--cat-border);
+  color: var(--cat-text);
+}
+
+[data-theme='frappe'] .admin-layout-content,
+[data-theme='macchiato'] .admin-layout-content,
+[data-theme='mocha'] .admin-layout-content {
+  background: var(--cat-bg-primary);
+  color: var(--cat-text);
+}

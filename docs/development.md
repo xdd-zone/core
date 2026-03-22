@@ -18,7 +18,7 @@ bun run db:local:prepare
 
 新增或修改公共 API 时，默认按下面顺序推进：
 
-1. 改 Nexus contract
+1. 改 Nexus 接口定义
 2. 改 service / repository
 3. 改 route
 4. 导出 OpenAPI
@@ -82,7 +82,7 @@ route handler 优先直接消费：
 
 ## 新增接口的推荐流程
 
-### 第 1 步：定义 contract
+### 第 1 步：定义接口
 
 推荐位置：
 
@@ -247,7 +247,7 @@ bun run lint
 bun run type-check
 ```
 
-### 改了 contract / route / OpenAPI
+### 改了接口定义 / route / OpenAPI
 
 ```bash
 bun run --filter @xdd-zone/nexus export:openapi
@@ -290,7 +290,7 @@ bun run db:local:prepare
 
 建议按下面的顺序推进：
 
-- 先定义 Nexus contract
+- 先定义 Nexus 接口
 - 再写 route / service / repository
 - 公共 API 变更后同步检查 OpenAPI 导出与 Nexus 测试
-- 避免重新制造第二套契约源
+- 避免重新维护第二套接口定义

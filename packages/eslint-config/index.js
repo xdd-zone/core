@@ -9,9 +9,7 @@
 import antfu from '@antfu/eslint-config'
 import eslintConfigPrettier from 'eslint-config-prettier'
 
-// 合并所有配置为数组格式
-const configs = [
-  // 全局忽略配置（必须作为数组的第一项）
+export default antfu(
   {
     ignores: [
       // 依赖
@@ -31,6 +29,7 @@ const configs = [
       // 生成文件
       '*.generated.ts',
       '*.generated.js',
+      '*.tsbuildinfo',
       'packages/*/dist',
       'packages/*/node_modules',
 
@@ -74,9 +73,6 @@ const configs = [
       'temp',
       'tmp',
     ],
-  },
-  // 基础配置 - 适用于 TypeScript + Bun 运行时
-  ...antfu({
     typescript: true,
     formatters: true,
     markdown: false,
@@ -87,8 +83,6 @@ const configs = [
       'jsdoc/check-param-names': 'off',
       'antfu/if-newline': 'off',
     },
-  }),
+  },
   eslintConfigPrettier,
-]
-
-export default configs
+)

@@ -4,10 +4,10 @@
 
 仓库的主要边界可以概括成 5 条：
 
-- `packages/nexus` 是服务端 HTTP 契约真相源
+- `packages/nexus` 是服务端 HTTP 接口定义的唯一来源
 - route 层直接表达 HTTP 语义，不维护额外的 schema 镜像层
 - access control 通过声明式 route 配置表达
-- OpenAPI 是服务端对外协议导出物
+- OpenAPI 是服务端对外的接口说明导出物
 - Eden 是仓库内联调与 smoke test 的内部类型基线
 
 ## 包边界
@@ -17,17 +17,17 @@
 负责：
 
 - Elysia app / route / plugin 组合
-- 模块 contract、OpenAPI、权限与认证
+- 模块接口定义、OpenAPI、权限与认证
 - Prisma、日志、配置等基础设施
 - Eden internal smoke test
 
 不负责：
 
-- 维护第二套独立 HTTP 契约源
+- 维护第二套独立的 HTTP 接口定义
 
 ### `@xdd-zone/eslint-config`
 
-负责共享 lint / format 规则，不参与业务协议链路。
+负责共享 lint / format 规则，不参与业务接口流程。
 
 ## 服务端结构
 
@@ -157,19 +157,19 @@ route 层优先使用下面 4 种声明式配置：
 
 新代码应统一从 `@/core/access-control` 与 `@/core/http` 导入。
 
-## 协议与生成链路
+## 接口定义与导出流程
 
-协议链路如下：
+整体流程如下：
 
 ```text
-Nexus contract / route
+Nexus 接口定义 / route
   -> OpenAPI 导出
   -> Eden / 测试 / 外部集成消费
 ```
 
 具体落点：
 
-- contract 源：
+- 接口定义位置：
   - `packages/nexus/src/modules/*/*.contract.ts`
 - OpenAPI 导出：
   - `packages/nexus/scripts/export-openapi.ts`
@@ -202,7 +202,7 @@ Nexus contract / route
 
 ## 实现摘要
 
-- 服务端只维护一套 HTTP 契约源
+- 服务端只维护一套 HTTP 接口定义
 - route 风格保持 Elysia-native 的声明式写法
 - Better Auth 适配位于 `core/auth`
 - Eden 位于 Nexus 测试集中，并覆盖匿名、登录态、own、me

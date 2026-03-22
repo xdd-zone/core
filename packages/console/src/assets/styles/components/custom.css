@@ -1,0 +1,33 @@
+/* 自定义组件样式 */
+@layer components {
+  /* 这里可以添加项目中自定义组件的样式 */
+  /* 例如：卡片、导航、布局等自定义组件样式 */
+
+  /* Markdown 代码块行号样式 */
+  .markdown-code-with-lines .shiki {
+    counter-reset: md-code-line;
+  }
+
+  .markdown-code-with-lines .shiki {
+    background-color: inherit !important;
+  }
+
+  .markdown-code-with-lines .shiki .line {
+    position: relative;
+    padding-left: 3rem;
+  }
+
+  .markdown-code-with-lines .shiki .line::before {
+    counter-increment: md-code-line;
+    content: counter(md-code-line);
+    position: absolute;
+    left: 0;
+    width: 2.5rem;
+    margin-right: 0.75rem;
+    padding-right: 0.5rem;
+    text-align: right;
+    user-select: none;
+    opacity: 0.6;
+    border-right: 1px solid color-mix(in oklab, var(--shiki-foreground) 40%, transparent);
+  }
+}

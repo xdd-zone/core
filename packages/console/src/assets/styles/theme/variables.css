@@ -1,0 +1,180 @@
+/* TailwindCSS v4 Theme Configuration for Catppuccin */
+
+/* Import Catppuccin color variables */
+@import './catppuccin.css';
+
+/* Configure TailwindCSS v4 Theme */
+@theme {
+  /* ========== Catppuccin 基础调色板 ========== */
+  --color-rosewater: var(--ctp-rosewater);
+  --color-flamingo: var(--ctp-flamingo);
+  --color-pink: var(--ctp-pink);
+  --color-mauve: var(--ctp-mauve);
+  --color-red: var(--ctp-red);
+  --color-maroon: var(--ctp-maroon);
+  --color-peach: var(--ctp-peach);
+  --color-yellow: var(--ctp-yellow);
+  --color-green: var(--ctp-green);
+  --color-teal: var(--ctp-teal);
+  --color-sky: var(--ctp-sky);
+  --color-blue: var(--ctp-blue);
+  --color-sapphire: var(--ctp-sapphire);
+  --color-lavender: var(--ctp-lavender);
+
+  /* ========== 语义化颜色 - 符合 Catppuccin 风格指南 ========== */
+  /* 文字颜色 - 使用 fg (foreground) 前缀避免 text-text 冗余 */
+  --color-fg: var(--ctp-text);
+  --color-fg-muted: var(--ctp-subtext-1);
+  --color-fg-subtle: var(--ctp-subtext-0);
+
+  /* 背景颜色 - 使用 surface 前缀避免 bg-bg 冗余 */
+  --color-surface: var(--ctp-base);
+  --color-surface-muted: var(--ctp-mantle);
+  --color-surface-subtle: var(--ctp-crust);
+  --color-surface-elevated: var(--ctp-overlay-1);
+
+  /* 表面元素层级 */
+  --color-surface-0: var(--ctp-surface-0);
+  --color-surface-1: var(--ctp-surface-1);
+  --color-surface-2: var(--ctp-surface-2);
+
+  /* 叠加层层级 (用于 hover、disabled 等交互状态) */
+  --color-overlay-0: var(--ctp-overlay-0);
+  --color-overlay-1: var(--ctp-overlay-1);
+  --color-overlay-2: var(--ctp-overlay-2);
+
+  /* 边框颜色 */
+  --color-border: var(--ctp-crust);
+  --color-border-subtle: var(--ctp-surface-2);
+
+  /* 主色调 */
+  --color-primary: var(--ctp-primary);
+  --color-primary-hover: var(--ctp-primary-hover);
+  --color-primary-light: var(--ctp-primary-light);
+
+  /* 状态语义色 */
+  --color-success: var(--ctp-success);
+  --color-warning: var(--ctp-warning);
+  --color-error: var(--ctp-error);
+  --color-info: var(--ctp-info);
+}
+
+/* Dark Mode Variant Configuration */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* ========== TailwindCSS 标准颜色映射 ========== */
+/* 映射 Catppuccin 颜色到 TailwindCSS 常用类名 */
+
+/* Gray Scale - 使用 Subtext 颜色 */
+[data-theme='latte'] {
+  --color-gray-50: #f8f9fb;
+  --color-gray-100: #eff1f5;
+  --color-gray-200: #e6e9ef;
+  --color-gray-300: #dce0e8;
+  --color-gray-400: #8c8fa1;
+  --color-gray-500: #6c6f85;
+  --color-gray-600: #4c4f69;
+  --color-gray-700: #4c4f69;
+  --color-gray-800: #4c4f69;
+  --color-gray-900: #4c4f69;
+  --color-gray-950: #1e1e2e;
+}
+
+[data-theme='frappe'] {
+  --color-gray-50: #4c4f69;
+  --color-gray-100: #4c4f69;
+  --color-gray-200: #4c4f69;
+  --color-gray-300: #4c4f69;
+  --color-gray-400: #a5adce;
+  --color-gray-500: #8389a7;
+  --color-gray-600: #c6d0f5;
+  --color-gray-700: #c6d0f5;
+  --color-gray-800: #c6d0f5;
+  --color-gray-900: #c6d0f5;
+  --color-gray-950: #232634;
+}
+
+[data-theme='macchiato'] {
+  --color-gray-50: #4c4f69;
+  --color-gray-100: #4c4f69;
+  --color-gray-200: #4c4f69;
+  --color-gray-300: #4c4f69;
+  --color-gray-400: #a5adcb;
+  --color-gray-500: #8a91b4;
+  --color-gray-600: #cad3f5;
+  --color-gray-700: #cad3f5;
+  --color-gray-800: #cad3f5;
+  --color-gray-900: #cad3f5;
+  --color-gray-950: #181926;
+}
+
+[data-theme='mocha'] {
+  --color-gray-50: #4c4f69;
+  --color-gray-100: #4c4f69;
+  --color-gray-200: #4c4f69;
+  --color-gray-300: #4c4f69;
+  --color-gray-400: #a6adc8;
+  --color-gray-500: #9399b2;
+  --color-gray-600: #cdd6f4;
+  --color-gray-700: #cdd6f4;
+  --color-gray-800: #cdd6f4;
+  --color-gray-900: #cdd6f4;
+  --color-gray-950: #11111b;
+}
+
+/* 通用语义颜色 - 兼容 shadcn/ui 等组件库 */
+[data-theme='latte'] {
+  --color-muted: var(--ctp-subtext-1);
+  --color-muted-foreground: var(--ctp-subtext-1);
+  --color-background: var(--ctp-base);
+  --color-foreground: var(--ctp-text);
+  --color-card: var(--ctp-base);
+  --color-card-foreground: var(--ctp-text);
+  --color-popover: var(--ctp-base);
+  --color-popover-foreground: var(--ctp-text);
+  --color-border: var(--ctp-crust);
+  --color-input: var(--ctp-crust);
+  --color-ring: var(--ctp-blue);
+}
+
+[data-theme='frappe'] {
+  --color-muted: var(--ctp-subtext-1);
+  --color-muted-foreground: var(--ctp-subtext-1);
+  --color-background: var(--ctp-base);
+  --color-foreground: var(--ctp-text);
+  --color-card: var(--ctp-base);
+  --color-card-foreground: var(--ctp-text);
+  --color-popover: var(--ctp-base);
+  --color-popover-foreground: var(--ctp-text);
+  --color-border: var(--ctp-crust);
+  --color-input: var(--ctp-crust);
+  --color-ring: var(--ctp-blue);
+}
+
+[data-theme='macchiato'] {
+  --color-muted: var(--ctp-subtext-1);
+  --color-muted-foreground: var(--ctp-subtext-1);
+  --color-background: var(--ctp-base);
+  --color-foreground: var(--ctp-text);
+  --color-card: var(--ctp-base);
+  --color-card-foreground: var(--ctp-text);
+  --color-popover: var(--ctp-base);
+  --color-popover-foreground: var(--ctp-text);
+  --color-border: var(--ctp-crust);
+  --color-input: var(--ctp-crust);
+  --color-ring: var(--ctp-blue);
+}
+
+[data-theme='mocha'] {
+  --color-muted: var(--ctp-subtext-1);
+  --color-muted-foreground: var(--ctp-subtext-1);
+  --color-background: var(--ctp-base);
+  --color-foreground: var(--ctp-text);
+  --color-card: var(--ctp-base);
+  --color-card-foreground: var(--ctp-text);
+  --color-popover: var(--ctp-base);
+  --color-popover-foreground: var(--ctp-text);
+  --color-border: var(--ctp-crust);
+  --color-input: var(--ctp-crust);
+  --color-ring: var(--ctp-blue);
+}

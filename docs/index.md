@@ -44,7 +44,7 @@
 - `packages/nexus/src/core/http`
 - `packages/nexus/src/modules/*/*.contract.ts`
 
-## 如果你要修改 HTTP 协议 / contract
+## 如果你要修改 HTTP 接口定义
 
 优先阅读：
 
@@ -78,7 +78,7 @@
 - [README.md](/Users/wuwanzhu/Code/xdd/core/README.md)：仓库总览
 - [architecture.md](/Users/wuwanzhu/Code/xdd/core/docs/architecture.md)：架构说明
 - [development.md](/Users/wuwanzhu/Code/xdd/core/docs/development.md)：开发流程与标准动作
-- [api.md](/Users/wuwanzhu/Code/xdd/core/docs/api.md)：HTTP 协议与端点概览
+- [api.md](/Users/wuwanzhu/Code/xdd/core/docs/api.md)：HTTP 接口与端点概览
 - [authentication.md](/Users/wuwanzhu/Code/xdd/core/docs/authentication.md)：认证与登录态
 - [rbac.md](/Users/wuwanzhu/Code/xdd/core/docs/rbac.md)：权限模型与声明式写法
 - [testing.md](/Users/wuwanzhu/Code/xdd/core/docs/testing.md)：测试分层与回归命令

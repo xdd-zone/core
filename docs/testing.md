@@ -82,7 +82,7 @@ DATABASE_URL=postgresql://xdd:xdd_local_dev@localhost:55432/xdd_core_local bun r
 
 ## 推荐流程
 
-### 改了 contract / OpenAPI / route
+### 改了接口定义 / OpenAPI / route
 
 ```bash
 bun run --filter @xdd-zone/nexus export:openapi
@@ -111,7 +111,7 @@ bun run lint
 bun run type-check
 ```
 
-如果这次改动触及了协议或鉴权，再加上：
+如果这次改动触及了接口定义或鉴权，再加上：
 
 ```bash
 bun run --filter @xdd-zone/nexus test

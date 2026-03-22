@@ -25,6 +25,7 @@ export default [
       // 生成文件
       "*.generated.ts",
       "*.generated.js",
+      "*.tsbuildinfo",
       "packages/*/dist",
       "packages/*/node_modules",
 

@@ -1,0 +1,160 @@
+/* 全局滚动条样式 - Catppuccin 主题 */
+@layer base {
+  /* Latte（亮色主题）滚动条 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #9ca3af transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: all 0.2s ease-in-out;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-thumb:active {
+    background: #4b5563;
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Mocha（暗色主题）滚动条 */
+  [data-theme='mocha'] * {
+    scrollbar-color: #6c7086 transparent;
+  }
+
+  [data-theme='mocha'] *::-webkit-scrollbar-thumb {
+    background: #6c7086;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  [data-theme='mocha'] *::-webkit-scrollbar-thumb:hover {
+    background: #89b4fa;
+    background-clip: content-box;
+  }
+
+  [data-theme='mocha'] *::-webkit-scrollbar-thumb:active {
+    background: #b4befe;
+    background-clip: content-box;
+  }
+
+  [data-theme='mocha'] *::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  [data-theme='mocha'] *::-webkit-scrollbar-track:hover {
+    background: rgb(24 24 37 / 0.5);
+  }
+
+  /* Frappé（暗色主题）滚动条 */
+  [data-theme='frappe'] * {
+    scrollbar-color: #8389a7 transparent;
+  }
+
+  [data-theme='frappe'] *::-webkit-scrollbar-thumb {
+    background: #8389a7;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  [data-theme='frappe'] *::-webkit-scrollbar-thumb:hover {
+    background: #8caaee;
+    background-clip: content-box;
+  }
+
+  [data-theme='frappe'] *::-webkit-scrollbar-thumb:active {
+    background: #babbf1;
+    background-clip: content-box;
+  }
+
+  [data-theme='frappe'] *::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  [data-theme='frappe'] *::-webkit-scrollbar-track:hover {
+    background: rgb(35 38 52 / 0.5);
+  }
+
+  /* Macchiato（暗色主题）滚动条 */
+  [data-theme='macchiato'] * {
+    scrollbar-color: #6c7086 transparent;
+  }
+
+  [data-theme='macchiato'] *::-webkit-scrollbar-thumb {
+    background: #6c7086;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  [data-theme='macchiato'] *::-webkit-scrollbar-thumb:hover {
+    background: #8aadf4;
+    background-clip: content-box;
+  }
+
+  [data-theme='macchiato'] *::-webkit-scrollbar-thumb:active {
+    background: #b7bdf8;
+    background-clip: content-box;
+  }
+
+  [data-theme='macchiato'] *::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  [data-theme='macchiato'] *::-webkit-scrollbar-track:hover {
+    background: rgb(24 24 37 / 0.5);
+  }
+
+  /* Latte（亮色主题）滚动条 */
+  [data-theme='latte'] * {
+    scrollbar-color: #9ca3af transparent;
+  }
+
+  [data-theme='latte'] *::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  [data-theme='latte'] *::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+    background-clip: content-box;
+  }
+
+  [data-theme='latte'] *::-webkit-scrollbar-thumb:active {
+    background: #4b5563;
+    background-clip: content-box;
+  }
+
+  [data-theme='latte'] *::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  [data-theme='latte'] *::-webkit-scrollbar-track:hover {
+    background: rgb(239 241 245 / 0.5);
+  }
+}

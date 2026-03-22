@@ -1,0 +1,247 @@
+/* Catppuccin Theme - TailwindCSS v4 适配版 */
+/* 基于官方风格指南: https://github.com/catppuccin/catppuccin/blob/main/docs/style-guide.md */
+
+/* ========== Latte（亮色主题 - 默认） ========== */
+:root,
+[data-theme='latte'] {
+  /* ========== 基础背景层级 ========== */
+  --ctp-base: #eff1f5; /* 面板背景 */
+  --ctp-mantle: #e6e9ef; /* 次级背景 */
+  --ctp-crust: #dce0e8; /* 边框/细节 */
+
+  /* ========== 表面元素层级 (Surface) ========== */
+  --ctp-surface-0: #eff1f5;
+  --ctp-surface-1: #e6e9ef;
+  --ctp-surface-2: #dce0e8;
+
+  /* ========== 叠加层层级 (Overlay) ========== */
+  --ctp-overlay-0: #c4c6d0;
+  --ctp-overlay-1: #acb0be;
+  --ctp-overlay-2: #949aad;
+
+  /* ========== 文字颜色层级 ========== */
+  --ctp-text: #4c4f69; /* 正文/主标题 */
+  --ctp-subtext-0: #6c6f85; /* 副标题/标签 */
+  --ctp-subtext-1: #8c8fa1; /* 辅助说明 */
+
+  /* ========== Catppuccin 调色板 ========== */
+  --ctp-rosewater: #dc8a78;
+  --ctp-flamingo: #dd7878;
+  --ctp-pink: #ea76cb;
+  --ctp-mauve: #8839ef;
+  --ctp-red: #d20f39;
+  --ctp-maroon: #e64553;
+  --ctp-peach: #fe640b;
+  --ctp-yellow: #df8e1d;
+  --ctp-green: #40a02b;
+  --ctp-teal: #179299;
+  --ctp-sky: #04a5e5;
+  --ctp-blue: #1e66f5;
+  --ctp-sapphire: #209fb5;
+  --ctp-lavender: #7287fd;
+}
+
+/* ========== Frappé（暗色主题） ========== */
+[data-theme='frappe'] {
+  /* 基础背景层级 */
+  --ctp-base: #303446;
+  --ctp-mantle: #292c3c;
+  --ctp-crust: #232634;
+
+  /* 表面元素层级 */
+  --ctp-surface-0: #303446;
+  --ctp-surface-1: #292c3c;
+  --ctp-surface-2: #232634;
+
+  /* 叠加层层级 */
+  --ctp-overlay-0: #51576d;
+  --ctp-overlay-1: #626880;
+  --ctp-overlay-2: #737894;
+
+  /* 文字颜色层级 */
+  --ctp-text: #c6d0f5;
+  --ctp-subtext-0: #8389a7;
+  --ctp-subtext-1: #a5adce;
+
+  /* 调色板 */
+  --ctp-rosewater: #f2d5cf;
+  --ctp-flamingo: #eebebe;
+  --ctp-pink: #f4b8e4;
+  --ctp-mauve: #ca9ee6;
+  --ctp-red: #e78284;
+  --ctp-maroon: #ea999c;
+  --ctp-peach: #ef9f76;
+  --ctp-yellow: #e5c890;
+  --ctp-green: #a6d189;
+  --ctp-teal: #81c8be;
+  --ctp-sky: #99d1db;
+  --ctp-blue: #8caaee;
+  --ctp-sapphire: #85c1dc;
+  --ctp-lavender: #babbf1;
+}
+
+/* ========== Macchiato（暗色主题） ========== */
+[data-theme='macchiato'] {
+  /* 基础背景层级 */
+  --ctp-base: #24273a;
+  --ctp-mantle: #1e2030;
+  --ctp-crust: #181926;
+
+  /* 表面元素层级 */
+  --ctp-surface-0: #24273a;
+  --ctp-surface-1: #1e2030;
+  --ctp-surface-2: #181926;
+
+  /* 叠加层层级 */
+  --ctp-overlay-0: #494d64;
+  --ctp-overlay-1: #5b6078;
+  --ctp-overlay-2: #6e738d;
+
+  /* 文字颜色层级 */
+  --ctp-text: #cad3f5;
+  --ctp-subtext-0: #8a91b4;
+  --ctp-subtext-1: #a5adcb;
+
+  /* 调色板 */
+  --ctp-rosewater: #f4dbd6;
+  --ctp-flamingo: #f0c6c6;
+  --ctp-pink: #f5bde6;
+  --ctp-mauve: #c6a0f6;
+  --ctp-red: #ed8796;
+  --ctp-maroon: #ee99a0;
+  --ctp-peach: #f5a97f;
+  --ctp-yellow: #eed49f;
+  --ctp-green: #a6da95;
+  --ctp-teal: #8bd5ca;
+  --ctp-sky: #91d7e3;
+  --ctp-blue: #8aadf4;
+  --ctp-sapphire: #7dc4e4;
+  --ctp-lavender: #b7bdf8;
+}
+
+/* ========== Mocha（暗色主题 - 默认暗色） ========== */
+[data-theme='mocha'] {
+  /* 基础背景层级 */
+  --ctp-base: #1e1e2e;
+  --ctp-mantle: #181825;
+  --ctp-crust: #11111b;
+
+  /* 表面元素层级 */
+  --ctp-surface-0: #1e1e2e;
+  --ctp-surface-1: #181825;
+  --ctp-surface-2: #11111b;
+
+  /* 叠加层层级 */
+  --ctp-overlay-0: #45475a;
+  --ctp-overlay-1: #585b70;
+  --ctp-overlay-2: #6c7086;
+
+  /* 文字颜色层级 */
+  --ctp-text: #cdd6f4;
+  --ctp-subtext-0: #9399b2;
+  --ctp-subtext-1: #a6adc8;
+
+  /* 调色板 */
+  --ctp-rosewater: #f5e0dc;
+  --ctp-flamingo: #f2cdcd;
+  --ctp-pink: #f5c2e7;
+  --ctp-mauve: #cba6f7;
+  --ctp-red: #f38ba8;
+  --ctp-maroon: #eba0ac;
+  --ctp-peach: #fab387;
+  --ctp-yellow: #f9e2af;
+  --ctp-green: #a6e3a1;
+  --ctp-teal: #94e2d5;
+  --ctp-sky: #89dceb;
+  --ctp-blue: #89b4fa;
+  --ctp-sapphire: #74c7ec;
+  --ctp-lavender: #b4befe;
+}
+
+/* ========== 语义化颜色变量（主题自动切换） ========== */
+/* Latte（默认亮色主题） */
+:root,
+[data-theme='latte'] {
+  /* 边框语义色 */
+  --ctp-border: var(--ctp-crust);
+  --ctp-border-subtle: var(--ctp-base);
+
+  /* 文字语义色 */
+  --ctp-fg-primary: var(--ctp-text);
+  --ctp-fg-secondary: var(--ctp-subtext-0);
+  --ctp-fg-muted: var(--ctp-subtext-1);
+
+  /* 主色调 */
+  --ctp-primary: var(--ctp-blue);
+  --ctp-primary-hover: var(--ctp-sapphire);
+  --ctp-primary-light: var(--ctp-sky);
+
+  /* 状态语义色 */
+  --ctp-success: var(--ctp-green);
+  --ctp-warning: var(--ctp-yellow);
+  --ctp-error: var(--ctp-red);
+  --ctp-info: var(--ctp-teal);
+}
+
+/* Frappé 语义变量覆盖 */
+[data-theme='frappe'] {
+  /* 边框语义色 */
+  --ctp-border: var(--ctp-crust);
+  --ctp-border-subtle: var(--ctp-base);
+
+  /* 文字语义色 */
+  --ctp-fg-primary: var(--ctp-text);
+  --ctp-fg-secondary: var(--ctp-subtext-0);
+  --ctp-fg-muted: var(--ctp-subtext-1);
+
+  --ctp-primary: var(--ctp-blue);
+  --ctp-primary-hover: var(--ctp-sapphire);
+  --ctp-primary-light: var(--ctp-sky);
+
+  --ctp-success: var(--ctp-green);
+  --ctp-warning: var(--ctp-yellow);
+  --ctp-error: var(--ctp-red);
+  --ctp-info: var(--ctp-teal);
+}
+
+/* Macchiato 语义变量覆盖 */
+[data-theme='macchiato'] {
+  /* 边框语义色 */
+  --ctp-border: var(--ctp-crust);
+  --ctp-border-subtle: var(--ctp-base);
+
+  /* 文字语义色 */
+  --ctp-fg-primary: var(--ctp-text);
+  --ctp-fg-secondary: var(--ctp-subtext-0);
+  --ctp-fg-muted: var(--ctp-subtext-1);
+
+  --ctp-primary: var(--ctp-blue);
+  --ctp-primary-hover: var(--ctp-sapphire);
+  --ctp-primary-light: var(--ctp-sky);
+
+  --ctp-success: var(--ctp-green);
+  --ctp-warning: var(--ctp-yellow);
+  --ctp-error: var(--ctp-red);
+  --ctp-info: var(--ctp-teal);
+}
+
+/* Mocha 语义变量覆盖 */
+[data-theme='mocha'] {
+  /* 边框语义色 */
+  --ctp-border: var(--ctp-crust);
+  --ctp-border-subtle: var(--ctp-base);
+
+  /* 文字语义色 */
+  --ctp-fg-primary: var(--ctp-text);
+  --ctp-fg-secondary: var(--ctp-subtext-0);
+  --ctp-fg-muted: var(--ctp-subtext-1);
+
+  --ctp-primary: var(--ctp-blue);
+  --ctp-primary-hover: var(--ctp-sapphire);
+  --ctp-primary-light: var(--ctp-sky);
+
+  --ctp-success: var(--ctp-green);
+  --ctp-warning: var(--ctp-yellow);
+  --ctp-error: var(--ctp-red);
+  --ctp-info: var(--ctp-teal);
+}

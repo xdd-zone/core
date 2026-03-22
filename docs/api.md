@@ -7,14 +7,14 @@
 - OpenAPI JSON: `http://localhost:7788/openapi/json`
 - Health: `GET /api/health`
 
-HTTP 契约的定义位置：
+HTTP 接口定义的位置：
 
 - `packages/nexus/src/modules/*/*.contract.ts`
 - `packages/nexus/src/shared/schema/*`
 
-OpenAPI 作为服务端协议导出物保留，供文档、调试与外部集成使用。
+OpenAPI 作为服务端接口说明导出物保留，供文档、调试与外部集成使用。
 
-## 响应协议
+## 响应说明
 
 ### 成功响应
 
@@ -145,7 +145,7 @@ own / me 语义：
 | GET | `/api/rbac/users/me/roles` | 获取登录用户角色 |
 | GET | `/api/rbac/users/me/permissions` | 获取登录用户权限 |
 
-## 协议来源与消费方式
+## 接口来源与使用方式
 
 ### 服务端
 
@@ -161,9 +161,9 @@ own / me 语义：
 ### OpenAPI 导出
 
 ```text
-Nexus contract / route
+Nexus 接口定义 / route
   -> OpenAPI JSON
-  -> 文档、调试与外部集成消费 
+  -> 文档、调试与外部集成使用
 ```
 
 ## 调试建议

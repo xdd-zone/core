@@ -76,7 +76,7 @@ bun run seed
 
 ## 开发约定
 
-- route 中直接使用 contract schema + service
+- route 中直接使用接口定义 schema + service
 - 全局应用装配通过 `core/http` 收口
 - 路由鉴权优先使用 `auth: 'required'`、`permission`、`own`、`me`
 - OpenAPI 统一使用 `apiDetail(...)`
