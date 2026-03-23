@@ -2,7 +2,7 @@ import type { MenuProps } from 'antd'
 import type { LucideProps } from 'lucide-react'
 import type { ComponentType } from 'react'
 
-import { Crop, FileText, FolderOpen, LayoutDashboard } from 'lucide-react'
+import { Crop, FileText, FileText as FileTextIcon, FolderOpen, LayoutDashboard, LayoutTemplate } from 'lucide-react'
 
 import { renderIcon } from '@/utils/pathUtils'
 
@@ -63,6 +63,18 @@ export const navigationItems: NavigationItem[] = [
     key: 'examples',
     label: 'menu.exampleFeatures',
     children: [
+      {
+        icon: LayoutTemplate,
+        key: 'ui-showcase',
+        label: 'menu.uiShowcase',
+        path: '/ui-showcase',
+      },
+      {
+        icon: FileTextIcon,
+        key: 'markdown-example',
+        label: 'menu.markdownExample',
+        path: '/markdown-example',
+      },
       {
         icon: Crop,
         key: 'image-crop',

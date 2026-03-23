@@ -60,7 +60,7 @@
 }
 
 /* Dark Mode Variant Configuration */
-@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+@custom-variant dark (&:where([data-theme='frappe'], [data-theme='frappe'] *, [data-theme='macchiato'], [data-theme='macchiato'] *, [data-theme='mocha'], [data-theme='mocha'] *));
 
 /* ========== TailwindCSS 标准颜色映射 ========== */
 /* 映射 Catppuccin 颜色到 TailwindCSS 常用类名 */
@@ -123,48 +123,10 @@
 }
 
 /* 通用语义颜色 - 兼容 shadcn/ui 等组件库 */
-[data-theme='latte'] {
-  --color-muted: var(--ctp-subtext-1);
-  --color-muted-foreground: var(--ctp-subtext-1);
-  --color-background: var(--ctp-base);
-  --color-foreground: var(--ctp-text);
-  --color-card: var(--ctp-base);
-  --color-card-foreground: var(--ctp-text);
-  --color-popover: var(--ctp-base);
-  --color-popover-foreground: var(--ctp-text);
-  --color-border: var(--ctp-crust);
-  --color-input: var(--ctp-crust);
-  --color-ring: var(--ctp-blue);
-}
-
-[data-theme='frappe'] {
-  --color-muted: var(--ctp-subtext-1);
-  --color-muted-foreground: var(--ctp-subtext-1);
-  --color-background: var(--ctp-base);
-  --color-foreground: var(--ctp-text);
-  --color-card: var(--ctp-base);
-  --color-card-foreground: var(--ctp-text);
-  --color-popover: var(--ctp-base);
-  --color-popover-foreground: var(--ctp-text);
-  --color-border: var(--ctp-crust);
-  --color-input: var(--ctp-crust);
-  --color-ring: var(--ctp-blue);
-}
-
-[data-theme='macchiato'] {
-  --color-muted: var(--ctp-subtext-1);
-  --color-muted-foreground: var(--ctp-subtext-1);
-  --color-background: var(--ctp-base);
-  --color-foreground: var(--ctp-text);
-  --color-card: var(--ctp-base);
-  --color-card-foreground: var(--ctp-text);
-  --color-popover: var(--ctp-base);
-  --color-popover-foreground: var(--ctp-text);
-  --color-border: var(--ctp-crust);
-  --color-input: var(--ctp-crust);
-  --color-ring: var(--ctp-blue);
-}
-
+:root,
+[data-theme='latte'],
+[data-theme='frappe'],
+[data-theme='macchiato'],
 [data-theme='mocha'] {
   --color-muted: var(--ctp-subtext-1);
   --color-muted-foreground: var(--ctp-subtext-1);

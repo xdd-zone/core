@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react'
 
-import { ConfigProvider, theme } from 'antd'
+import { ConfigProvider } from 'antd'
 
 import { Pattern } from '@/components/ui'
 import { LanguageButton } from '@/layout/atoms/LanguageButton'
 import { ThemeToggle } from '@/layout/atoms/ThemeToggle'
 import { useSettingStore } from '@/stores'
+import { getAntdThemeConfig } from '@/utils/catppuccin.antd'
 import { getPrimaryColorByTheme } from '@/utils/theme'
 
 interface AuthContainerProps {
@@ -16,14 +17,16 @@ interface AuthContainerProps {
  * 认证页面容器组件
  */
 export function AuthContainer({ children }: AuthContainerProps) {
-  const { catppuccinTheme, isDark } = useSettingStore()
+  const { catppuccinTheme } = useSettingStore()
   const primaryColor = getPrimaryColorByTheme(catppuccinTheme)
+  const themeConfig = getAntdThemeConfig(catppuccinTheme)
 
   return (
     <ConfigProvider
       theme={{
-        algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        ...themeConfig,
         token: {
+          ...themeConfig.token,
           colorPrimary: primaryColor,
         },
       }}

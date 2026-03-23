@@ -1,7 +1,6 @@
-import type { HighlighterCore, LanguageInput } from 'shiki'
+import type { CodeToHastOptions, HighlighterCore, LanguageInput } from 'shiki/core'
 import type { BundledLanguage } from 'shiki/langs'
 import type { BundledTheme } from 'shiki/themes'
-import type { CodeToHastOptions } from 'shiki/types.mjs'
 
 import {
   transformerMetaHighlight,
@@ -9,7 +8,8 @@ import {
   transformerNotationHighlight,
   transformerNotationWordHighlight,
 } from '@shikijs/transformers'
-import { createHighlighterCoreSync, createJavaScriptRegexEngine } from 'shiki'
+import { createHighlighterCoreSync } from 'shiki/core'
+import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
 import catppuccinFrappe from 'shiki/themes/catppuccin-frappe.mjs'
 import catppuccinLatte from 'shiki/themes/catppuccin-latte.mjs'
 import catppuccinMacchiato from 'shiki/themes/catppuccin-macchiato.mjs'
@@ -25,6 +25,77 @@ export const CATPUCCIN_TO_SHIKI_THEME: Record<string, string> = {
   latte: 'catppuccin-latte',
   macchiato: 'catppuccin-macchiato',
   mocha: 'catppuccin-mocha',
+}
+
+/**
+ * Markdown 代码块支持的基础语言别名
+ */
+const LANGUAGE_ALIASES: Record<string, SupportedLanguage> = {
+  bash: 'shellscript',
+  cjs: 'javascript',
+  js: 'javascript',
+  json5: 'json',
+  jsonc: 'json',
+  md: 'markdown',
+  mts: 'typescript',
+  shell: 'shellscript',
+  sh: 'shellscript',
+  text: 'text',
+  ts: 'typescript',
+  txt: 'text',
+  xml: 'html',
+  yml: 'yaml',
+  zsh: 'shellscript',
+}
+
+type SupportedLanguage
+  = | 'css'
+    | 'html'
+    | 'javascript'
+    | 'json'
+    | 'jsx'
+    | 'markdown'
+    | 'shellscript'
+    | 'text'
+    | 'tsx'
+    | 'typescript'
+    | 'yaml'
+
+interface ShikiLanguageModule {
+  default: LanguageInput
+}
+
+/**
+ * 控制浏览器端实际打包的高亮语言范围，避免生成大量冷门语言 chunk
+ */
+const LANGUAGE_LOADERS: Record<Exclude<SupportedLanguage, 'text'>, () => Promise<ShikiLanguageModule>> = {
+  css: () => import('@shikijs/langs/css'),
+  html: () => import('@shikijs/langs/html'),
+  javascript: () => import('@shikijs/langs/javascript'),
+  json: () => import('@shikijs/langs/json'),
+  jsx: () => import('@shikijs/langs/jsx'),
+  markdown: () => import('@shikijs/langs/markdown'),
+  shellscript: () => import('@shikijs/langs/shellscript'),
+  tsx: () => import('@shikijs/langs/tsx'),
+  typescript: () => import('@shikijs/langs/typescript'),
+  yaml: () => import('@shikijs/langs/yaml'),
+}
+
+/**
+ * 将语言标识收敛到白名单范围：
+ * - 常见别名归一化到统一语言名
+ * - 不支持的语言回退为 text
+ */
+function normalizeLanguage (lang: string): SupportedLanguage {
+  const normalizedLang = lang.trim().toLowerCase()
+
+  if (!normalizedLang) return 'text'
+
+  if (normalizedLang in LANGUAGE_LOADERS || normalizedLang === 'text') {
+    return normalizedLang as SupportedLanguage
+  }
+
+  return LANGUAGE_ALIASES[normalizedLang] ?? 'text'
 }
 
 /**
@@ -52,33 +123,23 @@ export function createClientHighlighter (): HighlighterCore | null {
   return singleton
 }
 
-let langLoaderCache: Record<string, LanguageInput> | null = null
-
-/**
- * 获取语言加载器（带缓存）：
- * - 首次调用时缓存整个 bundledLanguages 模块
- * - 后续调用直接从缓存读取，避免重复导入
- */
-async function getLangLoader (lang: string) {
-  if (!langLoaderCache) {
-    const { bundledLanguages } = await import('shiki/langs')
-    langLoaderCache = bundledLanguages as Record<string, LanguageInput>
-  }
-  return langLoaderCache[lang]
-}
-
 /**
  * 确保指定语言已加载到高亮器：
- * - 从缓存的 bundledLanguages 获取语言加载器
- * - 若语言已加载或不存在对应 loader，则跳过
+ * - 仅加载白名单中的基础语言
+ * - 未支持的语言回退为 text，不额外加载语言包
  */
 export async function ensureLanguageLoaded (highlighter: HighlighterCore, lang: string) {
-  const loader = await getLangLoader(lang)
+  const normalizedLang = normalizeLanguage(lang)
+
+  if (normalizedLang === 'text') return
+
+  const loader = LANGUAGE_LOADERS[normalizedLang]
   if (!loader) return
-  const loaded = highlighter.getLoadedLanguages().includes(lang)
+
+  const loaded = highlighter.getLoadedLanguages().includes(normalizedLang)
   if (!loaded) {
-    const mod = typeof loader === 'function' ? await loader() : loader
-    await highlighter.loadLanguage(mod as LanguageInput)
+    const mod = await loader()
+    await highlighter.loadLanguage(mod.default)
   }
 }
 
@@ -87,11 +148,12 @@ export async function ensureLanguageLoaded (highlighter: HighlighterCore, lang: 
  * - 支持根据 Catppuccin 主题 ID 选择对应的高亮主题
  * - 支持 diff、高亮、单词高亮、行高亮等标注
  */
-export function codeToHtml (highlighter: HighlighterCore,  { attrs, code, lang, themeId }: { attrs?: string; code: string; lang: string; themeId?: string }) {
+export function codeToHtml (highlighter: HighlighterCore, { attrs, code, lang, themeId }: { attrs?: string; code: string; lang: string; themeId?: string }) {
   const shikiTheme = themeId ? (CATPUCCIN_TO_SHIKI_THEME[themeId] ?? 'catppuccin-latte') : 'catppuccin-latte'
+  const normalizedLang = normalizeLanguage(lang)
 
   const common = {
-    lang,
+    lang: normalizedLang,
     meta: { __raw: attrs ?? '' },
     transformers: [
       transformerNotationDiff(),

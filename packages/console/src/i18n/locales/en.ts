@@ -76,6 +76,15 @@ export default {
     warning: 'Warning',
     yes: 'Yes',
   },
+  dashboard: {
+    emptyDescription:
+      'This page is intentionally left blank for now. Component and theme demos have moved to Example Features.',
+    emptyTitle: 'Dashboard is not configured yet',
+  },
+  articleList: {
+    emptyDescription: 'Article list is temporarily unavailable.',
+    emptyTitle: 'Article List',
+  },
   guide: {
     closeBtn: 'Close',
     doneBtn: 'Done',
@@ -114,7 +123,9 @@ export default {
     dashboard: 'Dashboard',
     exampleFeatures: 'Example Features',
     imageCrop: 'Image Crop',
+    markdownExample: 'Markdown',
     tagManagement: 'Tag Management',
+    uiShowcase: 'Components & Theme',
   },
   setting: {
     catppuccinTheme: 'Theme Color',

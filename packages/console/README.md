@@ -68,6 +68,19 @@ packages/console
 - 独立导航配置
 - 细粒度权限以后端 `401 / 403` 语义为准
 
+当前页面入口：
+
+- `/dashboard`
+  - 登录后的默认落点，当前保留为空状态入口
+- `/articles`
+  - 文章模块入口，当前保留为空状态入口
+- `/ui-showcase`
+  - 集中展示 Ant Design 组件、Catppuccin 主题与设计令牌
+- `/markdown-example`
+  - 集中展示 Markdown、GFM 与 Shiki 高亮效果
+- `/image-crop`
+  - 图片裁剪示例页
+
 ## 快速开始
 
 ### 1. 安装依赖
@@ -179,6 +192,15 @@ src/
 - `src/modules/auth`
   - session API、auth query 与 auth store
 
+当前与本轮实现直接相关的目录还有：
+
+- `src/pages/example`
+  - 示例页入口，承接组件主题展示、Markdown 演示与图片裁剪
+- `src/assets/styles/theme`
+  - Catppuccin 主题变量、暗色变体与语义色定义
+- `src/components/ui/markdown`
+  - Markdown 渲染器、目录、高亮与主题能力
+
 ## 开发约定
 
 ### 共享工程配置
@@ -198,6 +220,20 @@ src/
 - 页面联调优先通过根目录 `bun run dev` 完成
 - 本地开发默认通过 `/api` 代理到 `nexus`
 - Better Auth 需要信任前端来源，例如 `http://localhost:2333`
+
+### 主题与构建约定
+
+当前主题与构建策略遵循以下原则：
+
+- `data-theme` 始终写入实际 Catppuccin 主题 ID
+  - `latte`
+  - `frappe`
+  - `macchiato`
+  - `mocha`
+- Ant Design 主题统一通过 `getAntdThemeConfig(...)` 注入，避免页面各自拼装 token
+- Tailwind 与 CSS 组件样式优先使用 `--color-*`、`--ctp-*` 语义变量
+- Markdown 高亮只对白名单语言做动态加载，未支持语言回退到 `text`
+- Vite 手动分包优先拆分 React、Ant Design、TanStack、i18n、Zustand 等基础依赖
 
 ### 验证建议
 
@@ -223,6 +259,8 @@ bun run build:console
 - 登录与路由 `beforeLoad` 行为正确
 - 菜单、主题、标签页状态没有回退
 - 刷新页面后能通过 `/api/auth/get-session` 恢复登录态
+- `/ui-showcase` 与 `/markdown-example` 能正常访问
+- 切换 Catppuccin 主题后，菜单、抽屉、认证页与示例页样式一致
 
 ## 文档入口
 

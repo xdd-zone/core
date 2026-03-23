@@ -3,6 +3,28 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 
+/**
+ * 从 node_modules 路径中提取包名
+ */
+function getPackageName(id: string): string | null {
+  const normalizedId = id.replace(/\\/g, '/')
+  const nodeModulesMarker = '/node_modules/'
+  const nodeModulesIndex = normalizedId.lastIndexOf(nodeModulesMarker)
+
+  if (nodeModulesIndex === -1) return null
+
+  const packagePath = normalizedId.slice(nodeModulesIndex + nodeModulesMarker.length)
+  const [scopeOrName, maybeName] = packagePath.split('/')
+
+  if (!scopeOrName) return null
+
+  if (scopeOrName.startsWith('@') && maybeName) {
+    return `${scopeOrName}/${maybeName}`
+  }
+
+  return scopeOrName
+}
+
 export default defineConfig(({ mode }) => {
   // 载入 .env.[mode] 环境变量
   const env = loadEnv(mode, process.cwd())
@@ -11,8 +33,8 @@ export default defineConfig(({ mode }) => {
     build: {
       // 静态资源目录
       assetsDir: 'assets',
-      // chunk 大小警告限制 (提高到 6000kb，Shiki 按需加载所有语言包会很大，这是正常的)
-      chunkSizeWarningLimit: 6000,
+      // chunk 大小警告限制
+      chunkSizeWarningLimit: 1500,
       // CSS 代码分割
       cssCodeSplit: true,
       // 清理输出目录
@@ -52,50 +74,34 @@ export default defineConfig(({ mode }) => {
           entryFileNames: 'js/[name]-[hash].js',
           // 代码分割策略
           manualChunks: (id) => {
-            // React 相关库
-            if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            const packageName = getPackageName(id)
+
+            if (!packageName) return
+
+            // React 运行时相关包放在一起，避免跨 chunk 循环依赖
+            if (['react', 'react-dom', 'scheduler', 'react-is'].includes(packageName)) {
               return 'vendor-react'
             }
-            // Ant Design
-            if (id.includes('node_modules/antd')) {
+            // Ant Design 生态包统一归组
+            if (
+              packageName === 'antd'
+              || packageName.startsWith('@ant-design/')
+              || packageName.startsWith('@rc-component/')
+              || packageName.startsWith('rc-')
+            ) {
               return 'vendor-antd'
             }
-            // 路由相关
-            if (id.includes('node_modules/react-router')) {
-              return 'vendor-router'
-            }
-            // Shiki 语法高亮器 - 按语言分组
-            if (id.includes('node_modules/shiki') || id.includes('node_modules/@shikijs')) {
-              // 核心库
-              if (id.includes('/core') || id.includes('/engine')) {
-                return 'shiki-core'
-              }
-              // 语言包 - 按大小分组
-              if (id.includes('/langs')) {
-                // 大型语言包单独分离
-                if (id.includes('cpp') || id.includes('emacs-lisp')) {
-                  return 'langs-large'
-                }
-                // 其他语言包
-                return 'langs'
-              }
-              // 主题
-              if (id.includes('/themes')) {
-                return 'shiki-themes'
-              }
-              return 'shiki'
-            }
-            // i18n 相关 - 单独分离避免动态导入警告
-            if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) {
+            // i18n 相关
+            if (packageName === 'i18next' || packageName === 'react-i18next') {
               return 'vendor-i18n'
             }
             // Zustand 状态管理
-            if (id.includes('node_modules/zustand')) {
+            if (packageName === 'zustand') {
               return 'vendor-zustand'
             }
-            // 其他大型依赖
-            if (id.includes('node_modules')) {
-              return 'vendor-other'
+            // TanStack 相关包独立分组，减少首屏入口压力
+            if (packageName.startsWith('@tanstack/')) {
+              return 'vendor-tanstack'
             }
           },
         },

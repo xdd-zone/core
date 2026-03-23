@@ -15,7 +15,7 @@ export function SidebarHeader() {
   }
 
   return (
-    <div className="border-b border-gray-500 p-4">
+    <div className="border-b border-border p-4">
       <div className="flex items-center">
         <Logo />
         {!isSidebarCollapsed && <Brand />}

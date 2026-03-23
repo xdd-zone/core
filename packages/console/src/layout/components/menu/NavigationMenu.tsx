@@ -1,10 +1,12 @@
 import type { MenuProps } from 'antd'
 import type { MenuItem } from '@/utils/pathUtils'
 import { useLocation, useNavigate } from '@tanstack/react-router'
-import { ConfigProvider, Menu, theme } from 'antd'
+import { ConfigProvider, Menu } from 'antd'
+import { clsx } from 'clsx'
 import { useMemo } from 'react'
 
 import { useSettingStore } from '@/stores'
+import { getAntdThemeConfig } from '@/utils/catppuccin.antd'
 import { findMatchingMenuKey } from '@/utils/pathUtils'
 import { getPrimaryColorByTheme, hexToRgba } from '@/utils/theme'
 
@@ -39,14 +41,13 @@ export function NavigationMenu({
   style,
 }: NavigationMenuProps) {
   const { catppuccinTheme, isDark } = useSettingStore()
-  const { token } = theme.useToken()
   const navigate = useNavigate()
   const location = useLocation()
 
-  // 根据 catppuccinTheme 获取当前主题的 primaryColor
-  const primaryColor = useMemo(() => {
-    return getPrimaryColorByTheme(catppuccinTheme)
-  }, [catppuccinTheme])
+  const primaryColor = useMemo(() => getPrimaryColorByTheme(catppuccinTheme), [catppuccinTheme])
+  const themeConfig = useMemo(() => getAntdThemeConfig(catppuccinTheme), [catppuccinTheme])
+  const menuSelectedBg = useMemo(() => hexToRgba(primaryColor, isDark ? 0.18 : 0.12), [isDark, primaryColor])
+  const popupBg = themeConfig.token?.colorBgElevated
 
   const handleMenuClick: MenuProps['onClick'] = (e) => {
     // 如果有自定义点击事件，先执行
@@ -67,21 +68,24 @@ export function NavigationMenu({
   return (
     <ConfigProvider
       theme={{
-        algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        ...themeConfig,
         components: {
+          ...themeConfig.components,
           Menu: {
+            ...(themeConfig.components?.Menu ?? {}),
             activeBarBorderWidth: 0,
-            darkItemBg: 'rgba(255, 255, 255, 0)',
-            darkItemSelectedBg: hexToRgba(token.colorPrimaryBg, 0.7),
-            darkPopupBg: 'rgba(0, 0, 0, 1)',
-            darkSubMenuItemBg: 'rgba(255, 255, 255, 0)',
-            itemBg: 'rgba(255, 255, 255, 0)',
-            itemSelectedBg: hexToRgba(token.colorPrimaryBg, 0.5),
-            popupBg: 'rgba(255, 255, 255, 1)',
-            subMenuItemBg: 'rgba(255, 255, 255, 0)',
+            darkItemBg: 'transparent',
+            darkItemSelectedBg: menuSelectedBg,
+            darkPopupBg: popupBg,
+            darkSubMenuItemBg: 'transparent',
+            itemBg: 'transparent',
+            itemSelectedBg: menuSelectedBg,
+            popupBg,
+            subMenuItemBg: 'transparent',
           },
         },
         token: {
+          ...themeConfig.token,
           colorPrimary: primaryColor,
         },
       }}
@@ -94,7 +98,7 @@ export function NavigationMenu({
         inlineCollapsed={inlineCollapsed}
         onClick={handleMenuClick}
         style={{ width: '100%', ...style }}
-        className={`guide-menu ${className}`}
+        className={clsx('guide-menu', className)}
       />
     </ConfigProvider>
   )

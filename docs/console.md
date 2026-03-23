@@ -78,11 +78,17 @@ src/
   - 只允许游客访问，已登录时直接重定向到 `/dashboard`
 - 后台受保护页面
   - `/dashboard`
+    - 当前为后台首页占位入口，保留登录后的默认落点
   - `/articles`
+    - 当前为文章列表占位入口，页面暂未开放业务内容
   - `/categories`
   - `/tags`
   - `/comments`
   - `/article-settings`
+  - `/ui-showcase`
+    - 展示 Ant Design 组件、Catppuccin 主题与设计令牌
+  - `/markdown-example`
+    - 展示 Markdown、GFM 与 Shiki 代码高亮效果
   - `/image-crop`
   - 统一在父级 route 的 `beforeLoad` 中校验登录态
 - 错误页
@@ -162,7 +168,20 @@ auth store 只保留会话快照消费边界：
   - 评论管理
   - 文章设置
 - 功能示例
+  - 组件与主题
+  - Markdown 演示
   - 图片裁剪
+
+当前页面状态：
+
+- `Dashboard`
+  - 保留为登录后的默认入口，当前展示空状态提示
+- `ArticleList`
+  - 保留为文章模块入口，当前展示空状态提示
+- `UiShowcase`
+  - 承接原先散落在 `Dashboard` 中的组件与主题演示
+- `MarkdownExample`
+  - 承接原先散落在 `ArticleList` 中的 Markdown 全量预览
 
 ## 布局与标签页
 
@@ -189,6 +208,51 @@ TabBar 会根据路由变化自动添加标签页，但会跳过：
 - [packages/console/src/hooks/useRouteListener.ts](../packages/console/src/hooks/useRouteListener.ts)
 - [packages/console/src/utils/routeUtils.ts](../packages/console/src/utils/routeUtils.ts)
 - [packages/console/src/components/common/Breadcrumb.tsx](../packages/console/src/components/common/Breadcrumb.tsx)
+
+## 主题与样式
+
+当前主题体系统一基于 Catppuccin：
+
+- HTML 根节点使用 `data-theme` 挂载实际主题 ID
+  - `latte`
+  - `frappe`
+  - `macchiato`
+  - `mocha`
+- Ant Design 主题配置统一通过 `getAntdThemeConfig(...)` 注入
+  - 应用根入口
+  - 认证页容器
+  - 导航菜单
+- Tailwind / 自定义样式统一消费语义变量
+  - `--color-*`
+  - `--ctp-*`
+- `dark` 变体覆盖所有深色 Catppuccin 主题，而不是单独依赖 `data-theme="dark"`
+
+相关位置：
+
+- [packages/console/src/utils/catppuccin.antd.ts](../packages/console/src/utils/catppuccin.antd.ts)
+- [packages/console/src/utils/theme.ts](../packages/console/src/utils/theme.ts)
+- [packages/console/src/assets/styles/theme/variables.css](../packages/console/src/assets/styles/theme/variables.css)
+- [packages/console/src/assets/styles/theme/dark-mode.css](../packages/console/src/assets/styles/theme/dark-mode.css)
+- [packages/console/src/assets/styles/base/scrollbar.css](../packages/console/src/assets/styles/base/scrollbar.css)
+
+## Markdown 与构建
+
+Markdown 能力当前由 `markdown-to-jsx` 与 Shiki 组合完成：
+
+- `MarkdownExample` 页面用于集中验证 Markdown 渲染效果
+- 代码高亮语言按白名单动态加载，未支持语言回退到 `text`
+- 常见别名会在高亮前归一化，例如：
+  - `ts -> typescript`
+  - `bash / sh / zsh -> shellscript`
+  - `yml -> yaml`
+- 高亮主题与 Catppuccin 主题 ID 对齐
+
+相关位置：
+
+- [packages/console/src/components/ui/markdown/Markdown.tsx](../packages/console/src/components/ui/markdown/Markdown.tsx)
+- [packages/console/src/components/ui/markdown/core/code-hightlighter/index.ts](../packages/console/src/components/ui/markdown/core/code-hightlighter/index.ts)
+- [packages/console/src/pages/example/MarkdownExample.tsx](../packages/console/src/pages/example/MarkdownExample.tsx)
+- [packages/console/vite.config.ts](../packages/console/vite.config.ts)
 
 ## 与 Nexus 的协作方式
 
@@ -249,6 +313,9 @@ bun run dev
 3. 登录成功后跳转 `/dashboard`
 4. 刷新页面后能通过 route `beforeLoad` + `/api/auth/get-session` 恢复登录态
 5. 退出登录后返回 `/login`
+6. 切换不同 Catppuccin 主题后，菜单、抽屉、认证页样式保持一致
+7. 访问 `/ui-showcase`，确认组件、设计令牌与主题色展示正常
+8. 访问 `/markdown-example`，确认 Markdown 与代码高亮按预期渲染
 
 ## 相关阅读
 

@@ -76,6 +76,14 @@ export default {
     warning: '警告',
     yes: '是',
   },
+  dashboard: {
+    emptyDescription: '这里先保留为空页入口，组件展示与主题演示已迁移到功能示例中。',
+    emptyTitle: '仪表盘暂未配置内容',
+  },
+  articleList: {
+    emptyDescription: '文章列表暂未开放。',
+    emptyTitle: '文章列表',
+  },
   guide: {
     closeBtn: '关闭',
     doneBtn: '完成',
@@ -114,7 +122,9 @@ export default {
     dashboard: '仪表盘',
     exampleFeatures: '功能示例',
     imageCrop: '图片裁剪',
+    markdownExample: 'Markdown 演示',
     tagManagement: '标签管理',
+    uiShowcase: '组件与主题',
   },
   setting: {
     catppuccinTheme: '主题颜色',

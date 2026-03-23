@@ -44,16 +44,18 @@ export function SettingDrawer({ onClose, open }: SettingDrawerProps) {
         body: 'bg-surface',
         footer: 'bg-surface-muted border-border',
         header: 'bg-surface-muted border-border text-fg',
-        mask: 'bg-black/50',
         wrapper: 'text-fg',
       }}
       styles={{
         body: {
-          color: 'var(--ctp-text)',
+          color: 'var(--color-fg)',
         },
         header: {
-          borderBottom: '1px solid var(--ctp-crust)',
-          color: 'var(--ctp-text)',
+          borderBottom: '1px solid var(--color-border)',
+          color: 'var(--color-fg)',
+        },
+        mask: {
+          backgroundColor: 'color-mix(in oklab, var(--color-surface-subtle) 52%, transparent)',
         },
       }}
     >

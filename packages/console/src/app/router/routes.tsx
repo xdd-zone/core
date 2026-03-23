@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 
 import { createRootRouteWithContext, createRoute, lazyRouteComponent, Outlet } from '@tanstack/react-router'
-import { BarChart3, Crop, Folder, List, MessageCircle, Settings, Tag } from 'lucide-react'
+import { BarChart3, Crop, FileText, Folder, LayoutTemplate, List, MessageCircle, Settings, Tag } from 'lucide-react'
 
 import { ErrorBoundary } from '@/components/ui'
 import { RootLayout } from '@/layout'
@@ -147,6 +147,26 @@ const imageCropRoute = createRoute({
   },
 })
 
+const uiShowcaseRoute = createRoute({
+  component: lazyRouteComponent(() => import('@/pages/example/UiShowcase'), 'UiShowcase'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'ui-showcase',
+  staticData: {
+    icon: LayoutTemplate,
+    title: 'menu.uiShowcase',
+  },
+})
+
+const markdownExampleRoute = createRoute({
+  component: lazyRouteComponent(() => import('@/pages/example/MarkdownExample'), 'MarkdownExample'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'markdown-example',
+  staticData: {
+    icon: FileText,
+    title: 'menu.markdownExample',
+  },
+})
+
 const protectedRouteTree = protectedRoute.addChildren([
   appLayoutRoute.addChildren([
     dashboardRoute,
@@ -155,6 +175,8 @@ const protectedRouteTree = protectedRoute.addChildren([
     tagListRoute,
     commentListRoute,
     articleSettingsRoute,
+    uiShowcaseRoute,
+    markdownExampleRoute,
     imageCropRoute,
   ]),
 ])

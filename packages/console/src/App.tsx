@@ -1,11 +1,10 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import { App as AntdApp, ConfigProvider } from 'antd'
-import { useEffect } from 'react'
 
 import { queryClient } from '@/app/query-client'
 import { router } from '@/app/router'
-import { getPrimaryColorByTheme, hexToRgb } from '@/utils/theme'
+import { getPrimaryColorByTheme } from '@/utils/theme'
 
 import { useSettingStore } from './stores'
 import { getAntdThemeConfig } from './utils/catppuccin.antd'
@@ -19,14 +18,6 @@ export function App() {
 
   // 使用当前主题的 Blue 作为主色
   const primaryColor = getPrimaryColorByTheme(catppuccinTheme)
-
-  // 响应式更新 CSS 变量
-  useEffect(() => {
-    const rgb = hexToRgb(primaryColor)
-    const rgbString = rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : '30, 102, 245'
-    document.documentElement.style.setProperty('--primary-color', primaryColor)
-    document.documentElement.style.setProperty('--primary-color-rgb', rgbString)
-  }, [primaryColor])
 
   return (
     <ConfigProvider

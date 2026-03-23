@@ -13,7 +13,7 @@ interface AppHeaderProps {
  */
 export function AppHeader({ showBrand = false, showBreadcrumb = false, variant }: AppHeaderProps) {
   return (
-    <header className="flex items-center justify-between border-b border-gray-500 p-2 md:p-4">
+    <header className="flex items-center justify-between border-b border-border p-2 md:p-4">
       <HeaderLeft variant={variant} showBrand={showBrand} showBreadcrumb={showBreadcrumb} />
       <HeaderActions />
     </header>

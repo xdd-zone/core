@@ -13,7 +13,7 @@ export function AppSidebar() {
 
   return (
     <aside
-      className={`hidden flex-col border-r border-gray-500 transition-all duration-300 md:flex ${
+      className={`hidden flex-col border-r border-border transition-all duration-300 md:flex ${
         isSidebarCollapsed ? 'w-16' : 'w-64'
       }`}
     >

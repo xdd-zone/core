@@ -28,12 +28,18 @@ export function MobileDrawer() {
       classNames={{
         body: 'bg-surface',
         header: 'bg-surface-muted border-border text-fg',
-        mask: 'bg-black/50',
         wrapper: 'text-fg',
       }}
       styles={{
         body: {
           padding: '0px',
+        },
+        header: {
+          borderBottom: '1px solid var(--color-border)',
+          color: 'var(--color-fg)',
+        },
+        mask: {
+          backgroundColor: 'color-mix(in oklab, var(--color-surface-subtle) 52%, transparent)',
         },
       }}
     >

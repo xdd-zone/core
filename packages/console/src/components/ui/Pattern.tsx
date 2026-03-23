@@ -1,5 +1,3 @@
-import { useSettingStore } from '@/stores'
-
 interface PatternProps {
   /**
    * 动画持续时间（秒）
@@ -7,11 +5,7 @@ interface PatternProps {
   animationDuration?: number
 }
 
-export function Pattern ({ animationDuration = 4 }: PatternProps) {
-  const { isDark } = useSettingStore()
-
-  const patternClass = isDark ? 'pattern-dark' : 'pattern-light'
-
+export function Pattern({ animationDuration = 4 }: PatternProps) {
   return (
     <>
       <style>{`
@@ -25,43 +19,18 @@ export function Pattern ({ animationDuration = 4 }: PatternProps) {
           
           /* Animation */
           animation: move ${animationDuration}s linear infinite;
-        }
-
-        /* Auto theme - follows current dark mode state */
-        .pattern-auto {
-          /* This class is no longer used, replaced by dynamic class assignment */
-        }
-
-        /* Forced light theme */
-        .pattern-light {
-          background: #f8f9fa;
           background: linear-gradient(
             135deg,
-            #f8f9fa 25%,
-            #e9ecef 25%,
-            #e9ecef 50%,
-            #f8f9fa 50%,
-            #f8f9fa 75%,
-            #e9ecef 75%,
-            #e9ecef
+            var(--ctp-base) 25%,
+            var(--ctp-mantle) 25%,
+            var(--ctp-mantle) 50%,
+            var(--ctp-base) 50%,
+            var(--ctp-base) 75%,
+            var(--ctp-mantle) 75%,
+            var(--ctp-mantle)
           );
           background-size: 40px 40px;
-        }
-
-        /* Forced dark theme */
-        .pattern-dark {
-          background: #121212;
-          background: linear-gradient(
-            135deg,
-            #121212 25%,
-            #1a1a1a 25%,
-            #1a1a1a 50%,
-            #121212 50%,
-            #121212 75%,
-            #1a1a1a 75%,
-            #1a1a1a
-          );
-          background-size: 40px 40px;
+          opacity: 0.96;
         }
 
         @keyframes move {
@@ -73,7 +42,7 @@ export function Pattern ({ animationDuration = 4 }: PatternProps) {
           }
         }
       `}</style>
-      <div className={`pattern-container ${patternClass}`} />
+      <div className="pattern-container" />
     </>
   )
 }
