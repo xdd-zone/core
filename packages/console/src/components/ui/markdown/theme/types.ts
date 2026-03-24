@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { CatppuccinThemeId } from './catppuccin'
 
 export interface HeadingTheme {
   anchor: string
@@ -79,6 +80,7 @@ export interface MarkdownTheme {
 }
 
 export interface MarkdownThemeProviderProps {
+  catppuccinTheme?: CatppuccinThemeId
   children: ReactNode
   theme?: MarkdownTheme
 }

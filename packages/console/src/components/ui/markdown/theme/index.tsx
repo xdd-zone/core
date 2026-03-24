@@ -2,12 +2,23 @@ import type { ReactNode } from 'react'
 
 import type { MarkdownThemeProviderProps } from './types'
 
-import { MarkdownThemeContext } from './context'
+import { DEFAULT_CATPPUCCIN_THEME } from './catppuccin'
+import { MarkdownCatppuccinThemeContext, MarkdownThemeContext } from './context'
 import { defaultMarkdownTheme } from './default'
 
-function MarkdownThemeProvider({ children, theme }: MarkdownThemeProviderProps): ReactNode {
+function MarkdownThemeProvider({
+  catppuccinTheme = DEFAULT_CATPPUCCIN_THEME,
+  children,
+  theme,
+}: MarkdownThemeProviderProps): ReactNode {
   const value = theme ?? defaultMarkdownTheme
-  return <MarkdownThemeContext.Provider value={value}>{children}</MarkdownThemeContext.Provider>
+  return (
+    <MarkdownThemeContext.Provider value={value}>
+      <MarkdownCatppuccinThemeContext.Provider value={catppuccinTheme}>
+        {children}
+      </MarkdownCatppuccinThemeContext.Provider>
+    </MarkdownThemeContext.Provider>
+  )
 }
 
 export { MarkdownThemeProvider }

@@ -1,7 +1,9 @@
-import type { CatppuccinThemeId } from '@console/stores/modules/setting'
+import type { CatppuccinThemeId } from './catppuccin'
 
-import { useSettingStore } from '@console/stores/modules/setting'
+import { useContext } from 'react'
+
+import { MarkdownCatppuccinThemeContext } from './context'
 
 export function useCatppuccinTheme (): CatppuccinThemeId {
-  return useSettingStore((state) => state.catppuccinTheme)
+  return useContext(MarkdownCatppuccinThemeContext)
 }

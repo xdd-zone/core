@@ -2,13 +2,13 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "incremental": true,
-    "baseUrl": ".",
     "lib": ["ES2023"],
     "moduleDetection": "force",
-    "types": ["node"],
+    "baseUrl": ".",
     "paths": {
       "@console/*": ["src/*"]
     },
+    "types": ["node"],
     "allowImportingTsExtensions": true,
     "noFallthroughCasesInSwitch": true,
     "noEmit": true,

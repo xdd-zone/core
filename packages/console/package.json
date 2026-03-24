@@ -58,8 +58,8 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.2.0",
-    "@xdd-zone/nexus": "workspace:*",
     "@xdd-zone/eslint-config": "workspace:*",
+    "@xdd-zone/nexus": "workspace:*",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.26",
     "typescript": "^5.9.3"

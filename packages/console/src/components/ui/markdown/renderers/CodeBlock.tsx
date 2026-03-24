@@ -1,6 +1,5 @@
 import type { FC, JSX } from 'react'
 
-import { useSettingStore } from '@console/stores'
 import { clsx } from 'clsx'
 import { Check, Copy, FileCode } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -14,6 +13,7 @@ import {
   getLanguageFromClassName,
   normalizeCode,
 } from '../core'
+import { useCatppuccinTheme } from '../theme/useCatppuccinTheme'
 import { useMarkdownTheme } from '../theme/useTheme'
 
 type PreProps = JSX.IntrinsicElements['pre']
@@ -37,7 +37,7 @@ const LangIcon: FC<{ lang: string }> = ({ lang }) => {
 export const CodeBlock: FC<PreProps> = ({ children, className }) => {
   const highlighter = useHighlighter()
   const [html, setHtml] = useState<string>('')
-  const { catppuccinTheme } = useSettingStore()
+  const catppuccinTheme = useCatppuccinTheme()
   const theme = useMarkdownTheme()
   const [copied, setCopied] = useState<boolean>(false)
 

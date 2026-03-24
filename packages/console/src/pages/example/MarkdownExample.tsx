@@ -124,7 +124,7 @@ export function MarkdownExample() {
   const primaryColor = getPrimaryColorByTheme(catppuccinTheme)
   return (
     <div className="p-4">
-      <Markdown value={text} accentColor={primaryColor} />
+      <Markdown value={text} accentColor={primaryColor} catppuccinTheme={catppuccinTheme} />
     </div>
   )
 }

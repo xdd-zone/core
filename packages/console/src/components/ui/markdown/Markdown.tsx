@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react'
 
+import type { CatppuccinThemeId } from './theme/catppuccin'
 import type { MarkdownTheme } from './theme/types'
-import { hexToRgb } from '@console/utils/theme'
+
 import { clsx } from 'clsx'
 
 import { compiler } from 'markdown-to-jsx'
 
 import { useRef } from 'react'
-
 import { SelectionPopup, useSelectionPopup } from './core'
 import { MarkdownErrorBoundary } from './MarkdownErrorBoundary'
 import {
@@ -40,9 +40,11 @@ import {
 import { MarkdownThemeProvider } from './theme'
 import { useMarkdownTheme } from './theme/useTheme'
 import { Toc } from './toc'
+import { hexToRgb } from './utils/color'
 
 interface MarkdownProps {
   accentColor?: string
+  catppuccinTheme?: CatppuccinThemeId
   children?: string
   className?: string
   theme?: MarkdownTheme
@@ -118,10 +120,10 @@ function MarkdownInner ({ accentColor, className, md }: { accentColor?: string; 
  * - 支持传入自定义主题 `MarkdownTheme`，否则使用默认主题
  * - 使用 ErrorBoundary 捕获渲染错误，防止异常 Markdown 导致崩溃
  */
-export function Markdown({ accentColor, children, className, theme, value }: MarkdownProps): ReactNode {
+export function Markdown({ accentColor, catppuccinTheme, children, className, theme, value }: MarkdownProps): ReactNode {
   const md = value ?? children ?? ''
   return (
-    <MarkdownThemeProvider theme={theme}>
+    <MarkdownThemeProvider catppuccinTheme={catppuccinTheme} theme={theme}>
       <MarkdownErrorBoundary>
         <MarkdownInner accentColor={accentColor} className={className} md={md} />
       </MarkdownErrorBoundary>
