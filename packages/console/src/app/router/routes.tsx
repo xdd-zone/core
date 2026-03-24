@@ -1,13 +1,13 @@
 import type { QueryClient } from '@tanstack/react-query'
 
+import { ErrorBoundary } from '@console/components/ui'
+import { RootLayout } from '@console/layout'
+
+import { Login } from '@console/pages/auth/Login'
+import { Forbidden } from '@console/pages/error/Forbidden'
+import { NotFound } from '@console/pages/error/NotFound'
 import { createRootRouteWithContext, createRoute, lazyRouteComponent, Outlet } from '@tanstack/react-router'
 import { BarChart3, Crop, FileText, Folder, LayoutTemplate, List, MessageCircle, Settings, Tag } from 'lucide-react'
-
-import { ErrorBoundary } from '@/components/ui'
-import { RootLayout } from '@/layout'
-import { Login } from '@/pages/auth/Login'
-import { Forbidden } from '@/pages/error/Forbidden'
-import { NotFound } from '@/pages/error/NotFound'
 
 import { redirectFromRoot, requireAuth, requireGuest, validateLoginSearch } from './guards'
 
@@ -78,7 +78,7 @@ const appLayoutRoute = createRoute({
 })
 
 const dashboardRoute = createRoute({
-  component: lazyRouteComponent(() => import('@/pages/dashboard/Dashboard'), 'Dashboard'),
+  component: lazyRouteComponent(() => import('@console/pages/dashboard/Dashboard'), 'Dashboard'),
   getParentRoute: () => appLayoutRoute,
   path: 'dashboard',
   staticData: {
@@ -88,7 +88,7 @@ const dashboardRoute = createRoute({
 })
 
 const articleListRoute = createRoute({
-  component: lazyRouteComponent(() => import('@/pages/article/list/ArticleList'), 'ArticleList'),
+  component: lazyRouteComponent(() => import('@console/pages/article/list/ArticleList'), 'ArticleList'),
   getParentRoute: () => appLayoutRoute,
   path: 'articles',
   staticData: {
@@ -98,7 +98,7 @@ const articleListRoute = createRoute({
 })
 
 const categoryListRoute = createRoute({
-  component: lazyRouteComponent(() => import('@/pages/article/category/CategoryList'), 'CategoryList'),
+  component: lazyRouteComponent(() => import('@console/pages/article/category/CategoryList'), 'CategoryList'),
   getParentRoute: () => appLayoutRoute,
   path: 'categories',
   staticData: {
@@ -108,7 +108,7 @@ const categoryListRoute = createRoute({
 })
 
 const tagListRoute = createRoute({
-  component: lazyRouteComponent(() => import('@/pages/article/tag/TagList'), 'TagList'),
+  component: lazyRouteComponent(() => import('@console/pages/article/tag/TagList'), 'TagList'),
   getParentRoute: () => appLayoutRoute,
   path: 'tags',
   staticData: {
@@ -118,7 +118,7 @@ const tagListRoute = createRoute({
 })
 
 const commentListRoute = createRoute({
-  component: lazyRouteComponent(() => import('@/pages/article/comment/CommentList'), 'CommentList'),
+  component: lazyRouteComponent(() => import('@console/pages/article/comment/CommentList'), 'CommentList'),
   getParentRoute: () => appLayoutRoute,
   path: 'comments',
   staticData: {
@@ -128,7 +128,7 @@ const commentListRoute = createRoute({
 })
 
 const articleSettingsRoute = createRoute({
-  component: lazyRouteComponent(() => import('@/pages/article/settings/ArticleSettings'), 'ArticleSettings'),
+  component: lazyRouteComponent(() => import('@console/pages/article/settings/ArticleSettings'), 'ArticleSettings'),
   getParentRoute: () => appLayoutRoute,
   path: 'article-settings',
   staticData: {
@@ -138,7 +138,7 @@ const articleSettingsRoute = createRoute({
 })
 
 const imageCropRoute = createRoute({
-  component: lazyRouteComponent(() => import('@/pages/example/ImageCropExample'), 'ImageCropExample'),
+  component: lazyRouteComponent(() => import('@console/pages/example/ImageCropExample'), 'ImageCropExample'),
   getParentRoute: () => appLayoutRoute,
   path: 'image-crop',
   staticData: {
@@ -148,7 +148,7 @@ const imageCropRoute = createRoute({
 })
 
 const uiShowcaseRoute = createRoute({
-  component: lazyRouteComponent(() => import('@/pages/example/UiShowcase'), 'UiShowcase'),
+  component: lazyRouteComponent(() => import('@console/pages/example/UiShowcase'), 'UiShowcase'),
   getParentRoute: () => appLayoutRoute,
   path: 'ui-showcase',
   staticData: {
@@ -158,7 +158,7 @@ const uiShowcaseRoute = createRoute({
 })
 
 const markdownExampleRoute = createRoute({
-  component: lazyRouteComponent(() => import('@/pages/example/MarkdownExample'), 'MarkdownExample'),
+  component: lazyRouteComponent(() => import('@console/pages/example/MarkdownExample'), 'MarkdownExample'),
   getParentRoute: () => appLayoutRoute,
   path: 'markdown-example',
   staticData: {

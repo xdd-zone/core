@@ -1,10 +1,10 @@
-import type { PermissionString } from '@/core/permissions/permissions.types'
-import type { AuthenticatedSession } from '@/modules/auth'
+import type { PermissionString } from '@nexus/core/permissions/permissions.types'
+import type { AuthenticatedSession } from '@nexus/modules/auth'
+import { ForbiddenError } from '@nexus/core/http'
+import { PermissionService } from '@nexus/core/permissions/permission.service'
+import { Permissions } from '@nexus/core/permissions/permissions'
+import { AuthService } from '@nexus/modules/auth'
 import { Elysia } from 'elysia'
-import { ForbiddenError } from '@/core/http'
-import { PermissionService } from '@/core/permissions/permission.service'
-import { Permissions } from '@/core/permissions/permissions'
-import { AuthService } from '@/modules/auth'
 import { assertAuthenticated, authPlugin } from './auth.plugin'
 
 type RoutePermission = PermissionString | string
@@ -19,7 +19,7 @@ export interface OwnPermissionConfig {
   paramKey?: string
 }
 
-interface PermissionGuardContext {
+export interface PermissionGuardContext {
   params?: Record<string, string | undefined>
   request: Request
 }

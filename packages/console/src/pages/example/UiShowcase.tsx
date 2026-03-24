@@ -1,3 +1,4 @@
+import { Loading } from '@console/components/ui/Loading'
 import {
   Alert,
   Button,
@@ -14,9 +15,8 @@ import {
   Timeline,
   Typography,
 } from 'antd'
-import { useEffect, useState } from 'react'
 
-import { Loading } from '@/components/ui/Loading'
+import { useEffect, useState } from 'react'
 
 const { Paragraph, Text, Title } = Typography
 const { RangePicker } = DatePicker

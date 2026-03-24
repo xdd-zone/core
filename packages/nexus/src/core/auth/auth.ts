@@ -1,6 +1,6 @@
+import { prisma } from '@nexus/infra'
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
-import { prisma } from '@/infra'
 import { BETTER_AUTH_CONFIG } from '../config'
 import { assignDefaultRoleToUser } from './hooks/assign-default-role.hook'
 

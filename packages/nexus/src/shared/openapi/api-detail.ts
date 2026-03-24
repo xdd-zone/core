@@ -1,6 +1,6 @@
 import type { DocumentDecoration } from 'elysia'
 import type { ZodTypeAny } from 'zod'
-import { ApiErrorSchema } from '@/shared/schema'
+import { ApiErrorSchema } from '@nexus/shared/schema'
 
 const JSON_CONTENT_TYPE = 'application/json'
 

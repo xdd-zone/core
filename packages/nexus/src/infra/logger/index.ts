@@ -1,7 +1,7 @@
 import type { LoggerOptions } from 'pino'
+import { LOGGER_CONFIG } from '@nexus/core/config'
+import { getEnv } from '@nexus/core/config/utils'
 import pino, { stdTimeFunctions } from 'pino'
-import { LOGGER_CONFIG } from '@/core/config'
-import { getEnv } from '@/core/config/utils'
 
 // 根据 NODE_ENV 自动判断输出格式
 const env = getEnv()

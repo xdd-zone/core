@@ -1,6 +1,6 @@
-import { Markdown } from '@/components/ui'
-import { useSettingStore } from '@/stores/modules/setting'
-import { getPrimaryColorByTheme } from '@/utils/theme'
+import { Markdown } from '@console/components/ui'
+import { useSettingStore } from '@console/stores/modules/setting'
+import { getPrimaryColorByTheme } from '@console/utils/theme'
 
 const text = `
 # Markdown 全量预览

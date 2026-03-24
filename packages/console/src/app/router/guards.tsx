@@ -1,8 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query'
 
-import { redirect } from '@tanstack/react-router'
+import { ensureAuthSession } from '@console/modules/auth'
 
-import { ensureAuthSession } from '@/modules/auth'
+import { redirect } from '@tanstack/react-router'
 
 export interface LoginRouteSearch {
   redirect?: string

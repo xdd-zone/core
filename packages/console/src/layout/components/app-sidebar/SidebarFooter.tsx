@@ -1,5 +1,5 @@
-import { CollapseButton } from '@/layout/atoms'
-import { useSettingStore } from '@/stores'
+import { CollapseButton } from '@console/layout/atoms'
+import { useSettingStore } from '@console/stores'
 
 /**
  * 侧边栏底部组件

@@ -1,14 +1,14 @@
-import type { PixelCrop } from 'react-image-crop'
+import type { ImageCropRef } from '@console/components/common'
 
-import type { ImageCropRef } from '@/components/common'
+import type { PixelCrop } from 'react-image-crop'
+import sullyoon from '@console/assets/images/sullyoon.jpg'
+import { ImageCrop } from '@console/components/common'
+
+import { downloadCroppedImage, getCroppedImg } from '@console/utils/cropUtils'
+
 import { Button, Card, Col, Divider, Row, Space, Switch, Typography } from 'antd'
 import { Crop, Download, Eye, EyeOff, Square } from 'lucide-react'
-
 import { useEffect, useRef, useState } from 'react'
-
-import sullyoon from '@/assets/images/sullyoon.jpg'
-import { ImageCrop } from '@/components/common'
-import { downloadCroppedImage, getCroppedImg } from '@/utils/cropUtils'
 
 const { Text, Title } = Typography
 

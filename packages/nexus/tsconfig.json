@@ -1,9 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "composite": true,
     "rootDir": "./src",
     "paths": {
-      "@/*": ["./src/*"]
+      "@nexus/*": ["./src/*"]
     },
     "types": ["bun-types"],
     "outDir": "./dist"

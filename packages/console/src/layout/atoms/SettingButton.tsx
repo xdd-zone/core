@@ -1,8 +1,8 @@
+import { ResponsiveTooltip } from '@console/components/ui'
+import { useSettingStore } from '@console/stores'
+
 import { Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-
-import { ResponsiveTooltip } from '@/components/ui'
-import { useSettingStore } from '@/stores'
 
 interface SettingButtonProps {
   className?: string

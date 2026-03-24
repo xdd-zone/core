@@ -1,5 +1,4 @@
-import { Elysia } from 'elysia'
-import { assertAuthenticated, authPlugin, permissionPlugin, Permissions } from '@/core/access-control'
+import { assertAuthenticated, authPlugin, permissionPlugin, Permissions } from '@nexus/core/access-control'
 import {
   UpdateMyProfileBodySchema,
   UpdateUserBodySchema,
@@ -9,8 +8,9 @@ import {
   UserListSchema,
   UserSchema,
   UserService,
-} from '@/modules/user'
-import { apiDetail } from '@/shared'
+} from '@nexus/modules/user'
+import { apiDetail } from '@nexus/shared'
+import { Elysia } from 'elysia'
 
 /**
  * 用户路由。

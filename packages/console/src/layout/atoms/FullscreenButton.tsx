@@ -1,9 +1,9 @@
+import { ResponsiveTooltip } from '@console/components/ui'
 import { Fullscreen } from 'lucide-react'
 import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useFullscreen, useToggle } from 'react-use'
 
-import { ResponsiveTooltip } from '@/components/ui'
+import { useFullscreen, useToggle } from 'react-use'
 
 interface FullscreenButtonProps {
   className?: string

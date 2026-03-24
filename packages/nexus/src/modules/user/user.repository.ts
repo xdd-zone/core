@@ -1,8 +1,8 @@
+import type { PaginatedList, PaginationQuery } from '@nexus/infra/database'
+import type { UserStatus } from '@nexus/infra/database/prisma/generated'
 import type { UserBaseData, UserWhereInput } from './user.types'
-import type { PaginatedList, PaginationQuery } from '@/infra/database'
-import type { UserStatus } from '@/infra/database/prisma/generated'
-import { prisma } from '@/infra/database'
-import { PrismaService } from '@/infra/database/prisma.service'
+import { prisma } from '@nexus/infra/database'
+import { PrismaService } from '@nexus/infra/database/prisma.service'
 import { USER_BASE_SELECT } from './user.constants'
 
 function withActiveRecord(where: UserWhereInput = {}): UserWhereInput {

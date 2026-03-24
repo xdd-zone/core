@@ -1,4 +1,4 @@
-import { useSettingStore } from '@/stores'
+import { useSettingStore } from '@console/stores'
 
 import { SidebarContent } from './SidebarContent'
 import { SidebarFooter } from './SidebarFooter'

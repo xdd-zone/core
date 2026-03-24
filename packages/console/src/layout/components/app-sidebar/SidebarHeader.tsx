@@ -1,4 +1,4 @@
-import { useSettingStore } from '@/stores'
+import { useSettingStore } from '@console/stores'
 
 import { Brand, Logo } from '../../atoms'
 

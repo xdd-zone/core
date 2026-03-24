@@ -1,12 +1,12 @@
+import { DATABASE_CONFIG } from '@nexus/core'
+import { PrismaClient } from '@nexus/infra/database/prisma/generated/client'
+import { createModuleLogger } from '@nexus/infra/logger'
 /**
  * Prisma 客户端实例
  * - 使用 PostgreSQL 适配器
  * - 配置日志输出
  */
 import { PrismaPg } from '@prisma/adapter-pg'
-import { DATABASE_CONFIG } from '@/core'
-import { PrismaClient } from '@/infra/database/prisma/generated/client'
-import { createModuleLogger } from '@/infra/logger'
 
 const logger = createModuleLogger('prisma')
 

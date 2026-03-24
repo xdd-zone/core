@@ -1,8 +1,5 @@
 import type { BaseStore } from '../types'
-import { create } from 'zustand'
-
-import { persist } from 'zustand/middleware'
-import { catppuccinThemes, getThemeById } from '@/config/catppuccin'
+import { catppuccinThemes, getThemeById } from '@console/config/catppuccin'
 
 import {
   calculateIsDark,
@@ -10,7 +7,10 @@ import {
   isDarkTheme,
   updatePrimaryColorAttribute,
   updateThemeAttribute,
-} from '@/utils/theme'
+} from '@console/utils/theme'
+import { create } from 'zustand'
+
+import { persist } from 'zustand/middleware'
 
 /**
  * Catppuccin 主题定义
@@ -185,7 +185,7 @@ export const useSettingStore = create<SettingState>()(
         setLanguage: async (language: string) => {
           set({ language })
           // 动态导入 i18n 实例访问器，避免与 App.tsx 的静态导入冲突
-          const { getI18nInstance } = await import('@/i18n/instance')
+          const { getI18nInstance } = await import('@console/i18n/instance')
           getI18nInstance().changeLanguage(language)
         },
 
@@ -242,7 +242,7 @@ export const useSettingStore = create<SettingState>()(
           const newLanguage = language === 'zh' ? 'en' : 'zh'
           set({ language: newLanguage })
           // 动态导入 i18n 实例访问器，避免与 App.tsx 的静态导入冲突
-          const { getI18nInstance } = await import('@/i18n/instance')
+          const { getI18nInstance } = await import('@console/i18n/instance')
           getI18nInstance().changeLanguage(newLanguage)
         },
 

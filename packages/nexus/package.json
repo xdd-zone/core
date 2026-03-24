@@ -16,6 +16,18 @@
     "url": "https://github.com/xdd-zone/core/issues"
   },
   "keywords": [],
+  "exports": {
+    "./eden": {
+      "types": "./src/public/eden.ts",
+      "import": "./src/public/eden.ts",
+      "default": "./src/public/eden.ts"
+    },
+    "./auth-types": {
+      "types": "./src/public/auth-types.ts",
+      "import": "./src/public/auth-types.ts",
+      "default": "./src/public/auth-types.ts"
+    }
+  },
   "engines": {
     "bun": "1.3.5"
   },

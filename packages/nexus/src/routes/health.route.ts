@@ -1,6 +1,6 @@
+import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
 import { z } from 'zod'
-import { apiDetail } from '@/shared'
 
 const HealthSchema = z.object({
   status: z.literal('ok'),

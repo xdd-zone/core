@@ -61,7 +61,7 @@
     title: 'menu.userManagement',
   },
   lazy: async () => {
-    const { UserList } = await import('@/pages/user/UserList')
+    const { UserList } = await import('@console/pages/user/UserList')
 
     return { Component: UserList }
   },
@@ -111,8 +111,8 @@ import { Alert, Card, Table } from 'antd'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Loading } from '@/components/ui'
-import { useDynamicTableHeight } from '@/hooks/useDynamicTableHeight'
+import { Loading } from '@console/components/ui'
+import { useDynamicTableHeight } from '@console/hooks/useDynamicTableHeight'
 
 interface UserRow {
   id: string
@@ -180,7 +180,7 @@ export function UserList() {
 - `layout/*`
 - 普通业务页面
 
-如果页面只是消费当前登录用户状态，优先从 `useAuthStore()` 读取，而不是重新请求 session。
+如果页面只是使用当前登录用户状态，优先从 `useAuthStore()` 读取，而不是重新请求 session。
 
 ## 布局与壳层约定
 
@@ -239,7 +239,7 @@ export function UserList() {
 2. 登录态是否只依赖 `/api/auth/get-session`
 3. 这个页面是未登录不可访问，还是接口返回 `403` 后再提示
 
-如果后端边界还没准备好，先改 `packages/nexus`，不要在前端临时发明兼容协议。
+如果后端接口还没准备好，先改 `packages/nexus`，不要在前端临时发明兼容协议。
 
 ## 常见坏味道与替代写法
 

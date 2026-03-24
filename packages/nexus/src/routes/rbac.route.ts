@@ -1,8 +1,8 @@
+import { assertAuthenticated, authPlugin, permissionPlugin, Permissions } from '@nexus/core/access-control'
+import * as Schemas from '@nexus/modules/rbac'
+import { RbacService } from '@nexus/modules/rbac'
+import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
-import { assertAuthenticated, authPlugin, permissionPlugin, Permissions } from '@/core/access-control'
-import * as Schemas from '@/modules/rbac'
-import { RbacService } from '@/modules/rbac'
-import { apiDetail } from '@/shared'
 
 /**
  * RBAC 路由。

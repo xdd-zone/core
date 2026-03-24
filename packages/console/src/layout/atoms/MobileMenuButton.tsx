@@ -1,7 +1,7 @@
+import { useSettingStore } from '@console/stores'
 import { Menu } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 
-import { useSettingStore } from '@/stores'
+import { useTranslation } from 'react-i18next'
 
 /**
  * 移动端菜单按钮

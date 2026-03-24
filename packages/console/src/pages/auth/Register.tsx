@@ -1,8 +1,8 @@
+import { AuthContainer } from '@console/components/business'
 import { Button, Divider, Form, Input } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { AiFillWechat, AiOutlineGoogle } from 'react-icons/ai'
 
-import { AuthContainer } from '@/components/business'
+import { AiFillWechat, AiOutlineGoogle } from 'react-icons/ai'
 
 interface RegisterFormData {
   confirmPassword: string

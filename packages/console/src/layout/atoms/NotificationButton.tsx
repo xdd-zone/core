@@ -1,9 +1,9 @@
+import { ResponsiveTooltip } from '@console/components/ui'
+import { useMobile } from '@console/hooks/useMobile'
 import { Popover, Tabs } from 'antd'
+
 import { Bell } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-
-import { ResponsiveTooltip } from '@/components/ui'
-import { useMobile } from '@/hooks/useMobile'
 
 import { MessageList } from './MessageList'
 import { NotificationList } from './NotificationList'

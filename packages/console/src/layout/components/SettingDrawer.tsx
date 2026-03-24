@@ -1,10 +1,10 @@
+import { ResponsiveTooltip } from '@console/components/ui'
+import { catppuccinThemes } from '@console/config/catppuccin'
+import { useSettingStore } from '@console/stores/modules/setting'
+
 import { Drawer, Space, Typography } from 'antd'
 import { Layout, Lightbulb, Monitor, Moon, Palette, PanelLeft, PanelTop, Sun } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-
-import { ResponsiveTooltip } from '@/components/ui'
-import { catppuccinThemes } from '@/config/catppuccin'
-import { useSettingStore } from '@/stores/modules/setting'
 
 const { Text, Title } = Typography
 

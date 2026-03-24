@@ -57,7 +57,7 @@ bun run seed
 
 ## 鉴权与权限
 
-职责边界：
+职责说明：
 
 - `authPlugin`：获取会话，并支持 `auth: 'required'`
 - `permissionPlugin`：组合 `authPlugin`，并负责 `permission`、`own`、`me` 判断

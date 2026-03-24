@@ -1,7 +1,7 @@
+import { ResponsiveTooltip } from '@console/components/ui'
 import { Search } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 
-import { ResponsiveTooltip } from '@/components/ui'
+import { useTranslation } from 'react-i18next'
 
 interface SearchButtonProps {
   className?: string

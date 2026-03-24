@@ -1,6 +1,6 @@
-import { Avatar } from 'antd'
+import sullyoon from '@console/assets/images/sullyoon.jpg'
 
-import sullyoon from '@/assets/images/sullyoon.jpg'
+import { Avatar } from 'antd'
 
 interface LogoProps {
   size?: number

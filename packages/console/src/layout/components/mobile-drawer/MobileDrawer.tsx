@@ -1,8 +1,8 @@
+import { buildNavigationMenuItems } from '@console/app/navigation/navigation'
+import { useSettingStore } from '@console/stores'
+
 import { Drawer } from 'antd'
 import { useTranslation } from 'react-i18next'
-
-import { buildNavigationMenuItems } from '@/app/navigation/navigation'
-import { useSettingStore } from '@/stores'
 
 import { NavigationMenu } from '../menu/NavigationMenu'
 

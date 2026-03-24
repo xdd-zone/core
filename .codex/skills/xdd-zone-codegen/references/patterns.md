@@ -22,9 +22,9 @@
 
 不要跳过前两层直接写宽泛对象，更不要用 `any` 占位。
 
-## 权限边界检查
+## 权限检查
 
-写 route 之前，先判断当前需求是否已经落在现有权限边界内：
+写 route 之前，先判断当前需求是否已经落在现有权限设计里：
 
 - 用户资料与后台用户管理，优先复用 `Permissions.USER.*`
 - 角色分配与移除，优先复用 `Permissions.USER_ROLE.*`
@@ -46,7 +46,7 @@ export type ExampleIdParams = z.infer<typeof ExampleIdParamsSchema>
 ```
 
 ```ts
-import { createPaginatedListSchema } from '@/shared/schema'
+import { createPaginatedListSchema } from '@nexus/shared/schema'
 
 export const ExampleSchema = z.object({
   id: z.string(),
@@ -64,10 +64,10 @@ export type ExampleList = typeof ExampleListSchema._output
 
 ```ts
 import { Elysia } from 'elysia'
-import { assertAuthenticated, authPlugin, permissionPlugin, Permissions } from '@/core/access-control'
-import * as Schemas from '@/modules/example'
-import { ExampleService } from '@/modules/example'
-import { apiDetail } from '@/shared'
+import { assertAuthenticated, authPlugin, permissionPlugin, Permissions } from '@nexus/core/access-control'
+import * as Schemas from '@nexus/modules/example'
+import { ExampleService } from '@nexus/modules/example'
+import { apiDetail } from '@nexus/shared'
 
 export const exampleRoutes = new Elysia({
   prefix: '/example',
@@ -135,12 +135,12 @@ service 负责业务编排、参数转换和调用 repository。
 ## repository 骨架
 
 ```ts
-import type { Prisma } from '@/infra/database/prisma/generated'
+import type { Prisma } from '@nexus/infra/database/prisma/generated'
 
 import type { ExampleListQuery } from './example.contract'
 import type { ExampleBaseData } from './example.types'
-import type { PaginatedList } from '@/infra/database'
-import { PrismaService } from '@/infra/database/prisma.service'
+import type { PaginatedList } from '@nexus/infra/database'
+import { PrismaService } from '@nexus/infra/database/prisma.service'
 
 export class ExampleRepository {
   static async paginate(
@@ -202,7 +202,7 @@ type Query = ExampleListQuery
 - contract 是否先于 route 更新
 - `index.ts` 导出是否补齐
 - route 是否使用正确 plugin 与声明式权限字段
-- 是否优先复用了现有固定权限和资料边界
+- 是否优先复用了现有固定权限和用户资料相关约定
 - OpenAPI 是否统一用 `apiDetail(...)`
 - 成功响应是否直接返回业务数据
 - 删除接口是否返回 `204`

@@ -10,7 +10,7 @@
 /**
  * 固定系统角色名称。
  */
-import { Permissions } from '@/core/permissions/permissions'
+import { Permissions } from '@nexus/core/permissions/permissions'
 
 export const SYSTEM_ROLE_NAMES = ['superAdmin', 'admin', 'user'] as const
 

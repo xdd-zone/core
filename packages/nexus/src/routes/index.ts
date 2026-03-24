@@ -1,5 +1,5 @@
+import { APP_CONFIG } from '@nexus/core/config'
 import { Elysia } from 'elysia'
-import { APP_CONFIG } from '@/core/config'
 import { authRoutes } from './auth.route'
 import { healthRoutes } from './health.route'
 import { rbacRoutes } from './rbac.route'

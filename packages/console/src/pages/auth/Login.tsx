@@ -1,13 +1,13 @@
-import type { SignInEmailBody } from '@/modules/auth'
+import type { SignInEmailBody } from '@console/modules/auth'
+import { DASHBOARD_ROUTE_PATH, sanitizeRedirectPath } from '@console/app/router/guards'
+
+import { AuthContainer } from '@console/components/business'
+import { AuthRequestError, useLoginMutation } from '@console/modules/auth'
 import { useNavigate, useRouter, useSearch } from '@tanstack/react-router'
 
 import { App as AntdApp, Button, Divider, Form, Input } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { AiFillWechat, AiOutlineGoogle } from 'react-icons/ai'
-
-import { DASHBOARD_ROUTE_PATH, sanitizeRedirectPath } from '@/app/router/guards'
-import { AuthContainer } from '@/components/business'
-import { AuthRequestError, useLoginMutation } from '@/modules/auth'
 
 /**
  * 登录页

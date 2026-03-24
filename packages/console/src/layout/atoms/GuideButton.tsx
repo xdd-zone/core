@@ -1,7 +1,7 @@
+import { ResponsiveTooltip } from '@console/components/ui'
 import { driver } from 'driver.js'
 import { Compass } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { ResponsiveTooltip } from '@/components/ui'
 
 import 'driver.js/dist/driver.css'
 

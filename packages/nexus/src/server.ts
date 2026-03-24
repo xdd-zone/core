@@ -1,6 +1,6 @@
-import { APP_CONFIG, OPENAPI_CONFIG } from '@/core/config'
-import { prisma } from '@/infra/database'
-import { logger } from '@/infra/logger'
+import { APP_CONFIG, OPENAPI_CONFIG } from '@nexus/core/config'
+import { prisma } from '@nexus/infra/database'
+import { logger } from '@nexus/infra/logger'
 
 interface StartableApp {
   listen: (port: number) => unknown

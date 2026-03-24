@@ -1,7 +1,7 @@
 import { openapi } from '@elysiajs/openapi'
+import { OPENAPI_CONFIG } from '@nexus/core/config'
 import { Elysia } from 'elysia'
 import z from 'zod'
-import { OPENAPI_CONFIG } from '@/core/config'
 
 /**
  * OpenAPI 文档插件。

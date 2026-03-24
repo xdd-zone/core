@@ -1,6 +1,6 @@
+import { SYSTEM_PERMISSION_KEYS } from '@nexus/core/permissions/permissions'
+import { createPaginatedListSchema, DateTimeSchema, intFromQuery } from '@nexus/shared/schema'
 import { z } from 'zod'
-import { SYSTEM_PERMISSION_KEYS } from '@/core/permissions/permissions'
-import { createPaginatedListSchema, DateTimeSchema, intFromQuery } from '@/shared/schema'
 
 export const PermissionStringSchema = z.enum(SYSTEM_PERMISSION_KEYS)
 export type PermissionString = z.infer<typeof PermissionStringSchema>

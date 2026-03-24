@@ -1,11 +1,11 @@
+import { useMobile } from '@console/hooks/useMobile'
+import { useTabBarStore } from '@console/stores'
 import { useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 import { X } from 'lucide-react'
+
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-
-import { useMobile } from '@/hooks/useMobile'
-import { useTabBarStore } from '@/stores'
 
 /**
  * 标签栏组件

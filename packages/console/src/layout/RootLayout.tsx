@@ -1,6 +1,6 @@
-import { Pattern } from '@/components/ui'
-import { useRouteListener } from '@/hooks/useRouteListener'
-import { useSettingStore } from '@/stores/modules/setting'
+import { Pattern } from '@console/components/ui'
+import { useRouteListener } from '@console/hooks/useRouteListener'
+import { useSettingStore } from '@console/stores/modules/setting'
 
 import { MobileDrawer } from './components/mobile-drawer/MobileDrawer'
 import { SettingDrawer } from './components/SettingDrawer'

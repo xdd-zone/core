@@ -34,20 +34,20 @@ packages/nexus
 
 修改后台前端时，默认按下面顺序推进：
 
-1. 确认 `nexus` 现有接口和登录态边界
-2. 改 `console` 的 `app/router`、`app/navigation` 或 `modules/auth`
+1. 确认 `nexus` 现有接口和登录态约定
+2. 先接 `console` 的 Eden 公共请求层或模块 API 适配层，再改 `app/router`、`app/navigation` 或 `modules/auth`
 3. 对齐登录页、导航或页面入口
 4. 完成 `lint / type-check / build`
 
 也就是：
 
 ```text
-packages/nexus 认证与接口边界
+packages/nexus 认证与接口约定
   -> packages/console 路由 / 导航 / auth
   -> 验证
 ```
 
-当前实现采用固定角色、固定权限和用户资料管理的接口模型，新增接口时优先复用现有角色、权限和资料边界。
+当前实现采用固定角色、固定权限和用户资料管理的接口模型，新增接口时优先复用现有角色、权限和用户资料相关约定。
 
 ## 代码放哪一层
 
@@ -96,13 +96,15 @@ packages/nexus 认证与接口边界
 - `/api/auth/get-session`
 - `/api/auth/sign-in/email`
 - `/api/auth/sign-out`
+- 基于 Eden Treaty 的 auth API 适配层
 - auth query
-- auth store 中的会话快照消费边界
+- auth store 中的会话快照使用范围
 
 不要在这里放：
 
 - 页面渲染逻辑
 - 业务页面数据请求
+- 页面层直接处理 Eden `{ data, error }`
 
 ### `packages/nexus/src/modules/*/*.contract.ts`
 
@@ -110,7 +112,7 @@ packages/nexus 认证与接口边界
 
 - body / query / params schema
 - 成功 response schema
-- route 可复用的 HTTP 边界类型
+- route 可复用的 HTTP 类型定义
 
 ### `packages/nexus/src/routes/*.route.ts`
 
@@ -129,7 +131,7 @@ packages/nexus 认证与接口边界
 - Better Auth glue code
 - `AuthService.getSession(request.headers)` 这类会话解析
 
-route handler 优先直接消费：
+route handler 优先直接使用：
 
 - `auth`
 - `currentUser`
@@ -248,6 +250,23 @@ bun run --filter @xdd-zone/nexus export:openapi
 - `403`
 - `204`
 - own / me
+- console 模块 API 适配层是否仍然只暴露语义化方法
+
+## Console 接口接入约定
+
+- `packages/nexus` 统一维护服务端 HTTP 接口定义
+- `packages/console` 默认通过 Eden Treaty 调用 `nexus`
+- 新增 console 接口时，优先走：
+
+```text
+shared/api Eden 公共请求层
+  -> modules/<domain> API 适配层
+  -> query / store / page
+```
+
+- 页面层不要直接写 Eden 路径调用，例如 `api.auth['sign-in'].email.post(...)`
+- 带中划线的 route path 允许保留在后端，前端通过模块 API 适配层封装成语义化方法
+- 需要共享类型时，优先从 `@xdd-zone/nexus/eden` 获取 Eden 类型参考，而不是手写第二套 DTO
 
 ## 插件与权限选择
 

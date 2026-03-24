@@ -1,6 +1,6 @@
-import { createRouter } from '@tanstack/react-router'
+import { HydrateFallback } from '@console/components/ui/HydrateFallback'
 
-import { HydrateFallback } from '@/components/ui/HydrateFallback'
+import { createRouter } from '@tanstack/react-router'
 
 import { queryClient } from '../query-client'
 import { routeTree } from './routes'

@@ -8,7 +8,10 @@
     "useDefineForClassFields": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@console/*": ["src/*"],
+      "@nexus/*": ["../nexus/src/*"],
+      "@xdd-zone/nexus/eden": ["../nexus/src/public/eden.ts"],
+      "@xdd-zone/nexus/auth-types": ["../nexus/src/public/auth-types.ts"]
     },
     "allowImportingTsExtensions": true,
     "noFallthroughCasesInSwitch": true,

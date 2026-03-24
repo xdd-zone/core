@@ -1,6 +1,6 @@
-import { useMatches } from '@tanstack/react-router'
+import { resolveRouteMeta } from '@console/app/router/types'
 
-import { resolveRouteMeta } from '@/app/router/types'
+import { useMatches } from '@tanstack/react-router'
 
 /**
  * 返回当前路由（最后一个 match）的静态元信息。

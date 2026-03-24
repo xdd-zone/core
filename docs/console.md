@@ -7,7 +7,7 @@
 - 管理后台页面与交互
 - 路由、导航、布局与标签页
 - 登录态初始化与登录/登出流程
-- 消费 `@xdd-zone/nexus` 提供的认证与业务接口
+- 调用 `@xdd-zone/nexus` 提供的认证与业务接口
 
 
 前端工作方式很直接：
@@ -16,7 +16,7 @@
 - TanStack Query 负责认证请求、会话缓存与 mutation 状态
 - 菜单负责导航组织与页面入口
 - 页面业务权限以服务端返回的 `401 / 403` 为准
-- 登录态以 `/api/auth/get-session` 为唯一真相源
+- 登录态以 `/api/auth/get-session` 作为统一判断依据
 
 ## 技术栈
 
@@ -130,7 +130,7 @@ auth store 管理：
 - `useLogoutMutation()`
   - 登出并清空当前 session cache
 
-auth store 只保留会话快照消费边界：
+auth store 只保留会话快照相关状态：
 
 - `setSessionPayload(payload)`
 - `clearAuth()`
@@ -222,7 +222,7 @@ TabBar 会根据路由变化自动添加标签页，但会跳过：
   - 应用根入口
   - 认证页容器
   - 导航菜单
-- Tailwind / 自定义样式统一消费语义变量
+- Tailwind / 自定义样式统一使用语义变量
   - `--color-*`
   - `--ctp-*`
 - `dark` 变体覆盖所有深色 Catppuccin 主题，而不是单独依赖 `data-theme="dark"`
@@ -277,7 +277,7 @@ Markdown 能力当前由 `markdown-to-jsx` 与 Shiki 组合完成：
 
 ## 权限语义
 
-前端与服务端的权限职责边界如下：
+前端与服务端的权限分工如下：
 
 - 未登录访问后台页：TanStack Router 在 `beforeLoad` 阶段跳转 `/login`
 - 已登录但接口无权限：以后端返回 `403` 为准，页面内自行处理提示

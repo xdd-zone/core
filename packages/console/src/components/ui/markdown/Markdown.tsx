@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
 
 import type { MarkdownTheme } from './theme/types'
+import { hexToRgb } from '@console/utils/theme'
 import { clsx } from 'clsx'
+
 import { compiler } from 'markdown-to-jsx'
 
 import { useRef } from 'react'
-
-import { hexToRgb } from '@/utils/theme'
 
 import { SelectionPopup, useSelectionPopup } from './core'
 import { MarkdownErrorBoundary } from './MarkdownErrorBoundary'

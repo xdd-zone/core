@@ -1,4 +1,4 @@
-import type { PermissionString } from '@/core/permissions/permissions.types'
+import type { PermissionString } from '@nexus/core/permissions/permissions.types'
 
 /**
  * 角色与权限的聚合类型。

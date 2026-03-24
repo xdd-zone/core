@@ -1,5 +1,5 @@
+import { setupAppPlugin } from '@nexus/core/http'
 import { Elysia } from 'elysia'
-import { setupAppPlugin } from '@/core/http'
 import { routes } from './routes'
 
 /**

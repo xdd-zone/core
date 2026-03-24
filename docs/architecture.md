@@ -2,13 +2,14 @@
 
 ## 架构结论
 
-仓库的主要边界可以概括成 5 条：
+仓库当前的核心设计可以概括成 5 条：
 
-- `packages/nexus` 是服务端 HTTP 接口定义的唯一来源
+- `packages/nexus` 集中维护服务端 HTTP 接口定义
 - route 层直接表达 HTTP 语义，不维护额外的 schema 镜像层
 - access control 通过声明式 route 配置表达
-- OpenAPI 是服务端对外的接口说明导出物
-- Eden 是仓库内联调与 smoke test 的内部类型基线
+- OpenAPI 作为服务端接口说明文档导出
+- Eden 作为仓库内联调与 smoke test 共用的类型参考
+- console 默认通过 Eden Treaty 调用 nexus，不再单独维护一套重复的接口 DTO
 
 当前系统采用固定角色和固定权限的后台管理模型。
 
@@ -19,7 +20,7 @@
 - 角色能力围绕角色列表、用户角色分配与用户权限查看展开
 - `own` 只用于用户自己的资料场景，不作为通用资源归属判断器
 
-## 包边界
+## 包职责
 
 ### `@xdd-zone/console`
 
@@ -28,11 +29,11 @@
 - 后台管理前端页面与布局
 - 应用路由、导航与标签页
 - 登录态初始化、登录、登出与会话恢复
-- 消费 `@xdd-zone/nexus` 暴露的认证与业务接口
+- 调用 `@xdd-zone/nexus` 提供的认证与业务接口
 
 不负责：
 
-- 维护服务端接口定义的唯一来源
+- 维护服务端接口定义
 - 在前端单独维护权限计算规则
 - 用菜单承担业务权限判定
 
@@ -75,13 +76,13 @@ src/
 其中：
 
 - `app/router/`
-  - TanStack Router 路由树、`beforeLoad` 认证边界与 `staticData` 元信息
+  - TanStack Router 路由树、`beforeLoad` 认证约束与 `staticData` 元信息
 - `app/query-client.ts`
   - TanStack Query 的 QueryClient 初始化
 - `app/navigation/`
   - 独立导航配置
 - `modules/auth/`
-  - `get-session / sign-in / sign-out` 的 API、query、store 封装
+  - 基于 Eden Treaty 的 `get-session / sign-in / sign-out` API 适配、query、store 封装
 - `layout/`
   - 后台外壳、侧边栏、头部、TabBar、设置抽屉
 
@@ -92,6 +93,7 @@ src/
 - 菜单负责导航组织
 - 页面级权限以服务端返回的 `401 / 403` 为准
 - 根路径与受保护页面在路由 `beforeLoad` 阶段完成重定向
+- 页面层不直接处理 Eden 原始 `{ data, error }` 结果
 
 ## 服务端结构
 
@@ -116,6 +118,7 @@ src/
 
 - `core/http` 全局插件
 - API 路由聚合
+- Eden Treaty 共用类型入口
 
 它不负责监听端口，也不负责优雅关闭。
 
@@ -131,7 +134,7 @@ src/
 
 只负责启动入口。
 
-## Route / Module / Core 的边界
+## Route / Module / Core 的职责
 
 ### `routes/`
 
@@ -221,11 +224,11 @@ route 层优先使用下面 4 种声明式配置：
 - `me`
   - 登录用户访问自己的 `/me` 类接口
 
-当 handler 需要直接消费已认证的 `auth` 上下文时，推荐同时显式声明：
+当 handler 需要直接使用已认证的 `auth` 上下文时，推荐同时显式声明：
 
 - `auth: 'required'`
 
-新代码应统一从 `@/core/access-control` 与 `@/core/http` 导入。
+新代码应统一从 `@nexus/core/access-control` 与 `@nexus/core/http` 导入。
 
 当前权限列表包括：
 
@@ -248,7 +251,7 @@ route 层优先使用下面 4 种声明式配置：
 ```text
 Nexus 接口定义 / route
   -> OpenAPI 导出
-  -> Eden / 测试 / 外部集成消费
+  -> Eden / 测试 / 外部系统接入
 ```
 
 具体落点：
@@ -258,6 +261,8 @@ Nexus 接口定义 / route
 - OpenAPI 导出：
   - `packages/nexus/scripts/export-openapi.ts`
   - `packages/nexus/openapi/openapi.json`
+- Eden 类型入口：
+  - `packages/nexus/src/eden/index.ts`
 
 ## 内部验证链路
 

@@ -1,9 +1,9 @@
-import type { Tab } from '@/stores'
+import type { Tab } from '@console/stores'
+import { useTabBarStore } from '@console/stores'
+import { getTabFromMatch } from '@console/utils/routeUtils'
+
 import { useLocation, useMatches } from '@tanstack/react-router'
 import { useEffect } from 'react'
-
-import { useTabBarStore } from '@/stores'
-import { getTabFromMatch } from '@/utils/routeUtils'
 
 /**
  * 路由监听Hook

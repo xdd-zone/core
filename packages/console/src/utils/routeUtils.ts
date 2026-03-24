@@ -1,6 +1,6 @@
-import type { Tab } from '@/stores'
+import type { Tab } from '@console/stores'
 
-import { resolveRouteMeta } from '@/app/router/types'
+import { resolveRouteMeta } from '@console/app/router/types'
 
 import { generateTabId } from './pathUtils'
 

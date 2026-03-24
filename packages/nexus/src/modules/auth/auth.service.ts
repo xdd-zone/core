@@ -1,5 +1,5 @@
 import type { Session } from './auth.types'
-import { auth } from '@/core/auth'
+import { auth } from '@nexus/core/auth'
 
 /**
  * 认证服务类

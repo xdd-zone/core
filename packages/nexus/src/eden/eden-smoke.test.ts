@@ -1,7 +1,7 @@
 import { edenTreaty } from '@elysiajs/eden'
+import { createApp } from '@nexus/app'
+import { prisma } from '@nexus/infra/database'
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
-import { createApp } from '@/app'
-import { prisma } from '@/infra/database'
 
 const app = createApp()
 app.listen(0)

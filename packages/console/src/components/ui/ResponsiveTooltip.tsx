@@ -1,9 +1,9 @@
 import type { TooltipProps } from 'antd'
 import type { ReactElement } from 'react'
 
-import { Tooltip } from 'antd'
+import { useMobile } from '@console/hooks/useMobile'
 
-import { useMobile } from '@/hooks/useMobile'
+import { Tooltip } from 'antd'
 
 interface ResponsiveTooltipProps {
   align?: TooltipProps['align']

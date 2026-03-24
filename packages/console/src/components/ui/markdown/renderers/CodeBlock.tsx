@@ -1,11 +1,11 @@
 import type { FC, JSX } from 'react'
 
+import { useSettingStore } from '@console/stores'
 import { clsx } from 'clsx'
 import { Check, Copy, FileCode } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { SiGnubash, SiGo, SiJavascript, SiJson, SiPython, SiRust, SiTypescript } from 'react-icons/si'
 
-import { useSettingStore } from '@/stores'
+import { SiGnubash, SiGo, SiJavascript, SiJson, SiPython, SiRust, SiTypescript } from 'react-icons/si'
 
 import {
   codeToHtml,

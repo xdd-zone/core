@@ -1,8 +1,8 @@
+import { Pattern } from '@console/components/ui'
 import { useNavigate } from '@tanstack/react-router'
 import { Button, Result, Space } from 'antd'
-import { Home, Lock } from 'lucide-react'
 
-import { Pattern } from '@/components/ui'
+import { Home, Lock } from 'lucide-react'
 
 /**
  * 403 Forbidden 页面

@@ -125,7 +125,7 @@ function ListItem() {
 主题通过 `data-theme` 属性控制：
 
 ```tsx
-import { updateThemeAttribute } from '@/utils/theme'
+import { updateThemeAttribute } from '@console/utils/theme'
 
 // 切换到 Mocha 暗色主题
 updateThemeAttribute('mocha')

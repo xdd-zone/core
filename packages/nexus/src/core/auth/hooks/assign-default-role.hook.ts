@@ -1,6 +1,6 @@
-import { prisma } from '@/infra/database/client'
-import { createModuleLogger } from '@/infra/logger'
-import { DEFAULT_ROLE_NAME, FIRST_USER_ROLE_NAME, RbacService } from '@/modules/rbac'
+import { prisma } from '@nexus/infra/database/client'
+import { createModuleLogger } from '@nexus/infra/logger'
+import { DEFAULT_ROLE_NAME, FIRST_USER_ROLE_NAME, RbacService } from '@nexus/modules/rbac'
 
 const logger = createModuleLogger('auth:assign-default-role-hook')
 

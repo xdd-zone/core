@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
+import { createModuleLogger } from '@nexus/infra/logger'
 import { Elysia } from 'elysia'
-import { createModuleLogger } from '@/infra/logger'
 
 const httpLogger = createModuleLogger('http')
 const requestStartTimes = new WeakMap<Request, number>()

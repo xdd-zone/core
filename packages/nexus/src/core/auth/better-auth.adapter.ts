@@ -1,10 +1,10 @@
+import type { Session as PrismaSession } from '@nexus/infra/database/prisma/generated'
 import type { BetterAuthOptions } from 'better-auth'
-import type { Session as PrismaSession } from '@/infra/database/prisma/generated'
 
+import { BadRequestError } from '@nexus/core/http'
+import { prisma } from '@nexus/infra'
+import { AuthService } from '@nexus/modules/auth'
 import { getCookieCache, getCookies } from 'better-auth/cookies'
-import { BadRequestError } from '@/core/http'
-import { prisma } from '@/infra'
-import { AuthService } from '@/modules/auth'
 import { auth } from './auth'
 
 type MutableHeaders = Headers | Record<string, string | number | string[]>

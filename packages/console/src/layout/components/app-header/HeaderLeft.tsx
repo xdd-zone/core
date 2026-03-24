@@ -1,5 +1,5 @@
-import { Breadcrumb } from '@/components/common'
-import { CollapseButton, MobileMenuButton } from '@/layout/atoms'
+import { Breadcrumb } from '@console/components/common'
+import { CollapseButton, MobileMenuButton } from '@console/layout/atoms'
 
 import { Brand, Logo } from '../../atoms'
 

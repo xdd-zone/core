@@ -75,7 +75,7 @@ Better Auth 的 HTTP 适配位于：
 | GET | `/api/auth/get-session` | 获取 session |
 | GET | `/api/auth/me` | 获取登录用户 |
 
-## 接口边界
+## 接口范围
 
 用户资料：
 
@@ -132,7 +132,7 @@ export const profileRoutes = new Elysia()
   })
 ```
 
-## Handler 可直接消费的上下文
+## Handler 可直接使用的上下文
 
 使用 `authPlugin` 后，handler 里通常可以直接拿到：
 
@@ -164,7 +164,7 @@ export const profileRoutes = new Elysia()
 
 ### `console` 前端约定
 
-当前后台前端统一按下面方式消费认证接口：
+当前后台前端统一按下面方式接入认证接口：
 
 - TanStack Query 用 query 维护 `/api/auth/get-session`
 - 登录 mutation 调用 `/api/auth/sign-in/email`，成功后刷新并写回 session
@@ -204,7 +204,7 @@ BETTER_AUTH_SECRET="replace-with-a-secure-secret"
 
 补充约定：
 
-- 如果 route handler 需要直接消费已认证的 `auth.user` / `auth.session`
+- 如果 route handler 需要直接使用已认证的 `auth.user` / `auth.session`
 - 即使已经声明 `permission / own / me`，也推荐同时显式写上 `auth: 'required'`
 - 当前用户资料接口优先使用 `me`
 - 指定用户资料接口才使用 `own`

@@ -1,9 +1,9 @@
+import type { Prisma } from '@nexus/infra/database/prisma/generated'
 import type { RoleListQuery } from './rbac.contract'
-import type { Prisma } from '@/infra/database/prisma/generated'
-import { NotFoundError } from '@/core/http'
-import { PermissionService } from '@/core/permissions/permission.service'
-import { createPaginatedResponse } from '@/infra/database'
-import { UserRepository } from '@/modules/user'
+import { NotFoundError } from '@nexus/core/http'
+import { PermissionService } from '@nexus/core/permissions/permission.service'
+import { createPaginatedResponse } from '@nexus/infra/database'
+import { UserRepository } from '@nexus/modules/user'
 import {
   CurrentUserPermissionsSchema,
   CurrentUserRolesSchema,

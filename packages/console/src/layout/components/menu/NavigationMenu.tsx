@@ -1,14 +1,14 @@
+import type { MenuItem } from '@console/utils/pathUtils'
 import type { MenuProps } from 'antd'
-import type { MenuItem } from '@/utils/pathUtils'
+import { useSettingStore } from '@console/stores'
+import { getAntdThemeConfig } from '@console/utils/catppuccin.antd'
+import { findMatchingMenuKey } from '@console/utils/pathUtils'
+import { getPrimaryColorByTheme, hexToRgba } from '@console/utils/theme'
+
 import { useLocation, useNavigate } from '@tanstack/react-router'
 import { ConfigProvider, Menu } from 'antd'
 import { clsx } from 'clsx'
 import { useMemo } from 'react'
-
-import { useSettingStore } from '@/stores'
-import { getAntdThemeConfig } from '@/utils/catppuccin.antd'
-import { findMatchingMenuKey } from '@/utils/pathUtils'
-import { getPrimaryColorByTheme, hexToRgba } from '@/utils/theme'
 
 interface NavigationMenuProps {
   /** 自定义类名 */

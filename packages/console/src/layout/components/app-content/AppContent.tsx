@@ -1,6 +1,6 @@
-import { Outlet, useRouterState } from '@tanstack/react-router'
+import { Loading } from '@console/components'
 
-import { Loading } from '@/components'
+import { Outlet, useRouterState } from '@tanstack/react-router'
 
 /**
  * 应用内容区域组件

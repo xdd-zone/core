@@ -1,6 +1,6 @@
-import { PanelLeftClose } from 'lucide-react'
+import { useSettingStore } from '@console/stores'
 
-import { useSettingStore } from '@/stores'
+import { PanelLeftClose } from 'lucide-react'
 
 /**
  * 折叠按钮组件

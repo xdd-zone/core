@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react'
 
-import { ConfigProvider } from 'antd'
+import { Pattern } from '@console/components/ui'
 
-import { Pattern } from '@/components/ui'
-import { LanguageButton } from '@/layout/atoms/LanguageButton'
-import { ThemeToggle } from '@/layout/atoms/ThemeToggle'
-import { useSettingStore } from '@/stores'
-import { getAntdThemeConfig } from '@/utils/catppuccin.antd'
-import { getPrimaryColorByTheme } from '@/utils/theme'
+import { LanguageButton } from '@console/layout/atoms/LanguageButton'
+import { ThemeToggle } from '@console/layout/atoms/ThemeToggle'
+import { useSettingStore } from '@console/stores'
+import { getAntdThemeConfig } from '@console/utils/catppuccin.antd'
+import { getPrimaryColorByTheme } from '@console/utils/theme'
+import { ConfigProvider } from 'antd'
 
 interface AuthContainerProps {
   children: ReactNode

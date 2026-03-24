@@ -1,4 +1,4 @@
-import type { Session as PrismaSession, User } from '@/infra/database/prisma/generated'
+import type { Session as PrismaSession, User } from '@nexus/infra/database/prisma/generated'
 
 /**
  * 认证响应

@@ -1,7 +1,7 @@
-import type { AuthenticatedSession, Session } from '@/modules/auth'
+import type { AuthenticatedSession, Session } from '@nexus/modules/auth'
+import { UnauthorizedError } from '@nexus/core/http'
+import { AuthService } from '@nexus/modules/auth'
 import { Elysia } from 'elysia'
-import { UnauthorizedError } from '@/core/http'
-import { AuthService } from '@/modules/auth'
 
 /**
  * 路由鉴权模式。

@@ -1,8 +1,8 @@
+import { Pattern } from '@console/components/ui'
 import { useNavigate } from '@tanstack/react-router'
 import { Button, Result, Space } from 'antd'
-import { Home, Search } from 'lucide-react'
 
-import { Pattern } from '@/components/ui'
+import { Home, Search } from 'lucide-react'
 
 /**
  * 404 Not Found 页面

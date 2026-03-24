@@ -1,12 +1,12 @@
 import type { MenuProps } from 'antd'
-import { useNavigate } from '@tanstack/react-router'
+import { useAuthStore, useLogoutMutation } from '@console/modules/auth'
 
+import { useTabBarStore } from '@console/stores'
+import { useNavigate } from '@tanstack/react-router'
 import { Avatar, Dropdown } from 'antd'
+
 import { LogOut, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-
-import { useAuthStore, useLogoutMutation } from '@/modules/auth'
-import { useTabBarStore } from '@/stores'
 
 /**
  * 用户头像组件 (简化版)

@@ -1,9 +1,9 @@
-import type { AuthSession } from '@/modules/auth'
+import type { AuthSession } from '@nexus/modules/auth'
+import { authPlugin } from '@nexus/core/access-control'
+import { clearBetterAuthCookies, forwardBetterAuthResponse, revokeBetterAuthSession } from '@nexus/core/auth'
+import { AuthSessionSchema, SessionSchema, SignInEmailBodySchema, SignUpEmailBodySchema } from '@nexus/modules/auth'
+import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
-import { authPlugin } from '@/core/access-control'
-import { clearBetterAuthCookies, forwardBetterAuthResponse, revokeBetterAuthSession } from '@/core/auth'
-import { AuthSessionSchema, SessionSchema, SignInEmailBodySchema, SignUpEmailBodySchema } from '@/modules/auth'
-import { apiDetail } from '@/shared'
 
 /**
  * 认证路由。

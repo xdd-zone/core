@@ -4,4 +4,4 @@ export { useTabBarStore } from './modules/tabBar'
 // 导出类型定义
 export type { Tab, TabBarState } from './modules/tabBar'
 export * from './types'
-export { useAuthStore } from '@/modules/auth'
+export { useAuthStore } from '@console/modules/auth'

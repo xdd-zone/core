@@ -1,10 +1,10 @@
 import type { BreadcrumbItemType } from 'antd/es/breadcrumb/Breadcrumb'
 
+import { resolveRouteMeta } from '@console/app/router/types'
 import { Link, useMatches } from '@tanstack/react-router'
 import { Breadcrumb as AntBreadcrumb } from 'antd'
-import { useTranslation } from 'react-i18next'
 
-import { resolveRouteMeta } from '@/app/router/types'
+import { useTranslation } from 'react-i18next'
 
 /**
  * 动态面包屑组件

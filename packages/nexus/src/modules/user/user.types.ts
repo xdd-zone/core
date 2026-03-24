@@ -3,8 +3,8 @@
  * 定义用户模块内部使用的 TypeScript 类型
  */
 
+import type { Prisma } from '@nexus/infra/database/prisma/generated/client'
 import type { USER_BASE_SELECT } from './user.constants'
-import type { Prisma } from '@/infra/database/prisma/generated/client'
 
 /**
  * 用户基础数据类型（从数据库查询返回）

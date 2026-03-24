@@ -1,5 +1,5 @@
-import type { Prisma } from '@/infra/database/prisma/generated'
-import { prisma } from '@/infra/database/client'
+import type { Prisma } from '@nexus/infra/database/prisma/generated'
+import { prisma } from '@nexus/infra/database/client'
 
 /**
  * 角色数据访问层。

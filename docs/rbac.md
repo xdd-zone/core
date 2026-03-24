@@ -42,7 +42,7 @@ route 中应使用常量，不直接写裸字符串。
 
 - 通过组合 `authPlugin` 提供登录态校验
 - 声明式权限宏
-- handler 可直接消费的 `auth / currentUser / currentSession`
+- handler 可直接使用的 `auth / currentUser / currentSession`
 
 ### route 级声明
 

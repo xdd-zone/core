@@ -5,10 +5,11 @@ XDD Zone Core 是一个基于 Bun 的全栈 monorepo，当前同时包含后端 
 - `@xdd-zone/console`
   - 后台管理前端
   - 基于 `nexus` session 的后台前端
-  - 消费服务端认证与业务接口
+  - 调用服务端认证与业务接口
 - `@xdd-zone/nexus`
   - Elysia API 服务
-  - 服务端接口定义、OpenAPI、权限与认证能力的唯一来源
+  - 统一维护服务端接口定义、OpenAPI、权限与认证能力
+  - `src/eden` 作为仓库内联调共用的 Eden 类型入口
 - `@xdd-zone/eslint-config`
   - 仓库共享的 ESLint / Prettier 配置
 
@@ -22,14 +23,15 @@ XDD Zone Core 是一个基于 Bun 的全栈 monorepo，当前同时包含后端 
 
 ## 架构摘要
 
-- `packages/console` 是后台前端，负责路由、导航、布局与登录态消费
+- `packages/console` 是后台前端，负责路由、导航、布局与登录态处理
 - `packages/nexus` 只维护一套 HTTP 接口定义
 - 固定系统角色为 `superAdmin / admin / user`
 - 权限表达围绕固定角色和稳定权限能力展开
 - `own` 只用于用户自己的资料场景，资源归属判断由具体业务模块自行负责
 - Better Auth 的 HTTP 适配位于 `packages/nexus/src/core/auth/`
 - OpenAPI 作为服务端接口说明导出物保留
-- 仓库内联调与 smoke test 使用 Eden 作为内部类型基线
+- 仓库内联调与 smoke test 使用 Eden 作为共用类型参考
+- console 默认通过 Eden Treaty 调用 nexus，不再手写重复的接口 DTO
 
 ## 仓库结构
 
@@ -165,9 +167,11 @@ bun run --filter @xdd-zone/nexus export:openapi
 当前 `console` 采用的基础模型：
 
 - 路由只区分 public / protected
-- 登录态唯一真相源是 `/api/auth/get-session`
+- 登录态统一以 `/api/auth/get-session` 的结果为准
 - 菜单与路由解耦
 - 细粒度权限以后端 `401 / 403` 为准
+- 默认通过 Eden Treaty 公共请求层调用 nexus 接口
+- 页面层不直接处理 Eden `{ data, error }`，统一经模块 API 适配层拆包
 
 后端接口改动时，优先按下面的职责拆分：
 
@@ -181,6 +185,8 @@ bun run --filter @xdd-zone/nexus export:openapi
   - 负责 Prisma 访问
 - `packages/nexus/openapi/openapi.json`
   - 服务端导出的 OpenAPI 文档产物
+- `packages/nexus/src/eden`
+  - 仓库内共享的 Eden 类型入口
 
 ## 当前能力
 

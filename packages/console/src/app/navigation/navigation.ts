@@ -2,9 +2,9 @@ import type { MenuProps } from 'antd'
 import type { LucideProps } from 'lucide-react'
 import type { ComponentType } from 'react'
 
-import { Crop, FileText, FileText as FileTextIcon, FolderOpen, LayoutDashboard, LayoutTemplate } from 'lucide-react'
+import { renderIcon } from '@console/utils/pathUtils'
 
-import { renderIcon } from '@/utils/pathUtils'
+import { Crop, FileText, FileText as FileTextIcon, FolderOpen, LayoutDashboard, LayoutTemplate } from 'lucide-react'
 
 type MenuItem = Required<MenuProps>['items'][number]
 

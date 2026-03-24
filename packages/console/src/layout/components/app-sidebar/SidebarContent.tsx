@@ -1,7 +1,7 @@
-import { useTranslation } from 'react-i18next'
+import { buildNavigationMenuItems } from '@console/app/navigation/navigation'
 
-import { buildNavigationMenuItems } from '@/app/navigation/navigation'
-import { useSettingStore } from '@/stores'
+import { useSettingStore } from '@console/stores'
+import { useTranslation } from 'react-i18next'
 
 import { NavigationMenu } from '../menu/NavigationMenu'
 
