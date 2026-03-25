@@ -1,5 +1,5 @@
 import type { Prisma } from '@nexus/infra/database/prisma/generated'
-import type { RoleListQuery } from './rbac.contract'
+import type { RoleListQuery } from './model'
 import { NotFoundError } from '@nexus/core/http'
 import { PermissionService } from '@nexus/core/permissions/permission.service'
 import { createPaginatedResponse } from '@nexus/infra/database'
@@ -11,8 +11,9 @@ import {
   UserPermissionsSchema,
   UserRoleAssignmentSchema,
   UserRolesSchema,
-} from './rbac.contract'
-import { RoleRepository, UserRoleRepository } from './repositories'
+} from './model'
+import { RoleRepository } from './role.repository'
+import { UserRoleRepository } from './user-role.repository'
 
 /**
  * RBAC 服务类。

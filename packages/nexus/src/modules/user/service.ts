@@ -1,10 +1,10 @@
-import type { UpdateMyProfileBody, UpdateUserBody, User, UserList, UserListQuery, UserStatus } from './user.contract'
-import type { UserWhereInput } from './user.types'
+import type { UpdateMyProfileBody, UpdateUserBody, User, UserList, UserListQuery, UserStatus } from './model'
+import type { UserWhereInput } from './types'
 import { NotFoundError } from '@nexus/core/http'
 import { buildKeywordSearch } from '@nexus/infra/database'
-import { USER_SEARCH_FIELDS } from './user.constants'
-import { UserListSchema, UserSchema } from './user.contract'
-import { UserRepository } from './user.repository'
+import { USER_SEARCH_FIELDS } from './constants'
+import { UserListSchema, UserSchema } from './model'
+import { UserRepository } from './repository'
 
 /**
  * 用户服务类。

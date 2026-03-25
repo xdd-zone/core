@@ -1,7 +1,7 @@
-import type { SystemRoleName } from '@nexus/modules/rbac/rbac.constants'
+import type { SystemRoleName } from '@nexus/modules/rbac/constants'
 import type pino from 'pino'
 import type { PrismaClient } from '../../generated'
-import { SYSTEM_ROLE_NAMES } from '@nexus/modules/rbac/rbac.constants'
+import { SYSTEM_ROLE_NAMES } from '@nexus/modules/rbac/constants'
 
 const ROLE_DEFINITIONS: Record<SystemRoleName, { displayName: string; description: string }> = {
   superAdmin: {

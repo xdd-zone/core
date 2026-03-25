@@ -5,7 +5,7 @@ import en from './locales/en'
 import zh from './locales/zh'
 
 // 获取浏览器语言或从localStorage获取保存的语言
-function getInitialLanguage (): string {
+function getInitialLanguage(): string {
   if (typeof window !== 'undefined') {
     // 首先尝试从localStorage获取
     const savedLanguage = localStorage.getItem('i18n-language')

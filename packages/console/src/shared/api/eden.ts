@@ -92,7 +92,9 @@ export class ConsoleApiError<TValue = unknown> extends Error {
 }
 
 function resolveConfiguredApiBaseUrl() {
-  return normalizeEdenBaseUrl(import.meta.env.VITE_API_ORIGIN || import.meta.env.VITE_API_ROOT || import.meta.env.VITE_API_BASE_URL)
+  return normalizeEdenBaseUrl(
+    import.meta.env.VITE_API_ORIGIN || import.meta.env.VITE_API_ROOT || import.meta.env.VITE_API_BASE_URL,
+  )
 }
 
 function resolveErrorMessage(status: number, value: unknown) {

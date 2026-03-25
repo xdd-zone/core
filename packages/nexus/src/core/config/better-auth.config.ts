@@ -1,4 +1,4 @@
-import type { RuntimeEnv, YamlConfig  } from './utils'
+import type { RuntimeEnv, YamlConfig } from './utils'
 import { z } from 'zod'
 import { parseOptionalEnv, parseRequiredEnv } from './utils'
 

@@ -1,13 +1,4 @@
 /**
- * RBAC 模块常量配置
- *
- * 说明：
- * - 定义固定系统角色与角色权限映射
- *
- * @module rbac.constants
- */
-
-/**
  * 固定系统角色名称。
  */
 import { Permissions } from '@nexus/core/permissions/permissions'

@@ -1,11 +1,5 @@
 /**
- * User 模块常量
- * 定义用户模块相关的常量配置
- */
-
-/**
- * 用户响应字段选择器
- * 说明：统一选择响应中需要返回的字段，避免返回敏感信息（如密码）
+ * 用户响应字段选择器。
  */
 export const USER_BASE_SELECT = {
   id: true,
@@ -28,7 +22,6 @@ export const USER_BASE_SELECT = {
 } as const
 
 /**
- * 用户关键字搜索字段
- * 说明：定义支持关键字搜索的字段列表
+ * 用户关键字搜索字段。
  */
 export const USER_SEARCH_FIELDS = ['username', 'email', 'name'] as const

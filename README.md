@@ -1,37 +1,17 @@
 # XDD Zone Core
 
-XDD Zone Core 是一个基于 Bun 的全栈 monorepo，当前同时包含后端 API 与后台管理前端，主要由以下包组成：
+XDD Zone Core 是一个基于 Bun 的全栈 monorepo，当前同时维护后台前端和 Elysia API 服务。
+
+主要包：
 
 - `@xdd-zone/console`
   - 后台管理前端
-  - 基于 `nexus` session 的后台前端
-  - 调用服务端认证与业务接口
+  - 负责路由、导航、布局和登录态接入
 - `@xdd-zone/nexus`
   - Elysia API 服务
-  - 统一维护服务端接口定义、OpenAPI、权限与认证能力
-  - `src/eden` 作为仓库内联调共用的 Eden 类型入口
+  - 负责接口、认证、权限、OpenAPI 和 Eden 类型入口
 - `@xdd-zone/eslint-config`
   - 仓库共享的 ESLint / Prettier 配置
-
-新增或修改接口的标准动作如下：
-
-```text
-改 Nexus 接口定义 / route / service / repository
-  -> 导出 OpenAPI
-  -> 用 Eden / OpenAPI / 测试回归
-```
-
-## 架构摘要
-
-- `packages/console` 是后台前端，负责路由、导航、布局与登录态处理
-- `packages/nexus` 只维护一套 HTTP 接口定义
-- 固定系统角色为 `superAdmin / admin / user`
-- 权限表达围绕固定角色和稳定权限能力展开
-- `own` 只用于用户自己的资料场景，资源归属判断由具体业务模块自行负责
-- Better Auth 的 HTTP 适配位于 `packages/nexus/src/core/auth/`
-- OpenAPI 作为服务端接口说明导出物保留
-- 仓库内联调与 smoke test 使用 Eden 作为共用类型参考
-- console 默认通过 Eden Treaty 调用 nexus，不再手写重复的接口 DTO
 
 ## 仓库结构
 
@@ -47,19 +27,36 @@ XDD Zone Core 是一个基于 Bun 的全栈 monorepo，当前同时包含后端 
 └── tsconfig.base.json
 ```
 
-更细一点的服务端结构：
+`packages/nexus/src/` 当前结构：
 
 ```text
 packages/nexus/src/
 ├── app.ts
 ├── server.ts
-├── routes/
+├── index.ts
 ├── modules/
 ├── core/
 ├── infra/
 ├── shared/
 └── eden/
 ```
+
+其中：
+
+- `modules/`
+  - 按功能组织 Elysia 模块
+  - 每个模块的 `index.ts` 直接定义路由入口
+  - `model.ts` 放 HTTP schema
+  - `service.ts` 放业务编排
+  - `repository.ts` 或 `*.repository.ts` 放 Prisma 访问
+- `core/`
+  - 认证、权限、配置、HTTP 基础插件
+- `infra/`
+  - Prisma、数据库辅助能力、日志
+- `shared/`
+  - OpenAPI 辅助函数和通用 schema
+- `eden/`
+  - 仓库内联调与 smoke test 使用的类型入口
 
 ## 技术栈
 
@@ -73,13 +70,13 @@ packages/nexus/src/
 
 ## 快速开始
 
-### 1. 安装依赖
+### 安装依赖
 
 ```bash
 bun install
 ```
 
-### 2. 配置环境变量
+### 配置环境变量
 
 至少需要：
 
@@ -89,14 +86,14 @@ BETTER_AUTH_URL="http://localhost:7788"
 BETTER_AUTH_SECRET="replace-with-a-secure-secret"
 ```
 
-### 3. 准备本地数据库
+### 准备数据库
 
 ```bash
 bun run prisma:generate
 bun run db:local:prepare
 ```
 
-### 4. 启动开发服务
+### 启动开发服务
 
 ```bash
 bun run dev
@@ -146,55 +143,54 @@ bun run seed
 
 # openapi export
 bun run --filter @xdd-zone/nexus export:openapi
-
 ```
 
-## 日常开发模型
+## 开发约定
 
-后台前端改动时，优先按下面的职责拆分：
+前端主要目录：
 
 - `packages/console/src/app/router`
-  - 应用级路由与登录守卫
 - `packages/console/src/app/navigation`
-  - 后台菜单配置
 - `packages/console/src/modules/auth`
-  - session 请求与 auth store
 - `packages/console/src/layout`
-  - 布局、侧边栏、头部、TabBar
 - `packages/console/src/pages`
-  - 页面入口
 
-当前 `console` 采用的基础模型：
+后端主要目录：
 
-- 路由只区分 public / protected
-- 登录态统一以 `/api/auth/get-session` 的结果为准
-- 菜单与路由解耦
-- 细粒度权限以后端 `401 / 403` 为准
-- 默认通过 Eden Treaty 公共请求层调用 nexus 接口
-- 页面层不直接处理 Eden `{ data, error }`，统一经模块 API 适配层拆包
-
-后端接口改动时，优先按下面的职责拆分：
-
-- `packages/nexus/src/modules/*/*.contract.ts`
-  - 定义 body / query / params / response
-- `packages/nexus/src/routes/*.route.ts`
-  - 负责 HTTP 结构、声明式权限、`apiDetail(...)`
-- `packages/nexus/src/modules/*/*.service.ts`
-  - 负责业务编排
-- `packages/nexus/src/modules/*/*.repository.ts`
-  - 负责 Prisma 访问
-- `packages/nexus/openapi/openapi.json`
-  - 服务端导出的 OpenAPI 文档产物
+- `packages/nexus/src/modules/*/index.ts`
+  - 模块路由入口
+- `packages/nexus/src/modules/*/model.ts`
+  - body / query / params / response schema
+- `packages/nexus/src/modules/*/service.ts`
+  - 业务编排
+- `packages/nexus/src/modules/*/repository.ts`
+  - Prisma 访问
+- `packages/nexus/src/shared/openapi`
+  - `apiDetail(...)`
 - `packages/nexus/src/eden`
-  - 仓库内共享的 Eden 类型入口
+  - Eden 类型与 smoke test
 
-## 当前能力
+新增或修改接口时，默认按下面顺序推进：
 
-认证与会话：
+```text
+调整 model
+  -> 调整 service / repository
+  -> 在模块 index.ts 注册路由
+  -> 导出 OpenAPI
+  -> 回归验证
+```
 
-- 注册、登录、登出、获取会话
+## 当前接口
 
-用户资料：
+认证：
+
+- `POST /api/auth/sign-up/email`
+- `POST /api/auth/sign-in/email`
+- `POST /api/auth/sign-out`
+- `GET /api/auth/get-session`
+- `GET /api/auth/me`
+
+用户：
 
 - `GET /api/user/me`
 - `PATCH /api/user/me`
@@ -203,7 +199,7 @@ bun run --filter @xdd-zone/nexus export:openapi
 - `PATCH /api/user/:id`
 - `PATCH /api/user/:id/status`
 
-RBAC 底座：
+RBAC：
 
 - `GET /api/rbac/roles`
 - `GET /api/rbac/users/:userId/roles`
@@ -213,35 +209,18 @@ RBAC 底座：
 - `GET /api/rbac/users/me/roles`
 - `GET /api/rbac/users/me/permissions`
 
-系统角色与权限：
+## 权限模型
 
-- `superAdmin`
-- `admin`
-- `user`
-- `user:read:own`
-- `user:update:own`
-- `user:read:all`
-- `user:update:all`
-- `user:disable:all`
-- `role:read:all`
-- `user_role:assign:all`
-- `user_role:revoke:all`
-- `user_permission:read:own`
-- `user_permission:read:all`
-- `system:manage`
+- 固定角色：`superAdmin / admin / user`
+- 权限以系统内置权限为准
+- `own` 只用于当前用户资料场景
+- 后台前端默认以后端 `401 / 403` 结果为准
 
-## 文档入口
+## 相关文档
 
-- [文档总入口](./docs/index.md)
+- [文档入口](./docs/index.md)
 - [架构说明](./docs/architecture.md)
-- [Console 前端指南](./docs/console.md)
 - [开发指南](./docs/development.md)
 - [API 指南](./docs/api.md)
 - [认证说明](./docs/authentication.md)
 - [RBAC 指南](./docs/rbac.md)
-- [测试指南](./docs/testing.md)
-
-## 包文档
-
-- [packages/console/README.md](./packages/console/README.md)
-- [packages/nexus/README.md](./packages/nexus/README.md)

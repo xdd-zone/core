@@ -7,7 +7,7 @@ export interface RgbColor {
 /**
  * 将十六进制颜色转换为 RGB 值
  */
-export function hexToRgb (hex: string): RgbColor | null {
+export function hexToRgb(hex: string): RgbColor | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   return result
     ? {

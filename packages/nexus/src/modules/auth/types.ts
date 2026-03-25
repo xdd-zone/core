@@ -1,7 +1,7 @@
 import type { Session as PrismaSession, User } from '@nexus/infra/database/prisma/generated'
 
 /**
- * 认证响应
+ * 登录成功后的会话数据。
  */
 export interface AuthSession {
   user: User
@@ -9,7 +9,7 @@ export interface AuthSession {
 }
 
 /**
- * 会话响应
+ * 当前会话数据。
  */
 export interface Session {
   user: User | null

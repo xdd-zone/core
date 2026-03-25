@@ -2,16 +2,13 @@
 
 `@xdd-zone/nexus` 是 XDD Zone Core 的 Elysia API 服务。
 
-## 架构
-
-服务端采用 Elysia-first 结构：
+## 目录结构
 
 ```text
 src/
 ├── index.ts
 ├── app.ts
 ├── server.ts
-├── routes/
 ├── modules/
 ├── core/
 ├── infra/
@@ -21,13 +18,49 @@ src/
 
 职责划分：
 
-- `routes/`：HTTP 路由
-- `modules/`：业务逻辑
-- `core/http/`：HTTP 基础能力与应用装配
-- `core/access-control/`：鉴权与权限声明
-- `core/`：认证、配置、权限、错误处理等核心能力
-- `infra/`：数据库与日志
-- `eden/`：仓库内联调与 smoke test
+- `modules/`
+  - 按功能组织 Elysia 模块
+  - 模块目录内直接放路由入口、model、service、repository
+- `core/http/`
+  - HTTP 基础插件和应用装配
+- `core/access-control/`
+  - 认证上下文与权限声明
+- `core/`
+  - 认证、配置、权限、错误处理等核心能力
+- `infra/`
+  - 数据库与日志
+- `shared/`
+  - OpenAPI 辅助函数与通用 schema
+- `eden/`
+  - 仓库内联调和 smoke test
+
+## 模块结构
+
+推荐结构：
+
+```text
+modules/<feature>/
+├── index.ts
+├── model.ts
+├── service.ts
+├── repository.ts
+├── constants.ts
+└── types.ts
+```
+
+说明：
+
+- `index.ts`
+  - Elysia 路由入口
+  - 定义 prefix、tags、鉴权和 OpenAPI 说明
+- `model.ts`
+  - body / query / params / response schema
+- `service.ts`
+  - 业务编排
+- `repository.ts`
+  - Prisma 查询与写入
+
+不是每个模块都必须包含全部文件。按当前功能需要组织即可。
 
 ## 运行
 
@@ -46,7 +79,6 @@ bun run dev
 ```bash
 bun run dev
 bun run build
-bun run test
 bun run type-check
 bun run prisma:generate
 bun run prisma:migrate
@@ -59,33 +91,31 @@ bun run seed
 
 职责说明：
 
-- `authPlugin`：获取会话，并支持 `auth: 'required'`
-- `permissionPlugin`：组合 `authPlugin`，并负责 `permission`、`own`、`me` 判断
-- `permit.*`：权限宏内部复用的低层工具，不作为 route 主入口
+- `authPlugin`
+  - 提供会话上下文
+  - 支持 `auth: 'required'`
+- `permissionPlugin`
+  - 组合 `authPlugin`
+  - 负责 `permission`、`own`、`me`
 
-语义：
-
-- 未登录：`401`
-- 已登录但无权限：`403`
-
-使用约束：
+约束：
 
 - 固定角色只保留 `superAdmin / admin / user`
 - 权限以当前系统内置权限为准
-- `own` 只用于用户自己的资料场景
-- 角色接口用于角色列表、用户角色分配、用户角色查看与用户权限查看
+- `own` 只用于当前用户资料场景
 
 ## 响应约定
 
 - 成功响应直接返回业务数据
 - 删除或无 body 接口返回 `204`
-- 错误响应统一由错误插件输出
+- 错误响应统一由错误插件处理
 
 ## 开发约定
 
-- route 中直接使用接口定义 schema + service
-- 全局应用装配通过 `core/http` 统一管理
-- 路由鉴权优先使用 `auth: 'required'`、`permission`、`own`、`me`
+- 模块入口 `index.ts` 直接定义路由
+- route schema 与 response schema 统一从模块 `model.ts` 引用
+- service 负责业务编排
+- repository 负责 Prisma 访问
 - OpenAPI 统一使用 `apiDetail(...)`
 
 ## 接口概览

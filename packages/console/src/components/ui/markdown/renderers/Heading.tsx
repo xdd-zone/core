@@ -6,7 +6,7 @@ import { extractText, slugify } from '../utils/slugify'
 
 const headingTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const
 
-function createHeading (level: 1 | 2 | 3 | 4 | 5 | 6) {
+function createHeading(level: 1 | 2 | 3 | 4 | 5 | 6) {
   const tagName = headingTags[level - 1]
 
   return ({

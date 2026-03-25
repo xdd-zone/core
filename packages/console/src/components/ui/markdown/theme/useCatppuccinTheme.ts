@@ -4,6 +4,6 @@ import { useContext } from 'react'
 
 import { MarkdownCatppuccinThemeContext } from './context'
 
-export function useCatppuccinTheme (): CatppuccinThemeId {
+export function useCatppuccinTheme(): CatppuccinThemeId {
   return useContext(MarkdownCatppuccinThemeContext)
 }

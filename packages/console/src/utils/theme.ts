@@ -5,7 +5,7 @@ import { getThemeById } from '../config/catppuccin'
 /**
  * 获取系统是否偏好暗黑模式
  */
-export function getSystemPrefersDark (): boolean {
+export function getSystemPrefersDark(): boolean {
   if (typeof window === 'undefined') return false
   return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
@@ -14,7 +14,7 @@ export function getSystemPrefersDark (): boolean {
  * 更新 HTML 元素的主题属性
  * @param themeId - Catppuccin 主题 ID (latte | frappe | macchiato | mocha)
  */
-export function updateThemeAttribute (themeId: string) {
+export function updateThemeAttribute(themeId: string) {
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('data-theme', themeId)
   }
@@ -24,7 +24,7 @@ export function updateThemeAttribute (themeId: string) {
  * 根据布尔值更新 HTML 元素的主题属性（兼容性函数）
  * @deprecated 请使用 updateThemeAttribute(themeId)
  */
-export function updateThemeAttributeByBool (isDark: boolean) {
+export function updateThemeAttributeByBool(isDark: boolean) {
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('data-theme', isDark ? 'mocha' : 'latte')
   }
@@ -33,7 +33,7 @@ export function updateThemeAttributeByBool (isDark: boolean) {
 /**
  * 将十六进制颜色转换为 RGB 值
  */
-export function hexToRgb (hex: string): { b: number; g: number; r: number } | null {
+export function hexToRgb(hex: string): { b: number; g: number; r: number } | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   return result
     ? {
@@ -47,7 +47,7 @@ export function hexToRgb (hex: string): { b: number; g: number; r: number } | nu
 /**
  * 将十六进制颜色转换为 CSS RGB 值 并添加透明度
  */
-export function hexToRgba (hex: string, alpha: number = 1): string {
+export function hexToRgba(hex: string, alpha: number = 1): string {
   const rgb = hexToRgb(hex)
   if (!rgb) return 'rgba(0, 0, 0, 0)'
 
@@ -57,7 +57,7 @@ export function hexToRgba (hex: string, alpha: number = 1): string {
 /**
  * 将十六进制颜色转换为 HSL 值
  */
-export function hexToHsl (hex: string): { h: number; l: number; s: number } | null {
+export function hexToHsl(hex: string): { h: number; l: number; s: number } | null {
   const rgb = hexToRgb(hex)
   if (!rgb) return null
 
@@ -98,7 +98,7 @@ export function hexToHsl (hex: string): { h: number; l: number; s: number } | nu
 /**
  * 将 HSL 值转换为十六进制颜色
  */
-export function hslToHex (h: number, s: number, l: number): string {
+export function hslToHex(h: number, s: number, l: number): string {
   l /= 100
   const a = (s * Math.min(l, 1 - l)) / 100
   const f = (n: number) => {
@@ -117,7 +117,7 @@ export function hslToHex (h: number, s: number, l: number): string {
  * @param color2 第二个颜色（十六进制）
  * @param ratio 混合比例（0-1），0 表示完全使用 color1，1 表示完全使用 color2
  */
-export function mixColors (color1: string, color2: string, ratio: number): string {
+export function mixColors(color1: string, color2: string, ratio: number): string {
   const rgb1 = hexToRgb(color1)
   const rgb2 = hexToRgb(color2)
 
@@ -134,7 +134,7 @@ export function mixColors (color1: string, color2: string, ratio: number): strin
  * 生成颜色的 shades（深浅变化）
  * 使用白色和黑色混合生成类似 TailwindCSS 的颜色阶梯
  */
-export function generateColorShades (color: string): Record<string, string> {
+export function generateColorShades(color: string): Record<string, string> {
   const shades: Record<string, string> = {}
 
   // TailwindCSS 风格的颜色阶梯混合比例
@@ -168,7 +168,7 @@ export function generateColorShades (color: string): Record<string, string> {
  * 更新主题色的 CSS 自定义属性
  * 同时生成完整的颜色 shades 供 TailwindCSS 使用
  */
-export function updatePrimaryColorAttribute (color: string) {
+export function updatePrimaryColorAttribute(color: string) {
   if (typeof document !== 'undefined') {
     const rgb = hexToRgb(color)
     if (rgb) {
@@ -194,7 +194,7 @@ export function updatePrimaryColorAttribute (color: string) {
 /**
  * 根据主题模式计算实际的暗黑模式状态
  */
-export function calculateIsDark (themeMode: 'light' | 'dark' | 'system'): boolean {
+export function calculateIsDark(themeMode: 'light' | 'dark' | 'system'): boolean {
   switch (themeMode) {
     case 'dark':
       return true
@@ -210,14 +210,14 @@ export function calculateIsDark (themeMode: 'light' | 'dark' | 'system'): boolea
 /**
  * 获取 Catppuccin 主题的完整配置
  */
-export function getCatppuccinThemeConfig (themeId: string): CatppuccinTheme | undefined {
+export function getCatppuccinThemeConfig(themeId: string): CatppuccinTheme | undefined {
   return getThemeById(themeId)
 }
 
 /**
  * 获取指定主题的主色（Blue）
  */
-export function getPrimaryColorByTheme (themeId: string): string {
+export function getPrimaryColorByTheme(themeId: string): string {
   const theme = getThemeById(themeId)
   const blueColor = theme?.colors.find((c) => c.name === 'Blue')
   return blueColor?.value || '#1e66f5'
@@ -226,6 +226,6 @@ export function getPrimaryColorByTheme (themeId: string): string {
 /**
  * 判断主题是否为暗色主题
  */
-export function isDarkTheme (themeId: string): boolean {
+export function isDarkTheme(themeId: string): boolean {
   return ['frappe', 'macchiato', 'mocha'].includes(themeId)
 }

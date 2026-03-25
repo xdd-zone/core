@@ -18,16 +18,6 @@
 - [rbac.md](./rbac.md)
 - [testing.md](./testing.md)
 
-## 如果你要了解架构设计背景
-
-优先阅读：
-
-1. [Elysia-First 设计总览](./design/elysia-first-refactor/README.md)
-2. [原则与关键决策](./design/elysia-first-refactor/01-principles-and-decisions.md)
-3. [目标架构](./design/elysia-first-refactor/02-target-architecture.md)
-4. [开发作战手册](./design/elysia-first-refactor/07-development-playbook.md)
-5. [实施进度](./design/elysia-first-refactor/08-implementation-progress.md)
-
 ## 如果你要开始写后端代码
 
 优先阅读：
@@ -39,11 +29,10 @@
 
 再看代码目录：
 
-- `packages/nexus/src/routes`
 - `packages/nexus/src/modules`
 - `packages/nexus/src/core/access-control`
 - `packages/nexus/src/core/http`
-- `packages/nexus/src/modules/*/*.contract.ts`
+- `packages/nexus/src/modules/*/model.ts`
 
 ## 如果你要修改后台前端
 
@@ -68,7 +57,7 @@
 
 1. [api.md](./api.md)
 2. [development.md](./development.md)
-3. [01-principles-and-decisions.md](./design/elysia-first-refactor/01-principles-and-decisions.md)
+3. [architecture.md](./architecture.md)
 
 修改后至少检查：
 

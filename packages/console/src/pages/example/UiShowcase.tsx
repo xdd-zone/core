@@ -122,7 +122,9 @@ export function UiShowcase() {
     <div className="bg-surface rounded-lg p-6 space-y-12">
       {/* 页面引言 */}
       <div className="pb-8 border-b border-border-subtle">
-        <Title level={2} className="mb-3">组件与主题</Title>
+        <Title level={2} className="mb-3">
+          组件与主题
+        </Title>
         <Paragraph className="text-fg-muted mb-0 text-base">
           这里集中展示 Ant Design 在当前项目主题下的基础表现，以及 Catppuccin 语义色和标准色板的落地效果。
         </Paragraph>
@@ -130,7 +132,9 @@ export function UiShowcase() {
 
       {/* 第一组：基础组件 */}
       <section className="space-y-6">
-        <Title level={4} className="text-fg-muted">基础组件</Title>
+        <Title level={4} className="text-fg-muted">
+          基础组件
+        </Title>
 
         <div className="grid gap-6">
           {/* 按钮 */}
@@ -256,7 +260,9 @@ export function UiShowcase() {
 
       {/* 第二组：复合组件 */}
       <section className="space-y-6">
-        <Title level={4} className="text-fg-muted">复合组件</Title>
+        <Title level={4} className="text-fg-muted">
+          复合组件
+        </Title>
 
         <div className="grid gap-6">
           <Card>
@@ -270,10 +276,25 @@ export function UiShowcase() {
             <div className="space-y-3">
               <Text className="text-fg-muted text-sm">Card 卡片</Text>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <Card title="Default Card" extra={<Button type="link" size="small">More</Button>}>
+                <Card
+                  title="Default Card"
+                  extra={
+                    <Button type="link" size="small">
+                      More
+                    </Button>
+                  }
+                >
                   <Paragraph className="text-fg-muted mb-0">卡片内容区域，展示一般性描述文字。</Paragraph>
                 </Card>
-                <Card title="Hover Card" hoverable extra={<Button type="link" size="small">More</Button>}>
+                <Card
+                  title="Hover Card"
+                  hoverable
+                  extra={
+                    <Button type="link" size="small">
+                      More
+                    </Button>
+                  }
+                >
                   <Paragraph className="text-fg-muted mb-0">可悬停的卡片，交互效果更丰富。</Paragraph>
                 </Card>
                 <Card actions={[<Button key="1">Action</Button>, <Button key="2">Action</Button>]}>
@@ -341,7 +362,9 @@ export function UiShowcase() {
 
       {/* 第三组：数据统计 */}
       <section className="space-y-6">
-        <Title level={4} className="text-fg-muted">数据统计</Title>
+        <Title level={4} className="text-fg-muted">
+          数据统计
+        </Title>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Card>
             <div className="text-center py-2">
@@ -366,7 +389,9 @@ export function UiShowcase() {
 
       {/* 第四组：设计令牌 */}
       <section className="space-y-6">
-        <Title level={4} className="text-fg-muted">设计令牌</Title>
+        <Title level={4} className="text-fg-muted">
+          设计令牌
+        </Title>
 
         <div className="grid gap-6">
           {/* Catppuccin 标准色 - 渐进式布局 */}
@@ -376,15 +401,21 @@ export function UiShowcase() {
               <div className="space-y-4">
                 {/* 第一行：暖色系 */}
                 <div className="flex gap-2">
-                  <div className="bg-rosewater flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">rosewater</div>
-                  <div className="bg-flamingo flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">flamingo</div>
+                  <div className="bg-rosewater flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">
+                    rosewater
+                  </div>
+                  <div className="bg-flamingo flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">
+                    flamingo
+                  </div>
                   <div className="bg-pink flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">pink</div>
                   <div className="bg-mauve flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">mauve</div>
                 </div>
                 {/* 第二行：红橙黄 */}
                 <div className="flex gap-2">
                   <div className="bg-red flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">red</div>
-                  <div className="bg-maroon flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">maroon</div>
+                  <div className="bg-maroon flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">
+                    maroon
+                  </div>
                   <div className="bg-peach flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">peach</div>
                   <div className="bg-yellow flex-1 rounded-lg p-4 text-center text-sm font-medium">yellow</div>
                 </div>
@@ -397,8 +428,12 @@ export function UiShowcase() {
                 </div>
                 {/* 第四行：蓝紫 */}
                 <div className="flex gap-2">
-                  <div className="bg-sapphire flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">sapphire</div>
-                  <div className="bg-lavender flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">lavender</div>
+                  <div className="bg-sapphire flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">
+                    sapphire
+                  </div>
+                  <div className="bg-lavender flex-1 rounded-lg p-4 text-center text-white font-medium text-sm">
+                    lavender
+                  </div>
                   <div className="flex-1" />
                   <div className="flex-1" />
                 </div>

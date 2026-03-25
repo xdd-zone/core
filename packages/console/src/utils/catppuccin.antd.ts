@@ -366,7 +366,7 @@ const MOCHA_COMPONENTS = {
  * @param themeId - 主题 ID (latte | frappe | macchiato | mocha)
  * @returns Ant Design ThemeConfig
  */
-export function getAntdThemeConfig (themeId: string): ThemeConfig {
+export function getAntdThemeConfig(themeId: string): ThemeConfig {
   const baseConfig = {
     components: {},
     token: {

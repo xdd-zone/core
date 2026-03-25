@@ -1,15 +1,15 @@
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
-import { z } from 'zod'
-
-const HealthSchema = z.object({
-  status: z.literal('ok'),
-})
+import { HealthSchema } from './model'
 
 /**
- * 基础健康检查路由。
+ * 健康检查模块。
  */
-export const healthRoutes = new Elysia({ prefix: '/health' }).get(
+export const healthModule = new Elysia({
+  name: 'health-module',
+  prefix: '/health',
+  tags: ['Health'],
+}).get(
   '/',
   () => ({
     status: 'ok' as const,
@@ -18,8 +18,10 @@ export const healthRoutes = new Elysia({ prefix: '/health' }).get(
     response: HealthSchema,
     detail: apiDetail({
       summary: '健康检查',
-      description: '返回服务当前可用状态',
+      description: '返回服务当前可用状态。',
       response: HealthSchema,
     }),
   },
 )
+
+export * from './model'

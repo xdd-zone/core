@@ -49,7 +49,7 @@ export interface SettingState extends BaseStore {
  * 获取初始主题状态
  * 在 store 初始化时同步计算，避免闪烁
  */
-function getInitialThemeState () {
+function getInitialThemeState() {
   // 尝试从 localStorage 获取持久化的 themeMode
   let themeMode: 'light' | 'dark' | 'system' = 'system'
   // Catppuccin 默认主题

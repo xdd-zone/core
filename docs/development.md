@@ -18,9 +18,9 @@ bun run db:local:prepare
 
 新增或修改公共 API 时，默认按下面顺序推进：
 
-1. 改 Nexus 接口定义
-2. 改 service / repository
-3. 改 route
+1. 改模块 `model.ts`
+2. 改 `service.ts / repository.ts`
+3. 在模块 `index.ts` 注册或调整路由
 4. 导出 OpenAPI
 5. 完成 Eden / OpenAPI / 权限回归
 
@@ -35,21 +35,51 @@ packages/nexus
 修改后台前端时，默认按下面顺序推进：
 
 1. 确认 `nexus` 现有接口和登录态约定
-2. 先接 `console` 的 Eden 公共请求层或模块 API 适配层，再改 `app/router`、`app/navigation` 或 `modules/auth`
-3. 对齐登录页、导航或页面入口
+2. 先接 `console` 的 Eden 公共请求层或模块 API 适配层
+3. 再改 `app/router`、`app/navigation`、`layout` 或页面
 4. 完成 `lint / type-check / build`
 
-也就是：
-
-```text
-packages/nexus 认证与接口约定
-  -> packages/console 路由 / 导航 / auth
-  -> 验证
-```
-
-当前实现采用固定角色、固定权限和用户资料管理的接口模型，新增接口时优先复用现有角色、权限和用户资料相关约定。
-
 ## 代码放哪一层
+
+### `packages/nexus/src/modules/*/index.ts`
+
+放：
+
+- 模块 Elysia 实例
+- prefix / tags
+- route schema 绑定
+- `apiDetail(...)`
+- `auth / permission / own / me`
+- 调用当前模块 service
+
+不要在这里放：
+
+- Prisma 查询
+- 散落的业务判断
+- Better Auth 底层适配细节
+
+### `packages/nexus/src/modules/*/model.ts`
+
+放：
+
+- body / query / params schema
+- 成功 response schema
+- route 复用的 HTTP 类型
+
+### `packages/nexus/src/modules/*/service.ts`
+
+放：
+
+- 业务编排
+- 资源存在性校验
+- 领域层判断
+
+### `packages/nexus/src/modules/*/repository.ts`
+
+放：
+
+- Prisma 查询与写入
+- 数据选择与持久化细节
 
 ### `packages/console/src/app/router/*`
 
@@ -58,24 +88,7 @@ packages/nexus 认证与接口约定
 - TanStack Router 路由树
 - `beforeLoad` 登录校验与重定向
 - 根路径重定向
-- 路由元信息（`staticData`）
-
-不要在这里放：
-
-- 业务接口请求
-- 角色/权限枚举裁剪逻辑
-
-### `packages/console/src/app/query-client.ts`
-
-放：
-
-- QueryClient 初始化
-- query 默认策略
-
-不要在这里放：
-
-- 业务页面 query 定义
-- 页面组件逻辑
+- 路由元信息
 
 ### `packages/console/src/app/navigation/*`
 
@@ -83,11 +96,6 @@ packages/nexus 认证与接口约定
 
 - 侧边栏与移动端菜单配置
 - 菜单分组与展示顺序
-
-不要在这里放：
-
-- 登录态判断
-- 业务接口权限判断
 
 ### `packages/console/src/modules/auth/*`
 
@@ -100,65 +108,13 @@ packages/nexus 认证与接口约定
 - auth query
 - auth store 中的会话快照使用范围
 
-不要在这里放：
-
-- 页面渲染逻辑
-- 业务页面数据请求
-- 页面层直接处理 Eden `{ data, error }`
-
-### `packages/nexus/src/modules/*/*.contract.ts`
-
-放：
-
-- body / query / params schema
-- 成功 response schema
-- route 可复用的 HTTP 类型定义
-
-### `packages/nexus/src/routes/*.route.ts`
-
-放：
-
-- prefix / tags
-- route schema 绑定
-- `apiDetail(...)`
-- `auth / permission / own / me`
-- 调用 service
-
-不要在这里放：
-
-- Prisma 查询
-- 散落的业务权限逻辑
-- Better Auth glue code
-- `AuthService.getSession(request.headers)` 这类会话解析
-
-route handler 优先直接使用：
-
-- `auth`
-- `currentUser`
-- `currentSession`
-
-### `packages/nexus/src/modules/*/*.service.ts`
-
-放：
-
-- 业务编排
-- 资源存在性校验
-- 领域层判断
-
-### `packages/nexus/src/modules/*/*.repository.ts`
-
-放：
-
-- Prisma 查询与写入
-- 数据选择与持久化细节
-
 ## 新增接口的推荐流程
 
-### 第 1 步：定义接口
+### 第 1 步：定义接口 schema
 
 推荐位置：
 
-- `packages/nexus/src/modules/<name>/<name>.contract.ts`
+- `packages/nexus/src/modules/<name>/model.ts`
 
 至少明确：
 
@@ -174,12 +130,12 @@ route handler 优先直接使用：
 - Prisma 访问下沉到 repository
 - service 只保留业务编排
 
-### 第 3 步：实现 route
+### 第 3 步：在模块入口注册路由
 
-推荐 route 写法：
+推荐写法：
 
 ```ts
-export const userRoutes = new Elysia({
+export const userModule = new Elysia({
   prefix: '/user',
   tags: ['User'],
 })
@@ -205,129 +161,9 @@ export const userRoutes = new Elysia({
 })
 ```
 
-own / me 场景时：
+### 第 4 步：验证
 
-```ts
-.get('/:id', handler, {
-  own: Permissions.USER.READ_OWN,
-})
-
-.get('/users/me/permissions', handler, {
-  auth: 'required',
-  me: Permissions.USER_PERMISSION.READ_OWN,
-})
-```
-
-### route 层禁止项
-
-看到下面这些写法时，默认说明分层又开始回漂了：
-
-- 在 route handler 里直接调用 `AuthService.getSession(...)`
-- 在 route handler 里手写 `401 / 403` 判断
-- 在 route handler 里写 Prisma 查询
-- 为了“方便”重新绕回低层鉴权 helper
-
-### 第 4 步：导出 OpenAPI
-
-执行：
-
-```bash
-bun run --filter @xdd-zone/nexus export:openapi
-```
-
-这会完成：
-
-- 导出最新的 OpenAPI JSON 产物
-- 校验导出产物写入默认 OpenAPI 目录
-
-### 第 5 步：回归验证
-
-至少考虑：
-
-- happy path
-- 参数错误
-- `401`
-- `403`
-- `204`
-- own / me
-- console 模块 API 适配层是否仍然只暴露语义化方法
-
-## Console 接口接入约定
-
-- `packages/nexus` 统一维护服务端 HTTP 接口定义
-- `packages/console` 默认通过 Eden Treaty 调用 `nexus`
-- 新增 console 接口时，优先走：
-
-```text
-shared/api Eden 公共请求层
-  -> modules/<domain> API 适配层
-  -> query / store / page
-```
-
-- 页面层不要直接写 Eden 路径调用，例如 `api.auth['sign-in'].email.post(...)`
-- 带中划线的 route path 允许保留在后端，前端通过模块 API 适配层封装成语义化方法
-- 需要共享类型时，优先从 `@xdd-zone/nexus/eden` 获取 Eden 类型参考，而不是手写第二套 DTO
-
-## 插件与权限选择
-
-### 公开接口，只想读取可选 session
-
-使用 `authPlugin`。
-
-### 必须登录，但没有权限分层
-
-优先直接在 route 上使用：
-
-```ts
-auth: 'required'
-```
-
-需要一组路由都要求登录时，也优先使用 `authPlugin`，并在每个 route 上显式声明 `auth: 'required'`。
-
-### 需要权限判断
-
-使用 `permissionPlugin`，并在 route 配置里声明：
-
-- `permission`
-- `own`
-- `me`
-
-## 响应约定
-
-### 成功响应
-
-直接返回业务数据：
-
-```ts
-return user
-return { items, total, page, pageSize, totalPages }
-```
-
-### 无 body 操作
-
-```ts
-set.status = 204
-```
-
-### 错误响应
-
-统一交给错误插件，不在 handler 内手动拼错误结构。
-
-## OpenAPI 写法
-
-统一通过 `apiDetail(...)` 描述：
-
-```ts
-detail: apiDetail({
-  summary: '更新用户状态',
-  response: UserSchema,
-  errors: [400, 401, 403, 404],
-})
-```
-
-## 本地验证建议
-
-### 最小检查
+至少执行：
 
 ```bash
 bun run format
@@ -335,73 +171,40 @@ bun run lint
 bun run type-check
 ```
 
-### 只改 `console`
+如果涉及公共 API，再补：
 
-```bash
-bun run lint:console
-bun run --filter @xdd-zone/console type-check
-bun run build:console
-```
+- OpenAPI 导出
+- Eden smoke test
 
-联调时额外确认：
+## 命名建议
 
-- `/login` 是否可访问
-- 登录后是否跳转 `/dashboard`
-- 刷新页面后是否仍能通过 `/api/auth/get-session` 恢复 session
-- 退出登录后是否回到 `/login`
+模块目录统一使用：
 
-### 改了接口定义 / route / OpenAPI
+- `index.ts`
+- `model.ts`
+- `service.ts`
+- `repository.ts`
+- `constants.ts`
+- `types.ts`
 
-```bash
-bun run --filter @xdd-zone/nexus export:openapi
-bun run --filter @xdd-zone/nexus type-check
-bun run --filter @xdd-zone/nexus test
-```
+说明：
 
-### 改了 auth / permission / own / me
+- `model.ts` 表达 HTTP schema，不表示 Prisma model
+- schema 命名继续使用 `UserSchema`、`RoleListSchema` 这类写法
+- 模块实例统一使用 `userModule`、`authModule`、`rbacModule`
 
-```bash
-bun run --filter @xdd-zone/nexus test
-bun run --filter @xdd-zone/nexus export:openapi
-```
+## 类型安全要求
 
-### 改了 RBAC / 用户底座
+- 禁止 `any`
+- route 的 `body / query / params / response` 优先从模块 `model.ts` 推导
+- repository 优先复用 Prisma 生成类型
+- service 方法签名写清楚入参与返回值
 
-```bash
-bun run --filter @xdd-zone/nexus test
-bun run --filter @xdd-zone/nexus export:openapi
-bun run --filter @xdd-zone/nexus type-check
-```
+## 收尾检查
 
-## 本地数据库
+完成代码后，再做一次检查：
 
-仓库提供统一的本地数据库入口：
-
-```bash
-bun run db:local:up
-bun run db:local:down
-bun run db:local:reset
-bun run db:local:status
-bun run db:local:prepare
-```
-
-默认连接信息：
-
-- host: `localhost`
-- port: `55432`
-- database: `xdd_core_local`
-- user: `xdd`
-- password: `xdd_local_dev`
-
-`packages/nexus` 的测试与 Prisma 操作可直接复用这套本地数据库配置。
-
-## AI 生成代码建议
-
-如果通过 AI 在仓库中生成或修改代码，优先使用 `xdd-zone-codegen` 项目 Skill。
-
-建议按下面的顺序推进：
-
-- 先定义 Nexus 接口
-- 再写 route / service / repository
-- 公共 API 变更后同步检查 OpenAPI 导出与 Nexus 测试
-- 避免重新维护第二套接口定义
+- 搜索是否残留 `any` 或 `as any`
+- 检查 `model / service / repository` 是否职责清楚
+- 检查模块入口是否已经声明正确的鉴权
+- 检查 OpenAPI 与 Eden 是否还能正常工作

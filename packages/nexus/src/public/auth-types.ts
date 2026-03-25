@@ -5,4 +5,4 @@ export type {
   Session,
   SignInEmailBody,
   SignUpEmailBody,
-} from '../modules/auth/auth.contract'
+} from '../modules/auth/model'

@@ -4,7 +4,7 @@
  * - 空白转换为 `-`，并归一化为小写
  * - 当清洗后为空时，回退为 `encodeURIComponent` 保障可用性
  */
-export function slugify (input: string): string {
+export function slugify(input: string): string {
   const base = input.trim()
   if (base.length === 0) return ''
   const cleaned = base
@@ -20,7 +20,7 @@ export function slugify (input: string): string {
  * - 支持字符串、数组与含 `props.children` 的对象
  * - 用于从标题组件的复杂子节点中提取纯文本
  */
-export function extractText (node: unknown): string {
+export function extractText(node: unknown): string {
   if (typeof node === 'string') return node
   if (Array.isArray(node)) return node.map((n) => extractText(n)).join('')
   if (node && typeof node === 'object' && 'props' in (node as Record<string, unknown>)) {

@@ -84,10 +84,10 @@ export default defineConfig(({ mode }) => {
             }
             // Ant Design 生态包统一归组
             if (
-              packageName === 'antd'
-              || packageName.startsWith('@ant-design/')
-              || packageName.startsWith('@rc-component/')
-              || packageName.startsWith('rc-')
+              packageName === 'antd' ||
+              packageName.startsWith('@ant-design/') ||
+              packageName.startsWith('@rc-component/') ||
+              packageName.startsWith('rc-')
             ) {
               return 'vendor-antd'
             }

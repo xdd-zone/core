@@ -1,16 +1,12 @@
-import type { Session } from './auth.types'
+import type { Session } from './types'
 import { auth } from '@nexus/core/auth'
 
 /**
- * 认证服务类
- *
- * 注意：
- * - Better Auth 标准端点（注册、登录、登出、获取会话）直接通过适配层透传
- * - 本服务只负责读取当前会话，供底座型自定义端点复用
+ * 认证服务类。
  */
 export class AuthService {
   /**
-   * 获取当前会话
+   * 获取当前会话。
    */
   static async getSession(headers: Headers | HeadersInit): Promise<Session> {
     try {

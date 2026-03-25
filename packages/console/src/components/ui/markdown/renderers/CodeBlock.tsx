@@ -18,7 +18,7 @@ import { useMarkdownTheme } from '../theme/useTheme'
 
 type PreProps = JSX.IntrinsicElements['pre']
 
-function useHighlighter () {
+function useHighlighter() {
   return useMemo(() => createClientHighlighter(), [])
 }
 

@@ -57,7 +57,7 @@ interface MarkdownProps {
  * - 通过 `overrides` 将各 HTML 标签映射到自定义渲染组件
  * - 集成文本选择弹窗（复制）与右侧目录（TOC）
  */
-function MarkdownInner ({ accentColor, className, md }: { accentColor?: string; className?: string; md: string }) {
+function MarkdownInner({ accentColor, className, md }: { accentColor?: string; className?: string; md: string }) {
   const theme = useMarkdownTheme()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const { copy, onMouseUp, position, visible } = useSelectionPopup(containerRef)
@@ -120,7 +120,14 @@ function MarkdownInner ({ accentColor, className, md }: { accentColor?: string; 
  * - 支持传入自定义主题 `MarkdownTheme`，否则使用默认主题
  * - 使用 ErrorBoundary 捕获渲染错误，防止异常 Markdown 导致崩溃
  */
-export function Markdown({ accentColor, catppuccinTheme, children, className, theme, value }: MarkdownProps): ReactNode {
+export function Markdown({
+  accentColor,
+  catppuccinTheme,
+  children,
+  className,
+  theme,
+  value,
+}: MarkdownProps): ReactNode {
   const md = value ?? children ?? ''
   return (
     <MarkdownThemeProvider catppuccinTheme={catppuccinTheme} theme={theme}>

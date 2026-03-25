@@ -1,9 +1,9 @@
 import type { PermissionString } from '@nexus/core/permissions/permissions.types'
-import type { SystemRoleName } from '@nexus/modules/rbac/rbac.constants'
+import type { SystemRoleName } from '@nexus/modules/rbac/constants'
 import type pino from 'pino'
 import type { PrismaClient } from '../../generated'
 import { parsePermission } from '@nexus/core/permissions/helpers'
-import { SYSTEM_ROLE_NAMES, SYSTEM_ROLE_PERMISSION_KEYS } from '@nexus/modules/rbac/rbac.constants'
+import { SYSTEM_ROLE_NAMES, SYSTEM_ROLE_PERMISSION_KEYS } from '@nexus/modules/rbac/constants'
 
 /**
  * 初始化固定角色与权限映射。

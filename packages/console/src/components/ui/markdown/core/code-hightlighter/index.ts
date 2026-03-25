@@ -48,18 +48,18 @@ const LANGUAGE_ALIASES: Record<string, SupportedLanguage> = {
   zsh: 'shellscript',
 }
 
-type SupportedLanguage
-  = | 'css'
-    | 'html'
-    | 'javascript'
-    | 'json'
-    | 'jsx'
-    | 'markdown'
-    | 'shellscript'
-    | 'text'
-    | 'tsx'
-    | 'typescript'
-    | 'yaml'
+type SupportedLanguage =
+  | 'css'
+  | 'html'
+  | 'javascript'
+  | 'json'
+  | 'jsx'
+  | 'markdown'
+  | 'shellscript'
+  | 'text'
+  | 'tsx'
+  | 'typescript'
+  | 'yaml'
 
 interface ShikiLanguageModule {
   default: LanguageInput
@@ -86,7 +86,7 @@ const LANGUAGE_LOADERS: Record<Exclude<SupportedLanguage, 'text'>, () => Promise
  * - 常见别名归一化到统一语言名
  * - 不支持的语言回退为 text
  */
-function normalizeLanguage (lang: string): SupportedLanguage {
+function normalizeLanguage(lang: string): SupportedLanguage {
   const normalizedLang = lang.trim().toLowerCase()
 
   if (!normalizedLang) return 'text'
@@ -106,7 +106,7 @@ function normalizeLanguage (lang: string): SupportedLanguage {
  */
 let singleton: HighlighterCore | null = null
 
-export function createClientHighlighter (): HighlighterCore | null {
+export function createClientHighlighter(): HighlighterCore | null {
   if (typeof window === 'undefined') return null
   const key = '__shiki_highlighter_singleton__'
   const store = globalThis as unknown as Record<string, unknown>
@@ -128,7 +128,7 @@ export function createClientHighlighter (): HighlighterCore | null {
  * - 仅加载白名单中的基础语言
  * - 未支持的语言回退为 text，不额外加载语言包
  */
-export async function ensureLanguageLoaded (highlighter: HighlighterCore, lang: string) {
+export async function ensureLanguageLoaded(highlighter: HighlighterCore, lang: string) {
   const normalizedLang = normalizeLanguage(lang)
 
   if (normalizedLang === 'text') return
@@ -148,7 +148,10 @@ export async function ensureLanguageLoaded (highlighter: HighlighterCore, lang: 
  * - 支持根据 Catppuccin 主题 ID 选择对应的高亮主题
  * - 支持 diff、高亮、单词高亮、行高亮等标注
  */
-export function codeToHtml (highlighter: HighlighterCore, { attrs, code, lang, themeId }: { attrs?: string; code: string; lang: string; themeId?: string }) {
+export function codeToHtml(
+  highlighter: HighlighterCore,
+  { attrs, code, lang, themeId }: { attrs?: string; code: string; lang: string; themeId?: string },
+) {
   const shikiTheme = themeId ? (CATPUCCIN_TO_SHIKI_THEME[themeId] ?? 'catppuccin-latte') : 'catppuccin-latte'
   const normalizedLang = normalizeLanguage(lang)
 

@@ -2,12 +2,12 @@ import type { TocItem, UseTocOptions } from './types'
 
 import { useCallback, useEffect, useState } from 'react'
 
-function getHeadingLevel (tagName: string): number {
+function getHeadingLevel(tagName: string): number {
   const n = Number(tagName.replace(/^H/i, ''))
   return Number.isFinite(n) ? n : 6
 }
 
-function getScrollParent (el: HTMLElement): Window | HTMLElement {
+function getScrollParent(el: HTMLElement): Window | HTMLElement {
   let node: HTMLElement | null = el.parentElement
   while (node) {
     const style = window.getComputedStyle(node)
@@ -24,7 +24,7 @@ function getScrollParent (el: HTMLElement): Window | HTMLElement {
 /**
  * 提取标题文本，处理多种节点类型
  */
-function getHeadingText (node: HTMLElement): string {
+function getHeadingText(node: HTMLElement): string {
   const textFromTextNodes = Array.from(node.childNodes)
     .map((n) => (n.nodeType === Node.TEXT_NODE ? (n.textContent ?? '') : ''))
     .join('')
@@ -35,7 +35,11 @@ function getHeadingText (node: HTMLElement): string {
 /**
  * 计算 Window 滚动进度
  */
-function computeProgressForWindow (container: HTMLElement,  containerRect: DOMRect,  items: TocItem[]): { activeId: string; progress: number } {
+function computeProgressForWindow(
+  container: HTMLElement,
+  containerRect: DOMRect,
+  items: TocItem[],
+): { activeId: string; progress: number } {
   const headings = items
     .map((item) => ({ el: document.getElementById(item.id), item }))
     .filter((x): x is { el: HTMLElement; item: TocItem } => Boolean(x.el))
@@ -62,7 +66,12 @@ function computeProgressForWindow (container: HTMLElement,  containerRect: DOMRe
 /**
  * 计算元素内滚动进度
  */
-function computeProgressForElement (container: HTMLElement,  containerRect: DOMRect,  scrollParent: HTMLElement,  items: TocItem[]): { activeId: string; progress: number } {
+function computeProgressForElement(
+  container: HTMLElement,
+  containerRect: DOMRect,
+  scrollParent: HTMLElement,
+  items: TocItem[],
+): { activeId: string; progress: number } {
   const headings = items
     .map((item) => ({ el: document.getElementById(item.id), item }))
     .filter((x): x is { el: HTMLElement; item: TocItem } => Boolean(x.el))
@@ -85,11 +94,7 @@ function computeProgressForElement (container: HTMLElement,  containerRect: DOMR
   return { activeId: currentId, progress }
 }
 
-export function useToc ({
-  containerRef,
-  maxLevel = 6,
-  minLevel = 1,
-}: UseTocOptions): {
+export function useToc({ containerRef, maxLevel = 6, minLevel = 1 }: UseTocOptions): {
   activeId: string
   items: TocItem[]
   progress: number

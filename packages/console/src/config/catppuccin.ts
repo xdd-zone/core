@@ -92,11 +92,11 @@ export const catppuccinThemes: CatppuccinTheme[] = [
   },
 ]
 
-export function getThemeById (id: string): CatppuccinTheme | undefined {
+export function getThemeById(id: string): CatppuccinTheme | undefined {
   return catppuccinThemes.find((theme) => theme.id === id)
 }
 
-export function getThemeColors (id: string): CatppuccinColor[] | null {
+export function getThemeColors(id: string): CatppuccinColor[] | null {
   const theme = getThemeById(id)
   return theme ? theme.colors : null
 }
