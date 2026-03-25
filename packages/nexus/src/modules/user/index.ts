@@ -1,4 +1,4 @@
-import { assertAuthenticated, authPlugin, permissionPlugin, Permissions } from '@nexus/core/access-control'
+import { accessPlugin, assertAuthenticated, Permissions } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
 import {
@@ -21,8 +21,7 @@ export const userModule = new Elysia({
   prefix: '/user',
   tags: ['User'],
 })
-  .use(authPlugin)
-  .use(permissionPlugin)
+  .use(accessPlugin)
   .get(
     '/me',
     async ({ auth }) => {

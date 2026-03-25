@@ -20,7 +20,8 @@ bun run --filter @xdd-zone/nexus test
 
 覆盖内容：
 
-- `authPlugin` 基础行为
+- `core/security/plugins/auth.plugin.ts` 基础行为
+- `core/security/plugins/access.plugin.ts` 基础行为
 - `permission / own / me` 基础行为
 - Eden typed smoke：
   - `/api/health`

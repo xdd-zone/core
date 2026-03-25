@@ -30,7 +30,7 @@
 再看代码目录：
 
 - `packages/nexus/src/modules`
-- `packages/nexus/src/core/access-control`
+- `packages/nexus/src/core/security`
 - `packages/nexus/src/core/http`
 - `packages/nexus/src/modules/*/model.ts`
 

@@ -1,21 +1,15 @@
 /**
  * 固定系统角色名称。
  */
-import { Permissions } from '@nexus/core/permissions/permissions'
+import type { SystemRoleName } from '@nexus/core/security/permissions'
+import { Permissions } from '@nexus/core/security/permissions'
 
-export const SYSTEM_ROLE_NAMES = ['superAdmin', 'admin', 'user'] as const
-
-export type SystemRoleName = (typeof SYSTEM_ROLE_NAMES)[number]
-
-/**
- * 默认注册角色。
- */
-export const DEFAULT_ROLE_NAME: SystemRoleName = 'user'
-
-/**
- * 首个用户默认角色。
- */
-export const FIRST_USER_ROLE_NAME: SystemRoleName = 'superAdmin'
+export {
+  DEFAULT_ROLE_NAME,
+  FIRST_USER_ROLE_NAME,
+  SYSTEM_ROLE_NAMES,
+} from '@nexus/core/security/permissions'
+export type { SystemRoleName }
 
 /**
  * 固定角色权限映射。

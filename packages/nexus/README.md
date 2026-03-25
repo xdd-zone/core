@@ -23,10 +23,10 @@ src/
   - 模块目录内直接放路由入口、model、service、repository
 - `core/http/`
   - HTTP 基础插件和应用装配
-- `core/access-control/`
-  - 认证上下文与权限声明
-- `core/`
-  - 认证、配置、权限、错误处理等核心能力
+- `core/security/`
+  - 认证上下文、守卫、插件和权限能力
+- `core/config/`
+  - 应用配置
 - `infra/`
   - 数据库与日志
 - `shared/`
@@ -91,17 +91,23 @@ bun run seed
 
 职责说明：
 
-- `authPlugin`
+- `core/security/auth/`
+  - 接入 Better Auth
+  - 解析 session
+  - 处理登出
+- `core/security/plugins/auth.plugin.ts`
   - 提供会话上下文
   - 支持 `auth: 'required'`
-- `permissionPlugin`
-  - 组合 `authPlugin`
+- `core/security/plugins/access.plugin.ts`
+  - 组合认证上下文和权限守卫
   - 负责 `permission`、`own`、`me`
+- `core/security/permissions/`
+  - 维护权限常量和权限查询
 
 约束：
 
 - 固定角色只保留 `superAdmin / admin / user`
-- 权限以当前系统内置权限为准
+- 权限以 `core/security/permissions/permissions.ts` 为准
 - `own` 只用于当前用户资料场景
 
 ## 响应约定

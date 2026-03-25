@@ -1,5 +1,4 @@
-import { UserStatusSchema } from '@nexus/modules/user/model'
-import { DateTimeSchema } from '@nexus/shared/schema'
+import { DateTimeSchema, UserStatusSchema } from '@nexus/shared/schema'
 import { z } from 'zod'
 
 export const AuthSessionRecordSchema = z.object({

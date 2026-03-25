@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+/**
+ * 用户状态。
+ */
+export const UserStatusSchema = z.enum(['ACTIVE', 'INACTIVE', 'BANNED'])
+export type UserStatus = z.infer<typeof UserStatusSchema>
+
 export const ApiErrorSchema = z.object({
   code: z.number(),
   message: z.string(),

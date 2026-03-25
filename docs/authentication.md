@@ -1,10 +1,10 @@
 # 认证说明
 
-项目使用 Better Auth 处理登录态，Elysia 层通过 `core/access-control` 提供认证上下文和权限声明。
+项目使用 Better Auth 处理登录态，Elysia 层通过 `core/security` 提供认证上下文、守卫和权限声明。
 
 ## 职责划分
 
-### `authPlugin`
+### `core/security/plugins/auth.plugin.ts`
 
 负责：
 
@@ -18,11 +18,12 @@
 - 公开接口读取可选 session
 - 少量必须登录的接口直接声明 `auth: 'required'`
 
-### `permissionPlugin`
+### `core/security/plugins/access.plugin.ts`
 
 负责：
 
-- 组合 `authPlugin`
+- 组合认证上下文和权限守卫
+- 支持 route 级 `auth: 'required'`
 - 在已登录前提下执行权限判断
 - 支持 route 级：
   - `permission`
@@ -32,24 +33,36 @@
 适合：
 
 - 需要 RBAC 的接口
+- 需要登录且同时使用权限声明的接口
 
 使用约束：
 
 - `own` 只用于用户自己的资料场景
 - 固定角色只保留 `superAdmin / admin / user`
+- 只要求登录且不需要权限声明时，优先使用 `authPlugin`
 
 ## Better Auth 适配位置
 
 Better Auth 的 HTTP 适配位于：
 
-- `packages/nexus/src/core/auth/auth.ts`
-- `packages/nexus/src/core/auth/better-auth.adapter.ts`
+- `packages/nexus/src/core/security/auth/auth-api.service.ts`
+- `packages/nexus/src/core/security/auth/better-auth.ts`
+- `packages/nexus/src/core/security/auth/better-auth.adapter.ts`
+- `packages/nexus/src/core/security/auth/session.service.ts`
 
-其中 adapter 负责：
+其中：
 
+- `auth-api.service.ts`
+  - 处理登录、注册、登出这些认证接口动作
 - Better Auth response 透传
-- sign-out 幂等撤销
-- cookie 清理
+- `better-auth.adapter.ts`
+  - 负责 Better Auth response 透传
+  - 负责 sign-out 幂等撤销
+  - 负责 cookie 清理
+
+固定角色名称位于：
+
+- `packages/nexus/src/core/security/permissions/role.constants.ts`
 
 认证模块入口位于：
 
@@ -101,7 +114,7 @@ export const authModule = new Elysia()
 
 ```ts
 export const userModule = new Elysia()
-  .use(permissionPlugin)
+  .use(accessPlugin)
   .get('/', ({ query }) => UserService.list(query), {
     permission: Permissions.USER.READ_ALL,
     query: UserListQuerySchema,
@@ -117,7 +130,13 @@ export const userModule = new Elysia()
 - `currentUser`
 - `currentSession`
 
-大多数场景不需要在 handler 内自己调用 `AuthService.getSession(...)`。
+大多数场景不需要在 handler 内自己读取当前会话。
+
+使用 `accessPlugin` 时，handler 里同样可以直接拿到：
+
+- `auth`
+- `currentUser`
+- `currentSession`
 
 ## 状态码语义
 

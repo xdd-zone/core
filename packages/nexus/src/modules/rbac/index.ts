@@ -1,4 +1,4 @@
-import { assertAuthenticated, authPlugin, permissionPlugin, Permissions } from '@nexus/core/access-control'
+import { accessPlugin, assertAuthenticated, Permissions } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
 import {
@@ -25,8 +25,7 @@ export const rbacModule = new Elysia({
   prefix: '/rbac',
   tags: ['RBAC'],
 })
-  .use(authPlugin)
-  .use(permissionPlugin)
+  .use(accessPlugin)
   .get('/roles', async ({ query }) => await RbacService.listRoles(query), {
     permission: Permissions.ROLE.READ_ALL,
     query: RoleListQuerySchema,

@@ -1,7 +1,6 @@
-import { createPaginatedListSchema, DateTimeSchema, intFromQuery } from '@nexus/shared/schema'
+import { createPaginatedListSchema, DateTimeSchema, intFromQuery, UserStatusSchema } from '@nexus/shared/schema'
 import { z } from 'zod'
 
-export const UserStatusSchema = z.enum(['ACTIVE', 'INACTIVE', 'BANNED'])
 export type UserStatus = z.infer<typeof UserStatusSchema>
 
 export const UserSchema = z.object({

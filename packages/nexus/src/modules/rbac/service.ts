@@ -1,9 +1,9 @@
 import type { Prisma } from '@nexus/infra/database/prisma/generated'
 import type { RoleListQuery } from './model'
 import { NotFoundError } from '@nexus/core/http'
-import { PermissionService } from '@nexus/core/permissions/permission.service'
+import { PermissionService } from '@nexus/core/security/permissions'
 import { createPaginatedResponse } from '@nexus/infra/database'
-import { UserRepository } from '@nexus/modules/user'
+import { UserRepository } from '../user/repository'
 import {
   CurrentUserPermissionsSchema,
   CurrentUserRolesSchema,

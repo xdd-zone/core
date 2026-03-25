@@ -1,7 +1,6 @@
 import type pino from 'pino'
 import type { PrismaClient } from '../../generated'
-import { parsePermission } from '@nexus/core/permissions/helpers'
-import { SYSTEM_PERMISSION_DEFINITIONS } from '@nexus/core/permissions/permissions'
+import { parsePermission, SYSTEM_PERMISSION_DEFINITIONS } from '@nexus/core/security/permissions'
 
 /**
  * 初始化系统权限注册表。

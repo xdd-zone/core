@@ -49,8 +49,10 @@ packages/nexus/src/
   - `model.ts` 放 HTTP schema
   - `service.ts` 放业务编排
   - `repository.ts` 或 `*.repository.ts` 放 Prisma 访问
-- `core/`
-  - 认证、权限、配置、HTTP 基础插件
+- `core/http/`
+  - HTTP 基础插件和应用装配
+- `core/security/`
+  - 认证上下文、守卫、插件和权限能力
 - `infra/`
   - Prisma、数据库辅助能力、日志
 - `shared/`
@@ -165,6 +167,8 @@ bun run --filter @xdd-zone/nexus export:openapi
   - 业务编排
 - `packages/nexus/src/modules/*/repository.ts`
   - Prisma 访问
+- `packages/nexus/src/core/security`
+  - 认证上下文、守卫、插件和权限能力
 - `packages/nexus/src/shared/openapi`
   - `apiDetail(...)`
 - `packages/nexus/src/eden`
@@ -212,7 +216,7 @@ RBAC：
 ## 权限模型
 
 - 固定角色：`superAdmin / admin / user`
-- 权限以系统内置权限为准
+- 权限以 `packages/nexus/src/core/security/permissions/permissions.ts` 为准
 - `own` 只用于当前用户资料场景
 - 后台前端默认以后端 `401 / 403` 结果为准
 

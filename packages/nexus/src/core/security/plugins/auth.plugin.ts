@@ -1,7 +1,7 @@
-import type { AuthenticatedSession, Session } from '@nexus/modules/auth'
-import { UnauthorizedError } from '@nexus/core/http'
-import { AuthService } from '@nexus/modules/auth'
+import type { AuthenticatedSecuritySession, SecuritySession } from '../auth'
 import { Elysia } from 'elysia'
+import { SessionService } from '../auth'
+import { assertAuthenticated } from '../guards'
 
 /**
  * 路由鉴权模式。
@@ -9,20 +9,11 @@ import { Elysia } from 'elysia'
 export type AuthRequirement = 'optional' | 'required'
 
 /**
- * 将会话断言为已登录状态。
+ * 路由级认证插件。
  */
-export function assertAuthenticated(auth: Session): asserts auth is AuthenticatedSession {
-  if (!auth.isAuthenticated || !auth.session || !auth.user) {
-    throw new UnauthorizedError('请先登录')
-  }
-}
-
-/**
- * 路由级鉴权插件。
- */
-export const authPlugin = new Elysia({ name: 'auth' })
+export const authPlugin = new Elysia({ name: 'auth-plugin' })
   .resolve({ as: 'scoped' }, async ({ request }) => {
-    const auth = await AuthService.getSession(request.headers)
+    const auth = await SessionService.getSession(request.headers)
 
     return {
       auth,
@@ -38,7 +29,7 @@ export const authPlugin = new Elysia({ name: 'auth' })
 
       return {
         resolve: async ({ request }) => {
-          const auth = await AuthService.getSession(request.headers)
+          const auth = await SessionService.getSession(request.headers)
           assertAuthenticated(auth)
 
           return {
@@ -50,3 +41,6 @@ export const authPlugin = new Elysia({ name: 'auth' })
       }
     },
   })
+
+export { assertAuthenticated }
+export type { AuthenticatedSecuritySession, SecuritySession }

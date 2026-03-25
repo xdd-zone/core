@@ -1,4 +1,4 @@
-import { SYSTEM_PERMISSION_KEYS } from '@nexus/core/permissions/permissions'
+import { SYSTEM_PERMISSION_KEYS } from '@nexus/core/security/permissions'
 import { createPaginatedListSchema, DateTimeSchema, intFromQuery } from '@nexus/shared/schema'
 import { z } from 'zod'
 

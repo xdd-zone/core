@@ -1,7 +1,7 @@
 import type { Permission, PermissionScope, PermissionString } from './permissions.types'
 
 /**
- * 将权限标准化为字符串格式
+ * 将权限标准化为字符串格式。
  */
 export function normalizePermission(permission: Permission | PermissionString): PermissionString {
   if (typeof permission === 'string') {
@@ -13,8 +13,7 @@ export function normalizePermission(permission: Permission | PermissionString): 
 }
 
 /**
- * 解析权限字符串为各个组成部分
- * 支持格式：resource:action 或 resource:action:scope
+ * 解析权限字符串。
  */
 export function parsePermission(permission: PermissionString): Permission {
   const parts = permission.split(':')
@@ -38,14 +37,29 @@ export function parsePermission(permission: PermissionString): Permission {
 }
 
 /**
- * 检查权限是否匹配模式
+ * 检查权限是否匹配。
  */
 export function matchPermission(permission: PermissionString, pattern: PermissionString): boolean {
-  return permission === pattern
+  if (permission === pattern) {
+    return true
+  }
+
+  const requested = parsePermission(permission)
+  const available = parsePermission(pattern)
+
+  if (requested.resource !== available.resource || requested.action !== available.action) {
+    return false
+  }
+
+  if (requested.scope === 'own' && available.scope === 'all') {
+    return true
+  }
+
+  return false
 }
 
 /**
- * 根据资源、操作和可选范围构建权限字符串
+ * 根据资源和操作构建权限字符串。
  */
 export function buildPermission(resource: string, action: string, scope?: PermissionScope): PermissionString {
   return scope ? `${resource}:${action}:${scope}` : `${resource}:${action}`

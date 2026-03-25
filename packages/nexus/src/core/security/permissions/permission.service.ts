@@ -1,24 +1,17 @@
-/**
- * 权限服务
- *
- * 核心权限检查逻辑，负责固定角色与权限计算。
- */
-
 import type { PermissionContext, PermissionString } from './permissions.types'
 import { prisma } from '@nexus/infra/database/client'
 import { matchPermission, normalizePermission } from './helpers'
 import { Permissions, SYSTEM_PERMISSION_KEYS } from './permissions'
 
-/**
- * 内存权限缓存
- * TODO: 生产环境应使用 Redis
- */
 const permissionCache = new Map<string, { context: PermissionContext; expiresAt: number }>()
-const CACHE_TTL = 5 * 60 * 1000 // 5分钟
+const CACHE_TTL = 5 * 60 * 1000
 
+/**
+ * 权限服务。
+ */
 export class PermissionService {
   /**
-   * 获取用户权限上下文（带缓存）
+   * 获取用户权限上下文。
    */
   static async getPermissionContext(userId: string): Promise<PermissionContext> {
     const cached = permissionCache.get(userId)
@@ -28,7 +21,6 @@ export class PermissionService {
 
     const context = await this.loadPermissionContext(userId)
 
-    // 缓存上下文
     permissionCache.set(userId, {
       context,
       expiresAt: Date.now() + CACHE_TTL,
@@ -109,7 +101,7 @@ export class PermissionService {
   }
 
   /**
-   * 检查用户是否有特定权限
+   * 检查用户是否拥有指定权限。
    */
   static async hasPermission(userId: string, permission: PermissionString | string): Promise<boolean> {
     const context = await this.getPermissionContext(userId)
@@ -130,37 +122,37 @@ export class PermissionService {
   }
 
   /**
-   * 检查用户是否有任一指定权限（OR 逻辑）
+   * 检查用户是否拥有任一指定权限。
    */
   static async hasAnyPermission(userId: string, permissions: (PermissionString | string)[]): Promise<boolean> {
-    const results = await Promise.all(permissions.map((p) => this.hasPermission(userId, p)))
-    return results.some((r) => r)
+    const results = await Promise.all(permissions.map((permission) => this.hasPermission(userId, permission)))
+    return results.some(Boolean)
   }
 
   /**
-   * 检查用户是否拥有所有指定权限（AND 逻辑）
+   * 检查用户是否拥有全部指定权限。
    */
   static async hasAllPermissions(userId: string, permissions: (PermissionString | string)[]): Promise<boolean> {
-    const results = await Promise.all(permissions.map((p) => this.hasPermission(userId, p)))
-    return results.every((r) => r)
+    const results = await Promise.all(permissions.map((permission) => this.hasPermission(userId, permission)))
+    return results.every(Boolean)
   }
 
   /**
-   * 清除特定用户的权限缓存
+   * 清除单个用户的权限缓存。
    */
   static clearCache(userId: string): void {
     permissionCache.delete(userId)
   }
 
   /**
-   * 清除所有权限缓存
+   * 清除全部权限缓存。
    */
   static clearAllCache(): void {
     permissionCache.clear()
   }
 
   /**
-   * 获取用户权限列表（供前端使用）
+   * 获取用户权限列表。
    */
   static async getUserPermissions(userId: string): Promise<string[]> {
     const context = await this.getPermissionContext(userId)
@@ -172,7 +164,7 @@ export class PermissionService {
   }
 
   /**
-   * 获取用户角色
+   * 获取用户角色列表。
    */
   static async getUserRoles(userId: string) {
     const userRoles = await prisma.userRole.findMany({
@@ -185,11 +177,11 @@ export class PermissionService {
       },
     })
 
-    return userRoles.map((ur) => ({
-      roleId: ur.roleId,
-      roleName: ur.role.name,
-      roleDisplayName: ur.role.displayName,
-      assignedAt: ur.assignedAt,
+    return userRoles.map((userRole) => ({
+      roleId: userRole.roleId,
+      roleName: userRole.role.name,
+      roleDisplayName: userRole.role.displayName,
+      assignedAt: userRole.assignedAt,
     }))
   }
 }

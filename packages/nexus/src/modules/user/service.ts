@@ -76,7 +76,18 @@ export class UserService {
    * 后台更新指定用户基础资料。
    */
   static async updateByAdmin(userId: string, data: UpdateUserBody): Promise<User> {
-    return this.updateProfile(userId, data)
+    await this.findById(userId)
+
+    return UserSchema.parse(
+      await UserRepository.updateProfile(userId, {
+        username: data.username ?? undefined,
+        name: data.name,
+        email: data.email ?? undefined,
+        phone: data.phone ?? undefined,
+        introduce: data.introduce ?? undefined,
+        image: data.image ?? undefined,
+      }),
+    )
   }
 
   /**

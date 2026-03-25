@@ -8,14 +8,15 @@
 - `packages/nexus/src/modules` 按功能组织 Elysia 模块
 - 每个模块自己的 `index.ts` 直接作为路由入口
 - `model.ts` 统一定义 HTTP schema
-- `core/` 只放跨业务的基础能力
+- `core/http/` 放 HTTP 基础能力
+- `core/security/` 放认证上下文、守卫、插件和权限能力
 - OpenAPI 作为接口说明导出
 - Eden 作为仓库内联调与 smoke test 的类型入口
 
 当前系统采用固定角色、固定权限的后台模型：
 
 - 固定角色：`superAdmin / admin / user`
-- 权限以系统内置权限为准
+- 权限以 `packages/nexus/src/core/security/permissions/permissions.ts` 为准
 - `own` 只用于用户自己的资料场景
 
 ## 包职责
@@ -121,13 +122,24 @@ modules/<feature>/
   - OpenAPI
   - 统一错误处理
   - 请求日志
-- `core/access-control/`
-  - `authPlugin`
-  - `permissionPlugin`
-- `core/auth/`
-  - Better Auth 配置与适配
-- `core/permissions/`
-  - 权限常量、权限服务、辅助判断
+- `core/security/`
+  - `auth/`
+    - Better Auth 接入
+    - session 解析
+    - 认证接口动作
+    - 登出处理
+  - `plugins/`
+    - 认证插件
+    - 权限插件
+  - `guards/`
+    - 登录校验
+    - 权限校验
+    - 所有权校验
+  - `permissions/`
+    - 权限常量
+    - 固定角色名称
+    - 权限服务
+    - 权限匹配辅助函数
 
 ### `infra/`
 
@@ -144,6 +156,7 @@ modules/<feature>/
 - `shared/schema/`
   - 常用基础 schema
   - 分页 schema
+  - 用户状态等共享枚举
   - query helper
 - `shared/openapi/`
   - `apiDetail(...)`
@@ -188,7 +201,7 @@ modules/<feature>/
 
 ## 鉴权与权限模型
 
-access control 的统一入口是 `core/access-control/`。
+鉴权与权限的统一入口是 `core/security/`。
 
 route 层优先使用下面 4 种声明式配置：
 

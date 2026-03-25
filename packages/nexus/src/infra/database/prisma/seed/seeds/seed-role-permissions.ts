@@ -1,8 +1,8 @@
-import type { PermissionString } from '@nexus/core/permissions/permissions.types'
+import type { PermissionString } from '@nexus/core/security/permissions'
 import type { SystemRoleName } from '@nexus/modules/rbac/constants'
 import type pino from 'pino'
 import type { PrismaClient } from '../../generated'
-import { parsePermission } from '@nexus/core/permissions/helpers'
+import { parsePermission } from '@nexus/core/security/permissions'
 import { SYSTEM_ROLE_NAMES, SYSTEM_ROLE_PERMISSION_KEYS } from '@nexus/modules/rbac/constants'
 
 /**

@@ -24,14 +24,6 @@ bun run db:local:prepare
 4. 导出 OpenAPI
 5. 完成 Eden / OpenAPI / 权限回归
 
-也就是：
-
-```text
-packages/nexus
-  -> export openapi
-  -> 验证
-```
-
 修改后台前端时，默认按下面顺序推进：
 
 1. 确认 `nexus` 现有接口和登录态约定
@@ -57,6 +49,40 @@ packages/nexus
 - Prisma 查询
 - 散落的业务判断
 - Better Auth 底层适配细节
+
+### `packages/nexus/src/core/security/*`
+
+放：
+
+- `auth/`
+  - Better Auth 接入
+  - session 解析
+  - 认证接口动作
+  - 登出处理
+- `plugins/`
+  - 认证插件
+  - 权限插件
+- `guards/`
+  - 登录校验
+  - 权限校验
+  - 所有权校验
+- `permissions/`
+  - 权限常量
+  - 固定角色名称
+  - 权限查询
+  - 权限匹配辅助函数
+
+使用建议：
+
+- `modules/auth` 只放 `/auth` 路由入口和 HTTP schema
+- 登录、注册、登出这类认证接口动作统一放 `core/security/auth/*`
+- 需要 `permission / own / me` 的模块只接 `accessPlugin`
+- 只读取可选 session 的模块接 `authPlugin`
+- 只要求登录且不做权限判断的接口，优先使用 `authPlugin + auth: 'required'`
+- 使用 `accessPlugin` 时，也可以直接声明 `auth: 'required'`
+- `plugins/*` 只做 Elysia 上下文注入和路由守卫编排，不直接写业务查询
+- 固定角色名称统一在 `core/security/permissions/role.constants.ts` 维护
+- `auth`、`user` 等模块共用的基础 schema 统一放 `shared/schema/*`
 
 ### `packages/nexus/src/modules/*/model.ts`
 
@@ -139,7 +165,7 @@ export const userModule = new Elysia({
   prefix: '/user',
   tags: ['User'],
 })
-  .use(permissionPlugin)
+  .use(accessPlugin)
   .get('/', async ({ query }) => await UserService.list(query), {
     permission: Permissions.USER.READ_ALL,
     query: UserListQuerySchema,

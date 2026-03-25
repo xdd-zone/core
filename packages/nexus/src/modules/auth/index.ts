@@ -1,10 +1,7 @@
-import type { AuthSession } from './types'
-import { authPlugin } from '@nexus/core/access-control'
-import { clearBetterAuthCookies, forwardBetterAuthResponse, revokeBetterAuthSession } from '@nexus/core/auth'
+import { AuthApiService, authPlugin } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
 import { AuthSessionSchema, SessionSchema, SignInEmailBodySchema, SignUpEmailBodySchema } from './model'
-import { AuthService } from './service'
 
 /**
  * 认证模块。
@@ -18,7 +15,7 @@ export const authModule = new Elysia({
   .post(
     '/sign-up/email',
     async ({ body, request, set }) =>
-      AuthSessionSchema.parse(await forwardBetterAuthResponse<AuthSession>(request, { body, headers: set.headers })),
+      AuthSessionSchema.parse(await AuthApiService.signUpEmail(request, body, set.headers)),
     {
       body: SignUpEmailBodySchema,
       response: AuthSessionSchema,
@@ -33,7 +30,7 @@ export const authModule = new Elysia({
   .post(
     '/sign-in/email',
     async ({ body, request, set }) =>
-      AuthSessionSchema.parse(await forwardBetterAuthResponse<AuthSession>(request, { body, headers: set.headers })),
+      AuthSessionSchema.parse(await AuthApiService.signInEmail(request, body, set.headers)),
     {
       body: SignInEmailBodySchema,
       response: AuthSessionSchema,
@@ -48,9 +45,7 @@ export const authModule = new Elysia({
   .post(
     '/sign-out',
     async ({ request, set }) => {
-      await revokeBetterAuthSession(request)
-      clearBetterAuthCookies(set.headers)
-
+      await AuthApiService.signOut(request, set.headers)
       set.status = 204
     },
     {
@@ -91,5 +86,3 @@ export {
   type SignUpEmailBody,
   SignUpEmailBodySchema,
 } from './model'
-export { AuthService }
-export type { AuthenticatedSession, AuthSession, Session } from './types'

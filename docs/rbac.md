@@ -28,19 +28,23 @@ RBAC 模型如下：
 
 统一定义在：
 
-[permissions.ts](../packages/nexus/src/core/permissions/permissions.ts)
+[permissions.ts](../packages/nexus/src/core/security/permissions/permissions.ts)
+
+固定角色名称统一维护在：
+
+[role.constants.ts](../packages/nexus/src/core/security/permissions/role.constants.ts)
 
 route 中应使用常量，不直接写裸字符串。
 
 ## 推荐入口
 
-### `permissionPlugin`
+### `accessPlugin`
 
 新代码通过它接入权限上下文。
 
 它同时提供：
 
-- 通过组合 `authPlugin` 提供登录态校验
+- 通过认证上下文提供登录态校验
 - 声明式权限宏
 - handler 可直接使用的 `auth / currentUser / currentSession`
 
@@ -100,7 +104,7 @@ export const rbacRoutes = new Elysia({
   prefix: '/rbac',
   tags: ['RBAC'],
 })
-  .use(permissionPlugin)
+  .use(accessPlugin)
   .get('/roles', async ({ query }) => await RbacService.listRoles(query), {
     permission: Permissions.ROLE.READ_ALL,
     query: RoleListQuerySchema,
