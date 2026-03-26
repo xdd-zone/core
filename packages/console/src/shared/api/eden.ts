@@ -1,26 +1,16 @@
-import type { EdenApp } from '@xdd-zone/nexus/eden'
+import type { Treaty } from '@elysiajs/eden'
+import type { App } from '@xdd-zone/nexus/eden'
 import { treaty } from '@elysiajs/eden'
 
-interface ConsoleApiErrorPayload {
-  code?: number
-  data?: null
-  details?: unknown
-  errorCode?: string
-  message?: string
-}
+type EdenResponseSchema = Record<number, unknown>
+type EdenSuccessStatus = 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 226
 
-interface EdenErrorResult<TError> {
-  status: number
-  value: TError
-}
+type EdenSuccessData<TSchema extends EdenResponseSchema> = TSchema[Extract<keyof TSchema, EdenSuccessStatus>]
 
-interface EdenResponseResult<TData, TError> {
-  data: TData | null
-  error: EdenErrorResult<TError> | null
-  headers?: HeadersInit
-  response: Response
-  status: number
-}
+type EdenErrorValue<TSchema extends EdenResponseSchema> = Extract<
+  Treaty.TreatyResponse<TSchema>,
+  { error: { value: unknown } }
+>['error']['value']
 
 const API_PREFIX = '/api'
 
@@ -97,12 +87,23 @@ function resolveConfiguredApiBaseUrl() {
   )
 }
 
+function resolvePayloadMessage(value: unknown) {
+  if (!value || typeof value !== 'object' || !('message' in value)) {
+    return null
+  }
+
+  const payloadMessage = value.message
+  if (typeof payloadMessage !== 'string' || !payloadMessage.trim()) {
+    return null
+  }
+
+  return payloadMessage
+}
+
 function resolveErrorMessage(status: number, value: unknown) {
-  if (value && typeof value === 'object' && 'message' in value) {
-    const payloadMessage = (value as ConsoleApiErrorPayload).message
-    if (typeof payloadMessage === 'string' && payloadMessage.trim()) {
-      return payloadMessage
-    }
+  const payloadMessage = resolvePayloadMessage(value)
+  if (payloadMessage) {
+    return payloadMessage
   }
 
   return status >= 500 ? '服务暂时不可用' : '请求失败'
@@ -111,7 +112,7 @@ function resolveErrorMessage(status: number, value: unknown) {
 /**
  * Console 共享 Eden Treaty 客户端。
  */
-const edenClient = treaty<EdenApp>(resolveConfiguredApiBaseUrl(), {
+const edenClient = treaty<App>(resolveConfiguredApiBaseUrl(), {
   fetch: {
     credentials: 'include',
   },
@@ -119,27 +120,27 @@ const edenClient = treaty<EdenApp>(resolveConfiguredApiBaseUrl(), {
   throwHttpError: false,
 })
 
+type EdenApi = Treaty.Create<App>['api']
+
 /**
  * Console 业务接口根节点。
  */
-export const api: Record<string, unknown> & {
-  auth?: unknown
-} = edenClient.api
+export const api: EdenApi = edenClient.api
 
 /**
  * 统一拆包 Eden 响应，并转成项目内错误模型。
  */
-export function unwrapEdenResponse<TData, TError = ConsoleApiErrorPayload>(
-  result: EdenResponseResult<TData, TError>,
-): TData {
+export function unwrapEdenResponse<TSchema extends EdenResponseSchema>(
+  result: Treaty.TreatyResponse<TSchema>,
+): EdenSuccessData<TSchema> {
   if (result.error) {
-    throw new ConsoleApiError(
-      resolveErrorMessage(result.error.status, result.error.value),
-      result.error.status,
+    throw new ConsoleApiError<EdenErrorValue<TSchema>>(
+      resolveErrorMessage(result.status, result.error.value),
+      result.status,
       result.error.value,
       result.response,
     )
   }
 
-  return result.data as TData
+  return result.data
 }

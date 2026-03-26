@@ -1,4 +1,5 @@
-import { edenTreaty } from '@elysiajs/eden'
+import type { App } from '@nexus/eden'
+import { treaty } from '@elysiajs/eden'
 import { createApp } from '@nexus/app'
 import { prisma } from '@nexus/infra/database'
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
@@ -7,7 +8,7 @@ const app = createApp()
 app.listen(0)
 
 const baseUrl = `http://localhost:${app.server?.port}`
-const anonymousClient = edenTreaty<ReturnType<typeof createApp>>(baseUrl)
+const anonymousClient = treaty<App>(baseUrl)
 
 function createCookieFetcher() {
   const cookies = new Map<string, string>()
@@ -65,7 +66,7 @@ function createCookieFetcher() {
   return fetcher
 }
 
-const authenticatedClient = edenTreaty<ReturnType<typeof createApp>>(baseUrl, {
+const authenticatedClient = treaty<App>(baseUrl, {
   fetcher: createCookieFetcher(),
 })
 
@@ -82,27 +83,12 @@ const subjectUser = {
   name: `Eden Subject ${tempSuffix}`,
 }
 
-const emptyRequest = {
-  $query: {},
-  $headers: {},
-} as const
-
-type RequestBody<T> = T & {
-  $query: Record<string, never>
-  $headers: Record<string, never>
-}
-
 interface RoleSummary {
   name: string
 }
 
 interface RoleAssignmentSummary {
   roleId: string
-}
-
-interface UserRoleStatusResponse {
-  id: string
-  status: 'ACTIVE' | 'INACTIVE' | 'BANNED'
 }
 
 const createdUserIds: string[] = []
@@ -112,31 +98,31 @@ let superAdminRoleId = ''
 let adminRoleId = ''
 let userRoleId = ''
 
-function withRequestMeta<T extends object>(body: T): RequestBody<T> {
-  return {
-    ...body,
-    $query: {},
-    $headers: {},
-  }
-}
-
 beforeAll(async () => {
-  const actorResult = await authenticatedClient.api.auth['sign-up'].email.post(withRequestMeta(actorUser))
+  const actorResult = await authenticatedClient.api.auth['sign-up'].email.post(actorUser)
 
   expect(actorResult.status).toBe(200)
   expect(actorResult.error).toBeNull()
-  expect(actorResult.data?.user?.id).toBeTruthy()
+  const actorId = actorResult.data?.user?.id
+  expect(actorId).toBeTruthy()
+  if (!actorId) {
+    throw new Error('缺少 actor 用户 ID')
+  }
 
-  actorUserId = actorResult.data!.user!.id
+  actorUserId = actorId
   createdUserIds.push(actorUserId)
 
-  const subjectResult = await anonymousClient.api.auth['sign-up'].email.post(withRequestMeta(subjectUser))
+  const subjectResult = await anonymousClient.api.auth['sign-up'].email.post(subjectUser)
 
   expect(subjectResult.status).toBe(200)
   expect(subjectResult.error).toBeNull()
-  expect(subjectResult.data?.user?.id).toBeTruthy()
+  const subjectId = subjectResult.data?.user?.id
+  expect(subjectId).toBeTruthy()
+  if (!subjectId) {
+    throw new Error('缺少 subject 用户 ID')
+  }
 
-  subjectUserId = subjectResult.data!.user!.id
+  subjectUserId = subjectId
   createdUserIds.push(subjectUserId)
 
   const [superAdminRole, adminRole, userRole] = await Promise.all([
@@ -145,13 +131,21 @@ beforeAll(async () => {
     prisma.role.findUnique({ where: { name: 'user' } }),
   ])
 
-  expect(superAdminRole?.id).toBeTruthy()
-  expect(adminRole?.id).toBeTruthy()
-  expect(userRole?.id).toBeTruthy()
+  const nextSuperAdminRoleId = superAdminRole?.id
+  const nextAdminRoleId = adminRole?.id
+  const nextUserRoleId = userRole?.id
 
-  superAdminRoleId = superAdminRole!.id
-  adminRoleId = adminRole!.id
-  userRoleId = userRole!.id
+  expect(nextSuperAdminRoleId).toBeTruthy()
+  expect(nextAdminRoleId).toBeTruthy()
+  expect(nextUserRoleId).toBeTruthy()
+
+  if (!nextSuperAdminRoleId || !nextAdminRoleId || !nextUserRoleId) {
+    throw new Error('缺少默认角色 ID')
+  }
+
+  superAdminRoleId = nextSuperAdminRoleId
+  adminRoleId = nextAdminRoleId
+  userRoleId = nextUserRoleId
 
   const ensureUserRole = async (userId: string, roleId: string, assignedBy: string | null) => {
     const existing = await prisma.userRole.findFirst({
@@ -218,7 +212,7 @@ afterAll(async () => {
 
 describe('eden smoke', () => {
   it('应可访问健康检查与匿名会话接口', async () => {
-    const result = await anonymousClient.api.health.get(emptyRequest)
+    const result = await anonymousClient.api.health.get()
 
     expect(result.status).toBe(200)
     expect(result.error).toBeNull()
@@ -228,7 +222,7 @@ describe('eden smoke', () => {
   })
 
   it('应可访问匿名会话接口', async () => {
-    const result = await anonymousClient.api.auth['get-session'].get(emptyRequest)
+    const result = await anonymousClient.api.auth['get-session'].get()
 
     expect(result.status).toBe(200)
     expect(result.error).toBeNull()
@@ -240,7 +234,7 @@ describe('eden smoke', () => {
   })
 
   it('应可访问登录态会话接口', async () => {
-    const result = await authenticatedClient.api.auth.me.get(emptyRequest)
+    const result = await authenticatedClient.api.auth.me.get()
 
     expect(result.status).toBe(200)
     expect(result.error).toBeNull()
@@ -249,89 +243,71 @@ describe('eden smoke', () => {
   })
 
   it('应支持当前用户资料查询与更新', async () => {
-    const userResult = await authenticatedClient.api.user.me.get(emptyRequest)
+    const userResult = await authenticatedClient.api.user.me.get()
 
     expect(userResult.status).toBe(200)
     expect(userResult.error).toBeNull()
     expect(userResult.data?.id).toBe(actorUserId)
 
     const updatedName = `Eden Actor Updated ${tempSuffix}`
-    const updateResult = await authenticatedClient.api.user.me.patch(
-      withRequestMeta({
-        name: updatedName,
-      }),
-    )
+    const updateResult = await authenticatedClient.api.user.me.patch({
+      name: updatedName,
+    })
 
     expect(updateResult.status).toBe(200)
     expect(updateResult.error).toBeNull()
     expect(updateResult.data?.id).toBe(actorUserId)
     expect(updateResult.data?.name).toBe(updatedName)
 
-    const refreshedResult = await authenticatedClient.api.user.me.get(emptyRequest)
+    const refreshedResult = await authenticatedClient.api.user.me.get()
     expect(refreshedResult.status).toBe(200)
     expect(refreshedResult.error).toBeNull()
     expect(refreshedResult.data?.name).toBe(updatedName)
   })
 
   it('应支持固定角色列表、用户角色分配与移除', async () => {
-    const rolesResult = await authenticatedClient.api.rbac.roles.get(emptyRequest)
+    const rolesResult = await authenticatedClient.api.rbac.roles.get()
 
     expect(rolesResult.status).toBe(200)
     expect(rolesResult.error).toBeNull()
     const roleNames = (rolesResult.data?.items ?? []).map((role: RoleSummary) => role.name).sort()
     expect(roleNames).toEqual(['admin', 'superAdmin', 'user'])
 
-    const currentUserRolesResult = await authenticatedClient.api.rbac.users.me.roles.get(emptyRequest)
+    const currentUserRolesResult = await authenticatedClient.api.rbac.users.me.roles.get()
     expect(currentUserRolesResult.status).toBe(200)
     expect(currentUserRolesResult.error).toBeNull()
     expect(currentUserRolesResult.data?.roles.some((role: RoleSummary) => role.name === 'superAdmin')).toBe(true)
 
-    const assignResult = await authenticatedClient.api.rbac.users[subjectUserId].roles.post(
-      withRequestMeta({
-        roleId: adminRoleId,
-      }),
-    )
+    const assignResult = await authenticatedClient.api.rbac.users({ userId: subjectUserId }).roles.post({
+      roleId: adminRoleId,
+    })
 
     expect(assignResult.status).toBe(200)
     expect(assignResult.error).toBeNull()
     expect(assignResult.data?.userId).toBe(subjectUserId)
     expect(assignResult.data?.roleId).toBe(adminRoleId)
 
-    const subjectRolesAfterAssign = await authenticatedClient.api.rbac.users[subjectUserId].roles.get(emptyRequest)
+    const subjectRolesAfterAssign = await authenticatedClient.api.rbac.users({ userId: subjectUserId }).roles.get()
     expect(subjectRolesAfterAssign.status).toBe(200)
     expect(subjectRolesAfterAssign.error).toBeNull()
     expect(subjectRolesAfterAssign.data?.some((role: RoleAssignmentSummary) => role.roleId === adminRoleId)).toBe(true)
 
-    const revokeResult = await authenticatedClient.api.rbac.users[subjectUserId].roles[adminRoleId].delete(emptyRequest)
+    const revokeResult = await authenticatedClient.api.rbac.users({ userId: subjectUserId }).roles({
+      roleId: adminRoleId,
+    }).delete()
     expect(revokeResult.status).toBe(204)
     expect(revokeResult.error).toBeNull()
 
-    const subjectRolesAfterRevoke = await authenticatedClient.api.rbac.users[subjectUserId].roles.get(emptyRequest)
+    const subjectRolesAfterRevoke = await authenticatedClient.api.rbac.users({ userId: subjectUserId }).roles.get()
     expect(subjectRolesAfterRevoke.status).toBe(200)
     expect(subjectRolesAfterRevoke.error).toBeNull()
     expect(subjectRolesAfterRevoke.data?.some((role: RoleAssignmentSummary) => role.roleId === adminRoleId)).toBe(false)
   })
 
   it('应支持用户状态管理与权限查询', async () => {
-    const subjectStatusClient = authenticatedClient.api.user[subjectUserId] as unknown as {
-      status: {
-        patch: (
-          body: RequestBody<{
-            status: 'ACTIVE' | 'INACTIVE' | 'BANNED'
-          }>,
-        ) => Promise<{
-          status: number
-          error: unknown
-          data?: UserRoleStatusResponse
-        }>
-      }
-    }
-
-    const statusResult = await subjectStatusClient.status.patch(
-      withRequestMeta({
-        status: 'BANNED',
-      }),
-    )
+    const statusResult = await authenticatedClient.api.user({ id: subjectUserId }).status.patch({
+      status: 'BANNED',
+    })
 
     expect(statusResult.status).toBe(200)
     expect(statusResult.error).toBeNull()
@@ -339,12 +315,12 @@ describe('eden smoke', () => {
     expect(statusResult.data?.status).toBe('BANNED')
 
     const subjectPermissionsResult =
-      await authenticatedClient.api.rbac.users[subjectUserId].permissions.get(emptyRequest)
+      await authenticatedClient.api.rbac.users({ userId: subjectUserId }).permissions.get()
     expect(subjectPermissionsResult.status).toBe(200)
     expect(subjectPermissionsResult.error).toBeNull()
     expect(subjectPermissionsResult.data?.permissions.includes('user:read:own')).toBe(true)
 
-    const currentUserPermissionsResult = await authenticatedClient.api.rbac.users.me.permissions.get(emptyRequest)
+    const currentUserPermissionsResult = await authenticatedClient.api.rbac.users.me.permissions.get()
     expect(currentUserPermissionsResult.status).toBe(200)
     expect(currentUserPermissionsResult.error).toBeNull()
     expect(currentUserPermissionsResult.data?.permissions.includes('system:manage')).toBe(true)

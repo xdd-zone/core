@@ -1,1 +1,1 @@
-export type { EdenApp } from '../public/eden'
+export type { App, EdenApp } from '../public/eden'
