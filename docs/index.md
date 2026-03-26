@@ -39,8 +39,9 @@
 优先阅读：
 
 1. [console.md](./console.md)
-2. [authentication.md](./authentication.md)
-3. [development.md](./development.md)
+2. [theme.md](./theme.md)
+3. [authentication.md](./authentication.md)
+4. [development.md](./development.md)
 
 再看代码目录：
 
@@ -91,4 +92,5 @@
 - [rbac.md](./rbac.md)：权限模型与声明式写法
 - [testing.md](./testing.md)：测试分层与回归命令
 - [skills.md](./skills.md)：项目级 Skill 与代码生成约定
+- [theme.md](./theme.md)：主题系统与颜色命名
 - [faq.md](./faq.md)：常见问题

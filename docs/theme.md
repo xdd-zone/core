@@ -1,8 +1,10 @@
 # 主题系统
 
-本项目使用 [Catppuccin](https://github.com/catppuccin/catppuccin) 配色方案，配合 TailwindCSS v4 的 `@theme` 机制实现主题管理。
+## 主题方案
 
-## 主题支持
+`@xdd-zone/console` 使用 [Catppuccin](https://github.com/catppuccin/catppuccin) 配色方案，配合 TailwindCSS v4 的 `@theme` 机制管理主题。
+
+支持的主题：
 
 | 主题      | ID          | 类型             |
 | --------- | ----------- | ---------------- |
@@ -11,9 +13,11 @@
 | Macchiato | `macchiato` | 暗色             |
 | Mocha     | `mocha`     | 暗色（默认暗色） |
 
+主题通过 HTML 根节点的 `data-theme` 属性切换，`dark` 变体覆盖所有深色 Catppuccin 主题。
+
 ## 颜色命名规范
 
-基于 [Catppuccin 官方风格指南](https://github.com/catppuccin/catppuccin/blob/main/docs/style-guide.md)，项目采用语义化命名：
+基于 [Catppuccin 官方风格指南](https://github.com/catppuccin/catppuccin/blob/main/docs/style-guide.md)，项目使用语义化命名。
 
 ### 背景颜色
 
@@ -26,7 +30,7 @@
 | 表面元素 1 | `bg-surface-1`      | `--ctp-surface-1` |
 | 表面元素 2 | `bg-surface-2`      | `--ctp-surface-2` |
 
-> **说明**：遵循 Catppuccin 官方命名规范，Base（主背景）→ Mantle（次级背景）→ Crust（边框/细节）构成背景层级。
+> Base（主背景）-> Mantle（次级背景）-> Crust（边框/细节）构成背景层级。
 
 ### 文字颜色
 
@@ -36,7 +40,7 @@
 | 次级文字 | `text-fg-subtle` | `--ctp-subtext-0` |
 | 辅助文字 | `text-fg-muted`  | `--ctp-subtext-1` |
 
-> **层级说明**：Catppuccin 的 `subtext-0` 比 `subtext-1` 更接近正文色深度的辅助色。
+> Catppuccin 的 `subtext-0` 比 `subtext-1` 更接近正文色深度。
 
 ### 叠加状态
 
@@ -91,6 +95,17 @@
 | `text-sapphire` / `bg-sapphire`   | 蓝宝石   |
 | `text-lavender` / `bg-lavender`   | 薰衣草紫 |
 
+## 兼容类名
+
+为兼容第三方组件库（如 shadcn/ui），同时提供标准语义名：
+
+| 功能   | 语义类名        | 兼容类名                               |
+| ------ | --------------- | -------------------------------------- |
+| 主背景 | `bg-surface`    | `bg-background`                        |
+| 正文   | `text-fg`       | `text-foreground`                      |
+| 辅助   | `text-fg-muted` | `text-muted` / `text-muted-foreground` |
+| 边框   | `border-border` | `border`                               |
+
 ## 使用示例
 
 ```tsx
@@ -122,8 +137,6 @@ function ListItem() {
 
 ## 主题切换
 
-主题通过 `data-theme` 属性控制：
-
 ```tsx
 import { updateThemeAttribute } from '@console/utils/theme'
 
@@ -134,35 +147,27 @@ updateThemeAttribute('mocha')
 updateThemeAttribute('latte')
 ```
 
-## 兼容类名
+## 文件位置
 
-为兼容第三方组件库（如 shadcn/ui），同时提供标准语义名：
-
-| 功能   | 新类名          | 兼容类名                               |
-| ------ | --------------- | -------------------------------------- |
-| 主背景 | `bg-surface`    | `bg-background`                        |
-| 正文   | `text-fg`       | `text-foreground`                      |
-| 辅助   | `text-fg-muted` | `text-muted` / `text-muted-foreground` |
-| 边框   | `border-border` | `border`                               |
-
-## CSS 变量参考
-
-Catppuccin 颜色变量定义在 `src/assets/styles/theme/catppuccin.css`，TailwindCSS @theme 映射在 `src/assets/styles/theme/variables.css`。
-
-主题切换时变量自动更新，无需手动处理。
-
-## 文件结构
-
-```
-src/assets/styles/theme/
+```text
+packages/console/src/assets/styles/theme/
 ├── catppuccin.css    # Catppuccin 颜色变量定义
 ├── variables.css     # TailwindCSS @theme 映射
 └── dark-mode.css     # 暗色模式配置
 ```
 
-## 相关资源
+相关位置：
 
+- [packages/console/src/assets/styles/theme/catppuccin.css](../packages/console/src/assets/styles/theme/catppuccin.css)
+- [packages/console/src/assets/styles/theme/variables.css](../packages/console/src/assets/styles/theme/variables.css)
+- [packages/console/src/assets/styles/theme/dark-mode.css](../packages/console/src/assets/styles/theme/dark-mode.css)
+- [packages/console/src/utils/theme.ts](../packages/console/src/utils/theme.ts)
+- [packages/console/src/utils/catppuccin.antd.ts](../packages/console/src/utils/catppuccin.antd.ts)
+
+## 相关阅读
+
+- [console.md](./console.md)
+- [architecture.md](./architecture.md)
 - [Catppuccin 官方仓库](https://github.com/catppuccin/catppuccin)
 - [Catppuccin 风格指南](https://github.com/catppuccin/catppuccin/blob/main/docs/style-guide.md)
 - [TailwindCSS v4 Theme](https://tailwindcss.com/docs/theme)
-- [TailwindCSS Colors](https://tailwindcss.com/docs/colors)
