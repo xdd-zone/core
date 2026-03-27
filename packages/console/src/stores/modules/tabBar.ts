@@ -25,6 +25,8 @@ export interface Tab {
 export interface TabBarState extends BaseStore {
   /** 当前激活的标签页ID */
   activeTabId: string
+  /** 正在关闭的标签页路径 */
+  closingPath: null | string
   /** 根据路径添加或激活标签页 */
   addOrActivateTab: (tab: Tab) => void
 
@@ -38,8 +40,12 @@ export interface TabBarState extends BaseStore {
   closeTab: (tabId: string) => void
   /** 根据路径查找标签页 */
   findTabByPath: (path: string) => Tab | undefined
+  /** 清理关闭中的路径标记 */
+  clearClosingPath: () => void
   /** 重置到默认状态 */
   reset: () => void
+  /** 标记当前正在关闭的路径 */
+  setClosingPath: (path: null | string) => void
   /** 设置激活标签页 */
   setActiveTab: (tabId: string) => void
   /** 标签页列表 */
@@ -64,6 +70,7 @@ export const useTabBarStore = create<TabBarState>()(
   persist(
     (set, get) => ({
       activeTabId: DEFAULT_HOME_TAB.id,
+      closingPath: null,
       addOrActivateTab: (tab: Tab) => {
         const { tabs } = get()
         const existingTab = tabs.find((t) => t.path === tab.path)
@@ -96,6 +103,10 @@ export const useTabBarStore = create<TabBarState>()(
         }
       },
 
+      clearClosingPath: () => {
+        set({ closingPath: null })
+      },
+
       closeAllTabs: () => {
         const { tabs } = get()
         // 只保留不可关闭的标签页
@@ -103,6 +114,7 @@ export const useTabBarStore = create<TabBarState>()(
 
         set({
           activeTabId: unclosableTabs.length > 0 ? unclosableTabs[0].id : DEFAULT_HOME_TAB.id,
+          closingPath: null,
           tabs: unclosableTabs.length > 0 ? unclosableTabs : [DEFAULT_HOME_TAB],
         })
       },
@@ -118,6 +130,7 @@ export const useTabBarStore = create<TabBarState>()(
 
         set({
           activeTabId: tabId,
+          closingPath: null,
           tabs: newTabs,
         })
       },
@@ -162,8 +175,13 @@ export const useTabBarStore = create<TabBarState>()(
       reset: () => {
         set({
           activeTabId: DEFAULT_HOME_TAB.id,
+          closingPath: null,
           tabs: [DEFAULT_HOME_TAB],
         })
+      },
+
+      setClosingPath: (path: null | string) => {
+        set({ closingPath: path })
       },
 
       setActiveTab: (tabId: string) => {

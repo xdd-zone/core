@@ -4,7 +4,7 @@ import type { ComponentType } from 'react'
 
 import { renderIcon } from '@console/utils/pathUtils'
 
-import { Crop, FileText, FileText as FileTextIcon, FolderOpen, LayoutDashboard, LayoutTemplate } from 'lucide-react'
+import { Crop, FileText, FileText as FileTextIcon, FolderOpen, KeyRound, LayoutDashboard, LayoutTemplate, ShieldCheck, Users } from 'lucide-react'
 
 type MenuItem = Required<MenuProps>['items'][number]
 
@@ -55,6 +55,35 @@ export const navigationItems: NavigationItem[] = [
         key: 'article-settings',
         label: 'menu.articleSettings',
         path: '/article-settings',
+      },
+    ],
+  },
+  {
+    icon: Users,
+    key: 'system',
+    label: 'menu.systemManagement',
+    children: [
+      {
+        key: 'users',
+        label: 'menu.userManagement',
+        path: '/users',
+      },
+      {
+        key: 'roles',
+        label: 'menu.roleManagement',
+        path: '/roles',
+      },
+      {
+        icon: ShieldCheck,
+        key: 'my-access',
+        label: 'menu.myAccess',
+        path: '/my-access',
+      },
+      {
+        icon: KeyRound,
+        key: 'my-profile',
+        label: 'menu.myProfile',
+        path: '/profile',
       },
     ],
   },

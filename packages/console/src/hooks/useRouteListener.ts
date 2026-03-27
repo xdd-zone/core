@@ -14,7 +14,7 @@ export function useRouteListener() {
     select: (location) => location.pathname,
   })
   const matches = useMatches()
-  const { addOrActivateTab, findTabByPath } = useTabBarStore()
+  const { addOrActivateTab, clearClosingPath, closingPath, findTabByPath } = useTabBarStore()
 
   useEffect(() => {
     const currentMatch = matches[matches.length - 1]
@@ -23,6 +23,15 @@ export function useRouteListener() {
     }
 
     const currentPath = currentMatch.pathname
+
+     if (closingPath && currentPath !== closingPath) {
+      clearClosingPath()
+    }
+
+    if (closingPath === currentPath && !findTabByPath(currentPath)) {
+      return
+    }
+
     const existingTab = findTabByPath(currentPath)
     if (existingTab) {
       addOrActivateTab(existingTab)
@@ -33,5 +42,5 @@ export function useRouteListener() {
     if (tab) {
       addOrActivateTab(tab)
     }
-  }, [pathname, matches, addOrActivateTab, findTabByPath])
+  }, [pathname, matches, addOrActivateTab, clearClosingPath, closingPath, findTabByPath])
 }

@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next'
 export function TabBar() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { activeTabId, closeTab, setActiveTab, tabs } = useTabBarStore()
+  const { activeTabId, closeTab, setActiveTab, setClosingPath, tabs } = useTabBarStore()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isMobile = useMobile()
 
@@ -35,6 +35,8 @@ export function TabBar() {
     }
 
     if (activeTabId === tabId) {
+      setClosingPath(tabToClose.path)
+
       const currentIndex = tabs.findIndex((tab) => tab.id === tabId)
       let targetTab = null
 

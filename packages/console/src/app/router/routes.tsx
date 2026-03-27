@@ -7,7 +7,7 @@ import { Login } from '@console/pages/auth/Login'
 import { Forbidden } from '@console/pages/error/Forbidden'
 import { NotFound } from '@console/pages/error/NotFound'
 import { createRootRouteWithContext, createRoute, lazyRouteComponent, Outlet } from '@tanstack/react-router'
-import { BarChart3, Crop, FileText, Folder, LayoutTemplate, List, MessageCircle, Settings, Tag } from 'lucide-react'
+import { BarChart3, Crop, FileText, Folder, KeyRound, LayoutTemplate, List, MessageCircle, Settings, Shield, ShieldCheck, Tag, UserCog, Users } from 'lucide-react'
 
 import { redirectFromRoot, requireAuth, requireGuest, validateLoginSearch } from './guards'
 
@@ -167,6 +167,74 @@ const markdownExampleRoute = createRoute({
   },
 })
 
+const userListRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/user/list/UserList'), 'UserList'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'users',
+  staticData: {
+    icon: Users,
+    title: 'menu.userManagement',
+  },
+})
+
+const userDetailRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/user/detail/UserDetail'), 'UserDetail'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'users/$id',
+  staticData: {
+    title: 'menu.userDetail',
+  },
+})
+
+const userEditRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/user/edit/UserEdit'), 'UserEdit'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'users/$id/edit',
+  staticData: {
+    title: 'menu.userEdit',
+  },
+})
+
+const roleListRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/role/list/RoleList'), 'RoleList'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'roles',
+  staticData: {
+    icon: Shield,
+    title: 'menu.roleManagement',
+  },
+})
+
+const myProfileRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/user/profile/MyProfile'), 'MyProfile'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'profile',
+  staticData: {
+    icon: UserCog,
+    title: 'menu.myProfile',
+  },
+})
+
+const myAccessRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/access/MyAccess'), 'MyAccess'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'my-access',
+  staticData: {
+    icon: ShieldCheck,
+    title: 'menu.myAccess',
+  },
+})
+
+const userAccessRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/user/access/UserAccess'), 'UserAccess'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'users/$id/access',
+  staticData: {
+    icon: KeyRound,
+    title: 'access.manage.title',
+  },
+})
+
 const protectedRouteTree = protectedRoute.addChildren([
   appLayoutRoute.addChildren([
     dashboardRoute,
@@ -178,6 +246,13 @@ const protectedRouteTree = protectedRoute.addChildren([
     uiShowcaseRoute,
     markdownExampleRoute,
     imageCropRoute,
+    userListRoute,
+    userDetailRoute,
+    userEditRoute,
+    userAccessRoute,
+    roleListRoute,
+    myProfileRoute,
+    myAccessRoute,
   ]),
 ])
 

@@ -5,7 +5,7 @@ import { useTabBarStore } from '@console/stores'
 import { useNavigate } from '@tanstack/react-router'
 import { Avatar, Dropdown } from 'antd'
 
-import { LogOut, User } from 'lucide-react'
+import { KeyRound, LogOut, User, UserCog } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -33,6 +33,25 @@ export function UserAvatar() {
           <div className="text-cat font-medium">{user?.name || user?.email || 'Guest'}</div>
         </div>
       ),
+    },
+    {
+      type: 'divider',
+    },
+    {
+      icon: <UserCog size={20} />,
+      key: 'profile',
+      label: t('menu.myProfile'),
+      onClick: () => {
+        void navigate({ to: '/profile' })
+      },
+    },
+    {
+      icon: <KeyRound size={20} />,
+      key: 'my-access',
+      label: t('menu.myAccess'),
+      onClick: () => {
+        void navigate({ to: '/my-access' })
+      },
     },
     {
       type: 'divider',
