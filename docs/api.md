@@ -3,8 +3,8 @@
 ## 基础信息
 
 - Base URL: `http://localhost:7788/api`
-- OpenAPI UI: `http://localhost:7788/openapi`
-- OpenAPI JSON: `http://localhost:7788/openapi/json`
+- OpenAPI 页面: `http://localhost:7788/openapi`
+- OpenAPI 文档接口: `http://localhost:7788/openapi/json`
 - Health: `GET /api/health`
 
 HTTP 接口定义主要放在：
@@ -13,7 +13,7 @@ HTTP 接口定义主要放在：
 - `packages/nexus/src/modules/*/index.ts`
 - `packages/nexus/src/shared/schema/*`
 
-OpenAPI 作为服务端接口说明导出物保留，供文档、调试与外部集成使用。
+OpenAPI 用来查看当前接口说明，可用于联调、调试和外部接入。
 
 ## 响应说明
 
@@ -118,10 +118,10 @@ OpenAPI 作为服务端接口说明导出物保留，供文档、调试与外部
 - 直接基于 `createApp()` 的 route 类型
 - 用于 smoke test 与类型漂移检查
 
-### OpenAPI 导出
+### OpenAPI 入口
 
 ```text
 模块 model / index.ts
-  -> OpenAPI JSON
-  -> 文档、调试与外部集成使用
+  -> /openapi
+  -> /openapi/json
 ```

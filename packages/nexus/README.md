@@ -71,8 +71,8 @@ bun run dev
 默认地址：
 
 - API: `http://localhost:7788/api`
-- OpenAPI UI: `http://localhost:7788/openapi`
-- OpenAPI JSON: `http://localhost:7788/openapi/json`
+- OpenAPI 页面: `http://localhost:7788/openapi`
+- OpenAPI 文档接口: `http://localhost:7788/openapi/json`
 
 ## 常用命令
 

@@ -105,8 +105,8 @@ bun run dev
 
 - Console: `http://localhost:2333`
 - API: `http://localhost:7788/api`
-- OpenAPI UI: `http://localhost:7788/openapi`
-- OpenAPI JSON: `http://localhost:7788/openapi/json`
+- OpenAPI 页面: `http://localhost:7788/openapi`
+- OpenAPI 文档接口: `http://localhost:7788/openapi/json`
 - Health: `http://localhost:7788/api/health`
 
 ## 常用命令
@@ -142,9 +142,6 @@ bun run prisma:migrate
 bun run prisma:push
 bun run prisma:reset
 bun run seed
-
-# openapi export
-bun run --filter @xdd-zone/nexus export:openapi
 ```
 
 ## 开发约定
@@ -180,7 +177,6 @@ bun run --filter @xdd-zone/nexus export:openapi
 调整 model
   -> 调整 service / repository
   -> 在模块 index.ts 注册路由
-  -> 导出 OpenAPI
   -> 回归验证
 ```
 

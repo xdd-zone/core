@@ -176,4 +176,4 @@ RBAC 调整后至少要覆盖：
 仓库内已有两层现成回归：
 
 - Nexus Eden smoke
-- Nexus 自动化测试与 OpenAPI 导出验证
+- Nexus 自动化测试与运行时 OpenAPI 验证

@@ -46,7 +46,7 @@ packages/console
 当前仓库的主要包包括：
 
 - `@xdd-zone/nexus`
-  - 后端 API、认证、权限与 OpenAPI 导出
+  - 后端 API、认证、权限与 OpenAPI
 - `@xdd-zone/console`
   - 后台管理前端
 - `@xdd-zone/eslint-config`
@@ -107,7 +107,7 @@ bun run dev:console
 
 - Console: `http://localhost:2333`
 - Nexus: `http://localhost:7788`
-- OpenAPI UI: `http://localhost:7788/openapi`
+- OpenAPI 页面: `http://localhost:7788/openapi`
 
 ## 常用命令
 

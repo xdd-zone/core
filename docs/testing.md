@@ -37,22 +37,17 @@ bun run --filter @xdd-zone/nexus test
   - me `/api/rbac/users/me/roles`
   - me `/api/rbac/users/me/permissions`
 - OpenAPI smoke：
-  - `/openapi/json` 可导出
-  - 关键路径进入导出物
-  - 导出物只包含当前角色与权限相关路径
+  - `/openapi/json` 可访问
+  - 关键路径进入当前接口说明
+  - 当前接口说明只包含当前角色与权限相关路径
 
-### 3. OpenAPI 导出验证
-
-```bash
-bun run --filter @xdd-zone/nexus export:openapi
-```
+### 3. OpenAPI 运行时验证
 
 主要覆盖：
 
-- OpenAPI 可正常导出
-- 导出产物写入默认目录
-- 导出产物落到 `packages/nexus/openapi/openapi.json`
-- 导出结果与当前 RBAC 路由一致
+- `/openapi/json` 可访问
+- 关键路径进入当前 OpenAPI 文档
+- 文档内容与当前 RBAC 路由一致
 
 ## 本地数据库
 
@@ -93,7 +88,6 @@ DATABASE_URL=postgresql://xdd:xdd_local_dev@localhost:55432/xdd_core_local bun r
 ### 改了接口定义 / OpenAPI / route
 
 ```bash
-bun run --filter @xdd-zone/nexus export:openapi
 bun run --filter @xdd-zone/nexus type-check
 bun run --filter @xdd-zone/nexus test
 ```
@@ -102,14 +96,12 @@ bun run --filter @xdd-zone/nexus test
 
 ```bash
 bun run --filter @xdd-zone/nexus test
-bun run --filter @xdd-zone/nexus export:openapi
 ```
 
 ### 改了 RBAC / 用户底座
 
 ```bash
 bun run --filter @xdd-zone/nexus test
-bun run --filter @xdd-zone/nexus export:openapi
 ```
 
 ### 只改了文档或低风险说明
@@ -130,5 +122,4 @@ bun run type-check
 
 ```bash
 bun run --filter @xdd-zone/nexus test
-bun run --filter @xdd-zone/nexus export:openapi
 ```

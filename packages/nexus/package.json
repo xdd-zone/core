@@ -34,7 +34,6 @@
   "scripts": {
     "dev": "NODE_ENV=development bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
-    "export:openapi": "bun run scripts/export-openapi.ts",
     "test": "bun test src/eden/eden-smoke.test.ts src/eden/openapi-smoke.test.ts",
     "seed": "bun run src/infra/database/prisma/seed/seed.ts",
     "prisma:generate": "prisma generate",

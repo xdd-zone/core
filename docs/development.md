@@ -21,8 +21,7 @@ bun run db:local:prepare
 1. 改模块 `model.ts`
 2. 改 `service.ts / repository.ts`
 3. 在模块 `index.ts` 注册或调整路由
-4. 导出 OpenAPI
-5. 完成 Eden / OpenAPI / 权限回归
+4. 完成 Eden / OpenAPI / 权限回归
 
 修改后台前端时，默认按下面顺序推进：
 
@@ -199,7 +198,7 @@ bun run type-check
 
 如果涉及公共 API，再补：
 
-- OpenAPI 导出
+- 访问 `/openapi` 或 `/openapi/json` 检查接口说明
 - Eden smoke test
 
 ## 命名建议
@@ -233,4 +232,4 @@ bun run type-check
 - 搜索是否残留 `any` 或 `as any`
 - 检查 `model / service / repository` 是否职责清楚
 - 检查模块入口是否已经声明正确的鉴权
-- 检查 OpenAPI 与 Eden 是否还能正常工作
+- 检查 `/openapi` 页面和 Eden 是否还能正常工作

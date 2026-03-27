@@ -73,7 +73,11 @@ bun run dev
 
 ```bash
 bun run --filter @xdd-zone/nexus test
-bun run --filter @xdd-zone/nexus export:openapi
 ```
 
-这样可以覆盖 Eden smoke 和 OpenAPI 导出这两条主链路。
+这样可以覆盖 Eden smoke 和运行时 OpenAPI 这条主链路。
+
+如果需要手动查看接口说明，直接访问：
+
+- `http://localhost:7788/openapi`
+- `http://localhost:7788/openapi/json`

@@ -63,7 +63,7 @@
 修改后至少检查：
 
 - `packages/nexus`
-- OpenAPI 导出
+- `/openapi`
 - Eden smoke
 
 ## 如果你要排查权限问题
