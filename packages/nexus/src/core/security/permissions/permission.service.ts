@@ -1,15 +1,50 @@
-import type { PermissionContext, PermissionString } from './permissions.types'
+import type { PermissionContext, PermissionString, PermissionSummary } from './permissions.types'
 import { prisma } from '@nexus/infra/database/client'
-import { matchPermission, normalizePermission } from './helpers'
-import { Permissions, SYSTEM_PERMISSION_KEYS } from './permissions'
+import { matchPermission, normalizePermission, parsePermission } from './helpers'
+import { Permissions, SYSTEM_PERMISSION_DEFINITIONS, SYSTEM_PERMISSION_KEYS } from './permissions'
 
 const permissionCache = new Map<string, { context: PermissionContext; expiresAt: number }>()
 const CACHE_TTL = 5 * 60 * 1000
+const systemPermissionOrderMap = new Map(SYSTEM_PERMISSION_KEYS.map((permission, index) => [permission, index]))
+const systemPermissionDefinitionMap = new Map(SYSTEM_PERMISSION_DEFINITIONS.map((definition) => [definition.key, definition]))
 
 /**
  * 权限服务。
  */
 export class PermissionService {
+  /**
+   * 按系统定义顺序整理权限列表，便于接口与前端稳定展示。
+   */
+  private static sortPermissions(permissions: PermissionString[]): PermissionString[] {
+    return [...permissions].sort((left, right) => {
+      const leftOrder = systemPermissionOrderMap.get(left) ?? Number.MAX_SAFE_INTEGER
+      const rightOrder = systemPermissionOrderMap.get(right) ?? Number.MAX_SAFE_INTEGER
+
+      if (leftOrder !== rightOrder) {
+        return leftOrder - rightOrder
+      }
+
+      return left.localeCompare(right)
+    })
+  }
+
+  /**
+   * 构建单个权限的展示信息。
+   */
+  static toPermissionSummary(permission: PermissionString): PermissionSummary {
+    const parsedPermission = parsePermission(permission)
+    const definition = systemPermissionDefinitionMap.get(permission)
+
+    return {
+      key: permission,
+      resource: parsedPermission.resource,
+      action: parsedPermission.action,
+      scope: parsedPermission.scope ?? null,
+      displayName: definition?.displayName ?? permission,
+      description: definition?.description ?? '',
+    }
+  }
+
   /**
    * 获取用户权限上下文。
    */
@@ -154,13 +189,29 @@ export class PermissionService {
   /**
    * 获取用户权限列表。
    */
-  static async getUserPermissions(userId: string): Promise<string[]> {
+  static async getUserPermissions(userId: string): Promise<PermissionString[]> {
     const context = await this.getPermissionContext(userId)
     if (context.isSuperAdmin) {
-      return [...SYSTEM_PERMISSION_KEYS]
+      return this.sortPermissions([...SYSTEM_PERMISSION_KEYS])
     }
 
-    return Array.from(context.permissions)
+    return this.sortPermissions(Array.from(context.permissions))
+  }
+
+  /**
+   * 获取用户权限展示列表。
+   */
+  static summarizePermissions(permissions: PermissionString[]): PermissionSummary[] {
+    return this.sortPermissions(permissions).map((permission) => this.toPermissionSummary(permission))
+  }
+
+  /**
+   * 获取用户权限展示列表。
+   */
+  static async getUserPermissionSummaries(userId: string): Promise<PermissionSummary[]> {
+    const permissions = await this.getUserPermissions(userId)
+
+    return this.summarizePermissions(permissions)
   }
 
   /**

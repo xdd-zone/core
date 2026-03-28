@@ -18,6 +18,18 @@ export interface Permission {
 }
 
 /**
+ * 权限展示摘要。
+ */
+export interface PermissionSummary {
+  key: PermissionString
+  resource: string
+  action: string
+  scope: PermissionScope | null
+  displayName: string
+  description: string
+}
+
+/**
  * 权限上下文。
  */
 export interface PermissionContext {

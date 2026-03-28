@@ -4,3 +4,4 @@
  */
 
 export { AuthContainer } from './AuthContainer'
+export { PermissionSummaryList } from './PermissionSummaryList'

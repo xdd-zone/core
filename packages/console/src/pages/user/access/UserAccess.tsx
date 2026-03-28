@@ -1,10 +1,11 @@
+import { PermissionSummaryList } from '@console/components/business'
 import { RbacRequestError, useAssignRoleMutation, useRemoveRoleMutation, useRoleListQuery, useUserPermissionsQuery, useUserRolesQuery } from '@console/modules/rbac'
 import { useUserDetailQuery } from '@console/modules/user'
 
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { App as AntdApp, Button, Card, Descriptions, Empty, Popconfirm, Select, Space, Spin, Tag } from 'antd'
 import dayjs from 'dayjs'
-import { ArrowLeft, ShieldCheck, ShieldPlus, Trash2 } from 'lucide-react'
+import { ArrowLeft, ShieldPlus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -182,15 +183,7 @@ export function UserAccess() {
           }
         >
           {permissions.length > 0
-            ? (
-                <div className="flex flex-wrap gap-2">
-                  {permissions.map((permission) => (
-                    <Tag key={permission} icon={<ShieldCheck className="size-3.5" />}>
-                      {permission}
-                    </Tag>
-                  ))}
-                </div>
-              )
+            ? <PermissionSummaryList permissions={permissions} />
             : <Empty description={t('access.empty.permissions')} image={Empty.PRESENTED_IMAGE_SIMPLE} />}
         </Card>
       </div>

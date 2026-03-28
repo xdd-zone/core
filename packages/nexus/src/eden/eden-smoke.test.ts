@@ -5,10 +5,7 @@ import { prisma } from '@nexus/infra/database'
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 
 const app = createApp()
-app.listen(0)
-
-const baseUrl = `http://localhost:${app.server?.port}`
-const anonymousClient = treaty<App>(baseUrl)
+const baseUrl = 'http://localhost'
 
 function createCookieFetcher() {
   const cookies = new Map<string, string>()
@@ -24,10 +21,12 @@ function createCookieFetcher() {
         headers.set('cookie', cookieHeader)
       }
 
-      const response = await fetch(input, {
+      const request = new Request(input, {
         ...init,
         headers,
       })
+
+      const response = await app.handle(request)
 
       const responseHeaders = response.headers as Headers & {
         getSetCookie?: () => string[]
@@ -65,6 +64,20 @@ function createCookieFetcher() {
 
   return fetcher
 }
+
+const directFetcher = Object.assign(
+  async (input: RequestInfo | URL, init?: RequestInit) => {
+    const request = new Request(input, init)
+    return await app.handle(request)
+  },
+  {
+    preconnect: fetch.preconnect.bind(fetch),
+  },
+) as typeof fetch
+
+const anonymousClient = treaty<App>(baseUrl, {
+  fetcher: directFetcher,
+})
 
 const authenticatedClient = treaty<App>(baseUrl, {
   fetcher: createCookieFetcher(),
@@ -206,8 +219,6 @@ afterAll(async () => {
       },
     })
   }
-
-  app.stop()
 })
 
 describe('eden smoke', () => {
@@ -318,12 +329,12 @@ describe('eden smoke', () => {
       await authenticatedClient.api.rbac.users({ userId: subjectUserId }).permissions.get()
     expect(subjectPermissionsResult.status).toBe(200)
     expect(subjectPermissionsResult.error).toBeNull()
-    expect(subjectPermissionsResult.data?.permissions.includes('user:read:own')).toBe(true)
+    expect(subjectPermissionsResult.data?.permissions.some((permission) => permission.key === 'user:read:own')).toBe(true)
 
     const currentUserPermissionsResult = await authenticatedClient.api.rbac.users.me.permissions.get()
     expect(currentUserPermissionsResult.status).toBe(200)
     expect(currentUserPermissionsResult.error).toBeNull()
-    expect(currentUserPermissionsResult.data?.permissions.includes('system:manage')).toBe(true)
+    expect(currentUserPermissionsResult.data?.permissions.some((permission) => permission.key === 'system:manage')).toBe(true)
     expect(currentUserPermissionsResult.data?.roles.some((role: RoleSummary) => role.name === 'superAdmin')).toBe(true)
   })
 })

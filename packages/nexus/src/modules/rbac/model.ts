@@ -5,6 +5,20 @@ import { z } from 'zod'
 export const PermissionStringSchema = z.enum(SYSTEM_PERMISSION_KEYS)
 export type PermissionString = z.infer<typeof PermissionStringSchema>
 
+export const PermissionScopeSchema = z.enum(['own', 'all'])
+export type PermissionScope = z.infer<typeof PermissionScopeSchema>
+
+export const PermissionSummarySchema = z.object({
+  key: PermissionStringSchema,
+  resource: z.string(),
+  action: z.string(),
+  scope: PermissionScopeSchema.nullable(),
+  displayName: z.string(),
+  description: z.string(),
+})
+
+export type PermissionSummary = z.infer<typeof PermissionSummarySchema>
+
 export const RoleSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -49,7 +63,7 @@ export const RoleListSchema = createPaginatedListSchema(RoleSchema)
 export type RoleList = z.infer<typeof RoleListSchema>
 
 export const UserPermissionsSchema = z.object({
-  permissions: z.array(PermissionStringSchema),
+  permissions: z.array(PermissionSummarySchema),
 })
 
 export type UserPermissions = z.infer<typeof UserPermissionsSchema>
@@ -66,16 +80,25 @@ export const CurrentUserPermissionsSchema = UserPermissionsSchema.extend({
 
 export type CurrentUserPermissions = z.infer<typeof CurrentUserPermissionsSchema>
 
+export const CurrentUserRoleSourceSchema = z.enum(['system', 'manual'])
+export type CurrentUserRoleSource = z.infer<typeof CurrentUserRoleSourceSchema>
+
+export const CurrentUserRoleSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  displayName: z.string().nullable(),
+  description: z.string().nullable(),
+  isSystem: z.boolean(),
+  source: CurrentUserRoleSourceSchema,
+  assignedBy: z.string().nullable(),
+  assignedAt: DateTimeSchema,
+  permissions: z.array(PermissionSummarySchema),
+})
+
+export type CurrentUserRole = z.infer<typeof CurrentUserRoleSchema>
+
 export const CurrentUserRolesSchema = z.object({
-  roles: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      displayName: z.string().nullable(),
-      assignedBy: z.string().nullable(),
-      assignedAt: DateTimeSchema,
-    }),
-  ),
+  roles: z.array(CurrentUserRoleSchema),
 })
 
 export type CurrentUserRoles = z.infer<typeof CurrentUserRolesSchema>

@@ -1,7 +1,7 @@
 import type { Prisma } from '@nexus/infra/database/prisma/generated'
 import type { RoleListQuery } from './model'
 import { NotFoundError } from '@nexus/core/http'
-import { PermissionService } from '@nexus/core/security/permissions'
+import { normalizePermission, PermissionService } from '@nexus/core/security/permissions'
 import { createPaginatedResponse } from '@nexus/infra/database'
 import { UserRepository } from '../user/repository'
 import {
@@ -107,7 +107,7 @@ export class RbacService {
   static async getUserPermissions(userId: string) {
     await this.assertUserExists(userId)
 
-    const permissions = await PermissionService.getUserPermissions(userId)
+    const permissions = await PermissionService.getUserPermissionSummaries(userId)
 
     return UserPermissionsSchema.parse({
       permissions,
@@ -123,7 +123,7 @@ export class RbacService {
       throw new NotFoundError('用户不存在')
     }
 
-    const permissions = await PermissionService.getUserPermissions(userId)
+    const permissions = await PermissionService.getUserPermissionSummaries(userId)
 
     return CurrentUserPermissionsSchema.parse({
       permissions,
@@ -139,17 +139,33 @@ export class RbacService {
    * 获取当前用户的角色列表。
    */
   static async getCurrentUserRoles(userId: string) {
-    await this.assertUserExists(userId)
-
-    const userRoles = await UserRoleRepository.findByUser(userId)
+    const userWithRoles = await UserRoleRepository.findUserWithRoles(userId)
+    if (!userWithRoles || userWithRoles.deletedAt) {
+      throw new NotFoundError('用户不存在')
+    }
 
     return CurrentUserRolesSchema.parse({
-      roles: userRoles.map((userRole) => ({
+      roles: userWithRoles.roles.map((userRole) => ({
         id: userRole.role.id,
         name: userRole.role.name,
         displayName: userRole.role.displayName,
+        description: userRole.role.description,
+        isSystem: userRole.role.isSystem,
+        source: userRole.assignedBy ? 'manual' : 'system',
         assignedBy: userRole.assignedBy,
         assignedAt: userRole.assignedAt,
+        permissions: PermissionService.summarizePermissions(
+          userRole.role.permissions.map((rolePermission) =>
+            normalizePermission({
+              resource: rolePermission.permission.resource,
+              action: rolePermission.permission.action,
+              scope:
+                rolePermission.permission.scope === 'own' || rolePermission.permission.scope === 'all'
+                  ? rolePermission.permission.scope
+                  : undefined,
+            }),
+          ),
+        ),
       })),
     })
   }

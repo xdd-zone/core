@@ -31,16 +31,25 @@ export interface RoleListQuery {
   keyword?: string
 }
 
+export type PermissionScope = 'own' | 'all' | null
+
 /**
- * 权限字符串。
+ * 权限展示项。
  */
-export type PermissionString = string
+export interface PermissionSummary {
+  key: string
+  resource: string
+  action: string
+  scope: PermissionScope
+  displayName: string
+  description: string
+}
 
 /**
  * 用户权限。
  */
 export interface UserPermissions {
-  permissions: PermissionString[]
+  permissions: PermissionSummary[]
 }
 
 /**
@@ -62,8 +71,12 @@ export interface CurrentUserRoles {
     id: string
     name: string
     displayName: string | null
+    description: string | null
+    isSystem: boolean
+    source: 'system' | 'manual'
     assignedBy: string | null
     assignedAt: string
+    permissions: PermissionSummary[]
   }[]
 }
 
