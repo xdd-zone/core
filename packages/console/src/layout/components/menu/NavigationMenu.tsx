@@ -2,7 +2,7 @@ import type { MenuItem } from '@console/utils/pathUtils'
 import type { MenuProps } from 'antd'
 import { useSettingStore } from '@console/stores'
 import { getAntdThemeConfig } from '@console/utils/catppuccin.antd'
-import { findMatchingMenuKey } from '@console/utils/pathUtils'
+import { findMatchingMenuState } from '@console/utils/pathUtils'
 import { getPrimaryColorByTheme, hexToRgba } from '@console/utils/theme'
 
 import { useLocation, useNavigate } from '@tanstack/react-router'
@@ -62,8 +62,12 @@ export function NavigationMenu({
 
   // 根据当前路由确定选中的菜单项
   const currentPath = location.pathname
-  const matchingKey = findMatchingMenuKey(items, currentPath)
-  const selectedKeys = matchingKey ? [matchingKey] : defaultSelectedKeys
+  const { openKeys: routeOpenKeys, selectedKeys: matchedSelectedKeys } = useMemo(
+    () => findMatchingMenuState(items, currentPath),
+    [currentPath, items],
+  )
+  const selectedKeys = matchedSelectedKeys.length > 0 ? matchedSelectedKeys : defaultSelectedKeys
+  const menuKey = useMemo(() => `${mode}:${routeOpenKeys.join('|')}`, [mode, routeOpenKeys])
 
   return (
     <ConfigProvider
@@ -91,11 +95,13 @@ export function NavigationMenu({
       }}
     >
       <Menu
+        key={menuKey}
         theme={isDark ? 'dark' : 'light'}
         selectedKeys={selectedKeys}
         mode={mode}
         items={items}
         inlineCollapsed={inlineCollapsed}
+        defaultOpenKeys={mode === 'inline' && !inlineCollapsed ? routeOpenKeys : undefined}
         onClick={handleMenuClick}
         style={{ width: '100%', ...style }}
         className={clsx('guide-menu', className)}

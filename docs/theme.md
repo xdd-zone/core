@@ -147,6 +147,27 @@ updateThemeAttribute('mocha')
 updateThemeAttribute('latte')
 ```
 
+## 菜单选中态
+
+后台导航菜单的选中样式分成两部分：
+
+- 颜色 token 统一在 `packages/console/src/utils/catppuccin.antd.ts` 里维护
+- `packages/console/src/layout/components/menu/NavigationMenu.tsx` 根据当前路由计算 `selectedKeys` 和 `openKeys`
+
+当前菜单使用的 Antd `Menu` 关键配置：
+
+- `itemSelectedBg`
+  - 控制当前菜单项的选中背景色
+- `subMenuItemBg`
+  - 控制 inline 子菜单容器背景色
+- `popupBg`
+  - 控制折叠侧边栏和弹出菜单的背景色
+
+如果某个子菜单项没有显示选中背景，先看两处：
+
+1. 当前路由是否已经被 `NavigationMenu` 正确匹配到 `selectedKeys`
+2. 当前主题下的 `Menu.itemSelectedBg` 和 `darkItemSelectedBg` 是否已经设置
+
 ## 文件位置
 
 ```text
