@@ -70,16 +70,18 @@ packages/console
 
 当前页面入口：
 
-- `/dashboard`
-  - 登录后的默认落点，当前保留为空状态入口
-- `/articles`
-  - 文章模块入口，当前保留为空状态入口
-- `/ui-showcase`
-  - 集中展示 Ant Design 组件、Catppuccin 主题与设计令牌
-- `/markdown-example`
-  - 集中展示 Markdown、GFM 与 Shiki 高亮效果
-- `/image-crop`
-  - 图片裁剪示例页
+- 仪表盘：`/dashboard`
+  - 登录后的默认落点，当前显示仪表盘占位内容
+- 内容管理：`/articles`、`/categories`、`/tags`、`/comments`、`/article-settings`
+  - 当前保留内容管理页面入口
+- 系统管理：`/users`、`/roles`
+  - 用于查看用户列表和角色列表
+- 用户详情与权限操作：`/users/:id`、`/users/:id/edit`、`/users/:id/access`
+  - 由用户列表和用户详情页的操作按钮进入
+- 当前用户：`/profile`、`/my-access`
+  - 用于维护当前登录用户资料，以及查看当前用户角色和权限
+- 功能示例：`/ui-showcase`、`/markdown-example`、`/image-crop`
+  - 用于验证主题、Markdown 和图片裁剪相关界面
 
 ## 快速开始
 
@@ -191,11 +193,18 @@ src/
   - 独立导航配置
 - `src/modules/auth`
   - session API、auth query 与 auth store
-
-当前与本轮实现直接相关的目录还有：
-
+- `src/modules/user`
+  - 用户列表、用户详情、当前用户资料与更新请求
+- `src/modules/rbac`
+  - 角色列表、用户角色、用户权限与分配角色请求
+- `src/pages/user`
+  - 用户列表、详情、编辑、当前用户资料和指定用户权限页面
+- `src/pages/role`
+  - 角色列表页
+- `src/pages/access`
+  - 当前登录用户权限页
 - `src/pages/example`
-  - 示例页入口，承接组件主题展示、Markdown 演示与图片裁剪
+  - 示例页入口，包含组件主题展示、Markdown 演示与图片裁剪
 - `src/assets/styles/theme`
   - Catppuccin 主题变量、暗色变体与语义色定义
 - `src/components/ui/markdown`
@@ -220,6 +229,7 @@ src/
 - 页面联调优先通过根目录 `bun run dev` 完成
 - 本地开发默认通过 `/api` 代理到 `nexus`
 - Better Auth 需要信任前端来源，例如 `http://localhost:2333`
+- 用户与权限相关请求统一放在 `src/modules/user` 和 `src/modules/rbac`
 
 ### 主题与构建约定
 
@@ -257,9 +267,11 @@ bun run build:console
 
 - 页面能正常访问后端接口
 - 登录与路由 `beforeLoad` 行为正确
+- 侧边栏和头像菜单能进入 `/users`、`/roles`、`/profile`、`/my-access`
+- 用户详情、编辑和权限管理页面能正常加载并提交操作
 - 菜单、主题、标签页状态没有回退
 - 刷新页面后能通过 `/api/auth/get-session` 恢复登录态
-- `/ui-showcase` 与 `/markdown-example` 能正常访问
+- `/ui-showcase`、`/markdown-example` 与 `/image-crop` 能正常访问
 - 切换 Catppuccin 主题后，菜单、抽屉、认证页与示例页样式一致
 
 ## 文档入口

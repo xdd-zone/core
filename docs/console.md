@@ -40,8 +40,14 @@ src/
 │   ├── navigation/
 │   └── router/
 ├── modules/
-│   └── auth/
+│   ├── auth/
+│   ├── rbac/
+│   └── user/
 ├── pages/
+│   ├── access/
+│   ├── example/
+│   ├── role/
+│   └── user/
 ├── layout/
 ├── components/
 ├── hooks/
@@ -58,9 +64,19 @@ src/
 - `app/navigation/`
   - 导航结构与菜单配置
 - `modules/auth/`
-  - 登录态请求、auth query、auth store、session 类型
-- `pages/`
-  - 页面入口组件
+  - 登录、登出、session 查询与 auth store
+- `modules/user/`
+  - 用户列表、用户详情、资料更新相关请求与 query
+- `modules/rbac/`
+  - 角色列表、用户角色、用户权限相关请求与 query
+- `pages/user/`
+  - 用户列表、用户详情、用户编辑、当前用户资料和指定用户权限页面
+- `pages/role/`
+  - 角色列表页
+- `pages/access/`
+  - 当前登录用户权限页
+- `pages/example/`
+  - 组件主题、Markdown 和图片裁剪示例页
 - `layout/`
   - 后台整体布局、头部、侧边栏、移动端抽屉
 - `stores/`
@@ -77,23 +93,17 @@ src/
 - 登录页 `/login`
   - 只允许游客访问，已登录时直接重定向到 `/dashboard`
 - 后台受保护页面
-  - `/dashboard`
-    - 当前为后台首页占位入口，保留登录后的默认落点
-  - `/articles`
-    - 当前为文章列表占位入口，页面暂未开放业务内容
-  - `/categories`
-  - `/tags`
-  - `/comments`
-  - `/article-settings`
-  - `/ui-showcase`
-    - 展示 Ant Design 组件、Catppuccin 主题与设计令牌
-  - `/markdown-example`
-    - 展示 Markdown、GFM 与 Shiki 代码高亮效果
-  - `/image-crop`
+  - 仪表盘：`/dashboard`
+  - 内容管理：`/articles`、`/categories`、`/tags`、`/comments`、`/article-settings`
+  - 系统管理：`/users`、`/users/:id`、`/users/:id/edit`、`/users/:id/access`、`/roles`
+  - 当前用户：`/profile`、`/my-access`
+  - 功能示例：`/ui-showcase`、`/markdown-example`、`/image-crop`
   - 统一在父级 route 的 `beforeLoad` 中校验登录态
 - 错误页
   - `/403`
   - `/404`
+
+带参数的用户路由在 `routes.tsx` 中使用 `users/$id` 这类写法。
 
 页面标题、TabBar、面包屑等元信息统一存放在 route 的 `staticData` 中。
 
@@ -167,21 +177,53 @@ auth store 只保留会话快照相关状态：
   - 标签管理
   - 评论管理
   - 文章设置
+- 系统管理
+  - 用户管理：`/users`
+  - 角色管理：`/roles`
+  - 我的权限：`/my-access`
+  - 我的资料：`/profile`
 - 功能示例
   - 组件与主题
   - Markdown 演示
   - 图片裁剪
 
-当前页面状态：
+列表页中的按钮会继续进入这些页面：
+
+- 用户详情：`/users/:id`
+- 用户编辑：`/users/:id/edit`
+- 用户权限管理：`/users/:id/access`
+
+头部头像菜单提供两个快捷入口：
+
+- 我的资料：`/profile`
+- 我的权限：`/my-access`
+
+当前页面说明：
 
 - `Dashboard`
-  - 保留为登录后的默认入口，当前展示空状态提示
-- `ArticleList`
-  - 保留为文章模块入口，当前展示空状态提示
+  - 登录后的默认落点，当前显示仪表盘占位内容
+- `ArticleList`、`CategoryList`、`TagList`、`CommentList`、`ArticleSettings`
+  - 当前保留内容管理页面入口
+- `UserList`
+  - 提供用户搜索、状态筛选和分页列表
+- `UserDetail`
+  - 展示用户资料、登录信息和当前角色
+- `UserEdit`
+  - 编辑指定用户的基础资料
+- `UserAccess`
+  - 为指定用户分配角色、移除角色并查看有效权限
+- `RoleList`
+  - 展示角色分页列表和角色基础信息
+- `MyProfile`
+  - 维护当前登录用户资料，并同步更新前端 session 快照
+- `MyAccess`
+  - 查看当前登录用户的角色和权限
 - `UiShowcase`
-  - 承接原先散落在 `Dashboard` 中的组件与主题演示
+  - 展示 Ant Design 组件、Catppuccin 主题与设计令牌
 - `MarkdownExample`
-  - 承接原先散落在 `ArticleList` 中的 Markdown 全量预览
+  - 展示 Markdown、GFM 与 Shiki 代码高亮效果
+- `ImageCropExample`
+  - 展示图片裁剪示例
 
 ## 布局与标签页
 
@@ -270,6 +312,16 @@ Markdown 能力当前由 `markdown-to-jsx` 与 Shiki 组合完成：
 - `POST /api/auth/sign-out`
 - `GET /api/auth/get-session`
 
+当前系统管理页面还会调用：
+
+- 用户接口：`GET /api/user`、`GET /api/user/:id`、`PATCH /api/user/:id`、`GET /api/user/me`、`PATCH /api/user/me`
+- 角色与权限接口：`GET /api/rbac/roles`、`GET /api/rbac/users/:userId/roles`、`POST /api/rbac/users/:userId/roles`、`DELETE /api/rbac/users/:userId/roles/:roleId`、`GET /api/rbac/users/:userId/permissions`、`GET /api/rbac/users/me/roles`、`GET /api/rbac/users/me/permissions`
+
+相关请求位置：
+
+- [packages/console/src/modules/user/index.ts](../packages/console/src/modules/user/index.ts)
+- [packages/console/src/modules/rbac/index.ts](../packages/console/src/modules/rbac/index.ts)
+
 联调时需要注意：
 
 - Better Auth 会校验请求来源
@@ -313,9 +365,12 @@ bun run dev
 3. 登录成功后跳转 `/dashboard`
 4. 刷新页面后能通过 route `beforeLoad` + `/api/auth/get-session` 恢复登录态
 5. 退出登录后返回 `/login`
-6. 切换不同 Catppuccin 主题后，菜单、抽屉、认证页样式保持一致
-7. 访问 `/ui-showcase`，确认组件、设计令牌与主题色展示正常
-8. 访问 `/markdown-example`，确认 Markdown 与代码高亮按预期渲染
+6. 通过侧边栏进入 `/users`、`/roles`，确认列表和分页请求正常
+7. 进入 `/users/:id`、`/users/:id/edit`、`/users/:id/access`，确认详情、编辑和角色分配流程正常
+8. 通过头像菜单进入 `/profile` 与 `/my-access`，确认资料页和当前用户权限页正常
+9. 切换不同 Catppuccin 主题后，菜单、抽屉、认证页样式保持一致
+10. 访问 `/ui-showcase`，确认组件、设计令牌与主题色展示正常
+11. 访问 `/markdown-example` 和 `/image-crop`，确认示例页按预期渲染
 
 ## 相关阅读
 

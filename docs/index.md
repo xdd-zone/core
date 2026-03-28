@@ -39,9 +39,10 @@
 优先阅读：
 
 1. [console.md](./console.md)
-2. [theme.md](./theme.md)
-3. [authentication.md](./authentication.md)
-4. [development.md](./development.md)
+2. [packages/console/README.md](../packages/console/README.md)
+3. [theme.md](./theme.md)
+4. [authentication.md](./authentication.md)
+5. [development.md](./development.md)
 
 再看代码目录：
 
@@ -49,7 +50,12 @@
 - `packages/console/src/app/query-client.ts`
 - `packages/console/src/app/navigation`
 - `packages/console/src/modules/auth`
+- `packages/console/src/modules/user`
+- `packages/console/src/modules/rbac`
 - `packages/console/src/layout`
+- `packages/console/src/pages/user`
+- `packages/console/src/pages/role`
+- `packages/console/src/pages/access`
 - `packages/console/src/pages`
 
 ## 如果你要修改 HTTP 接口定义
@@ -86,6 +92,7 @@
 - [README.md](../README.md)：仓库总览
 - [architecture.md](./architecture.md)：架构说明
 - [console.md](./console.md)：后台前端架构与开发说明
+- [packages/console/README.md](../packages/console/README.md)：Console 包说明与页面入口
 - [development.md](./development.md)：开发流程与标准动作
 - [api.md](./api.md)：HTTP 接口与端点概览
 - [authentication.md](./authentication.md)：认证与登录态
