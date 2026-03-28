@@ -4,7 +4,23 @@ import type { ComponentType } from 'react'
 
 import { renderIcon } from '@console/utils/pathUtils'
 
-import { Crop, FileText, FileText as FileTextIcon, FolderOpen, KeyRound, LayoutDashboard, LayoutTemplate, ShieldCheck, Users } from 'lucide-react'
+import {
+  Crop,
+  FileText,
+  FileText as FileTextIcon,
+  FolderOpen,
+  KeyRound,
+  LayoutDashboard,
+  LayoutTemplate,
+  MessageSquare,
+  Newspaper,
+  Settings,
+  Shield,
+  ShieldCheck,
+  Tags,
+  User,
+  Users,
+} from 'lucide-react'
 
 type MenuItem = Required<MenuProps>['items'][number]
 
@@ -27,48 +43,18 @@ export const navigationItems: NavigationItem[] = [
     path: '/dashboard',
   },
   {
-    icon: FileText,
-    key: 'content',
-    label: 'menu.articleManagement',
-    children: [
-      {
-        key: 'articles',
-        label: 'menu.articleList',
-        path: '/articles',
-      },
-      {
-        key: 'categories',
-        label: 'menu.categoryManagement',
-        path: '/categories',
-      },
-      {
-        key: 'tags',
-        label: 'menu.tagManagement',
-        path: '/tags',
-      },
-      {
-        key: 'comments',
-        label: 'menu.commentManagement',
-        path: '/comments',
-      },
-      {
-        key: 'article-settings',
-        label: 'menu.articleSettings',
-        path: '/article-settings',
-      },
-    ],
-  },
-  {
     icon: Users,
     key: 'system',
     label: 'menu.systemManagement',
     children: [
       {
+        icon: User,
         key: 'users',
         label: 'menu.userManagement',
         path: '/users',
       },
       {
+        icon: Shield,
         key: 'roles',
         label: 'menu.roleManagement',
         path: '/roles',
@@ -87,6 +73,44 @@ export const navigationItems: NavigationItem[] = [
       },
     ],
   },
+  {
+    icon: FileText,
+    key: 'content',
+    label: 'menu.articleManagement',
+    children: [
+      {
+        icon: Newspaper,
+        key: 'articles',
+        label: 'menu.articleList',
+        path: '/articles',
+      },
+      {
+        icon: FolderOpen,
+        key: 'categories',
+        label: 'menu.categoryManagement',
+        path: '/categories',
+      },
+      {
+        icon: Tags,
+        key: 'tags',
+        label: 'menu.tagManagement',
+        path: '/tags',
+      },
+      {
+        icon: MessageSquare,
+        key: 'comments',
+        label: 'menu.commentManagement',
+        path: '/comments',
+      },
+      {
+        icon: Settings,
+        key: 'article-settings',
+        label: 'menu.articleSettings',
+        path: '/article-settings',
+      },
+    ],
+  },
+
   {
     icon: FolderOpen,
     key: 'examples',
