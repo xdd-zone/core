@@ -20,6 +20,14 @@ export interface Tab {
 }
 
 /**
+ * 标签页关闭结果
+ */
+export interface TabCloseResult {
+  /** 关闭后需要跳转到的路径 */
+  nextPath: null | string
+}
+
+/**
  * TabBar状态接口
  */
 export interface TabBarState extends BaseStore {
@@ -33,19 +41,21 @@ export interface TabBarState extends BaseStore {
   /** 添加标签页 */
   addTab: (tab: Tab) => void
   /** 关闭所有标签页 */
-  closeAllTabs: () => void
+  closeAllTabs: () => TabCloseResult
+  /** 关闭左侧标签页 */
+  closeLeftTabs: (tabId: string) => TabCloseResult
   /** 关闭其他标签页 */
-  closeOtherTabs: (tabId: string) => void
+  closeOtherTabs: (tabId: string) => TabCloseResult
+  /** 关闭右侧标签页 */
+  closeRightTabs: (tabId: string) => TabCloseResult
   /** 关闭标签页 */
-  closeTab: (tabId: string) => void
+  closeTab: (tabId: string) => TabCloseResult
   /** 根据路径查找标签页 */
   findTabByPath: (path: string) => Tab | undefined
   /** 清理关闭中的路径标记 */
   clearClosingPath: () => void
   /** 重置到默认状态 */
   reset: () => void
-  /** 标记当前正在关闭的路径 */
-  setClosingPath: (path: null | string) => void
   /** 设置激活标签页 */
   setActiveTab: (tabId: string) => void
   /** 标签页列表 */
@@ -61,6 +71,41 @@ const DEFAULT_HOME_TAB: Tab = {
   id: 'home',
   label: 'menu.dashboard',
   path: '/dashboard',
+}
+
+/**
+ * 返回新的激活标签页 ID
+ */
+function resolveActiveTabId(tabs: Tab[], fallbackTabId?: string) {
+  if (fallbackTabId && tabs.some((tab) => tab.id === fallbackTabId)) {
+    return fallbackTabId
+  }
+
+  if (tabs.length > 0) {
+    return tabs[0].id
+  }
+
+  return DEFAULT_HOME_TAB.id
+}
+
+/**
+ * 生成关闭操作后的状态
+ */
+function buildCloseState(nextTabs: Tab[], fallbackTabId?: string, closingPath: null | string = null) {
+  const resolvedTabs = nextTabs.length > 0 ? nextTabs : [DEFAULT_HOME_TAB]
+  const resolvedActiveTabId = resolveActiveTabId(resolvedTabs, fallbackTabId)
+  const activeTab = resolvedTabs.find((tab) => tab.id === resolvedActiveTabId) ?? resolvedTabs[0]
+
+  return {
+    state: {
+      activeTabId: activeTab.id,
+      closingPath,
+      tabs: resolvedTabs,
+    },
+    result: {
+      nextPath: closingPath ? activeTab.path : null,
+    } satisfies TabCloseResult,
+  }
 }
 
 /**
@@ -88,19 +133,7 @@ export const useTabBarStore = create<TabBarState>()(
       },
 
       addTab: (tab: Tab) => {
-        const { tabs } = get()
-        const existingTab = tabs.find((t) => t.path === tab.path)
-
-        if (existingTab) {
-          // 如果标签页已存在，只激活它
-          set({ activeTabId: existingTab.id })
-        } else {
-          // 添加新标签页并激活
-          set({
-            activeTabId: tab.id,
-            tabs: [...tabs, tab],
-          })
-        }
+        get().addOrActivateTab(tab)
       },
 
       clearClosingPath: () => {
@@ -108,63 +141,110 @@ export const useTabBarStore = create<TabBarState>()(
       },
 
       closeAllTabs: () => {
-        const { tabs } = get()
-        // 只保留不可关闭的标签页
+        const { activeTabId, tabs } = get()
         const unclosableTabs = tabs.filter((t) => t.closable === false)
+        const activeTab = tabs.find((tab) => tab.id === activeTabId)
+        const activeWillClose = activeTab ? !unclosableTabs.some((tab) => tab.id === activeTab.id) : false
+        const { result, state } = buildCloseState(
+          unclosableTabs,
+          activeWillClose ? undefined : activeTabId,
+          activeWillClose ? (activeTab?.path ?? null) : null,
+        )
 
-        set({
-          activeTabId: unclosableTabs.length > 0 ? unclosableTabs[0].id : DEFAULT_HOME_TAB.id,
-          closingPath: null,
-          tabs: unclosableTabs.length > 0 ? unclosableTabs : [DEFAULT_HOME_TAB],
-        })
+        set(state)
+        return result
+      },
+
+      closeLeftTabs: (tabId: string) => {
+        const { activeTabId, tabs } = get()
+        const targetIndex = tabs.findIndex((t) => t.id === tabId)
+
+        if (targetIndex === -1) {
+          return { nextPath: null }
+        }
+
+        const nextTabs = tabs.filter((tab, index) => index >= targetIndex || tab.closable === false)
+        const activeTab = tabs.find((tab) => tab.id === activeTabId)
+        const activeWillClose = activeTab ? !nextTabs.some((tab) => tab.id === activeTab.id) : false
+        const { result, state } = buildCloseState(
+          nextTabs,
+          activeWillClose ? tabId : activeTabId,
+          activeWillClose ? (activeTab?.path ?? null) : null,
+        )
+
+        set(state)
+        return result
       },
 
       closeOtherTabs: (tabId: string) => {
-        const { tabs } = get()
+        const { activeTabId, tabs } = get()
         const targetTab = tabs.find((t) => t.id === tabId)
 
-        if (!targetTab) return
+        if (!targetTab) {
+          return { nextPath: null }
+        }
 
-        // 保留目标标签页和不可关闭的标签页
         const newTabs = tabs.filter((t) => t.id === tabId || t.closable === false)
+        const activeTab = tabs.find((tab) => tab.id === activeTabId)
+        const activeWillClose = activeTab ? !newTabs.some((tab) => tab.id === activeTab.id) : false
+        const { result, state } = buildCloseState(
+          newTabs,
+          activeWillClose ? tabId : activeTabId,
+          activeWillClose ? (activeTab?.path ?? null) : null,
+        )
 
-        set({
-          activeTabId: tabId,
-          closingPath: null,
-          tabs: newTabs,
-        })
+        set(state)
+        return result
+      },
+
+      closeRightTabs: (tabId: string) => {
+        const { activeTabId, tabs } = get()
+        const targetIndex = tabs.findIndex((t) => t.id === tabId)
+
+        if (targetIndex === -1) {
+          return { nextPath: null }
+        }
+
+        const nextTabs = tabs.filter((tab, index) => index <= targetIndex || tab.closable === false)
+        const activeTab = tabs.find((tab) => tab.id === activeTabId)
+        const activeWillClose = activeTab ? !nextTabs.some((tab) => tab.id === activeTab.id) : false
+        const { result, state } = buildCloseState(
+          nextTabs,
+          activeWillClose ? tabId : activeTabId,
+          activeWillClose ? (activeTab?.path ?? null) : null,
+        )
+
+        set(state)
+        return result
       },
 
       closeTab: (tabId: string) => {
         const { activeTabId, tabs } = get()
         const tabToClose = tabs.find((t) => t.id === tabId)
 
-        // 不允许关闭不可关闭的标签页
         if (!tabToClose || tabToClose.closable === false) {
-          return
+          return { nextPath: null }
         }
 
         const newTabs = tabs.filter((t) => t.id !== tabId)
-
-        // 如果关闭的是当前激活的标签页，需要激活其他标签页
-        let newActiveTabId = activeTabId
+        let fallbackTabId = activeTabId
+        let closingPath: null | string = null
         if (activeTabId === tabId) {
-          // 优先激活右侧标签页，如果没有则激活左侧标签页
           const closedIndex = tabs.findIndex((t) => t.id === tabId)
+          closingPath = tabToClose.path
+
           if (closedIndex < newTabs.length) {
-            newActiveTabId = newTabs[closedIndex].id
+            fallbackTabId = newTabs[closedIndex].id
           } else if (newTabs.length > 0) {
-            newActiveTabId = newTabs[newTabs.length - 1].id
+            fallbackTabId = newTabs[newTabs.length - 1].id
           } else {
-            // 如果没有其他标签页，激活首页
-            newActiveTabId = DEFAULT_HOME_TAB.id
+            fallbackTabId = DEFAULT_HOME_TAB.id
           }
         }
 
-        set({
-          activeTabId: newActiveTabId,
-          tabs: newTabs.length > 0 ? newTabs : [DEFAULT_HOME_TAB],
-        })
+        const { result, state } = buildCloseState(newTabs, fallbackTabId, closingPath)
+        set(state)
+        return result
       },
 
       findTabByPath: (path: string) => {
@@ -178,10 +258,6 @@ export const useTabBarStore = create<TabBarState>()(
           closingPath: null,
           tabs: [DEFAULT_HOME_TAB],
         })
-      },
-
-      setClosingPath: (path: null | string) => {
-        set({ closingPath: path })
       },
 
       setActiveTab: (tabId: string) => {

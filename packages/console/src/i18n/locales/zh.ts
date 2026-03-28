@@ -198,6 +198,14 @@ export default {
     themeModeDescription: '选择应用的主题模式',
     topBottomLayout: '上下布局',
   },
+  tabBar: {
+    closeAll: '关闭全部',
+    closeCurrent: '关闭',
+    closeLeft: '关闭左侧',
+    closeOthers: '关闭其他',
+    closeRight: '关闭右侧',
+    refreshCurrent: '刷新',
+  },
   theme: {
     darkMode: '暗色模式',
     exitFullscreen: '退出全屏',

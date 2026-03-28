@@ -199,6 +199,14 @@ export default {
     themeModeDescription: 'Choose the theme mode of the application',
     topBottomLayout: 'Top-Bottom Layout',
   },
+  tabBar: {
+    closeAll: 'Close All',
+    closeCurrent: 'Close',
+    closeLeft: 'Close Left',
+    closeOthers: 'Close Others',
+    closeRight: 'Close Right',
+    refreshCurrent: 'Refresh',
+  },
   theme: {
     darkMode: 'Dark Mode',
     exitFullscreen: 'Exit Fullscreen',
