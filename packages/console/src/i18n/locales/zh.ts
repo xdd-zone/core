@@ -216,6 +216,8 @@ export default {
     switchToLightMode: '切换到亮色模式',
   },
   tooltip: {
+    collapseHeaderActions: '收起操作按钮',
+    expandHeaderActions: '展开操作按钮',
     guide: '指南',
     notification: '通知',
     openMenu: '打开菜单',

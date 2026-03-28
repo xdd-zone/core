@@ -217,6 +217,8 @@ export default {
     switchToLightMode: 'Switch to Light Mode',
   },
   tooltip: {
+    collapseHeaderActions: 'Collapse actions',
+    expandHeaderActions: 'Expand actions',
     guide: 'Guide',
     notification: 'Notifications',
     openMenu: 'Open Menu',
