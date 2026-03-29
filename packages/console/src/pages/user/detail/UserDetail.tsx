@@ -2,10 +2,10 @@ import { useUserRolesQuery } from '@console/modules/rbac'
 
 import { useUserDetailQuery } from '@console/modules/user'
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { Badge, Button, Card, Descriptions, Space, Spin } from 'antd'
+import { Badge, Button, Card, Descriptions, Empty, Space, Spin, Tag } from 'antd'
 import dayjs from 'dayjs'
 
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ShieldCheck, UserRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -46,60 +46,133 @@ export function UserDetail() {
   const statusConfig = statusMap[user.status] || { color: 'default', text: user.status }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* 操作栏 */}
-      <div className="flex items-center justify-between">
-        <Button icon={<ArrowLeft className="size-4" />} onClick={() => void navigate({ to: '/users' })}>
-          {t('common.back')}
-        </Button>
-        <Space>
-          <Button onClick={() => void navigate({ to: '/users/$id/access', params: { id } })}>
-            {t('access.manage.title')}
-          </Button>
-          <Button type="primary" onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>
-            {t('common.edit')}
-          </Button>
-        </Space>
-      </div>
+    <div className="flex flex-col gap-5">
+      <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="max-w-3xl">
+              <Button icon={<ArrowLeft className="size-4" />} onClick={() => void navigate({ to: '/users' })}>
+                {t('common.back')}
+              </Button>
+              <div className="mt-4 flex items-start gap-3">
+                <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
+                  <UserRound className="size-5" />
+                </div>
+                <div>
+                  <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
+                    {t('user.detail.eyebrow')}
+                  </div>
+                  <h1 className="mt-2 text-2xl font-semibold tracking-tight">{user.name}</h1>
+                  <p className="text-fg-muted mt-2 text-sm leading-7">{t('user.detail.description')}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
+                    <Tag>{user.username || t('user.detail.noUsername')}</Tag>
+                    <Tag>{user.email || t('user.detail.noEmail')}</Tag>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-      {/* 用户信息卡片 */}
-      <Card title={t('user.detail.title')}>
-        <Descriptions column={2}>
-          <Descriptions.Item label={t('user.columns.username')}>{user.username || '-'}</Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.name')}>{user.name}</Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.email')}>{user.email || '-'}</Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.phone')}>{user.phone || '-'}</Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.status')}>
-            <Badge status={statusConfig.color as 'success' | 'default' | 'error'} text={statusConfig.text} />
-          </Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.introduce')}>{user.introduce || '-'}</Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.lastLogin')}>
-            {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.lastLoginIp')}>{user.lastLoginIp || '-'}</Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.createdAt')}>
-            {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}
-          </Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.updatedAt')}>
-            {dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}
-          </Descriptions.Item>
-        </Descriptions>
-      </Card>
-
-      {/* 用户角色卡片 */}
-      <Card title={t('user.detail.roles')} loading={userRolesQuery.isLoading}>
-        {roles.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {roles.map((role) => (
-              <span key={role.roleId} className="rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
-                {role.roleDisplayName || role.roleName}
-              </span>
-            ))}
+            <Space wrap>
+              <Button onClick={() => void navigate({ to: '/users/$id/access', params: { id } })}>
+                {t('access.manage.title')}
+              </Button>
+              <Button type="primary" onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>
+                {t('common.edit')}
+              </Button>
+            </Space>
           </div>
-        ) : (
-          <span className="text-fg-muted">{t('user.detail.noRoles')}</span>
-        )}
-      </Card>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <article className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
+              <div className="text-fg-muted text-xs">{t('user.columns.lastLogin')}</div>
+              <div className="mt-2 text-base font-semibold">
+                {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
+              </div>
+              <p className="text-fg-muted mt-2 text-xs leading-6">{t('user.detail.lastLoginDescription')}</p>
+            </article>
+            <article className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
+              <div className="text-fg-muted text-xs">{t('user.columns.createdAt')}</div>
+              <div className="mt-2 text-base font-semibold">{dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}</div>
+              <p className="text-fg-muted mt-2 text-xs leading-6">{t('user.detail.createdDescription')}</p>
+            </article>
+            <article className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
+              <div className="text-fg-muted text-xs">{t('user.detail.roles')}</div>
+              <div className="mt-2 text-base font-semibold">{roles.length}</div>
+              <p className="text-fg-muted mt-2 text-xs leading-6">{t('user.detail.rolesDescription')}</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+        <Card
+          title={t('user.detail.title')}
+          extra={<span className="text-fg-muted text-sm">{t('user.detail.infoDescription')}</span>}
+        >
+          <Descriptions column={2}>
+            <Descriptions.Item label={t('user.columns.username')}>{user.username || '-'}</Descriptions.Item>
+            <Descriptions.Item label={t('user.columns.name')}>{user.name}</Descriptions.Item>
+            <Descriptions.Item label={t('user.columns.email')}>{user.email || '-'}</Descriptions.Item>
+            <Descriptions.Item label={t('user.columns.phone')}>{user.phone || '-'}</Descriptions.Item>
+            <Descriptions.Item label={t('user.columns.status')}>
+              <Badge status={statusConfig.color as 'success' | 'default' | 'error'} text={statusConfig.text} />
+            </Descriptions.Item>
+            <Descriptions.Item label={t('user.columns.introduce')}>{user.introduce || '-'}</Descriptions.Item>
+            <Descriptions.Item label={t('user.columns.lastLogin')}>
+              {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('user.columns.lastLoginIp')}>{user.lastLoginIp || '-'}</Descriptions.Item>
+            <Descriptions.Item label={t('user.columns.createdAt')}>
+              {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('user.columns.updatedAt')}>
+              {dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}
+            </Descriptions.Item>
+          </Descriptions>
+        </Card>
+
+        <div className="flex flex-col gap-5">
+          <Card
+            title={t('user.detail.roles')}
+            extra={
+              <span className="text-fg-muted text-sm">{t('access.manage.roleCount', { count: roles.length })}</span>
+            }
+            loading={userRolesQuery.isLoading}
+          >
+            {roles.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {roles.map((role) => (
+                  <article
+                    key={role.roleId}
+                    className="rounded-2xl border border-border-subtle bg-surface-subtle/30 p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xl">
+                        <ShieldCheck className="size-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium">{role.roleDisplayName || role.roleName}</div>
+                        <div className="text-fg-muted mt-1 text-sm">{role.roleName}</div>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <Empty description={t('user.detail.noRoles')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            )}
+          </Card>
+
+          <Card title={t('user.detail.activityTitle')}>
+            <div className="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4">
+              <div className="text-fg-muted text-xs">{t('user.columns.updatedAt')}</div>
+              <div className="mt-2 font-medium">{dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}</div>
+              <p className="text-fg-muted mt-2 text-sm leading-7">{t('user.detail.activityDescription')}</p>
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

@@ -1,11 +1,21 @@
+import { Empty, Typography } from 'antd'
+import { useTranslation } from 'react-i18next'
+
+const { Paragraph, Title } = Typography
+
 /**
  * 分类管理页面
  */
 export function CategoryList() {
+  const { t } = useTranslation()
+
   return (
-    <div>
-      <h1>分类管理</h1>
-      <p>分类管理功能正在开发中...</p>
+    <div className="flex min-h-[60vh] items-center justify-center rounded-xl border border-dashed border-border bg-surface-muted/30 p-6">
+      <div className="max-w-md text-center">
+        <Title level={3}>{t('article.category.emptyTitle')}</Title>
+        <Paragraph className="text-fg-muted mb-0">{t('article.category.emptyDescription')}</Paragraph>
+        <Empty description={false} image={Empty.PRESENTED_IMAGE_SIMPLE} className="mt-6" />
+      </div>
     </div>
   )
 }

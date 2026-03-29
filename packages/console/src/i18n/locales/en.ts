@@ -47,8 +47,12 @@ export default {
         'This page explains the current account access by role, permission, and module scope so admins can verify authorization quickly.',
       overviewEyebrow: 'Access Overview',
       overviewTitle: 'What this account can manage in the console',
+      coveredModules: '{{count}} covered modules',
       permissionCount: '{{count}} permissions',
-      permissionsDescription: 'Permissions are grouped by module here so it is easy to confirm coverage and available actions.',
+      permissionsNote:
+        'Permissions are grouped by module here. Review the group first, then the concrete actions, to understand what this account can actually do.',
+      permissionsDescription:
+        'Permissions are grouped by module here so it is easy to confirm coverage and available actions.',
       permissionsTitle: 'My Permissions',
       roleAssignedAt: 'Effective since',
       roleCapabilitiesLabel: 'Default capability summary',
@@ -65,7 +69,8 @@ export default {
         manual: 'Admin assigned',
         system: 'System default',
       },
-      roleSourceNoteDescription: 'System default means the account gets it by default, while admin assigned means it was granted later.',
+      roleSourceNoteDescription:
+        'System default means the account gets it by default, while admin assigned means it was granted later.',
       roleSourceNoteTitle: 'Role source',
       rolesDescription:
         'Roles explain why this account has its current access, including role meaning, source, and default capability summary.',
@@ -82,6 +87,18 @@ export default {
         permissions: 'Effective Permissions',
         roles: 'Active Roles',
       },
+      summaryActionDescription:
+        'If you need to verify a specific permission next, continue below and review the concrete actions by module.',
+      summaryActionTitle: 'Next Step',
+      summaryActionValue: 'Review concrete permissions by module',
+      summaryPrimaryDescription:
+        'This page summarizes the available actions first, then explains which roles make those actions available.',
+      summaryPrimaryTitle: 'How to Read',
+      summaryPrimaryValue: 'Start with the result, then review the source',
+      summaryScopeDescription:
+        'Elevated actions usually affect more accounts or system settings, so they are worth reviewing first.',
+      summaryScopeTitle: 'Current Focus',
+      summaryScopeValue: 'Check high-scope permissions first',
     },
     empty: {
       permissions: 'No permissions available',
@@ -204,6 +221,24 @@ export default {
     emptyDescription: 'Article list is temporarily unavailable.',
     emptyTitle: 'Article List',
   },
+  article: {
+    category: {
+      emptyDescription: 'This page is intentionally left empty for now and will be used for category management later.',
+      emptyTitle: 'Category Management',
+    },
+    comment: {
+      emptyDescription: 'This page is intentionally left empty for now and will be used for comment management later.',
+      emptyTitle: 'Comment Management',
+    },
+    settings: {
+      emptyDescription: 'This page is intentionally left empty for now and will be used for article settings later.',
+      emptyTitle: 'Article Settings',
+    },
+    tag: {
+      emptyDescription: 'This page is intentionally left empty for now and will be used for tag management later.',
+      emptyTitle: 'Tag Management',
+    },
+  },
   guide: {
     closeBtn: 'Close',
     doneBtn: 'Done',
@@ -268,6 +303,16 @@ export default {
       updateSuccess: 'Profile updated successfully',
     },
     summary: {
+      contactDescription:
+        'Keep email and phone up to date so the account can still be identified and contacted from the console.',
+      contactTitle: 'Contact',
+      description:
+        'Review the current account profile and recent status here before updating commonly used information.',
+      eyebrow: 'My Profile',
+      identityDescription: 'Username and name help other admins recognize the current account in console workflows.',
+      identityTitle: 'Identity',
+      infoDescription: 'This section shows the basic profile currently saved for the signed-in account.',
+      sideTitle: 'Profile Notes',
       title: 'Current Profile',
     },
   },
@@ -326,14 +371,58 @@ export default {
       username: 'Username',
     },
     detail: {
+      activityDescription:
+        'Use this section to confirm when the profile was last updated and whether it needs another cleanup.',
+      activityTitle: 'Profile Activity',
+      createdDescription: 'Shows when this account first entered the console system.',
+      description: 'Start with the user identity, status, and roles here, then continue to the full profile below.',
+      eyebrow: 'User Detail',
+      infoDescription: 'This section contains the complete basic profile for administrator review.',
+      lastLoginDescription: 'Helps determine whether this account is still being used recently.',
+      noEmail: 'No email provided',
       noRoles: 'No roles assigned',
+      noUsername: 'No username provided',
+      rolesDescription: 'Shows how many roles are currently active for this user.',
       roles: 'User Roles',
       title: 'User Detail',
     },
     edit: {
+      description:
+        'Update the user’s basic profile here. Confirm identity first, then adjust contact details and supporting notes.',
+      eyebrow: 'Edit User',
+      formDescription: 'Changes sync back to both the user detail and the user list immediately.',
+      formTitle: 'Profile Form',
+      noteContactDescription:
+        'Use a reachable email and phone number so the account is easier to identify and follow up.',
+      noteContactTitle: 'Contact Details',
+      noteIdentityDescription:
+        'Name supports human-readable admin workflows, while username is the account key and is not editable here.',
+      noteIdentityTitle: 'Identity Fields',
+      noteIntroDescription:
+        'Use the introduction to capture role, responsibility, or any note that helps explain this account.',
+      noteIntroTitle: 'Introduction',
+      noteTitle: 'Editing Notes',
       title: 'Edit User',
     },
     emailInvalid: 'Invalid email format',
+    list: {
+      description:
+        'Review console accounts here, filter quickly by keyword or status, then continue to detail, edit, or access management.',
+      eyebrow: 'User Management',
+      filtersDescription: 'Narrow the scope first, then review the result set.',
+      filtersTitle: 'Filters',
+      resetFilters: 'Reset Filters',
+      resultsDescription: 'The result area keeps key fields and quick actions close at hand for fast admin follow-up.',
+      resultsTitle: 'User Results',
+      stats: {
+        active: 'Active on Page',
+        activeDescription: 'Quickly shows how many accounts on the current page are still in a normal state.',
+        currentPage: 'Results on Page',
+        currentPageDescription: 'Helps decide whether to keep paging or narrow the current filter.',
+        total: 'Total Matches',
+        totalDescription: 'Shows how many accounts match the current filter set.',
+      },
+    },
     logout: 'Logout',
     nameRequired: 'Please enter name',
     searchPlaceholder: 'Search username, name or email',
@@ -353,6 +442,25 @@ export default {
       name: 'Role Name',
     },
     customRole: 'Custom',
+    list: {
+      description:
+        'Review console roles here, confirm the difference between fixed system roles and custom roles, then continue into the details you need.',
+      eyebrow: 'Role Management',
+      filtersDescription: 'Use name or description keywords to narrow the role set quickly.',
+      filtersTitle: 'Filters',
+      resetFilters: 'Reset Filters',
+      resultsDescription:
+        'The result area keeps identity, type, and time information together so admins can judge roles quickly.',
+      resultsTitle: 'Role Results',
+      stats: {
+        currentPage: 'Roles on Page',
+        currentPageDescription: 'Helps decide whether the current page is enough or more paging is still needed.',
+        system: 'System Roles on Page',
+        systemDescription: 'Fixed system roles usually carry stable permissions and are worth checking first.',
+        total: 'Total Matches',
+        totalDescription: 'Shows how many roles match the current keyword filter.',
+      },
+    },
     searchPlaceholder: 'Search role name or description',
     systemRole: 'System',
   },

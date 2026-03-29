@@ -5,7 +5,7 @@ import { useCurrentUserPermissionsQuery, useCurrentUserRolesQuery } from '@conso
 
 import { Empty, Spin, Tag } from 'antd'
 import dayjs from 'dayjs'
-import { UserRound } from 'lucide-react'
+import { KeyRound, ShieldCheck, UserRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -77,23 +77,55 @@ export function MyAccess() {
   return (
     <div className="flex flex-col gap-5">
       <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-          <div className="max-w-2xl">
-            <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
-              {t('access.current.overviewEyebrow')}
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="max-w-3xl">
+              <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
+                {t('access.current.overviewEyebrow')}
+              </div>
+              <div className="mt-3 flex items-start gap-3">
+                <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
+                  <KeyRound className="size-5" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight text-fg">{t('access.current.overviewTitle')}</h1>
+                  <p className="mt-2 text-sm leading-7 text-fg-muted">{t('access.current.overviewDescription')}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Tag>{t('access.current.roleCount', { count: roles.length })}</Tag>
+                    <Tag>{t('access.current.permissionCount', { count: permissions.length })}</Tag>
+                    <Tag>{t('access.current.coveredModules', { count: coveredModulesCount })}</Tag>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-fg">{t('access.current.overviewTitle')}</h1>
-            <p className="mt-3 text-sm leading-7 text-fg-muted">{t('access.current.overviewDescription')}</p>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:max-w-[420px]">
+              {overviewStats.map((item) => (
+                <article key={item.label} className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
+                  <div className="text-fg-muted text-xs">{item.label}</div>
+                  <div className="mt-2 text-3xl font-semibold tracking-tight text-fg">{item.value}</div>
+                  <p className="mt-2 text-xs leading-6 text-fg-muted">{item.description}</p>
+                </article>
+              ))}
+            </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {overviewStats.map((item) => (
-              <article key={item.label} className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
-                <div className="text-fg-muted text-xs">{item.label}</div>
-                <div className="mt-2 text-3xl font-semibold tracking-tight text-fg">{item.value}</div>
-                <p className="mt-2 text-xs leading-6 text-fg-muted">{item.description}</p>
-              </article>
-            ))}
+          <div className="grid gap-3 md:grid-cols-3">
+            <article className="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4">
+              <div className="text-fg-muted text-xs">{t('access.current.summaryPrimaryTitle')}</div>
+              <div className="mt-2 font-medium text-fg">{t('access.current.summaryPrimaryValue')}</div>
+              <p className="mt-2 text-sm leading-7 text-fg-muted">{t('access.current.summaryPrimaryDescription')}</p>
+            </article>
+            <article className="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4">
+              <div className="text-fg-muted text-xs">{t('access.current.summaryScopeTitle')}</div>
+              <div className="mt-2 font-medium text-fg">{t('access.current.summaryScopeValue')}</div>
+              <p className="mt-2 text-sm leading-7 text-fg-muted">{t('access.current.summaryScopeDescription')}</p>
+            </article>
+            <article className="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4">
+              <div className="text-fg-muted text-xs">{t('access.current.summaryActionTitle')}</div>
+              <div className="mt-2 font-medium text-fg">{t('access.current.summaryActionValue')}</div>
+              <p className="mt-2 text-sm leading-7 text-fg-muted">{t('access.current.summaryActionDescription')}</p>
+            </article>
           </div>
         </div>
       </section>
@@ -126,7 +158,7 @@ export function MyAccess() {
                       return (
                         <article key={role.id} className="rounded-[24px] border border-border-subtle bg-overlay-0/20 p-4">
                           <div className="flex items-start gap-3">
-                            <div className="bg-primary/10 text-primary rounded-2xl p-2.5">
+                            <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-2xl">
                               <UserRound className="size-4" />
                             </div>
 
@@ -212,11 +244,20 @@ export function MyAccess() {
         <section className="rounded-[28px] border border-border-subtle bg-surface/80 p-5 shadow-sm backdrop-blur-xs">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold text-fg">{t('access.current.permissionsTitle')}</h2>
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-2xl">
+                  <ShieldCheck className="size-4" />
+                </div>
+                <h2 className="text-lg font-semibold text-fg">{t('access.current.permissionsTitle')}</h2>
+              </div>
               <p className="mt-2 max-w-2xl text-sm leading-7 text-fg-muted">{t('access.current.permissionsDescription')}</p>
             </div>
 
             <span className="text-fg-muted text-sm">{t('access.current.permissionCount', { count: permissions.length })}</span>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4 text-sm text-fg-muted">
+            {t('access.current.permissionsNote')}
           </div>
 
           <div className="mt-4">
