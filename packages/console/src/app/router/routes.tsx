@@ -7,7 +7,25 @@ import { Login } from '@console/pages/auth/Login'
 import { Forbidden } from '@console/pages/error/Forbidden'
 import { NotFound } from '@console/pages/error/NotFound'
 import { createRootRouteWithContext, createRoute, lazyRouteComponent, Outlet } from '@tanstack/react-router'
-import { BarChart3, Crop, FileText, Folder, KeyRound, LayoutTemplate, List, MessageCircle, Settings, Shield, ShieldCheck, Tag, UserCog, Users } from 'lucide-react'
+import {
+  AlertTriangle,
+  BarChart3,
+  Crop,
+  FileText,
+  Folder,
+  KeyRound,
+  LayoutTemplate,
+  List,
+  Lock,
+  MessageCircle,
+  Search,
+  Settings,
+  Shield,
+  ShieldCheck,
+  Tag,
+  UserCog,
+  Users,
+} from 'lucide-react'
 
 import { redirectFromRoot, requireAuth, requireGuest, validateLoginSearch } from './guards'
 
@@ -167,6 +185,36 @@ const markdownExampleRoute = createRoute({
   },
 })
 
+const errorStateExampleRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/example/ErrorStateExample'), 'ErrorStateExample'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'error-example',
+  staticData: {
+    icon: AlertTriangle,
+    title: 'menu.errorExample',
+  },
+})
+
+const forbiddenExampleRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/example/ForbiddenExample'), 'ForbiddenExample'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'forbidden-example',
+  staticData: {
+    icon: Lock,
+    title: 'menu.forbiddenExample',
+  },
+})
+
+const notFoundExampleRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/example/NotFoundExample'), 'NotFoundExample'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'not-found-example',
+  staticData: {
+    icon: Search,
+    title: 'menu.notFoundExample',
+  },
+})
+
 const userListRoute = createRoute({
   component: lazyRouteComponent(() => import('@console/pages/user/list/UserList'), 'UserList'),
   getParentRoute: () => appLayoutRoute,
@@ -246,6 +294,9 @@ const protectedRouteTree = protectedRoute.addChildren([
     uiShowcaseRoute,
     markdownExampleRoute,
     imageCropRoute,
+    errorStateExampleRoute,
+    forbiddenExampleRoute,
+    notFoundExampleRoute,
     userListRoute,
     userDetailRoute,
     userEditRoute,

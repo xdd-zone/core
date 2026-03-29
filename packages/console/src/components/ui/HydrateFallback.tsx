@@ -5,7 +5,7 @@ export function HydrateFallback() {
   return (
     <div className="relative h-screen w-screen">
       <Pattern />
-      <Loading />
+      <Loading fullScreen />
     </div>
   )
 }

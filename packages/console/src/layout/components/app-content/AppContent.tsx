@@ -11,8 +11,10 @@ export function AppContent() {
     select: (state) => state.status === 'pending',
   })
   return (
-    <main className="h-full flex-1 overflow-auto p-2">
-      <div className="text-fg h-full min-h-full rounded-lg shadow-sm">{isNavigating ? <Loading /> : <Outlet />}</div>
+    <main className="guide-content h-full flex-1 overflow-auto">
+      <div className="guide-content-inner text-fg h-full min-h-full">
+        {isNavigating ? <Loading /> : <Outlet />}
+      </div>
     </main>
   )
 }

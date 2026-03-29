@@ -92,7 +92,7 @@ src/
 - `pages/access/`
   - 当前登录用户权限页
 - `pages/example/`
-  - 组件主题、Markdown 和图片裁剪示例页
+  - 组件主题、Markdown、图片裁剪和错误状态示例页
 - `layout/`
   - 后台整体布局、头部、侧边栏、移动端抽屉
 - `stores/`
@@ -113,7 +113,7 @@ src/
   - 内容管理：`/articles`、`/categories`、`/tags`、`/comments`、`/article-settings`
   - 系统管理：`/users`、`/users/:id`、`/users/:id/edit`、`/users/:id/access`、`/roles`
   - 当前用户：`/profile`、`/my-access`
-  - 功能示例：`/ui-showcase`、`/markdown-example`、`/image-crop`
+  - 功能示例：`/ui-showcase`、`/markdown-example`、`/image-crop`、`/error-example`、`/forbidden-example`、`/not-found-example`
   - 统一在父级 route 的 `beforeLoad` 中校验登录态
 - 错误页
   - `/403`
@@ -202,6 +202,15 @@ auth store 只保留会话快照相关状态：
   - 组件与主题
   - Markdown 演示
   - 图片裁剪
+  - 运行时错误
+  - 403 权限错误
+  - 404 页面不存在
+
+示例页和错误页的文案默认保持简短：
+
+- 标题直接说明当前状态或用途
+- 说明文字尽量控制在 1 到 2 句
+- 能用按钮直接处理的，不再补很多解释块
 
 列表页中的按钮会继续进入这些页面：
 
@@ -386,7 +395,7 @@ bun run dev
 8. 通过头像菜单进入 `/profile` 与 `/my-access`，确认资料页和当前用户权限页正常
 9. 切换不同 Catppuccin 主题后，菜单、抽屉、认证页样式保持一致
 10. 访问 `/ui-showcase`，确认组件、设计令牌与主题色展示正常
-11. 访问 `/markdown-example` 和 `/image-crop`，确认示例页按预期渲染
+11. 访问 `/markdown-example`、`/image-crop`、`/error-example`、`/forbidden-example` 和 `/not-found-example`，确认示例页按预期渲染
 
 ## 相关阅读
 

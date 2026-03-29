@@ -3,9 +3,9 @@ import { RbacRequestError, useAssignRoleMutation, useRemoveRoleMutation, useRole
 import { useUserDetailQuery } from '@console/modules/user'
 
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { App as AntdApp, Button, Card, Descriptions, Empty, Popconfirm, Select, Space, Spin, Tag } from 'antd'
+import { App as AntdApp, Button, Card, Empty, Popconfirm, Select, Space, Spin, Tag } from 'antd'
 import dayjs from 'dayjs'
-import { ArrowLeft, ShieldPlus, Trash2 } from 'lucide-react'
+import { ArrowLeft, KeyRound, ShieldPlus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -93,41 +93,52 @@ export function UserAccess() {
   const permissions = userPermissionsQuery.data?.permissions ?? []
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button icon={<ArrowLeft className="size-4" />} onClick={() => void navigate({ to: '/users/$id', params: { id } })}>
-          {t('common.back')}
-        </Button>
-        <Space>
-          <Button onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>{t('common.edit')}</Button>
-        </Space>
-      </div>
+    <div className="flex flex-col gap-5">
+      <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Button icon={<ArrowLeft className="size-4" />} onClick={() => void navigate({ to: '/users/$id', params: { id } })}>
+              {t('common.back')}
+            </Button>
+            <Space>
+              <Button onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>{t('common.edit')}</Button>
+            </Space>
+          </div>
 
-      <Card title={t('access.manage.userSummaryTitle')}>
-        <Descriptions column={2}>
-          <Descriptions.Item label={t('user.columns.name')}>{user.name}</Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.username')}>{user.username || '-'}</Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.email')}>{user.email || '-'}</Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.status')}>
-            <Tag color={user.status === 'ACTIVE' ? 'success' : user.status === 'BANNED' ? 'error' : 'default'}>
-              {t(`user.status.${user.status.toLowerCase()}`)}
-            </Tag>
-          </Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.lastLogin')}>
-            {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label={t('user.columns.createdAt')}>
-            {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}
-          </Descriptions.Item>
-        </Descriptions>
-      </Card>
+          <div className="flex items-start gap-3">
+            <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
+              <KeyRound className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
+                {t('access.manage.title')}
+              </div>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-fg">{user.name}</h1>
+              <p className="mt-2 text-sm text-fg-muted">{t('access.manage.description')}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Tag color={user.status === 'ACTIVE' ? 'success' : user.status === 'BANNED' ? 'error' : 'default'}>
+                  {t(`user.status.${user.status.toLowerCase()}`)}
+                </Tag>
+                <Tag>{user.username || '-'}</Tag>
+                <Tag>{user.email || '-'}</Tag>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-3 text-sm text-fg-muted">
+                <span>{t('user.columns.lastLogin')} {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}</span>
+                <span>{t('user.columns.createdAt')} {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)]">
         <Card
           title={t('access.manage.rolesTitle')}
           extra={<span className="text-fg-muted text-sm">{t('access.manage.roleCount', { count: roles.length })}</span>}
         >
-          <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4 md:flex-row md:items-center">
+          <p className="mb-4 text-sm text-fg-muted">{t('access.manage.rolesDescription')}</p>
+
+          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center">
             <Select
               value={selectedRoleId}
               onChange={setSelectedRoleId}
@@ -182,6 +193,8 @@ export function UserAccess() {
             <span className="text-fg-muted text-sm">{t('access.manage.permissionCount', { count: permissions.length })}</span>
           }
         >
+          <p className="mb-4 text-sm text-fg-muted">{t('access.manage.permissionsDescription')}</p>
+
           {permissions.length > 0
             ? <PermissionSummaryList permissions={permissions} />
             : <Empty description={t('access.empty.permissions')} image={Empty.PRESENTED_IMAGE_SIMPLE} />}

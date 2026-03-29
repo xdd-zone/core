@@ -21,6 +21,11 @@ export function RoleList() {
   const roleListQuery = useRoleListQuery({ keyword: keyword || undefined, page, pageSize })
   const currentItems = roleListQuery.data?.items ?? []
   const systemRolesCount = currentItems.filter((role) => role.isSystem).length
+  const summaryItems = [
+    { label: t('role.list.stats.total'), value: roleListQuery.data?.total ?? 0 },
+    { label: t('role.list.stats.system'), value: systemRolesCount },
+    { label: t('role.list.stats.currentPage'), value: currentItems.length },
+  ]
 
   const columns: TableProps['columns'] = [
     {
@@ -58,76 +63,65 @@ export function RoleList() {
   return (
     <div className="flex flex-col gap-5">
       <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-3xl">
-              <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
-                {t('role.list.eyebrow')}
+        <div className="flex flex-col gap-5">
+          <div className="max-w-3xl">
+            <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
+              {t('role.list.eyebrow')}
+            </div>
+            <div className="mt-3 flex items-start gap-3">
+              <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
+                <ShieldCheck className="size-5" />
               </div>
-              <div className="mt-3 flex items-start gap-3">
-                <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
-                  <ShieldCheck className="size-5" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight">{t('menu.roleManagement')}</h1>
-                  <p className="text-fg-muted mt-2 text-sm leading-7">{t('role.list.description')}</p>
-                </div>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight">{t('menu.roleManagement')}</h1>
+                <p className="text-fg-muted mt-2 text-sm">{t('role.list.description')}</p>
               </div>
             </div>
-
-            <Button
-              icon={<RefreshCw className="size-4" />}
-              onClick={() => {
-                setKeyword('')
-                setPage(1)
-                setPageSize(20)
-              }}
-            >
-              {t('role.list.resetFilters')}
-            </Button>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <article className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
-              <div className="text-fg-muted text-xs">{t('role.list.stats.total')}</div>
-              <div className="mt-2 text-2xl font-semibold">{roleListQuery.data?.total ?? 0}</div>
-              <p className="text-fg-muted mt-2 text-xs leading-6">{t('role.list.stats.totalDescription')}</p>
-            </article>
-            <article className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
-              <div className="text-fg-muted text-xs">{t('role.list.stats.system')}</div>
-              <div className="mt-2 text-2xl font-semibold">{systemRolesCount}</div>
-              <p className="text-fg-muted mt-2 text-xs leading-6">{t('role.list.stats.systemDescription')}</p>
-            </article>
-            <article className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
-              <div className="text-fg-muted text-xs">{t('role.list.stats.currentPage')}</div>
-              <div className="mt-2 text-2xl font-semibold">{currentItems.length}</div>
-              <p className="text-fg-muted mt-2 text-xs leading-6">{t('role.list.stats.currentPageDescription')}</p>
-            </article>
+          <div className="flex flex-wrap gap-2">
+            {summaryItems.map((item) => (
+              <span
+                key={item.label}
+                className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-overlay-0/20 px-3 py-1.5 text-sm"
+              >
+                <span className="text-fg-muted">{item.label}</span>
+                <span className="font-medium text-fg">{item.value}</span>
+              </span>
+            ))}
           </div>
         </div>
       </section>
-
-      <Card title={t('role.list.filtersTitle')} extra={<span className="text-fg-muted text-sm">{t('role.list.filtersDescription')}</span>}>
-        <Input
-          placeholder={t('role.searchPlaceholder')}
-          prefix={<Search className="text-fg-muted size-4" />}
-          value={keyword}
-          onChange={(e) => {
-            setKeyword(e.target.value)
-            setPage(1)
-          }}
-          className="w-full max-w-md"
-          allowClear
-        />
-      </Card>
 
       <Card
         title={t('role.list.resultsTitle')}
         extra={<span className="text-fg-muted text-sm">{t('common.total', { count: roleListQuery.data?.total ?? 0 })}</span>}
       >
-        <div className="mb-4 rounded-2xl border border-border-subtle bg-surface-subtle/35 px-4 py-3 text-sm text-fg-muted">
-          {t('role.list.resultsDescription')}
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <Input
+            placeholder={t('role.searchPlaceholder')}
+            prefix={<Search className="text-fg-muted size-4" />}
+            value={keyword}
+            onChange={(e) => {
+              setKeyword(e.target.value)
+              setPage(1)
+            }}
+            className="w-full max-w-md"
+            allowClear
+          />
+
+          <Button
+            icon={<RefreshCw className="size-4" />}
+            onClick={() => {
+              setKeyword('')
+              setPage(1)
+              setPageSize(20)
+            }}
+          >
+            {t('role.list.resetFilters')}
+          </Button>
         </div>
+
         <Table
           columns={columns}
           dataSource={roleListQuery.data?.items}

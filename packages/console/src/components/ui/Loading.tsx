@@ -1,353 +1,127 @@
-export function Loading() {
+import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
+
+interface LoadingProps {
+  fullScreen?: boolean
+}
+
+const StyledWrapper = styled.div<{ $fullScreen: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: ${({ $fullScreen }) => ($fullScreen ? '100vh' : '320px')};
+  padding: 2.5rem 1.5rem;
+
+  .loading-content {
+    width: min(100%, 24rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .loading-eyebrow {
+    margin-top: 1rem;
+    color: var(--color-fg-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .loading-title {
+    margin: 0.75rem 0 0;
+    color: var(--color-fg);
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .loading-description {
+    margin: 0.5rem 0 0;
+    color: var(--color-fg-muted);
+    font-size: 0.875rem;
+    line-height: 1.8;
+  }
+
+  .loading-wave {
+    width: min(18.75rem, 100%);
+    height: 5.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+  }
+
+  .loading-bar {
+    width: 1.125rem;
+    height: 0.75rem;
+    margin: 0 0.375rem;
+    background: color-mix(in srgb, var(--color-primary) 78%, var(--color-surface));
+    border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+    border-radius: 999px;
+    box-shadow: 0 10px 24px -18px color-mix(in srgb, var(--color-primary) 26%, transparent);
+    animation: loading-wave-animation 1s ease-in-out infinite;
+  }
+
+  .loading-bar:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+
+  .loading-bar:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+
+  .loading-bar:nth-child(4) {
+    animation-delay: 0.3s;
+  }
+
+  @keyframes loading-wave-animation {
+    0% {
+      height: 0.75rem;
+      opacity: 0.65;
+    }
+
+    50% {
+      height: 3rem;
+      opacity: 1;
+    }
+
+    100% {
+      height: 0.75rem;
+      opacity: 0.65;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loading-bar {
+      animation: none;
+      height: 1.5rem;
+      opacity: 0.85;
+    }
+  }
+`
+
+/**
+ * 通用加载状态。
+ * 默认用于页面区块切换；需要占满视口时传入 fullScreen。
+ */
+export function Loading({ fullScreen = false }: LoadingProps) {
+  const { t } = useTranslation()
+
   return (
-    <>
-      <style>{`
-        .wheel-and-hamster {
-          --dur: 1s;
-        }
-
-        .wheel-and-hamster .wheel,
-        .wheel-and-hamster .hamster,
-        .wheel-and-hamster .hamster div,
-        .wheel-and-hamster .spoke {
-          position: absolute;
-        }
-
-        .wheel-and-hamster .wheel {
-          background: radial-gradient(100% 100% at center, hsla(0, 0%, 60%, 0) 47.8%, hsl(0, 0%, 60%) 48%);
-        }
-
-        .wheel-and-hamster .hamster {
-          animation: hamster var(--dur) ease-in-out infinite;
-          top: 50%;
-          left: calc(50% - 3.5em);
-          width: 7em;
-          height: 3.75em;
-          transform: rotate(4deg) translate(-0.8em, 1.85em);
-          transform-origin: 50% 0;
-        }
-
-        .wheel-and-hamster .hamster__head {
-          animation: hamsterHead var(--dur) ease-in-out infinite;
-          background: hsl(30, 90%, 55%);
-          border-radius: 70% 30% 0 100% / 40% 25% 25% 60%;
-          box-shadow:
-            0 -0.25em 0 hsl(30, 90%, 80%) inset,
-            0.75em -1.55em 0 hsl(30, 90%, 90%) inset;
-          top: 0;
-          left: -2em;
-          width: 2.75em;
-          height: 2.5em;
-          transform-origin: 100% 50%;
-        }
-
-        .wheel-and-hamster .hamster__ear {
-          animation: hamsterEar var(--dur) ease-in-out infinite;
-          background: hsl(0, 90%, 85%);
-          border-radius: 50%;
-          box-shadow: -0.25em 0 hsl(30, 90%, 55%) inset;
-          top: -0.25em;
-          right: -0.25em;
-          width: 0.75em;
-          height: 0.75em;
-          transform-origin: 50% 75%;
-        }
-
-        .wheel-and-hamster .hamster__eye {
-          animation: hamsterEye var(--dur) linear infinite;
-          background-color: hsl(0, 0%, 0%);
-          border-radius: 50%;
-          top: 0.375em;
-          left: 1.25em;
-          width: 0.5em;
-          height: 0.5em;
-        }
-
-        .wheel-and-hamster .hamster__nose {
-          background: hsl(0, 90%, 75%);
-          border-radius: 35% 65% 85% 15% / 70% 50% 50% 30%;
-          top: 0.75em;
-          left: 0;
-          width: 0.2em;
-          height: 0.25em;
-        }
-
-        .wheel-and-hamster .hamster__body {
-          animation: hamsterBody var(--dur) ease-in-out infinite;
-          background: hsl(30, 90%, 90%);
-          border-radius: 50% 30% 50% 30% / 15% 60% 40% 40%;
-          box-shadow:
-            0.1em 0.75em 0 hsl(30, 90%, 55%) inset,
-            0.15em -0.5em 0 hsl(30, 90%, 80%) inset;
-          top: 0.25em;
-          left: 2em;
-          width: 4.5em;
-          height: 3em;
-          transform-origin: 17% 50%;
-          transform-style: preserve-3d;
-        }
-
-        .wheel-and-hamster .hamster__limb--fr,
-        .wheel-and-hamster .hamster__limb--fl {
-          clip-path: polygon(0 0, 100% 0, 70% 80%, 60% 100%, 0% 100%, 40% 80%);
-          top: 2em;
-          left: 0.5em;
-          width: 1em;
-          height: 1.5em;
-          transform-origin: 50% 0;
-        }
-
-        .wheel-and-hamster .hamster__limb--fr {
-          animation: hamsterFRLimb var(--dur) linear infinite;
-          background: linear-gradient(hsl(30, 90%, 80%) 80%, hsl(0, 90%, 75%) 80%);
-          transform: rotate(15deg) translateZ(-1px);
-        }
-
-        .wheel-and-hamster .hamster__limb--fl {
-          animation: hamsterFLLimb var(--dur) linear infinite;
-          background: linear-gradient(hsl(30, 90%, 90%) 80%, hsl(0, 90%, 85%) 80%);
-          transform: rotate(15deg);
-        }
-
-        .wheel-and-hamster .hamster__limb--br,
-        .wheel-and-hamster .hamster__limb--bl {
-          border-radius: 0.75em 0.75em 0 0;
-          clip-path: polygon(0 0, 100% 0, 100% 30%, 70% 90%, 70% 100%, 30% 100%, 40% 90%, 0% 30%);
-          top: 1em;
-          left: 2.8em;
-          width: 1.5em;
-          height: 2.5em;
-          transform-origin: 50% 30%;
-        }
-
-        .wheel-and-hamster .hamster__limb--br {
-          animation: hamsterBRLimb var(--dur) linear infinite;
-          background: linear-gradient(hsl(30, 90%, 80%) 90%, hsl(0, 90%, 75%) 90%);
-          transform: rotate(-25deg) translateZ(-1px);
-        }
-
-        .wheel-and-hamster .hamster__limb--bl {
-          animation: hamsterBLLimb var(--dur) linear infinite;
-          background: linear-gradient(hsl(30, 90%, 90%) 90%, hsl(0, 90%, 85%) 90%);
-          transform: rotate(-25deg);
-        }
-
-        .wheel-and-hamster .hamster__tail {
-          animation: hamsterTail var(--dur) linear infinite;
-          background: hsl(0, 90%, 85%);
-          border-radius: 0.25em 50% 50% 0.25em;
-          box-shadow: 0 -0.2em 0 hsl(0, 90%, 75%) inset;
-          top: 1.5em;
-          right: -0.5em;
-          height: 0.5em;
-           width: 1em;
-          transform: rotate(30deg) translateZ(-1px);
-          transform-origin: 0.25em 0.25em;
-        }
-
-        .wheel-and-hamster .spoke {
-          animation: spoke var(--dur) linear infinite;
-          background:
-            radial-gradient(100% 100% at center, hsl(0, 0%, 60%) 4.8%, hsla(0, 0%, 60%, 0) 5%),
-            linear-gradient(hsla(0, 0%, 55%, 0) 46.9%, hsl(0, 0%, 65%) 47% 52.9%, hsla(0, 0%, 65%, 0) 53%) 50% 50% / 99% 99%
-              no-repeat;
-        }
-
-        /* Animations */
-        @keyframes hamster {
-          from,
-          to {
-            transform: rotate(4deg) translate(-0.8em, 1.85em);
-          }
-
-          50% {
-            transform: rotate(0) translate(-0.8em, 1.85em);
-          }
-        }
-
-        @keyframes hamsterHead {
-          from,
-          25%,
-          50%,
-          75%,
-          to {
-            transform: rotate(0);
-          }
-
-          12.5%,
-          37.5%,
-          62.5%,
-          87.5% {
-            transform: rotate(8deg);
-          }
-        }
-
-        @keyframes hamsterEye {
-          from,
-          90%,
-          to {
-            transform: scaleY(1);
-          }
-
-          95% {
-            transform: scaleY(0);
-          }
-        }
-
-        @keyframes hamsterEar {
-          from,
-          25%,
-          50%,
-          75%,
-          to {
-            transform: rotate(0);
-          }
-
-          12.5%,
-          37.5%,
-          62.5%,
-          87.5% {
-            transform: rotate(12deg);
-          }
-        }
-
-        @keyframes hamsterBody {
-          from,
-          25%,
-          50%,
-          75%,
-          to {
-            transform: rotate(0);
-          }
-
-          12.5%,
-          37.5%,
-          62.5%,
-          87.5% {
-            transform: rotate(-2deg);
-          }
-        }
-
-        @keyframes hamsterFRLimb {
-          from,
-          25%,
-          50%,
-          75%,
-          to {
-            transform: rotate(50deg) translateZ(-1px);
-          }
-
-          12.5%,
-          37.5%,
-          62.5%,
-          87.5% {
-            transform: rotate(-30deg) translateZ(-1px);
-          }
-        }
-
-        @keyframes hamsterFLLimb {
-          from,
-          25%,
-          50%,
-          75%,
-          to {
-            transform: rotate(-30deg);
-          }
-
-          12.5%,
-          37.5%,
-          62.5%,
-          87.5% {
-            transform: rotate(50deg);
-          }
-        }
-
-        @keyframes hamsterBRLimb {
-          from,
-          25%,
-          50%,
-          75%,
-          to {
-            transform: rotate(-60deg) translateZ(-1px);
-          }
-
-          12.5%,
-          37.5%,
-          62.5%,
-          87.5% {
-            transform: rotate(20deg) translateZ(-1px);
-          }
-        }
-
-        @keyframes hamsterBLLimb {
-          from,
-          25%,
-          50%,
-          75%,
-          to {
-            transform: rotate(20deg);
-          }
-
-          12.5%,
-          37.5%,
-          62.5%,
-          87.5% {
-            transform: rotate(-60deg);
-          }
-        }
-
-        @keyframes hamsterTail {
-          from,
-          25%,
-          50%,
-          75%,
-          to {
-            transform: rotate(30deg) translateZ(-1px);
-          }
-
-          12.5%,
-          37.5%,
-          62.5%,
-          87.5% {
-            transform: rotate(10deg) translateZ(-1px);
-          }
-        }
-
-        @keyframes spoke {
-          from {
-            transform: rotate(0);
-          }
-
-          to {
-            transform: rotate(-1turn);
-          }
-        }
-      `}</style>
-      <div className="flex h-full w-full items-center justify-center">
-        <div
-          className="wheel-and-hamster relative text-sm"
-          style={{ height: '12em', width: '12em' }}
-          aria-label="Orange and tan hamster running in a metal wheel"
-          role="img"
-        >
-          <div className="wheel absolute top-0 left-0 z-2 h-full w-full rounded-full" />
-          <div className="hamster absolute z-1">
-            <div className="hamster__body absolute">
-              <div className="hamster__head absolute">
-                <div className="hamster__ear absolute" />
-                <div className="hamster__eye absolute" />
-                <div className="hamster__nose absolute" />
-              </div>
-              <div className="hamster__limb hamster__limb--fr absolute" />
-              <div className="hamster__limb hamster__limb--fl absolute" />
-              <div className="hamster__limb hamster__limb--br absolute" />
-              <div className="hamster__limb hamster__limb--bl absolute" />
-              <div className="hamster__tail absolute" />
-            </div>
-          </div>
-          <div className="spoke absolute top-0 left-0 h-full w-full rounded-full" />
+    <StyledWrapper $fullScreen={fullScreen}>
+      <div className="loading-content">
+        <div className="loading-wave" aria-hidden="true">
+          <div className="loading-bar" />
+          <div className="loading-bar" />
+          <div className="loading-bar" />
+          <div className="loading-bar" />
         </div>
+
+        <div className="loading-eyebrow">Loading</div>
+        <h2 className="loading-title">{t('common.loadingTitle')}</h2>
+        <p className="loading-description">{t('common.loadingDescription')}</p>
       </div>
-    </>
+    </StyledWrapper>
   )
 }

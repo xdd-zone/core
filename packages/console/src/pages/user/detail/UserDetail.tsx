@@ -48,7 +48,7 @@ export function UserDetail() {
   return (
     <div className="flex flex-col gap-5">
       <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="max-w-3xl">
               <Button icon={<ArrowLeft className="size-4" />} onClick={() => void navigate({ to: '/users' })}>
@@ -63,7 +63,7 @@ export function UserDetail() {
                     {t('user.detail.eyebrow')}
                   </div>
                   <h1 className="mt-2 text-2xl font-semibold tracking-tight">{user.name}</h1>
-                  <p className="text-fg-muted mt-2 text-sm leading-7">{t('user.detail.description')}</p>
+                  <p className="text-fg-muted mt-2 text-sm">{t('user.detail.description')}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
                     <Tag>{user.username || t('user.detail.noUsername')}</Tag>
@@ -83,33 +83,17 @@ export function UserDetail() {
             </Space>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <article className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
-              <div className="text-fg-muted text-xs">{t('user.columns.lastLogin')}</div>
-              <div className="mt-2 text-base font-semibold">
-                {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
-              </div>
-              <p className="text-fg-muted mt-2 text-xs leading-6">{t('user.detail.lastLoginDescription')}</p>
-            </article>
-            <article className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
-              <div className="text-fg-muted text-xs">{t('user.columns.createdAt')}</div>
-              <div className="mt-2 text-base font-semibold">{dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}</div>
-              <p className="text-fg-muted mt-2 text-xs leading-6">{t('user.detail.createdDescription')}</p>
-            </article>
-            <article className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
-              <div className="text-fg-muted text-xs">{t('user.detail.roles')}</div>
-              <div className="mt-2 text-base font-semibold">{roles.length}</div>
-              <p className="text-fg-muted mt-2 text-xs leading-6">{t('user.detail.rolesDescription')}</p>
-            </article>
+          <div className="flex flex-wrap gap-3 text-sm text-fg-muted">
+            <span>{t('user.columns.lastLogin')} {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}</span>
+            <span>{t('user.columns.createdAt')} {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}</span>
+            <span>{t('user.detail.roles')} {roles.length}</span>
+            <span>{t('user.columns.updatedAt')} {dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}</span>
           </div>
         </div>
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
-        <Card
-          title={t('user.detail.title')}
-          extra={<span className="text-fg-muted text-sm">{t('user.detail.infoDescription')}</span>}
-        >
+        <Card title={t('user.detail.title')}>
           <Descriptions column={2}>
             <Descriptions.Item label={t('user.columns.username')}>{user.username || '-'}</Descriptions.Item>
             <Descriptions.Item label={t('user.columns.name')}>{user.name}</Descriptions.Item>
@@ -141,20 +125,15 @@ export function UserDetail() {
             loading={userRolesQuery.isLoading}
           >
             {roles.length > 0 ? (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col divide-y divide-border-subtle">
                 {roles.map((role) => (
-                  <article
-                    key={role.roleId}
-                    className="rounded-2xl border border-border-subtle bg-surface-subtle/30 p-4"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xl">
-                        <ShieldCheck className="size-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium">{role.roleDisplayName || role.roleName}</div>
-                        <div className="text-fg-muted mt-1 text-sm">{role.roleName}</div>
-                      </div>
+                  <article key={role.roleId} className="flex items-start gap-3 py-4 first:pt-0 last:pb-0">
+                    <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xl">
+                      <ShieldCheck className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium">{role.roleDisplayName || role.roleName}</div>
+                      <div className="text-fg-muted mt-1 text-sm">{role.roleName}</div>
                     </div>
                   </article>
                 ))}
@@ -162,14 +141,6 @@ export function UserDetail() {
             ) : (
               <Empty description={t('user.detail.noRoles')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
             )}
-          </Card>
-
-          <Card title={t('user.detail.activityTitle')}>
-            <div className="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4">
-              <div className="text-fg-muted text-xs">{t('user.columns.updatedAt')}</div>
-              <div className="mt-2 font-medium">{dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}</div>
-              <p className="text-fg-muted mt-2 text-sm leading-7">{t('user.detail.activityDescription')}</p>
-            </div>
           </Card>
         </div>
       </div>

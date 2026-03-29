@@ -1,8 +1,8 @@
-import { Pattern } from '@console/components/ui'
+import { ErrorStatePage } from '@console/components/ui'
 import { useNavigate } from '@tanstack/react-router'
-import { Button, Result, Space } from 'antd'
+import { Button } from 'antd'
 
-import { Home, Lock } from 'lucide-react'
+import { ArrowLeft, House, Lock } from 'lucide-react'
 
 /**
  * 403 Forbidden 页面
@@ -19,30 +19,23 @@ export function Forbidden() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center">
-      {/* Pattern 背景 */}
-      <Pattern animationDuration={6} />
-
-      {/* 内容区域 */}
-      <div className="relative z-10 mx-auto w-full max-w-md px-6">
-        <Result
-          status="403"
-          title="403"
-          subTitle="抱歉，您没有权限访问此页面"
-          icon={<Lock className="text-primary text-6xl" />}
-          extra={
-            <Space orientation="vertical" size="middle" className="w-full">
-              <Button type="primary" size="large" icon={<Home />} onClick={handleGoHome} className="w-full">
-                返回首页
-              </Button>
-              <Button size="large" onClick={handleGoBack} className="w-full">
-                返回上一页
-              </Button>
-            </Space>
-          }
-          className="bg-cat-secondary/80 rounded-lg p-8 shadow-lg backdrop-blur-sm"
-        />
-      </div>
-    </div>
+    <ErrorStatePage
+      eyebrow="403 Forbidden"
+      icon={<Lock className="size-5" />}
+      title="你当前没有权限访问这个页面"
+      description="当前账号已登录，但没有这个页面的访问权限。返回首页，或回到上一页继续操作。"
+      note="如果你本来应该能看到这里，请联系管理员确认角色或权限配置。"
+      actions={
+        <>
+          <Button type="primary" icon={<House className="size-4" />} onClick={handleGoHome}>
+            首页
+          </Button>
+          <Button icon={<ArrowLeft className="size-4" />} onClick={handleGoBack}>
+            上一页
+          </Button>
+        </>
+      }
+      patternDuration={6}
+    />
   )
 }

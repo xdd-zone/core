@@ -10,7 +10,7 @@ import { TabBar } from '../components/tab-bar/TabBar'
  */
 export function LeftRightLayout() {
   return (
-    <div className="flex h-screen">
+    <div className="guide-shell flex h-screen">
       {/* 左侧边栏 */}
       <AppSidebar />
 

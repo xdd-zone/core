@@ -10,7 +10,7 @@ import { TabBar } from '../components/tab-bar/TabBar'
  */
 export function TopBottomLayout() {
   return (
-    <div className="flex h-screen flex-col">
+    <div className="guide-shell flex h-screen flex-col">
       {/* 顶部头部 */}
       <AppHeader variant="topBottom" showBrand />
 

@@ -4,6 +4,7 @@
  */
 
 export { ErrorBoundary } from './ErrorBoundary'
+export { ErrorStatePage } from './ErrorStatePage'
 export { Loading } from './Loading'
 export { Markdown } from './markdown/Markdown'
 export { Pattern } from './Pattern'

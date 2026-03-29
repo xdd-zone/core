@@ -75,9 +75,6 @@ export function PermissionSummaryList({ permissions }: PermissionSummaryListProp
     ]
 
     return orderedResources.map((resource) => ({
-      description: t(`access.permissionMeta.groupDescriptions.${resource}`, {
-        defaultValue: t('access.permissionMeta.groupDescriptions.other'),
-      }),
       label: t(`access.permissionMeta.groups.${resource}`, {
         defaultValue: t('access.permissionMeta.groups.other'),
       }),
@@ -101,17 +98,21 @@ export function PermissionSummaryList({ permissions }: PermissionSummaryListProp
                 </div>
                 <div className="min-w-0">
                   <div className="font-medium">{group.label}</div>
-                  <p className="mt-1 text-sm text-fg-muted">{group.description}</p>
                 </div>
               </div>
 
-              <span className="text-fg-muted text-sm">{t('access.permissionMeta.groupCount', { count: group.permissions.length })}</span>
+              <span className="text-fg-muted text-sm">
+                {t('access.permissionMeta.groupCount', { count: group.permissions.length })}
+              </span>
             </div>
 
-            <div className="mt-4 grid gap-3 xl:grid-cols-2">
-              {group.permissions.map((permission) => (
-                <article key={permission.key} className="rounded-2xl border border-border-subtle bg-overlay-0/35 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="mt-4 overflow-hidden rounded-2xl border border-border-subtle bg-overlay-0/20">
+              {group.permissions.map((permission, index) => (
+                <article
+                  key={permission.key}
+                  className={`px-4 py-3 ${index === 0 ? '' : 'border-t border-border-subtle'}`}
+                >
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="font-medium">
                         {t(`access.permissionMeta.titles.${permission.key}`, {
@@ -125,16 +126,15 @@ export function PermissionSummaryList({ permissions }: PermissionSummaryListProp
                       </p>
                     </div>
 
-                    <Tag bordered={false} className="m-0 rounded-full px-2 py-0.5 text-xs">
-                      {t(`access.permissionMeta.scopes.${permission.scope ?? 'base'}`)}
-                    </Tag>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface px-2.5 py-1 font-mono text-fg-muted">
-                      <KeyRound className="size-3" />
-                      {permission.key}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                      <Tag bordered={false} className="m-0 rounded-full px-2 py-0.5 text-xs">
+                        {t(`access.permissionMeta.scopes.${permission.scope ?? 'base'}`)}
+                      </Tag>
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface px-2.5 py-1 font-mono text-xs text-fg-muted">
+                        <KeyRound className="size-3" />
+                        {permission.key}
+                      </span>
+                    </div>
                   </div>
                 </article>
               ))}

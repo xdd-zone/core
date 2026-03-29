@@ -90,90 +90,60 @@ export function MyProfile() {
     <div className="flex flex-col gap-5">
       <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
         <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div className="max-w-3xl">
-              <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
-                {t('profile.summary.eyebrow')}
-              </div>
-              <div className="mt-3 flex items-start gap-3">
-                <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
-                  <IdCard className="size-5" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight">{t('menu.myProfile')}</h1>
-                  <p className="text-fg-muted mt-2 text-sm leading-7">{t('profile.summary.description')}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Tag>{profile.username || '-'}</Tag>
-                    <Tag>{profile.email || '-'}</Tag>
-                    <Tag
-                      color={
-                        profile.status === 'ACTIVE' ? 'success' : profile.status === 'BANNED' ? 'error' : 'default'
-                      }
-                    >
-                      {t(`user.status.${profile.status.toLowerCase()}`)}
-                    </Tag>
-                  </div>
-                </div>
-              </div>
+          <div className="max-w-3xl">
+            <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
+              {t('profile.summary.eyebrow')}
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <article className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
-                <div className="text-fg-muted text-xs">{t('user.columns.lastLogin')}</div>
-                <div className="mt-2 font-medium">
-                  {profile.lastLogin ? dayjs(profile.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
+            <div className="mt-3 flex items-start gap-3">
+              <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
+                <IdCard className="size-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight">{t('menu.myProfile')}</h1>
+                <p className="text-fg-muted mt-2 text-sm">{t('profile.summary.description')}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Tag>{profile.username || '-'}</Tag>
+                  <Tag>{profile.email || '-'}</Tag>
+                  <Tag
+                    color={
+                      profile.status === 'ACTIVE' ? 'success' : profile.status === 'BANNED' ? 'error' : 'default'
+                    }
+                  >
+                    {t(`user.status.${profile.status.toLowerCase()}`)}
+                  </Tag>
                 </div>
-              </article>
-              <article className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
-                <div className="text-fg-muted text-xs">{t('user.columns.createdAt')}</div>
-                <div className="mt-2 font-medium">{dayjs(profile.createdAt).format('YYYY-MM-DD HH:mm')}</div>
-              </article>
+                <div className="mt-4 flex flex-wrap gap-3 text-sm text-fg-muted">
+                  <span>{t('user.columns.lastLogin')} {profile.lastLogin ? dayjs(profile.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}</span>
+                  <span>{t('user.columns.createdAt')} {dayjs(profile.createdAt).format('YYYY-MM-DD HH:mm')}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_320px]">
-        <Card
-          title={t('profile.summary.title')}
-          extra={<span className="text-fg-muted text-sm">{t('profile.summary.infoDescription')}</span>}
-        >
-          <Descriptions column={2}>
-            <Descriptions.Item label={t('user.columns.username')}>{profile.username || '-'}</Descriptions.Item>
-            <Descriptions.Item label={t('user.columns.status')}>
-              <Tag color={profile.status === 'ACTIVE' ? 'success' : profile.status === 'BANNED' ? 'error' : 'default'}>
-                {t(`user.status.${profile.status.toLowerCase()}`)}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label={t('user.columns.email')}>{profile.email || '-'}</Descriptions.Item>
-            <Descriptions.Item label={t('user.columns.phone')}>{profile.phone || '-'}</Descriptions.Item>
-            <Descriptions.Item label={t('user.columns.lastLogin')}>
-              {profile.lastLogin ? dayjs(profile.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('user.columns.createdAt')}>
-              {dayjs(profile.createdAt).format('YYYY-MM-DD HH:mm')}
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
+      <Card title={t('profile.summary.title')}>
+        <Descriptions column={2}>
+          <Descriptions.Item label={t('user.columns.username')}>{profile.username || '-'}</Descriptions.Item>
+          <Descriptions.Item label={t('user.columns.status')}>
+            <Tag color={profile.status === 'ACTIVE' ? 'success' : profile.status === 'BANNED' ? 'error' : 'default'}>
+              {t(`user.status.${profile.status.toLowerCase()}`)}
+            </Tag>
+          </Descriptions.Item>
+          <Descriptions.Item label={t('user.columns.email')}>{profile.email || '-'}</Descriptions.Item>
+          <Descriptions.Item label={t('user.columns.phone')}>{profile.phone || '-'}</Descriptions.Item>
+          <Descriptions.Item label={t('user.columns.lastLogin')}>
+            {profile.lastLogin ? dayjs(profile.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label={t('user.columns.createdAt')}>
+            {dayjs(profile.createdAt).format('YYYY-MM-DD HH:mm')}
+          </Descriptions.Item>
+        </Descriptions>
+      </Card>
 
-        <Card title={t('profile.summary.sideTitle')}>
-          <div className="flex flex-col gap-4">
-            <div className="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4">
-              <div className="text-sm font-medium">{t('profile.summary.identityTitle')}</div>
-              <p className="text-fg-muted mt-2 text-sm leading-7">{t('profile.summary.identityDescription')}</p>
-            </div>
-            <div className="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4">
-              <div className="text-sm font-medium">{t('profile.summary.contactTitle')}</div>
-              <p className="text-fg-muted mt-2 text-sm leading-7">{t('profile.summary.contactDescription')}</p>
-            </div>
-          </div>
-        </Card>
-      </div>
+      <Card title={t('profile.form.title')}>
+        <p className="mb-4 text-sm text-fg-muted">{t('profile.form.description')}</p>
 
-      <Card
-        title={t('profile.form.title')}
-        extra={<span className="text-fg-muted text-sm">{t('profile.form.description')}</span>}
-      >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <div className="grid gap-x-6 md:grid-cols-2">
             <Form.Item label={t('user.columns.username')} name="username">

@@ -1,109 +1,67 @@
 import type { ErrorComponentProps } from '@tanstack/react-router'
 
-import { Pattern } from './Pattern'
+import { Button } from 'antd'
+import { AlertTriangle, House, RefreshCw } from 'lucide-react'
+
+import { ErrorStatePage } from './ErrorStatePage'
 
 /**
  * 错误边界组件，用于捕获并处理子组件抛出的错误。
  */
-export function ErrorBoundary({ error }: ErrorComponentProps) {
-  const errorMessage = error instanceof Error ? error.message : '发生未知错误'
+export function ErrorBoundary({ error, info, reset }: ErrorComponentProps) {
+  const errorMessage = error instanceof Error && error.message.trim() ? error.message : '当前页面出现了未预期的错误'
+  const errorName = error instanceof Error && error.name.trim() ? error.name : 'ApplicationError'
+
+  const handleRetry = () => {
+    reset()
+  }
+
+  const handleGoHome = () => {
+    window.location.assign('/')
+  }
 
   return (
-    <>
-      <Pattern />
-      <style>{`
-        .glitch {
-          position: relative;
-          font-size: 8rem; /* 调整字体大小 */
-          font-weight: 700;
-          line-height: 1;
-          color: #fff;
-          letter-spacing: -0.025em;
-          text-shadow:
-            0 0 2px rgba(255, 0, 0, 0.5),
-            0 0 5px rgba(0, 255, 0, 0.5),
-            0 0 10px rgba(0, 0, 255, 0.5);
-        }
-
-        .glitch::before,
-        .glitch::after {
-          content: '500';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: transparent; /* 背景透明 */
-          overflow: hidden;
-        }
-
-        .glitch::before {
-          left: 2px;
-          text-shadow: -2px 0 #ff00c1;
-          animation: glitch-before 3s infinite linear alternate-reverse;
-        }
-
-        .glitch::after {
-          left: -2px;
-          text-shadow: -2px 0 #00fff9, 2px 2px #ff00c1;
-          animation: glitch-after 2s infinite linear alternate-reverse;
-        }
-
-        @keyframes glitch-before {
-          0% { clip-path: inset(85% 0 8% 0); }
-          10% { clip-path: inset(54% 0 7% 0); }
-          20% { clip-path: inset(49% 0 43% 0); }
-          30% { clip-path: inset(75% 0 18% 0); }
-          40% { clip-path: inset(40% 0 41% 0); }
-          50% { clip-path: inset(2% 0 82% 0); }
-          60% { clip-path: inset(76% 0 23% 0); }
-          70% { clip-path: inset(27% 0 49% 0); }
-          80% { clip-path: inset(23% 0 19% 0); }
-          90% { clip-path: inset(88% 0 3% 0); }
-          100% { clip-path: inset(3% 0 94% 0); }
-        }
-
-        @keyframes glitch-after {
-          0% { clip-path: inset(82% 0 10% 0); }
-          10% { clip-path: inset(5% 0 89% 0); }
-          20% { clip-path: inset(43% 0 32% 0); }
-          30% { clip-path: inset(30% 0 6% 0); }
-          40% { clip-path: inset(89% 0 8% 0); }
-          50% { clip-path: inset(45% 0 47% 0); }
-          60% { clip-path: inset(63% 0 3% 0); }
-          70% { clip-path: inset(13% 0 64% 0); }
-          80% { clip-path: inset(60% 0 33% 0); }
-          90% { clip-path: inset(73% 0 2% 0); }
-          100% { clip-path: inset(1% 0 95% 0); }
-        }
-
-        @keyframes shimmer {
-          from {
-            background-position: 0 0;
-          }
-          to {
-            background-position: -200% 0;
-          }
-        }
-
-        .shimmer-button {
-          animation: shimmer 2s linear infinite;
-          background: linear-gradient(to right, #4f46e5 0%, #c026d3 50%, #4f46e5 100%);
-          background-size: 200% 100%;
-        }
-      `}</style>
-      <div className="relative flex h-screen w-full flex-col items-center justify-center">
-        <div className="glitch">500</div>
-        <h1 className="text-fg mt-4 text-3xl font-bold">应用发生错误</h1>
-        <p className="text-fg-muted mt-2 text-center">{errorMessage}</p>
-        <button
-          type="button"
-          onClick={() => (window.location.href = '/')}
-          className="shimmer-button mt-6 rounded-md px-6 py-3 font-semibold text-white transition-all duration-300 ease-in-out hover:scale-105 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none"
-        >
-          返回首页
-        </button>
-      </div>
-    </>
+    <ErrorStatePage
+      eyebrow="Error State"
+      icon={<AlertTriangle className="size-5" />}
+      title="当前页面暂时无法显示"
+      description="页面加载时出了点问题。重试当前页面，或返回首页继续其他操作。"
+      note="如果问题持续出现，可以再查看下方错误信息。"
+      actions={
+        <>
+          <Button type="primary" icon={<RefreshCw className="size-4" />} onClick={handleRetry}>
+            重试
+          </Button>
+          <Button icon={<House className="size-4" />} onClick={handleGoHome}>
+            首页
+          </Button>
+        </>
+      }
+      detailDescription="需要排查时，可以参考下面的错误信息。"
+      detailItems={[
+        {
+          label: '错误名称',
+          content: <pre className="overflow-x-auto whitespace-pre-wrap break-words text-xs leading-6">{errorName}</pre>,
+        },
+        {
+          label: '错误消息',
+          content: (
+            <pre className="overflow-x-auto whitespace-pre-wrap break-words text-xs leading-6">{errorMessage}</pre>
+          ),
+        },
+        ...(info?.componentStack
+          ? [
+              {
+                label: '组件堆栈',
+                content: (
+                  <pre className="text-fg-muted max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs leading-6">
+                    {info.componentStack}
+                  </pre>
+                ),
+              },
+            ]
+          : []),
+      ]}
+    />
   )
 }

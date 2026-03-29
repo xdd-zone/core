@@ -29,28 +29,11 @@ export function MyAccess() {
   const permissions = currentUserPermissionsQuery.data?.permissions ?? []
   const coveredModulesCount = new Set(permissions.map((permission) => permission.resource)).size
   const elevatedPermissionsCount = permissions.filter((permission) => permission.scope === 'all' || permission.resource === 'system').length
-
-  const overviewStats = [
-    {
-      description: t('access.current.statDescriptions.roles'),
-      label: t('access.current.stats.roles'),
-      value: roles.length,
-    },
-    {
-      description: t('access.current.statDescriptions.permissions'),
-      label: t('access.current.stats.permissions'),
-      value: permissions.length,
-    },
-    {
-      description: t('access.current.statDescriptions.modules'),
-      label: t('access.current.stats.modules'),
-      value: coveredModulesCount,
-    },
-    {
-      description: t('access.current.statDescriptions.elevated'),
-      label: t('access.current.stats.elevated'),
-      value: elevatedPermissionsCount,
-    },
+  const summaryItems = [
+    { label: t('access.current.stats.roles'), value: roles.length },
+    { label: t('access.current.stats.permissions'), value: permissions.length },
+    { label: t('access.current.stats.modules'), value: coveredModulesCount },
+    { label: t('access.current.stats.elevated'), value: elevatedPermissionsCount },
   ]
 
   const getPermissionTitle = (permission: PermissionSummary) =>
@@ -77,55 +60,40 @@ export function MyAccess() {
   return (
     <div className="flex flex-col gap-5">
       <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div className="max-w-3xl">
-              <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
-                {t('access.current.overviewEyebrow')}
-              </div>
-              <div className="mt-3 flex items-start gap-3">
-                <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
-                  <KeyRound className="size-5" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight text-fg">{t('access.current.overviewTitle')}</h1>
-                  <p className="mt-2 text-sm leading-7 text-fg-muted">{t('access.current.overviewDescription')}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Tag>{t('access.current.roleCount', { count: roles.length })}</Tag>
-                    <Tag>{t('access.current.permissionCount', { count: permissions.length })}</Tag>
-                    <Tag>{t('access.current.coveredModules', { count: coveredModulesCount })}</Tag>
-                  </div>
-                </div>
-              </div>
+        <div className="flex flex-col gap-5">
+          <div className="max-w-3xl">
+            <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
+              {t('access.current.overviewEyebrow')}
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 xl:max-w-[420px]">
-              {overviewStats.map((item) => (
-                <article key={item.label} className="rounded-2xl border border-border-subtle bg-overlay-0/20 p-4">
-                  <div className="text-fg-muted text-xs">{item.label}</div>
-                  <div className="mt-2 text-3xl font-semibold tracking-tight text-fg">{item.value}</div>
-                  <p className="mt-2 text-xs leading-6 text-fg-muted">{item.description}</p>
-                </article>
-              ))}
+            <div className="mt-3 flex items-start gap-3">
+              <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
+                <KeyRound className="size-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight text-fg">{t('access.current.overviewTitle')}</h1>
+                <p className="mt-2 text-sm text-fg-muted">{t('access.current.overviewDescription')}</p>
+                <p className="mt-3 text-sm font-medium text-fg">
+                  {t('access.current.overviewSummary', {
+                    elevated: elevatedPermissionsCount,
+                    modules: coveredModulesCount,
+                    permissions: permissions.length,
+                    roles: roles.length,
+                  })}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <article className="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4">
-              <div className="text-fg-muted text-xs">{t('access.current.summaryPrimaryTitle')}</div>
-              <div className="mt-2 font-medium text-fg">{t('access.current.summaryPrimaryValue')}</div>
-              <p className="mt-2 text-sm leading-7 text-fg-muted">{t('access.current.summaryPrimaryDescription')}</p>
-            </article>
-            <article className="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4">
-              <div className="text-fg-muted text-xs">{t('access.current.summaryScopeTitle')}</div>
-              <div className="mt-2 font-medium text-fg">{t('access.current.summaryScopeValue')}</div>
-              <p className="mt-2 text-sm leading-7 text-fg-muted">{t('access.current.summaryScopeDescription')}</p>
-            </article>
-            <article className="rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4">
-              <div className="text-fg-muted text-xs">{t('access.current.summaryActionTitle')}</div>
-              <div className="mt-2 font-medium text-fg">{t('access.current.summaryActionValue')}</div>
-              <p className="mt-2 text-sm leading-7 text-fg-muted">{t('access.current.summaryActionDescription')}</p>
-            </article>
+          <div className="flex flex-wrap gap-2">
+            {summaryItems.map((item) => (
+              <span
+                key={item.label}
+                className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-overlay-0/20 px-3 py-1.5 text-sm"
+              >
+                <span className="text-fg-muted">{item.label}</span>
+                <span className="font-medium text-fg">{item.value}</span>
+              </span>
+            ))}
           </div>
         </div>
       </section>
@@ -135,15 +103,10 @@ export function MyAccess() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-fg">{t('access.current.rolesTitle')}</h2>
-              <p className="mt-2 max-w-xl text-sm leading-7 text-fg-muted">{t('access.current.rolesDescription')}</p>
+              <p className="mt-2 max-w-xl text-sm text-fg-muted">{t('access.current.rolesDescription')}</p>
             </div>
 
             <span className="text-fg-muted text-sm">{t('access.current.roleCount', { count: roles.length })}</span>
-          </div>
-
-          <div className="mt-4 rounded-2xl border border-border-subtle bg-surface-muted/55 p-4">
-            <div className="text-sm font-medium text-fg">{t('access.current.roleSourceNoteTitle')}</div>
-            <p className="mt-2 text-sm leading-7 text-fg-muted">{t('access.current.roleSourceNoteDescription')}</p>
           </div>
 
           <div className="mt-4">
@@ -183,54 +146,45 @@ export function MyAccess() {
                             </div>
                           </div>
 
-                          <div className="mt-4 grid gap-3 md:grid-cols-2">
-                            <div className="rounded-2xl border border-border-subtle bg-surface/70 px-3 py-3">
-                              <div className="text-fg-muted text-xs">{t('access.current.roleInternalName')}</div>
-                              <div className="mt-1 break-all font-mono text-xs text-fg">{role.name}</div>
-                            </div>
-
-                            <div className="rounded-2xl border border-border-subtle bg-surface/70 px-3 py-3">
-                              <div className="text-fg-muted text-xs">{t('access.current.roleAssignedAt')}</div>
-                              <div className="mt-1 text-sm text-fg">{dayjs(role.assignedAt).format('YYYY-MM-DD HH:mm')}</div>
-                            </div>
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <span className="rounded-full border border-border-subtle bg-surface/70 px-2.5 py-1 font-mono text-xs text-fg-muted">
+                              {role.name}
+                            </span>
+                            <span className="rounded-full border border-border-subtle bg-surface/70 px-2.5 py-1 text-xs text-fg-muted">
+                              {t('access.current.roleAssignedAt')} {dayjs(role.assignedAt).format('YYYY-MM-DD HH:mm')}
+                            </span>
+                            <span className="rounded-full border border-border-subtle bg-surface/70 px-2.5 py-1 text-xs text-fg-muted">
+                              {t('access.current.rolePermissionCount', { count: role.permissions.length })}
+                            </span>
                           </div>
 
-                          <div className="mt-4 rounded-2xl border border-border-subtle bg-surface/70 p-3">
-                            <div>
-                              <div className="text-fg-muted text-xs">{t('access.current.roleCapabilitiesLabel')}</div>
-                              <div className="mt-1 text-sm font-medium text-fg">
-                                {t('access.current.rolePermissionCount', { count: role.permissions.length })}
-                              </div>
-                            </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {capabilityGroups.map((group) => (
+                              <span
+                                key={`${role.id}-${group.resource}`}
+                                className="rounded-full border border-border-subtle bg-overlay-0/35 px-2.5 py-1 text-xs text-fg-muted"
+                              >
+                                {group.label} {group.count}
+                              </span>
+                            ))}
+                          </div>
 
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {capabilityGroups.map((group) => (
-                                <span
-                                  key={`${role.id}-${group.resource}`}
-                                  className="rounded-full border border-border-subtle bg-overlay-0/35 px-2.5 py-1 text-xs text-fg-muted"
-                                >
-                                  {group.label} {group.count}
-                                </span>
-                              ))}
-                            </div>
-
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {previewPermissions.map((permission) => (
-                                <span
-                                  key={`${role.id}-${permission.key}`}
-                                  className="rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-fg"
-                                >
-                                  {getPermissionTitle(permission)}
-                                </span>
-                              ))}
-                              {extraPermissionCount > 0
-                                ? (
-                                    <span className="rounded-full border border-dashed border-border-subtle px-2.5 py-1 text-xs text-fg-muted">
-                                      {t('access.current.rolePermissionMore', { count: extraPermissionCount })}
-                                    </span>
-                                  )
-                                : null}
-                            </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {previewPermissions.map((permission) => (
+                              <span
+                                key={`${role.id}-${permission.key}`}
+                                className="rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-fg"
+                              >
+                                {getPermissionTitle(permission)}
+                              </span>
+                            ))}
+                            {extraPermissionCount > 0
+                              ? (
+                                  <span className="rounded-full border border-dashed border-border-subtle px-2.5 py-1 text-xs text-fg-muted">
+                                    {t('access.current.rolePermissionMore', { count: extraPermissionCount })}
+                                  </span>
+                                )
+                              : null}
                           </div>
                         </article>
                       )
@@ -250,14 +204,10 @@ export function MyAccess() {
                 </div>
                 <h2 className="text-lg font-semibold text-fg">{t('access.current.permissionsTitle')}</h2>
               </div>
-              <p className="mt-2 max-w-2xl text-sm leading-7 text-fg-muted">{t('access.current.permissionsDescription')}</p>
+              <p className="mt-2 max-w-2xl text-sm text-fg-muted">{t('access.current.permissionsDescription')}</p>
             </div>
 
             <span className="text-fg-muted text-sm">{t('access.current.permissionCount', { count: permissions.length })}</span>
-          </div>
-
-          <div className="mt-4 rounded-2xl border border-border-subtle bg-surface-subtle/35 p-4 text-sm text-fg-muted">
-            {t('access.current.permissionsNote')}
           </div>
 
           <div className="mt-4">

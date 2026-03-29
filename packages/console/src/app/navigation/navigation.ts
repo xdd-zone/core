@@ -5,6 +5,7 @@ import type { ComponentType } from 'react'
 import { renderIcon } from '@console/utils/pathUtils'
 
 import {
+  AlertTriangle,
   Crop,
   FileText,
   FileText as FileTextIcon,
@@ -12,8 +13,10 @@ import {
   KeyRound,
   LayoutDashboard,
   LayoutTemplate,
+  Lock,
   MessageSquare,
   Newspaper,
+  Search,
   Settings,
   Shield,
   ShieldCheck,
@@ -133,6 +136,24 @@ export const navigationItems: NavigationItem[] = [
         key: 'image-crop',
         label: 'menu.imageCrop',
         path: '/image-crop',
+      },
+      {
+        icon: AlertTriangle,
+        key: 'error-example',
+        label: 'menu.errorExample',
+        path: '/error-example',
+      },
+      {
+        icon: Lock,
+        key: 'forbidden-example',
+        label: 'menu.forbiddenExample',
+        path: '/forbidden-example',
+      },
+      {
+        icon: Search,
+        key: 'not-found-example',
+        label: 'menu.notFoundExample',
+        path: '/not-found-example',
       },
     ],
   },

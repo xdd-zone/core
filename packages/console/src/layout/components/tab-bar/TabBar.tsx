@@ -160,6 +160,17 @@ export function TabBar() {
 
   useEffect(() => {
     const container = scrollContainerRef.current
+    if (!container || !activeTabId) return
+
+    // 等 DOM 渲染完成后再定位，避免新增 tab 时元素还没挂载
+    requestAnimationFrame(() => {
+      const activeEl = container.querySelector<HTMLElement>(`[data-tab-id="${activeTabId}"]`)
+      activeEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    })
+  }, [activeTabId, tabs.length])
+
+  useEffect(() => {
+    const container = scrollContainerRef.current
     if (!container) return
 
     if (!isMobile) {
@@ -189,7 +200,7 @@ export function TabBar() {
       <div className="flex items-center justify-between">
         <div
           ref={scrollContainerRef}
-          className="scrollbar-hide flex flex-1 items-center gap-x-1 overflow-x-hidden"
+          className="scrollbar-hide flex flex-1 items-center gap-x-1 overflow-x-auto"
           style={{
             msOverflowStyle: 'none',
             scrollbarWidth: 'none',
@@ -198,6 +209,7 @@ export function TabBar() {
           {tabs.map((tab) => (
             <Dropdown key={tab.id} menu={{ items: getContextMenuItems(tab) }} trigger={['contextMenu']}>
               <div
+                data-tab-id={tab.id}
                 onClick={() => handleTabClick(tab.id, tab.path)}
                 className={clsx(
                   'flex cursor-pointer items-center gap-x-2 rounded-md border px-3 py-1.5 text-sm whitespace-nowrap transition-all select-none',

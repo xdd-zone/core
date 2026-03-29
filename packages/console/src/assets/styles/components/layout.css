@@ -1,7 +1,39 @@
 /* 布局组件主题样式 */
 @layer components {
+  .guide-shell {
+    background: transparent;
+  }
+
+  .guide-header {
+    padding: clamp(0.85rem, 1.2vw, 1.15rem) clamp(1rem, 1.8vw, 1.5rem);
+    border-bottom-color: color-mix(in srgb, var(--color-border-subtle) 80%, transparent);
+    background: color-mix(in srgb, var(--color-surface) 68%, transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .guide-sidebar {
+    border-right-color: color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface) 76%, transparent),
+      color-mix(in srgb, var(--color-surface-muted) 68%, transparent)
+    );
+    backdrop-filter: blur(8px);
+  }
+
+  .guide-content {
+    padding: clamp(0.85rem, 1.6vw, 1.5rem);
+  }
+
+  .guide-content-inner {
+    width: 100%;
+    max-width: 96rem;
+    margin-inline: auto;
+  }
+
   .guide-tab-bar {
-    background: color-mix(in srgb, var(--color-surface-muted), transparent 70%);
+    background: color-mix(in srgb, var(--color-surface-muted) 60%, transparent);
+    backdrop-filter: blur(6px);
   }
 
   .guide-menu.ant-menu {
@@ -13,7 +45,21 @@
   .guide-menu.ant-menu .ant-menu-submenu-title {
     margin-inline: 0.5rem;
     width: calc(100% - 1rem);
-    border-radius: 0.5rem;
+    border-radius: 1rem;
+    transition:
+      background-color 220ms ease,
+      color 220ms ease,
+      transform 220ms ease;
+  }
+
+  .guide-menu.ant-menu .ant-menu-item:hover,
+  .guide-menu.ant-menu .ant-menu-submenu-title:hover {
+    background: color-mix(in srgb, var(--color-surface) 68%, transparent);
+  }
+
+  .guide-menu.ant-menu .ant-menu-item-selected,
+  .guide-menu.ant-menu .ant-menu-submenu-selected > .ant-menu-submenu-title {
+    background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface) 88%);
   }
 
   .guide-menu.ant-menu .ant-menu-item-selected::after {
