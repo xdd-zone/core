@@ -1,6 +1,6 @@
 # XDD Zone Core
 
-XDD Zone Core 是一个基于 Bun 的全栈 monorepo，当前同时维护后台前端和 Elysia API 服务。
+XDD Zone Core 是一个基于 Bun 的全栈 monorepo，当前同时维护后台前端和 Elysia API 服务~
 
 主要包：
 
