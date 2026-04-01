@@ -1,1 +1,1 @@
-export { api, ConsoleApiError, normalizeEdenBaseUrl, unwrapEdenResponse } from './eden'
+export { api, ConsoleApiError, normalizeEdenBaseUrl, resolveApiUrl, unwrapEdenResponse } from './eden'

@@ -4,7 +4,8 @@
 
 - Bun 1.3.5
 - Docker 可用
-- `.env` 已配置 `DATABASE_URL`、`BETTER_AUTH_URL`、`BETTER_AUTH_SECRET`
+- `.env` 已配置 `DATABASE_URL`、`BETTER_AUTH_URL`、`BETTER_AUTH_SECRET`、`GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET`
+- `packages/nexus/config.yaml` 的 `trustedOrigins` 已包含当前 Console 来源
 
 常用初始化命令：
 
@@ -26,7 +27,7 @@ bun run db:local:prepare
 修改后台前端时，默认按下面顺序推进：
 
 1. 确认 `nexus` 现有接口和登录态约定
-2. 先接 `console` 的 Eden 公共请求层或模块 API 适配层
+2. 先接 `console` 的 Eden 公共请求层、模块 API 适配层，或确认当前是否走浏览器重定向
 3. 再改 `app/router`、`app/navigation`、`layout` 或页面
 4. 完成 `lint / type-check / build`
 
@@ -75,7 +76,7 @@ bun run db:local:prepare
 
 - `modules/auth` 只放 `/auth` 路由入口和 HTTP schema
 - 登录、注册、登出这类认证接口动作统一放 `core/security/auth/*`
-- 需要 `permission / own / me` 的模块只接 `accessPlugin`
+- 需要 `permission / own / me` 的模块只使用 `accessPlugin`
 - 只读取可选 session 的模块接 `authPlugin`
 - 只要求登录且不做权限判断的接口，优先使用 `authPlugin + auth: 'required'`
 - 使用 `accessPlugin` 时，也可以直接声明 `auth: 'required'`
@@ -132,6 +133,12 @@ bun run db:local:prepare
 - 基于 Eden Treaty 的 auth API 适配层
 - auth query
 - auth store 中的会话快照使用范围
+
+补充说明：
+
+- GitHub 登录地址由 `packages/console/src/modules/auth/auth.api.ts` 统一构造
+- 这条流程仍然是浏览器跳转，不经过 Eden Treaty 请求封装
+- 如果修改 GitHub 登录入口，要同时检查 API 基址配置、`trustedOrigins`、GitHub callback URL，并确认浏览器可以直接访问这条地址；本地开发再检查 `/api` 代理
 
 ## 新增接口的推荐流程
 
@@ -200,6 +207,7 @@ bun run type-check
 
 - 访问 `/openapi` 或 `/openapi/json` 检查接口说明
 - Eden smoke test
+- 如果涉及 GitHub 登录，再检查 GitHub OAuth App callback URL、`trustedOrigins`、API 基址是否可以被浏览器直接访问；本地开发再检查 `/api` 代理
 
 ## 命名建议
 

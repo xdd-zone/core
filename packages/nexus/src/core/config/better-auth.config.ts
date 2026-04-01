@@ -6,6 +6,10 @@ export interface BetterAuthConfig {
   secret: string
   url: string
   trustedOrigins: string[]
+  github: {
+    clientId: string
+    clientSecret: string
+  }
 }
 
 const RECOMMENDED_SECRET_LENGTH = 32
@@ -27,6 +31,8 @@ function warnWeakBetterAuthSecret(secret: string, env: RuntimeEnv) {
 export function createBetterAuthConfig(env: RuntimeEnv, yamlConfig: YamlConfig): BetterAuthConfig {
   const secret = parseRequiredEnv(z.string().min(1), process.env.BETTER_AUTH_SECRET)
   const url = parseRequiredEnv(z.string().url(), process.env.BETTER_AUTH_URL)
+  const githubClientId = parseRequiredEnv(z.string().min(1), process.env.GITHUB_CLIENT_ID)
+  const githubClientSecret = parseRequiredEnv(z.string().min(1), process.env.GITHUB_CLIENT_SECRET)
   const trustedOrigins = parseOptionalEnv(z.array(z.string().url()), yamlConfig.trustedOrigins) ?? [
     'http://localhost:2333',
     'http://localhost:2233',
@@ -36,6 +42,10 @@ export function createBetterAuthConfig(env: RuntimeEnv, yamlConfig: YamlConfig):
   warnWeakBetterAuthSecret(secret, env)
 
   return {
+    github: {
+      clientId: githubClientId,
+      clientSecret: githubClientSecret,
+    },
     secret,
     url,
     trustedOrigins,

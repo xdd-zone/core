@@ -25,6 +25,25 @@ interface CachedSessionPayload {
 
 const betterAuthOptions = betterAuthInstance.options as BetterAuthOptions
 
+interface BetterAuthErrorPayload {
+  code?: number | string
+  errorCode?: string
+  message?: string
+}
+
+function getSetCookieValues(headers: Headers): string[] {
+  const headersWithGetSetCookie = headers as Headers & {
+    getSetCookie?: () => string[]
+  }
+
+  if (typeof headersWithGetSetCookie.getSetCookie === 'function') {
+    return headersWithGetSetCookie.getSetCookie()
+  }
+
+  const cookie = headers.get('set-cookie')
+  return cookie ? [cookie] : []
+}
+
 /**
  * 向响应头追加 Set-Cookie。
  */
@@ -51,6 +70,18 @@ function appendSetCookie(headers: MutableHeaders | undefined, value: string) {
   }
 
   headers['Set-Cookie'] = value
+}
+
+function resolveBetterAuthErrorCode(payload: BetterAuthErrorPayload | null | undefined) {
+  if (!payload) {
+    return undefined
+  }
+
+  if (typeof payload.errorCode === 'string' && payload.errorCode) {
+    return payload.errorCode
+  }
+
+  return typeof payload.code === 'string' && payload.code ? payload.code : undefined
 }
 
 /**
@@ -99,18 +130,46 @@ export async function forwardBetterAuthResponse<T>(
       : request
 
   const response = await betterAuthInstance.handler(authRequest)
-  const data = (await response.json()) as T & { code?: string; message?: string }
+  const data = (await response.json()) as T & BetterAuthErrorPayload
 
-  const cookie = response.headers.get('set-cookie')
-  if (cookie) {
+  for (const cookie of getSetCookieValues(response.headers)) {
     appendSetCookie(options?.headers, cookie)
   }
 
-  if (typeof data === 'object' && data !== null && 'code' in data && typeof data.code === 'string') {
-    throw new BadRequestError(data.message || '操作失败')
+  if (!response.ok) {
+    throw new BadRequestError(data.message || '操作失败', resolveBetterAuthErrorCode(data))
   }
 
   return data as T
+}
+
+/**
+ * 将 Better Auth 的重定向响应透传给客户端。
+ */
+export async function forwardBetterAuthRedirect(request: Request, headers?: MutableHeaders): Promise<string> {
+  const response = await betterAuthInstance.handler(request)
+  for (const cookie of getSetCookieValues(response.headers)) {
+    appendSetCookie(headers, cookie)
+  }
+
+  const location = response.headers.get('location')
+  if (location) {
+    return location
+  }
+
+  let message = 'OAuth 重定向失败'
+  let errorCode: string | undefined
+  try {
+    const data = (await response.json()) as BetterAuthErrorPayload
+    if (data.message) {
+      message = data.message
+    }
+    errorCode = resolveBetterAuthErrorCode(data)
+  } catch {
+    // no-op
+  }
+
+  throw new BadRequestError(message, errorCode)
 }
 
 /**

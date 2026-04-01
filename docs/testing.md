@@ -39,7 +39,8 @@ bun run --filter @xdd-zone/nexus test
 - OpenAPI smoke：
   - `/openapi/json` 可访问
   - 关键路径进入当前接口说明
-  - 当前接口说明只包含当前角色与权限相关路径
+  - 当前至少覆盖健康检查、认证、用户与 RBAC 关键路径
+  - 认证关键路径包含 `/api/auth/sign-in/github` 和 `/api/auth/callback/github`
 
 ### 3. OpenAPI 运行时验证
 
@@ -47,7 +48,7 @@ bun run --filter @xdd-zone/nexus test
 
 - `/openapi/json` 可访问
 - 关键路径进入当前 OpenAPI 文档
-- 文档内容与当前 RBAC 路由一致
+- 文档内容与当前认证、用户和 RBAC 路由一致
 
 ## 本地数据库
 

@@ -39,14 +39,14 @@ export function apiDetail(options: {
   summary: string
   description?: string
   response?: ZodTypeAny
-  successStatus?: 200 | 201 | 204
+  successStatus?: 200 | 201 | 204 | 302
   responseDescription?: string
   errors?: ErrorStatusCode[]
 }): DocumentDecoration {
   const { summary, description, response, successStatus = 200, responseDescription = '请求成功', errors = [] } = options
   const responses = {
-    ...(successStatus === 204
-      ? { 204: { description: responseDescription } }
+    ...(successStatus === 204 || successStatus === 302
+      ? { [successStatus]: { description: responseDescription } }
       : response
         ? { [successStatus]: jsonResponse(response, responseDescription) }
         : {}),

@@ -59,6 +59,12 @@ export const SignInEmailBodySchema = z.object({
 
 export type SignInEmailBody = z.infer<typeof SignInEmailBodySchema>
 
+export const GitHubSignInQuerySchema = z.object({
+  callbackURL: z.string().optional(),
+})
+
+export type GitHubSignInQuery = z.infer<typeof GitHubSignInQuerySchema>
+
 export const SignUpEmailBodySchema = z.object({
   email: z.string().min(1, '邮箱不能为空').email('请输入有效的邮箱地址'),
   password: z.string().min(8, '密码至少需要8个字符').max(100, '密码最多100个字符'),

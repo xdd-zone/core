@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 
 const app = createApp()
 const baseUrl = 'http://localhost'
+const authBaseUrl = 'http://localhost:7788'
 
 function createCookieFetcher() {
   const cookies = new Map<string, string>()
@@ -244,6 +245,47 @@ describe('eden smoke', () => {
     })
   })
 
+  it('应支持 GitHub 登录跳转，并在入口参数错误时回跳登录页', async () => {
+    const validResponse = await app.handle(
+      new Request(
+        `${authBaseUrl}/api/auth/sign-in/github?callbackURL=${encodeURIComponent('http://localhost:2333/dashboard')}`,
+        {
+          headers: {
+            referer: 'http://localhost:2333/login?redirect=%2Fdashboard',
+          },
+        },
+      ),
+    )
+
+    expect(validResponse.status).toBe(302)
+    expect(validResponse.headers.get('location')).toMatch(/^https:\/\/github\.com\/login\/oauth\/authorize/)
+    expect(validResponse.headers.get('set-cookie')).toContain('better-auth.state=')
+
+    const invalidResponse = await app.handle(
+      new Request(
+        `${authBaseUrl}/api/auth/sign-in/github?callbackURL=${encodeURIComponent('https://evil.example/dashboard')}`,
+        {
+          headers: {
+            referer: 'http://localhost:2333/login?redirect=%2Fdashboard',
+          },
+        },
+      ),
+    )
+
+    expect(invalidResponse.status).toBe(302)
+
+    const invalidLocation = invalidResponse.headers.get('location')
+    expect(invalidLocation).toBeTruthy()
+    if (!invalidLocation) {
+      throw new Error('缺少 GitHub 登录失败回跳地址')
+    }
+
+    const invalidRedirectUrl = new URL(invalidLocation)
+    expect(`${invalidRedirectUrl.origin}${invalidRedirectUrl.pathname}`).toBe('http://localhost:2333/login')
+    expect(invalidRedirectUrl.searchParams.get('error')).toBe('invalid_callback_url')
+    expect(invalidRedirectUrl.searchParams.get('redirect')).toBe('/dashboard')
+  })
+
   it('应可访问登录态会话接口', async () => {
     const result = await authenticatedClient.api.auth.me.get()
 
@@ -303,9 +345,12 @@ describe('eden smoke', () => {
     expect(subjectRolesAfterAssign.error).toBeNull()
     expect(subjectRolesAfterAssign.data?.some((role: RoleAssignmentSummary) => role.roleId === adminRoleId)).toBe(true)
 
-    const revokeResult = await authenticatedClient.api.rbac.users({ userId: subjectUserId }).roles({
-      roleId: adminRoleId,
-    }).delete()
+    const revokeResult = await authenticatedClient.api.rbac
+      .users({ userId: subjectUserId })
+      .roles({
+        roleId: adminRoleId,
+      })
+      .delete()
     expect(revokeResult.status).toBe(204)
     expect(revokeResult.error).toBeNull()
 
@@ -325,16 +370,22 @@ describe('eden smoke', () => {
     expect(statusResult.data?.id).toBe(subjectUserId)
     expect(statusResult.data?.status).toBe('BANNED')
 
-    const subjectPermissionsResult =
-      await authenticatedClient.api.rbac.users({ userId: subjectUserId }).permissions.get()
+    const subjectPermissionsResult = await authenticatedClient.api.rbac
+      .users({ userId: subjectUserId })
+      .permissions
+      .get()
     expect(subjectPermissionsResult.status).toBe(200)
     expect(subjectPermissionsResult.error).toBeNull()
-    expect(subjectPermissionsResult.data?.permissions.some((permission) => permission.key === 'user:read:own')).toBe(true)
+    expect(subjectPermissionsResult.data?.permissions.some((permission) => permission.key === 'user:read:own')).toBe(
+      true,
+    )
 
     const currentUserPermissionsResult = await authenticatedClient.api.rbac.users.me.permissions.get()
     expect(currentUserPermissionsResult.status).toBe(200)
     expect(currentUserPermissionsResult.error).toBeNull()
-    expect(currentUserPermissionsResult.data?.permissions.some((permission) => permission.key === 'system:manage')).toBe(true)
+    expect(
+      currentUserPermissionsResult.data?.permissions.some((permission) => permission.key === 'system:manage'),
+    ).toBe(true)
     expect(currentUserPermissionsResult.data?.roles.some((role: RoleSummary) => role.name === 'superAdmin')).toBe(true)
   })
 })

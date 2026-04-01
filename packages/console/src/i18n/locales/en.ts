@@ -9,6 +9,7 @@ export default {
     emailPlaceholder: 'Please enter email',
     emailRequired: 'Please enter email',
     forgotPassword: 'Forgot Password?',
+    githubLogin: 'GitHub',
     googleLogin: 'Google',
     googleRegister: 'Google',
     haveAccount: 'Already have an account?',
@@ -16,6 +17,18 @@ export default {
     loginFailed: 'Login failed',
     loginNow: 'Login now',
     loginSuccess: 'Login successful',
+    socialLoginAutoRegisterHint:
+      'If this GitHub account is signing in for the first time, the system will create the account automatically once a usable email is available.',
+    socialLoginErrorConfigHint:
+      'Please check the current Console origin, the API base URL configuration, and Nexus trustedOrigins before trying again.',
+    socialLoginErrorEmailNotFound:
+      'GitHub did not return a usable email address. Please go to GitHub Settings > Emails, add and verify an email, then try again.',
+    socialLoginErrorFallback:
+      'GitHub sign-in did not complete. Please try again later, or sign in with email and password first.',
+    socialLoginErrorInvalidCallback:
+      'The GitHub sign-in entry URL is invalid. Start again from the current login page, or check the API base URL and trustedOrigins configuration.',
+    socialLoginErrorTitle: 'GitHub sign-in did not complete',
+    socialLoginRetryHint: 'If this keeps happening, try again later or sign in with email and password first.',
     loginTitle: 'Login',
     loginWelcome: 'Welcome back',
     nickname: 'Nickname',
@@ -43,18 +56,15 @@ export default {
   },
   access: {
     current: {
-      overviewDescription:
-        'This section summarizes the current roles, permissions, and coverage for this account.',
+      overviewDescription: 'This section summarizes the current roles, permissions, and coverage for this account.',
       overviewEyebrow: 'Access Overview',
       overviewSummary:
         'This account has {{roles}} roles, {{permissions}} effective permissions, and access across {{modules}} modules. {{elevated}} of them affect all users or system settings.',
       overviewTitle: 'My Access',
       coveredModules: '{{count}} covered modules',
       permissionCount: '{{count}} permissions',
-      permissionsNote:
-        'Permissions are grouped by module.',
-      permissionsDescription:
-        'This section lists the current effective permissions.',
+      permissionsNote: 'Permissions are grouped by module.',
+      permissionsDescription: 'This section lists the current effective permissions.',
       permissionsTitle: 'My Permissions',
       roleAssignedAt: 'Effective since',
       roleCapabilitiesLabel: 'Default capability summary',
@@ -74,8 +84,7 @@ export default {
       roleSourceNoteDescription:
         'System default means the account gets it by default, while admin assigned means it was granted later.',
       roleSourceNoteTitle: 'Role source',
-      rolesDescription:
-        'This section lists the current effective roles.',
+      rolesDescription: 'This section lists the current effective roles.',
       rolesTitle: 'My Roles',
       statDescriptions: {
         elevated: 'Actions that affect all users or the system foundation.',
@@ -293,9 +302,12 @@ export default {
     metrics: {
       coveredModules: 'Covered Modules',
       permissionTotal: 'Effective Permissions',
+      restricted: 'By permission',
       roleTotal: 'Total Roles',
       userTotal: 'Total Accounts',
     },
+    adminSummaryNote:
+      'Account totals and role totals appear only when this account has the corresponding permissions. This page now prioritizes the entry points and permission results you can use right away.',
     primaryAction: 'Open user management',
     secondaryAction: 'Review my permissions',
     summary:
@@ -391,11 +403,9 @@ export default {
       updateSuccess: 'Profile updated successfully',
     },
     summary: {
-      contactDescription:
-        'This section shows the current contact details for the account.',
+      contactDescription: 'This section shows the current contact details for the account.',
       contactTitle: 'Contact',
-      description:
-        'Review and update the current account profile.',
+      description: 'Review and update the current account profile.',
       eyebrow: 'My Profile',
       identityDescription: 'This section shows the basic identity fields for the current account.',
       identityTitle: 'Basic Info',
@@ -475,8 +485,7 @@ export default {
       title: 'User Detail',
     },
     edit: {
-      description:
-        'Edit the basic profile for the current user here.',
+      description: 'Edit the basic profile for the current user here.',
       eyebrow: 'Edit User',
       formDescription: 'Changes sync back to the user detail and list.',
       formTitle: 'Edit Profile',
@@ -494,8 +503,7 @@ export default {
     },
     emailInvalid: 'Invalid email format',
     list: {
-      description:
-        'Review and filter the account list here.',
+      description: 'Review and filter the account list here.',
       eyebrow: 'User Management',
       filtersDescription: 'Filter accounts by keyword or status.',
       filtersTitle: 'Filters',
@@ -531,14 +539,12 @@ export default {
     },
     customRole: 'Custom',
     list: {
-      description:
-        'Review the role list and role types here.',
+      description: 'Review the role list and role types here.',
       eyebrow: 'Role Management',
       filtersDescription: 'Filter roles by name or description.',
       filtersTitle: 'Filters',
       resetFilters: 'Reset Filters',
-      resultsDescription:
-        'This section shows role identifiers, types, and created time.',
+      resultsDescription: 'This section shows role identifiers, types, and created time.',
       resultsTitle: 'Role List',
       stats: {
         currentPage: 'Current Page',

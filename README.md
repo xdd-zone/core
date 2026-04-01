@@ -86,7 +86,15 @@ bun install
 DATABASE_URL="postgresql://xdd:xdd_local_dev@localhost:55432/xdd_core_local"
 BETTER_AUTH_URL="http://localhost:7788"
 BETTER_AUTH_SECRET="replace-with-a-secure-secret"
+GITHUB_CLIENT_ID="your-github-client-id"
+GITHUB_CLIENT_SECRET="your-github-client-secret"
 ```
+
+当前 `packages/nexus` 默认启用 GitHub 登录。启动前还要确认：
+
+- `packages/nexus/config.yaml` 的 `trustedOrigins` 包含当前 Console 来源
+- GitHub OAuth App 的 callback URL 使用 `BETTER_AUTH_URL` 对应的 `/api/auth/callback/github`
+- Console 当前使用的 API 基址可以直达 Nexus
 
 ### 准备数据库
 
@@ -195,6 +203,8 @@ bun run seed
 
 - `POST /api/auth/sign-up/email`
 - `POST /api/auth/sign-in/email`
+- `GET /api/auth/sign-in/github`
+- `GET /api/auth/callback/github`
 - `POST /api/auth/sign-out`
 - `GET /api/auth/get-session`
 - `GET /api/auth/me`
@@ -233,4 +243,5 @@ RBAC：
 - [开发指南](./docs/development.md)
 - [API 指南](./docs/api.md)
 - [认证说明](./docs/authentication.md)
+- [GitHub OAuth2 接入指南](./docs/OAuth2/github.md)
 - [RBAC 指南](./docs/rbac.md)

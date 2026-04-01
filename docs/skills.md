@@ -26,9 +26,9 @@
 - 删除类接口返回 `204`
 - OpenAPI 统一使用 `apiDetail(...)`
 
-## 使用前建议
+## 触发前必须先看
 
-触发这个 Skill 前，先看：
+触发这个 Skill 前，必须先看：
 
 1. [README.md](../README.md)
 2. [architecture.md](./architecture.md)

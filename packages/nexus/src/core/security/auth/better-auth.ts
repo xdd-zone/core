@@ -16,7 +16,12 @@ export const betterAuthInstance = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  socialProviders: {},
+  socialProviders: {
+    github: {
+      clientId: BETTER_AUTH_CONFIG.github.clientId,
+      clientSecret: BETTER_AUTH_CONFIG.github.clientSecret,
+    },
+  },
   trustedOrigins: BETTER_AUTH_CONFIG.trustedOrigins,
   databaseHooks: {
     user: {

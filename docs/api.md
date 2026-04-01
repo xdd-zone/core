@@ -19,7 +19,7 @@ OpenAPI 用来查看当前接口说明，可用于联调、调试和外部接入
 
 ### 成功响应
 
-成功响应直接返回业务数据，不包 `{ code, message, data }`。
+成功响应直接返回业务数据，不含 `{ code, message, data }`。
 
 分页接口统一返回：
 
@@ -36,6 +36,7 @@ OpenAPI 用来查看当前接口说明，可用于联调、调试和外部接入
 无 body 操作统一返回：
 
 - `204 No Content`
+- `302 Found`
 
 ### 错误响应
 
@@ -78,9 +79,13 @@ OpenAPI 用来查看当前接口说明，可用于联调、调试和外部接入
 | ---- | ---- | ---- |
 | POST | `/api/auth/sign-up/email` | 注册用户 |
 | POST | `/api/auth/sign-in/email` | 登录 |
+| GET | `/api/auth/sign-in/github` | 发起 GitHub 登录，成功返回 `302` |
+| GET | `/api/auth/callback/github` | 处理 GitHub 回调，写 session cookie 后返回 `302` |
 | POST | `/api/auth/sign-out` | 登出，返回 `204` |
 | GET | `/api/auth/get-session` | 获取 session |
 | GET | `/api/auth/me` | 获取登录用户 |
+
+GitHub 登录相关接口由浏览器完成重定向，不返回 JSON body。`/api/auth/sign-in/github` 支持 `callbackURL` query。
 
 ### User
 

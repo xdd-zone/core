@@ -64,14 +64,15 @@ packages/console
 - 集中式 `routeTree`
 - 路由 `beforeLoad` 处理登录态校验与重定向
 - `staticData` 统一维护页面标题、TabBar、面包屑元信息
-- TanStack Query 管理 `/api/auth/get-session`、登录与登出
+- TanStack Query 管理 `/api/auth/get-session`、邮箱登录与登出
+- GitHub 登录地址统一通过 auth 模块构造，并复用当前 API 基址配置
 - 独立导航配置
 - 细粒度权限以后端 `401 / 403` 语义为准
 
 当前页面入口：
 
 - 仪表盘：`/dashboard`
-  - 登录后的默认落点，当前显示仪表盘占位内容
+  - 登录后的默认落点，按当前权限展示首页指标和常用入口
 - 内容管理：`/articles`、`/categories`、`/tags`、`/comments`、`/article-settings`
   - 当前保留内容管理页面入口
 - 系统管理：`/users`、`/roles`
@@ -244,6 +245,9 @@ src/
 - 认证与权限行为以后端实现为准
 - 页面联调优先通过根目录 `bun run dev` 完成
 - 本地开发默认通过 `/api` 代理到 `nexus`
+- GitHub 登录入口和 Eden 请求共用同一套 API 基址配置
+- 生产环境可继续使用同域 `/api` 或反向代理
+- 如果使用独立 API 域名，这条地址需要和当前会话策略匹配，并同步检查 cookie 与来源配置
 - Better Auth 需要信任前端来源，例如 `http://localhost:2333`
 - 用户与权限相关请求统一放在 `src/modules/user` 和 `src/modules/rbac`
 

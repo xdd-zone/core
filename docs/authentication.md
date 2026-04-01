@@ -2,6 +2,27 @@
 
 项目使用 Better Auth 处理登录态，Elysia 层通过 `core/security` 提供认证上下文、守卫和权限声明。
 
+如果你需要从 GitHub 后台开始一步一步完成接入，直接看：
+
+- [GitHub OAuth2 接入完整指南](./OAuth2/github.md)
+
+## 环境配置
+
+当前 `packages/nexus` 默认启用 GitHub socialProvider。启动前至少准备下面几项：
+
+- `BETTER_AUTH_URL`
+- `BETTER_AUTH_SECRET`
+- `GITHUB_CLIENT_ID`
+- `GITHUB_CLIENT_SECRET`
+- `packages/nexus/config.yaml` 中的 `trustedOrigins`
+
+说明：
+
+- `BETTER_AUTH_URL` 指向 Nexus 服务根地址，例如 `http://localhost:7788`
+- GitHub OAuth App 的 callback URL 使用 `BETTER_AUTH_URL` 对应的 `/api/auth/callback/github`
+- `trustedOrigins` 需要包含当前 Console 来源
+- Console 当前使用的 API 基址需要可以直达 Nexus
+
 ## 职责划分
 
 ### `core/security/plugins/auth.plugin.ts`
@@ -41,7 +62,7 @@
 - 固定角色只保留 `superAdmin / admin / user`
 - 只要求登录且不需要权限声明时，优先使用 `authPlugin`
 
-## Better Auth 适配位置
+## Better Auth 接入位置
 
 Better Auth 的 HTTP 适配位于：
 
@@ -53,10 +74,11 @@ Better Auth 的 HTTP 适配位于：
 其中：
 
 - `auth-api.service.ts`
-  - 处理登录、注册、登出这些认证接口动作
-- Better Auth response 透传
+  - 处理邮箱注册、邮箱登录、GitHub 登录和登出动作
+  - 负责校验 `callbackURL`、拼装 `errorCallbackURL` 和浏览器回跳地址
 - `better-auth.adapter.ts`
-  - 负责 Better Auth response 透传
+  - 透传 Better Auth 的 JSON 响应
+  - 透传 Better Auth 的重定向响应
   - 负责 sign-out 幂等撤销
   - 负责 cookie 清理
 
@@ -68,26 +90,47 @@ Better Auth 的 HTTP 适配位于：
 
 - `packages/nexus/src/modules/auth/index.ts`
 
-## 认证流程
-
-标准流程：
-
-1. `POST /api/auth/sign-up/email`
-2. `POST /api/auth/sign-in/email`
-3. 服务端返回 `Set-Cookie`
-4. 后续请求携带 session cookie
-5. `GET /api/auth/get-session` 检查会话状态
-6. `POST /api/auth/sign-out` 清理会话，返回 `204`
-
-## Auth API
+## 认证接口
 
 | 方法 | 路径 | 描述 |
 | ---- | ---- | ---- |
 | POST | `/api/auth/sign-up/email` | 注册 |
-| POST | `/api/auth/sign-in/email` | 登录 |
+| POST | `/api/auth/sign-in/email` | 邮箱登录 |
+| GET | `/api/auth/sign-in/github` | 发起 GitHub 登录，成功返回 `302` |
+| GET | `/api/auth/callback/github` | 处理 GitHub 回调，写入 session 后返回 `302` |
 | POST | `/api/auth/sign-out` | 登出 |
 | GET | `/api/auth/get-session` | 获取 session |
 | GET | `/api/auth/me` | 获取登录用户 |
+
+`/api/auth/sign-in/github` 支持 `callbackURL` query，用于指定登录成功后的浏览器落点。
+
+## 认证流程
+
+### 邮箱登录
+
+1. `POST /api/auth/sign-in/email`
+2. 服务端返回 `Set-Cookie`
+3. 后续请求携带 session cookie
+4. `GET /api/auth/get-session` 检查会话状态
+5. `POST /api/auth/sign-out` 清理会话，返回 `204`
+
+### GitHub 登录
+
+1. Console 生成浏览器跳转地址，地址指向当前 API 基址下的 `/api/auth/sign-in/github?callbackURL=...`
+2. Nexus 将请求转给 Better Auth 的 `/sign-in/social`
+3. Better Auth 跳转到 GitHub 授权页
+4. GitHub 回调 `GET /api/auth/callback/github?code=...&state=...`
+5. Nexus 写入 session cookie，并重定向到 `callbackURL`
+6. Console 通过 `/api/auth/get-session` 和路由 `beforeLoad` 恢复登录态
+
+常见失败结果：
+
+- `error=email_not_found`
+  - GitHub 没有返回可用邮箱
+- `error=invalid_callback_url`
+  - 登录入口使用的 `callbackURL` 或 API 基址配置不合法
+- `error=github_sign_in_failed`
+  - GitHub 登录入口没有完成，可稍后重试
 
 ## 推荐路由写法
 
@@ -148,7 +191,8 @@ export const userModule = new Elysia()
 后台前端统一按下面方式接入认证接口：
 
 - TanStack Query 维护 `/api/auth/get-session`
-- 登录 mutation 调用 `/api/auth/sign-in/email`
+- 邮箱登录 mutation 调用 `/api/auth/sign-in/email`
+- GitHub 登录地址统一通过 `authApi.getGithubSignInUrl(...)` 构造
 - 登出 mutation 调用 `/api/auth/sign-out`
 - TanStack Router 在 `beforeLoad` 中确保受保护页面先完成 session 检查
 
@@ -156,13 +200,20 @@ export const userModule = new Elysia()
 
 - 请求默认使用 `credentials: 'include'`
 - 是否已登录只看 `/api/auth/get-session`
+- 登录页继续解析 `redirect` 和 `error`
 - 未登录访问后台路由时，由路由层重定向到 `/login`
+- GitHub 登录入口和 Eden 请求共用同一套 API 基址配置
+- 本地开发继续通过 `/api` 代理
+- 生产环境可使用同域反向代理，或使用与当前会话策略匹配的同站点 API 域名
 
 ## 排查建议
 
 建议按下面顺序排查：
 
 1. 用 `/api/auth/get-session` 确认当前 cookie 是否有效
-2. 检查请求是否带上了 session cookie
-3. 检查 `BETTER_AUTH_URL` 是否与实际服务地址一致
-4. 检查 route 用的是 `auth: 'required'` 还是 `permission / own / me`
+2. 检查 `BETTER_AUTH_URL` 是否与实际服务地址一致
+3. 检查 `GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET` 是否已配置
+4. 检查 GitHub OAuth App callback URL 是否使用 `BETTER_AUTH_URL` 对应的 `/api/auth/callback/github`
+5. 检查 `packages/nexus/config.yaml` 的 `trustedOrigins` 是否包含当前 Console 来源
+6. 检查当前 API 基址配置是否正确，并且浏览器可以直接访问这条地址
+7. 检查 route 用的是 `auth: 'required'` 还是 `permission / own / me`

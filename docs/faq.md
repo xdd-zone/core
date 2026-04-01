@@ -60,6 +60,24 @@ bun run prisma:generate
 2. `BETTER_AUTH_URL` 是否与服务实际地址一致
 3. 调用方是否保存了 cookie
 4. 自定义 headers 是否覆盖了内部 cookie
+5. `packages/nexus/config.yaml` 的 `trustedOrigins` 是否包含当前来源
+
+## GitHub 登录跳回登录页怎么办？
+
+优先检查：
+
+1. `GITHUB_CLIENT_ID` 和 `GITHUB_CLIENT_SECRET` 是否已配置
+2. GitHub OAuth App 的 callback URL 是否使用 `BETTER_AUTH_URL` 对应的 `/api/auth/callback/github`
+3. `packages/nexus/config.yaml` 的 `trustedOrigins` 是否包含当前 Console 来源
+4. Console 当前使用的 API 基址是否正确
+5. 登录页地址上的 `error` 参数是什么
+
+补充说明：
+
+- `error=invalid_callback_url`
+  - 先检查 `VITE_API_ORIGIN / VITE_API_ROOT / VITE_API_BASE_URL` 和 `trustedOrigins`
+- `error=github_sign_in_failed`
+  - 先检查 GitHub OAuth App 配置、当前 API 地址是否可访问，再重试
 
 ## 本机回归怎么跑？
 

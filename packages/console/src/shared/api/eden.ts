@@ -18,12 +18,25 @@ function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/, '')
 }
 
+function joinUrlPath(basePath: string, nextPath: string) {
+  const normalizedBasePath = basePath === '/' ? '' : trimTrailingSlash(basePath)
+  return `${normalizedBasePath}${nextPath}` || nextPath
+}
+
 function resolveBrowserOrigin() {
   if (typeof window !== 'undefined' && window.location.origin) {
     return window.location.origin
   }
 
   return 'http://localhost:2333'
+}
+
+function normalizeBrowserBaseUrl(value: string) {
+  if (/^localhost(?::\d+)?$/i.test(value)) {
+    return `http://${value}`
+  }
+
+  return value
 }
 
 function stripApiPrefix(pathname: string) {
@@ -85,6 +98,20 @@ function resolveConfiguredApiBaseUrl() {
   return normalizeEdenBaseUrl(
     import.meta.env.VITE_API_ORIGIN || import.meta.env.VITE_API_ROOT || import.meta.env.VITE_API_BASE_URL,
   )
+}
+
+/**
+ * 生成浏览器可直接访问的 API 地址。
+ */
+export function resolveApiUrl(pathname: string) {
+  const apiPath = pathname.startsWith(API_PREFIX)
+    ? pathname
+    : `${API_PREFIX}${pathname.startsWith('/') ? pathname : `/${pathname}`}`
+  const url = new URL(normalizeBrowserBaseUrl(resolveConfiguredApiBaseUrl()))
+  url.pathname = joinUrlPath(url.pathname, apiPath)
+  url.search = ''
+  url.hash = ''
+  return url.toString()
 }
 
 function resolvePayloadMessage(value: unknown) {

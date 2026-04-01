@@ -9,6 +9,7 @@ export default {
     emailPlaceholder: '请输入邮箱',
     emailRequired: '请输入邮箱',
     forgotPassword: '忘记密码?',
+    githubLogin: 'GitHub',
     googleLogin: 'Google',
     googleRegister: 'Google',
     haveAccount: '已有账号?',
@@ -16,6 +17,15 @@ export default {
     loginFailed: '登录失败',
     loginNow: '立即登录',
     loginSuccess: '登录成功',
+    socialLoginAutoRegisterHint: '如果这个 GitHub 账号是第一次使用，拿到可用邮箱后会自动创建账号并直接登录。',
+    socialLoginErrorConfigHint: '请检查 Console 当前来源、API 地址配置和 Nexus 的 trustedOrigins，然后再重试。',
+    socialLoginErrorEmailNotFound:
+      'GitHub 没有返回可用邮箱。请先到 GitHub Settings > Emails 绑定并验证邮箱，然后再重试。',
+    socialLoginErrorFallback: 'GitHub 登录没有完成，请稍后重试，或先使用邮箱密码登录。',
+    socialLoginErrorInvalidCallback:
+      'GitHub 登录入口地址无效。请从当前后台登录页重新发起，或检查 API 地址和 trustedOrigins 配置。',
+    socialLoginErrorTitle: 'GitHub 登录没有完成',
+    socialLoginRetryHint: '如果问题持续出现，请稍后重试，或先使用邮箱密码登录。',
     loginTitle: '登录',
     loginWelcome: '欢迎回来',
     nickname: '昵称',
@@ -45,7 +55,8 @@ export default {
     current: {
       overviewDescription: '这里汇总当前账号的角色、权限和覆盖范围。',
       overviewEyebrow: '访问总览',
-      overviewSummary: '当前账号有 {{roles}} 个角色，生效 {{permissions}} 项权限，覆盖 {{modules}} 个模块，其中 {{elevated}} 项会影响全部用户或系统设置。',
+      overviewSummary:
+        '当前账号有 {{roles}} 个角色，生效 {{permissions}} 项权限，覆盖 {{modules}} 个模块，其中 {{elevated}} 项会影响全部用户或系统设置。',
       overviewTitle: '我的权限',
       coveredModules: '覆盖 {{count}} 个模块',
       permissionCount: '共 {{count}} 项权限',
@@ -284,12 +295,15 @@ export default {
     metrics: {
       coveredModules: '覆盖模块',
       permissionTotal: '有效权限',
+      restricted: '按权限显示',
       roleTotal: '角色总数',
       userTotal: '账号总数',
     },
+    adminSummaryNote: '账号总数和角色总数只在有对应权限时显示。当前首页会优先展示你自己可以继续使用的入口和权限结果。',
     primaryAction: '查看用户管理',
     secondaryAction: '查看我的权限',
-    summary: '当前共有 {{userTotal}} 个账号、{{roleTotal}} 个角色。你的账号有 {{roleCount}} 个生效角色，当前生效 {{permissionCount}} 项权限。',
+    summary:
+      '当前共有 {{userTotal}} 个账号、{{roleTotal}} 个角色。你的账号有 {{roleCount}} 个生效角色，当前生效 {{permissionCount}} 项权限。',
     title: '{{name}}，后台概览',
   },
   articleList: {

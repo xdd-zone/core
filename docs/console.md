@@ -5,7 +5,7 @@
 `@xdd-zone/console` 是当前仓库中的后台管理前端，负责：
 
 - 管理后台页面与交互
-- 路由、导航、布局与标签页
+- 路由、导航、布局与 TabBar
 - 登录态初始化与登录/登出流程
 - 调用 `@xdd-zone/nexus` 提供的认证与业务接口
 
@@ -17,6 +17,7 @@
 - 菜单负责导航组织与页面入口
 - 页面业务权限以服务端返回的 `401 / 403` 为准
 - 登录态以 `/api/auth/get-session` 作为统一判断依据
+- Dashboard 首页会根据当前权限决定显示哪些指标和常用入口
 
 ## 技术栈
 
@@ -44,7 +45,7 @@
 
 如果任务继续涉及布局节奏、说明文案、排版和界面收尾，再继续调用对应设计技能。
 
-执行时以 `packages/console/.impeccable.md` 中的当前规则为准，不跳过设计上下文直接临时决定页面风格。
+执行时以 `packages/console/.impeccable.md` 中的当前规则为准，不跳过设计上下文直接决定页面风格。
 
 ## 目录结构
 
@@ -107,7 +108,7 @@ src/
 - 根入口 `/`
   - 在 `beforeLoad` 中根据当前 session 自动跳转 `/login` 或 `/dashboard`
 - 登录页 `/login`
-  - 只允许游客访问，已登录时直接重定向到 `/dashboard`
+  - 只允许游客访问，支持 `redirect` 和 `error` search，已登录时直接重定向到 `/dashboard`
 - 后台受保护页面
   - 仪表盘：`/dashboard`
   - 内容管理：`/articles`、`/categories`、`/tags`、`/comments`、`/article-settings`
@@ -161,11 +162,41 @@ auth store 只保留会话快照相关状态：
 - `setSessionPayload(payload)`
 - `clearAuth()`
 
+邮箱密码登录继续通过 mutation 调用 `/api/auth/sign-in/email`。
+
+GitHub 登录地址由 `src/modules/auth/auth.api.ts` 统一构造。登录页会根据当前 API 基址生成浏览器跳转地址，地址指向这条基址下的 `/api/auth/sign-in/github?callbackURL=...`。登录完成后，再通过 `ensureAuthSession(...)` 和 `/api/auth/get-session` 恢复前端会话。
+
+## GitHub 登录与 Dashboard 权限适配
+
+GitHub 登录当前按下面流程接入：
+
+1. 登录页读取 `redirect`
+2. `authApi.getGithubSignInUrl(...)` 按当前 API 基址生成浏览器跳转地址
+3. Nexus 处理 GitHub 回调并写入 session cookie
+4. Router 回到目标页后，通过 `ensureAuthSession(...)` 恢复登录态
+
+当前部署要求：
+
+- 本地开发通过 Vite proxy 访问 Nexus
+- 生产环境可继续通过同域反向代理访问 `/api`
+- 如果使用独立 API 域名，GitHub 登录入口和 Eden 请求会一起复用这条 API 基址，这条地址需要和当前会话策略匹配
+
+Dashboard 首页会先读取当前用户权限，再决定是否继续请求管理型列表接口：
+
+- 具备 `user:read:all` 时才请求用户总数
+- 具备 `role:read:all` 时才请求角色总数
+- 权限未完成初始化时先显示加载占位
+- 无权限时显示“按权限显示”，并保留“我的权限”“我的资料”等自助入口
+
+这样 GitHub 登录后的普通用户也可以直接进入后台首页，不会因为首页主动拉取管理接口而收到 `403`。
+
 代码位置：
 
 - [packages/console/src/modules/auth/auth.api.ts](../packages/console/src/modules/auth/auth.api.ts)
 - [packages/console/src/modules/auth/auth.query.ts](../packages/console/src/modules/auth/auth.query.ts)
 - [packages/console/src/modules/auth/auth.store.ts](../packages/console/src/modules/auth/auth.store.ts)
+- [packages/console/src/pages/auth/Login.tsx](../packages/console/src/pages/auth/Login.tsx)
+- [packages/console/src/pages/dashboard/Dashboard.tsx](../packages/console/src/pages/dashboard/Dashboard.tsx)
 
 应用启动入口会统一注册 QueryClientProvider 与 RouterProvider：
 
@@ -226,7 +257,7 @@ auth store 只保留会话快照相关状态：
 当前页面说明：
 
 - `Dashboard`
-  - 登录后的默认落点，当前显示仪表盘占位内容
+  - 登录后的默认落点，按当前权限展示首页指标和常用入口
 - `ArticleList`、`CategoryList`、`TagList`、`CommentList`、`ArticleSettings`
   - 当前保留内容管理页面入口
 - `UserList`
@@ -333,9 +364,16 @@ Markdown 能力当前由 `markdown-to-jsx` 与 Shiki 组合完成：
 
 前端主要依赖的认证接口：
 
+- `GET /api/auth/sign-in/github`
+- `GET /api/auth/callback/github`
 - `POST /api/auth/sign-in/email`
 - `POST /api/auth/sign-out`
 - `GET /api/auth/get-session`
+
+其中：
+
+- GitHub 登录通过浏览器重定向进入，不走 Eden Treaty 请求封装
+- 邮箱登录、登出和 session 查询继续通过现有 Query / Mutation 处理
 
 当前系统管理页面还会调用：
 

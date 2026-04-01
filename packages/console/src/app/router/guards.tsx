@@ -5,6 +5,7 @@ import { ensureAuthSession } from '@console/modules/auth'
 import { redirect } from '@tanstack/react-router'
 
 export interface LoginRouteSearch {
+  error?: string
   redirect?: string
 }
 
@@ -23,6 +24,7 @@ export const DASHBOARD_ROUTE_PATH = '/dashboard'
  */
 export function validateLoginSearch(search: Record<string, unknown>): LoginRouteSearch {
   return {
+    error: typeof search.error === 'string' ? search.error : undefined,
     redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
   }
 }
