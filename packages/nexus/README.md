@@ -77,8 +77,31 @@ GITHUB_CLIENT_SECRET=your-github-client-secret
 当前 GitHub 登录默认启用。启动前还要确认：
 
 - `packages/nexus/config.yaml` 的 `trustedOrigins` 包含当前 Console 来源
+- `packages/nexus/config.yaml` 的 `auth.methods` 已按当前环境设置好
 - GitHub OAuth App 的 callback URL 使用 `BETTER_AUTH_URL` 对应的 `/api/auth/callback/github`
 - Console 当前使用的 API 基址可以直达 Nexus
+
+登录方式开关统一在 `packages/nexus/config.yaml` 维护：
+
+```yaml
+auth:
+  methods:
+    emailPassword:
+      enabled: true
+      allowSignUp: true
+    github:
+      enabled: true
+      allowSignUp: true
+```
+
+说明：
+
+- `enabled`
+  - 控制当前方式是否允许登录
+- `allowSignUp`
+  - 控制当前方式是否允许首次创建用户
+
+如果当前环境关闭 GitHub 登录，启动时不要求 `GITHUB_CLIENT_ID` 和 `GITHUB_CLIENT_SECRET`。
 
 ```bash
 bun run dev
@@ -144,6 +167,7 @@ bun run seed
 
 认证：
 
+- `GET /api/auth/methods`
 - `POST /api/auth/sign-up/email`
 - `POST /api/auth/sign-in/email`
 - `GET /api/auth/sign-in/github`

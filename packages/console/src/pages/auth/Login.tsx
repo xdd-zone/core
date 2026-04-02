@@ -1,8 +1,8 @@
-import type { SignInEmailBody } from '@console/modules/auth'
+import type { AuthMethod, SignInEmailBody } from '@console/modules/auth'
 import { DASHBOARD_ROUTE_PATH, sanitizeRedirectPath } from '@console/app/router/guards'
 
 import { AuthContainer } from '@console/components/business'
-import { authApi, AuthRequestError, useLoginMutation } from '@console/modules/auth'
+import { authApi, AuthRequestError, useAuthMethodsQuery, useLoginMutation } from '@console/modules/auth'
 import { useNavigate, useRouter, useSearch } from '@tanstack/react-router'
 
 import { Alert, App as AntdApp, Button, Divider, Form, Input } from 'antd'
@@ -11,9 +11,17 @@ import { AiFillGithub, AiFillWechat, AiOutlineGoogle } from 'react-icons/ai'
 
 function resolveSocialLoginError(
   error?: string,
-): 'email_not_found' | 'github_sign_in_failed' | 'invalid_callback_url' | 'unknown' | null {
+): 'auth_method_disabled' | 'auth_sign_up_disabled' | 'email_not_found' | 'github_sign_in_failed' | 'invalid_callback_url' | 'unknown' | null {
   if (!error) {
     return null
+  }
+
+  if (error === 'auth_method_disabled') {
+    return 'auth_method_disabled'
+  }
+
+  if (error === 'auth_sign_up_disabled') {
+    return 'auth_sign_up_disabled'
   }
 
   if (error === 'email_not_found') {
@@ -31,6 +39,27 @@ function resolveSocialLoginError(
   return 'unknown'
 }
 
+function resolveMethodState(methods: AuthMethod[] | undefined, methodId: AuthMethod['id'], isLoading: boolean) {
+  const method = methods?.find((item) => item.id === methodId)
+
+  if (!method) {
+    return {
+      allowSignUp: true,
+      enabled: !isLoading,
+    }
+  }
+
+  return method
+}
+
+function resolveSocialLoginMethodLabel(method?: string) {
+  if (method === 'github') {
+    return 'GitHub'
+  }
+
+  return null
+}
+
 /**
  * 登录页
  */
@@ -39,11 +68,22 @@ export function Login() {
   const { message } = AntdApp.useApp()
   const navigate = useNavigate()
   const router = useRouter()
-  const { error, redirect } = useSearch({ from: '/login' })
+  const { error, method, redirect } = useSearch({ from: '/login' })
+  const authMethodsQuery = useAuthMethodsQuery()
   const loginMutation = useLoginMutation()
   const socialLoginError = resolveSocialLoginError(error)
+  const socialLoginMethodLabel = resolveSocialLoginMethodLabel(method)
+  const authMethods = authMethodsQuery.data?.methods
+  const emailPasswordMethod = resolveMethodState(authMethods, 'emailPassword', authMethodsQuery.isLoading)
+  const githubMethod = resolveMethodState(authMethods, 'github', authMethodsQuery.isLoading)
+  const isEmailPasswordDisabled = !emailPasswordMethod.enabled
+  const isGithubDisabled = !githubMethod.enabled
 
   const handleLogin = async (values: SignInEmailBody) => {
+    if (isEmailPasswordDisabled) {
+      return
+    }
+
     try {
       await loginMutation.mutateAsync(values)
       message.success(t('auth.loginSuccess'))
@@ -65,6 +105,10 @@ export function Login() {
   }
 
   const handleGithubLogin = () => {
+    if (isGithubDisabled) {
+      return
+    }
+
     const callbackURL = sanitizeRedirectPath(redirect) ?? DASHBOARD_ROUTE_PATH
     const callbackTarget = new URL(callbackURL, window.location.origin).toString()
     window.location.href = authApi.getGithubSignInUrl(callbackTarget)
@@ -87,14 +131,22 @@ export function Login() {
           description={
             <div className="space-y-2">
               <p className="text-sm leading-6">
-                {socialLoginError === 'email_not_found'
+                {socialLoginError === 'auth_method_disabled'
+                  ? t('auth.socialLoginErrorMethodDisabled', { method: socialLoginMethodLabel ?? t('auth.githubLogin') })
+                  : socialLoginError === 'auth_sign_up_disabled'
+                    ? t('auth.socialLoginErrorSignUpDisabled', { method: socialLoginMethodLabel ?? t('auth.githubLogin') })
+                  : socialLoginError === 'email_not_found'
                   ? t('auth.socialLoginErrorEmailNotFound')
                   : socialLoginError === 'invalid_callback_url'
                     ? t('auth.socialLoginErrorInvalidCallback')
                     : t('auth.socialLoginErrorFallback')}
               </p>
               <p className="text-fg-muted text-xs leading-6">
-                {socialLoginError === 'email_not_found'
+                {socialLoginError === 'auth_method_disabled'
+                  ? t('auth.socialLoginDisabledHint')
+                  : socialLoginError === 'auth_sign_up_disabled'
+                    ? t('auth.socialLoginSignUpDisabledHint')
+                  : socialLoginError === 'email_not_found'
                   ? t('auth.socialLoginAutoRegisterHint')
                   : socialLoginError === 'invalid_callback_url'
                     ? t('auth.socialLoginErrorConfigHint')
@@ -115,7 +167,12 @@ export function Login() {
             { message: t('auth.emailInvalid'), type: 'email' },
           ]}
         >
-          <Input placeholder={t('auth.emailPlaceholder')} className="rounded-lg" autoComplete="email" />
+          <Input
+            placeholder={t('auth.emailPlaceholder')}
+            className="rounded-lg"
+            autoComplete="email"
+            disabled={isEmailPasswordDisabled}
+          />
         </Form.Item>
 
         <Form.Item
@@ -127,6 +184,7 @@ export function Login() {
             placeholder={t('auth.passwordPlaceholder')}
             className="rounded-lg"
             autoComplete="current-password"
+            disabled={isEmailPasswordDisabled}
           />
         </Form.Item>
 
@@ -141,6 +199,7 @@ export function Login() {
             type="primary"
             htmlType="submit"
             loading={loginMutation.isPending}
+            disabled={isEmailPasswordDisabled}
             className="h-12 w-full rounded-lg font-medium"
           >
             {t('auth.login')}
@@ -158,6 +217,7 @@ export function Login() {
         <Button
           icon={<AiFillGithub />}
           onClick={handleGithubLogin}
+          disabled={isGithubDisabled}
           className="border-border text-fg hover:border-primary hover:text-primary h-12 flex-1 rounded-lg bg-transparent transition-colors"
         >
           {t('auth.githubLogin')}

@@ -1,6 +1,7 @@
 import type { AuthApiSession, SignInEmailPayload, SignUpEmailPayload } from './auth-api.types'
 import { BETTER_AUTH_CONFIG } from '@nexus/core/config'
 import { BadRequestError } from '@nexus/core/http'
+import { AuthMethodsService } from './auth-methods.service'
 import {
   clearBetterAuthCookies,
   forwardBetterAuthRedirect,
@@ -9,7 +10,11 @@ import {
 } from './better-auth.adapter'
 
 type ResponseHeaders = Headers | Record<string, string | number | string[]>
-type SocialLoginErrorCode = 'github_sign_in_failed' | 'invalid_callback_url'
+type SocialLoginErrorCode =
+  | 'auth_method_disabled'
+  | 'auth_sign_up_disabled'
+  | 'github_sign_in_failed'
+  | 'invalid_callback_url'
 
 function normalizeOrigin(value: string): string | null {
   try {
@@ -111,10 +116,16 @@ function resolveRedirectPath(callbackURL: string, frontendOrigin: string): strin
   }
 }
 
-function createLoginRedirectUrl(frontendOrigin: string, redirectPath: string, error: SocialLoginErrorCode): string {
+function createLoginRedirectUrl(
+  frontendOrigin: string,
+  redirectPath: string,
+  error: SocialLoginErrorCode,
+  method: 'github',
+): string {
   const loginUrl = new URL('/login', frontendOrigin)
   loginUrl.searchParams.set('redirect', redirectPath)
   loginUrl.searchParams.set('error', error)
+  loginUrl.searchParams.set('method', method)
   return loginUrl.toString()
 }
 
@@ -126,6 +137,14 @@ function resolveSocialLoginErrorCode(error: unknown): SocialLoginErrorCode {
 
   if (errorCode === 'INVALID_CALLBACK_URL') {
     return 'invalid_callback_url'
+  }
+
+  if (errorCode === 'AUTH_METHOD_DISABLED') {
+    return 'auth_method_disabled'
+  }
+
+  if (errorCode === 'AUTH_SIGN_UP_DISABLED') {
+    return 'auth_sign_up_disabled'
   }
 
   const message = error instanceof Error ? error.message.toLowerCase() : ''
@@ -150,6 +169,8 @@ export class AuthApiService {
     let redirectPath = '/dashboard'
 
     try {
+      AuthMethodsService.assertMethodEnabled('github')
+
       const callbackURL = resolveBrowserUrl(request, frontendOrigin, requestedCallbackURL, '/dashboard')
       redirectPath = resolveRedirectPath(callbackURL, frontendOrigin)
       const errorCallbackURL = new URL('/login', frontendOrigin)
@@ -169,7 +190,7 @@ export class AuthApiService {
           errorCallbackURL: errorCallbackURL.toString(),
           newUserCallbackURL: callbackURL,
           provider: 'github',
-          requestSignUp: true,
+          requestSignUp: AuthMethodsService.canMethodSignUp('github'),
         }),
         headers: socialHeaders,
         method: 'POST',
@@ -180,7 +201,12 @@ export class AuthApiService {
       const trustedBrowserOrigin =
         resolveTrustedBrowserOrigin(request) ?? resolveTrustedCallbackOrigin(request, requestedCallbackURL)
       if (trustedBrowserOrigin) {
-        return createLoginRedirectUrl(trustedBrowserOrigin, redirectPath, resolveSocialLoginErrorCode(error))
+        return createLoginRedirectUrl(
+          trustedBrowserOrigin,
+          redirectPath,
+          resolveSocialLoginErrorCode(error),
+          'github',
+        )
       }
 
       throw error
@@ -202,6 +228,9 @@ export class AuthApiService {
     body: SignUpEmailPayload,
     headers: ResponseHeaders,
   ): Promise<AuthApiSession> {
+    AuthMethodsService.assertMethodEnabled('emailPassword')
+    AuthMethodsService.assertMethodSignUpAllowed('emailPassword')
+
     return await forwardBetterAuthResponse<AuthApiSession>(request, {
       body,
       headers,
@@ -216,6 +245,8 @@ export class AuthApiService {
     body: SignInEmailPayload,
     headers: ResponseHeaders,
   ): Promise<AuthApiSession> {
+    AuthMethodsService.assertMethodEnabled('emailPassword')
+
     return await forwardBetterAuthResponse<AuthApiSession>(request, {
       body,
       headers,

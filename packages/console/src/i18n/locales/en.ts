@@ -19,6 +19,8 @@ export default {
     loginSuccess: 'Login successful',
     socialLoginAutoRegisterHint:
       'If this GitHub account is signing in for the first time, the system will create the account automatically once a usable email is available.',
+    socialLoginDisabledHint:
+      'Please check with an administrator to confirm which sign-in methods are currently available.',
     socialLoginErrorConfigHint:
       'Please check the current Console origin, the API base URL configuration, and Nexus trustedOrigins before trying again.',
     socialLoginErrorEmailNotFound:
@@ -27,7 +29,11 @@ export default {
       'GitHub sign-in did not complete. Please try again later, or sign in with email and password first.',
     socialLoginErrorInvalidCallback:
       'The GitHub sign-in entry URL is invalid. Start again from the current login page, or check the API base URL and trustedOrigins configuration.',
+    socialLoginErrorMethodDisabled: '{{method}} sign-in is currently disabled.',
+    socialLoginErrorSignUpDisabled: '{{method}} sign-in does not allow first-time account creation right now.',
     socialLoginErrorTitle: 'GitHub sign-in did not complete',
+    socialLoginSignUpDisabledHint:
+      'If this is your first time using this sign-in method, ask an administrator to create your account or enable sign-up first.',
     socialLoginRetryHint: 'If this keeps happening, try again later or sign in with email and password first.',
     loginTitle: 'Login',
     loginWelcome: 'Welcome back',
@@ -242,77 +248,99 @@ export default {
     },
     actions: {
       access: {
-        description: 'View the current roles and permissions for this account.',
+        description: 'View current access.',
         title: 'Review my access',
         value: '{{count}} permissions',
       },
-      description: 'This section keeps the most common pages together.',
+      description:
+        'This section keeps the most common pages together. Even when a management page is not available, it still stays in place and explains why.',
       profile: {
-        description: 'View and update the current account profile.',
+        description: 'View and update profile.',
         title: 'Maintain my profile',
       },
       roles: {
-        description: 'View the current role list and role details.',
+        description: 'View role list.',
         title: 'Open role management',
+        unavailableDescription: 'This account cannot view the role list right now.',
         value: '{{count}} roles',
       },
-      title: 'Page entry points',
+      title: 'Common entry points',
+      unavailable: 'Not available now',
       users: {
-        description: 'View the account list, then continue to details, profile, or access pages.',
+        description: 'View account list.',
         title: 'Open user management',
+        unavailableDescription: 'This account cannot view all users right now.',
         value: '{{count}} accounts',
       },
     },
     coverage: {
-      description: 'Review the current permission distribution by module.',
+      description: 'This section groups the effective permission actions for the current account by module.',
       empty: 'No permission coverage is available',
       more: '{{count}} more actions',
       title: 'Permission coverage',
     },
     defaultName: 'Admin',
-    description: 'This page summarizes the current account, system objects, and common entry points.',
+    description: 'Overview of the current account and available entry points.',
     eyebrow: 'Workspace',
-    flow: {
-      description: 'Common checks usually pass through these pages.',
-      steps: {
-        permissions: {
-          description: 'Review the final effective permissions.',
-          title: 'Confirm permissions last',
-        },
-        roles: {
-          description: 'Review whether the current roles match expectations.',
-          title: 'Review roles next',
-        },
-        users: {
-          description: 'Locate the account first, then continue to follow-up actions.',
-          title: 'Find the account first',
-        },
-      },
-      title: 'Common workflow',
-    },
     focus: {
-      description: 'This section keeps a few commonly checked states in view.',
-      items: {
-        activeRoles: 'Effective roles for this account',
-        elevatedPermissions: 'Elevated permissions',
-        lastRefresh: 'Last refresh',
-      },
-      title: 'Current status',
+      description:
+        'This section gives the current operating scope first, so you can quickly decide whether to review platform data or focus on your own account.',
+      title: 'Current operating scope',
     },
     metrics: {
+      activeRoles: 'Active Roles',
+      activeRolesDescription: 'How many roles are currently effective for this account.',
       coveredModules: 'Covered Modules',
+      coveredModulesDescription: 'How many console modules are covered by the current permissions.',
+      elevatedPermissions: 'Elevated Permissions',
+      elevatedPermissionsDescription: 'Actions that affect all users or system settings.',
       permissionTotal: 'Effective Permissions',
-      restricted: 'By permission',
-      roleTotal: 'Total Roles',
-      userTotal: 'Total Accounts',
+      permissionTotalDescription: 'The total number of actions currently available in the console.',
     },
-    adminSummaryNote:
-      'Account totals and role totals appear only when this account has the corresponding permissions. This page now prioritizes the entry points and permission results you can use right away.',
-    primaryAction: 'Open user management',
-    secondaryAction: 'Review my permissions',
+    primaryAction: {
+      access: 'Review my access',
+      roles: 'Open role management',
+      users: 'Open user management',
+    },
+    roles: {
+      description:
+        'This section explains why the current account has these capabilities and which roles are making them available.',
+      empty: 'No effective roles are available',
+      fallbackDescription: 'No extra description is available for this role yet.',
+      fallbackTitle: 'Unnamed role',
+      meta: {
+        assignedAt: 'Effective since',
+        roleKey: 'Role key',
+      },
+      permissionCount: '{{count}} permissions',
+      title: 'Current role sources',
+    },
+    scope: {
+      fullAdmin: 'Platform-wide management',
+      loading: 'Loading scope',
+      partialAdmin: 'Partial management scope',
+      selfService: 'Focused on this account',
+    },
+    secondaryAction: 'Maintain my profile',
     summary:
-      'There are currently {{userTotal}} accounts and {{roleTotal}} roles. This account has {{roleCount}} effective roles and {{permissionCount}} active permissions.',
+      'This account has {{roleCount}} roles, {{permissionCount}} permissions, and coverage across {{moduleCount}} modules. Current scope: {{scope}}.',
+    summaryAdminNote:
+      'When platform-level permissions are available, user management and role management appear here with their current visibility.',
+    summarySelfNote:
+      'When this account mainly works with its own profile and permissions, the page prioritizes self-service entry points and results first.',
     title: '{{name}}, Console Overview',
+    visibility: {
+      available: 'Available',
+      description: 'This section shows which platform data is visible right now and where this account can continue next.',
+      items: {
+        manageScope: 'Current scope',
+        nextStep: 'Suggested next step',
+        roleList: 'Role list',
+        userList: 'User list',
+      },
+      title: 'Current visibility',
+      unavailable: 'Unavailable',
+    },
   },
   articleList: {
     emptyDescription: 'Article list is temporarily unavailable.',

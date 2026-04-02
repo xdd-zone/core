@@ -1,7 +1,14 @@
-import { AuthApiService, authPlugin } from '@nexus/core/security'
+import { AuthApiService, AuthMethodsService, authPlugin } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
-import { AuthSessionSchema, GitHubSignInQuerySchema, SessionSchema, SignInEmailBodySchema, SignUpEmailBodySchema } from './model'
+import {
+  AuthMethodsResponseSchema,
+  AuthSessionSchema,
+  GitHubSignInQuerySchema,
+  SessionSchema,
+  SignInEmailBodySchema,
+  SignUpEmailBodySchema,
+} from './model'
 
 /**
  * 认证模块。
@@ -12,6 +19,14 @@ export const authModule = new Elysia({
   tags: ['Auth'],
 })
   .use(authPlugin)
+  .get('/methods', () => AuthMethodsResponseSchema.parse({ methods: AuthMethodsService.listPublicMethods() }), {
+    response: AuthMethodsResponseSchema,
+    detail: apiDetail({
+      summary: '获取登录方式',
+      description: '返回当前开放的登录方式及是否允许首次创建用户。',
+      response: AuthMethodsResponseSchema,
+    }),
+  })
   .get(
     '/sign-in/github',
     async ({ request }) => {
@@ -124,6 +139,14 @@ export const authModule = new Elysia({
   })
 
 export {
+  type AuthMethod,
+  type AuthMethodId,
+  type AuthMethodKind,
+  AuthMethodIdSchema,
+  AuthMethodKindSchema,
+  AuthMethodSchema,
+  type AuthMethodsResponse,
+  AuthMethodsResponseSchema,
   type AuthSessionRecord,
   AuthSessionSchema,
   AuthUserSchema,

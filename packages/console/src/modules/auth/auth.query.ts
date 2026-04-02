@@ -1,12 +1,31 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { SessionPayload, SignInEmailBody } from './auth.types'
 
-import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { authApi } from './auth.api'
 import { applySessionPayload, clearAuthState, EMPTY_SESSION_PAYLOAD } from './auth.store'
 
+const AUTH_METHODS_QUERY_KEY = ['auth', 'methods'] as const
 const AUTH_SESSION_QUERY_KEY = ['auth', 'session'] as const
+
+/**
+ * 登录方式查询配置。
+ */
+export function getAuthMethodsQueryOptions() {
+  return queryOptions({
+    queryFn: authApi.getMethods,
+    queryKey: AUTH_METHODS_QUERY_KEY,
+    staleTime: 60_000,
+  })
+}
+
+/**
+ * 登录方式查询。
+ */
+export function useAuthMethodsQuery() {
+  return useQuery(getAuthMethodsQueryOptions())
+}
 
 /**
  * 当前会话查询配置。

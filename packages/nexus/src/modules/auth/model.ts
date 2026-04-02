@@ -1,6 +1,29 @@
 import { DateTimeSchema, UserStatusSchema } from '@nexus/shared/schema'
 import { z } from 'zod'
 
+export const AuthMethodIdSchema = z.enum(['emailPassword', 'github'])
+
+export type AuthMethodId = z.infer<typeof AuthMethodIdSchema>
+
+export const AuthMethodKindSchema = z.enum(['credential', 'oauth'])
+
+export type AuthMethodKind = z.infer<typeof AuthMethodKindSchema>
+
+export const AuthMethodSchema = z.object({
+  id: AuthMethodIdSchema,
+  kind: AuthMethodKindSchema,
+  enabled: z.boolean(),
+  allowSignUp: z.boolean(),
+})
+
+export type AuthMethod = z.infer<typeof AuthMethodSchema>
+
+export const AuthMethodsResponseSchema = z.object({
+  methods: z.array(AuthMethodSchema),
+})
+
+export type AuthMethodsResponse = z.infer<typeof AuthMethodsResponseSchema>
+
 export const AuthSessionRecordSchema = z.object({
   id: z.string(),
   userId: z.string(),

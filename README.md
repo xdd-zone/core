@@ -93,8 +93,31 @@ GITHUB_CLIENT_SECRET="your-github-client-secret"
 当前 `packages/nexus` 默认启用 GitHub 登录。启动前还要确认：
 
 - `packages/nexus/config.yaml` 的 `trustedOrigins` 包含当前 Console 来源
+- `packages/nexus/config.yaml` 的 `auth.methods` 已按当前环境设置好登录方式
 - GitHub OAuth App 的 callback URL 使用 `BETTER_AUTH_URL` 对应的 `/api/auth/callback/github`
 - Console 当前使用的 API 基址可以直达 Nexus
+
+登录方式开关统一在 `packages/nexus/config.yaml` 维护，例如：
+
+```yaml
+auth:
+  methods:
+    emailPassword:
+      enabled: true
+      allowSignUp: true
+    github:
+      enabled: true
+      allowSignUp: true
+```
+
+字段说明：
+
+- `enabled`
+  - 控制这条登录方式是否允许使用
+- `allowSignUp`
+  - 控制这条登录方式是否允许首次创建用户
+
+如果关闭邮箱密码登录，Console 登录页会继续保留邮箱表单，但输入框和提交按钮会改为禁用状态，页面布局不会变化。
 
 ### 准备数据库
 
@@ -201,6 +224,7 @@ bun run seed
 
 认证：
 
+- `GET /api/auth/methods`
 - `POST /api/auth/sign-up/email`
 - `POST /api/auth/sign-in/email`
 - `GET /api/auth/sign-in/github`

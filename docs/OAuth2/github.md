@@ -15,6 +15,7 @@
 - 后端使用 `packages/nexus` 中的 Better Auth + GitHub OAuth App
 - 前端使用 `packages/console` 登录页发起浏览器跳转
 - 成功登录后，GitHub 会回到 Nexus，再由 Nexus 回到 Console
+- GitHub 是否开启，以及是否允许首次创建用户，统一由 `packages/nexus/config.yaml` 的 `auth.methods.github` 控制
 
 ## 先知道这次接入长什么样
 
@@ -33,14 +34,20 @@
 
 这次接入里最重要的几个代码位置：
 
+- `packages/nexus/src/core/config/auth.config.ts`
+  - 解析登录方式配置
 - `packages/nexus/src/core/security/auth/better-auth.ts`
-  - 注册 GitHub social provider
+  - 按配置决定是否注册 GitHub social provider
 - `packages/nexus/src/core/security/auth/auth-api.service.ts`
   - 处理 GitHub 登录入口、校验 `callbackURL`、拼装失败回跳地址
+  - 按配置决定是否允许 GitHub 登录和首次创建用户
+- `packages/nexus/src/core/security/auth/auth-methods.service.ts`
+  - 读取登录方式开关并提供判断方法
 - `packages/console/src/modules/auth/auth.api.ts`
   - 生成 GitHub 登录地址
 - `packages/console/src/pages/auth/Login.tsx`
   - 登录页按钮、错误提示和跳转逻辑
+  - 读取登录方式接口并控制可用状态
 - `packages/console/src/shared/api/eden.ts`
   - 统一处理 Console 的 API 基址
 
@@ -162,14 +169,27 @@ GitHub 登录成功后，Nexus 需要确认哪些前端来源是可信的。
 
 - `packages/nexus/config.yaml`
 
-当前字段是：
+当前至少要确认下面两部分：
 
 ```yaml
+auth:
+  methods:
+    github:
+      enabled: true
+      allowSignUp: true
+
 trustedOrigins:
   - http://localhost:2333
 ```
 
-你至少要保证当前 Console 来源在这个列表里。
+说明：
+
+- `enabled`
+  - 控制 GitHub 登录是否开启
+- `allowSignUp`
+  - 控制第一次使用 GitHub 登录时，是否允许直接创建账号
+
+你至少要保证当前 Console 来源在 `trustedOrigins` 里。
 
 举例：
 

@@ -12,6 +12,15 @@ logger:
   level: info
   filePath: # logs/app.log 留空则不启用文件日志
 
+auth:
+  methods:
+    emailPassword:
+      enabled: true
+      allowSignUp: true
+    github:
+      enabled: true
+      allowSignUp: true
+
 # Better Auth 信任的请求来源
 trustedOrigins:
   - http://localhost:2333

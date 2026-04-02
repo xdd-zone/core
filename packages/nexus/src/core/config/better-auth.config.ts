@@ -1,3 +1,4 @@
+import type { AuthConfig } from './auth.config'
 import type { RuntimeEnv, YamlConfig } from './utils'
 import { z } from 'zod'
 import { parseOptionalEnv, parseRequiredEnv } from './utils'
@@ -6,7 +7,7 @@ export interface BetterAuthConfig {
   secret: string
   url: string
   trustedOrigins: string[]
-  github: {
+  github?: {
     clientId: string
     clientSecret: string
   }
@@ -28,24 +29,26 @@ function warnWeakBetterAuthSecret(secret: string, env: RuntimeEnv) {
   )
 }
 
-export function createBetterAuthConfig(env: RuntimeEnv, yamlConfig: YamlConfig): BetterAuthConfig {
+export function createBetterAuthConfig(env: RuntimeEnv, yamlConfig: YamlConfig, authConfig: AuthConfig): BetterAuthConfig {
   const secret = parseRequiredEnv(z.string().min(1), process.env.BETTER_AUTH_SECRET)
   const url = parseRequiredEnv(z.string().url(), process.env.BETTER_AUTH_URL)
-  const githubClientId = parseRequiredEnv(z.string().min(1), process.env.GITHUB_CLIENT_ID)
-  const githubClientSecret = parseRequiredEnv(z.string().min(1), process.env.GITHUB_CLIENT_SECRET)
   const trustedOrigins = parseOptionalEnv(z.array(z.string().url()), yamlConfig.trustedOrigins) ?? [
     'http://localhost:2333',
     'http://localhost:2233',
     'http://localhost:7788',
   ]
+  const github
+    = authConfig.methods.github.enabled
+      ? {
+          clientId: parseRequiredEnv(z.string().min(1), process.env.GITHUB_CLIENT_ID),
+          clientSecret: parseRequiredEnv(z.string().min(1), process.env.GITHUB_CLIENT_SECRET),
+        }
+      : undefined
 
   warnWeakBetterAuthSecret(secret, env)
 
   return {
-    github: {
-      clientId: githubClientId,
-      clientSecret: githubClientSecret,
-    },
+    github,
     secret,
     url,
     trustedOrigins,

@@ -1,4 +1,8 @@
 export type {
+  AuthMethod,
+  AuthMethodId,
+  AuthMethodKind,
+  AuthMethodsResponse,
   AuthSessionRecord,
   AuthUser,
   Session as SessionPayload,

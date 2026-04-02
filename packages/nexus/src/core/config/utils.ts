@@ -15,6 +15,18 @@ export interface RuntimeEnv {
 }
 
 interface YamlConfigRaw {
+  auth?: {
+    methods?: {
+      emailPassword?: {
+        enabled?: boolean
+        allowSignUp?: boolean
+      }
+      github?: {
+        enabled?: boolean
+        allowSignUp?: boolean
+      }
+    }
+  }
   port?: number
   prefix?: string
   openapi?: {

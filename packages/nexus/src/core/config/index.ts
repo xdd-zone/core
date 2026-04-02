@@ -1,8 +1,10 @@
+import type { AuthConfig } from './auth.config'
 import type { AppConfig } from './app.config'
 import type { BetterAuthConfig } from './better-auth.config'
 import type { DatabaseConfig } from './database.config'
 import type { LoggerConfig } from './logger.config'
 import type { OpenapiConfig } from './openapi.config'
+import { createAuthConfig } from './auth.config'
 import { createAppConfig } from './app.config'
 import { createBetterAuthConfig } from './better-auth.config'
 import { createDatabaseConfig } from './database.config'
@@ -17,13 +19,15 @@ import { createOpenapiConfig } from './openapi.config'
 import { getEnv, YAML_CONFIG } from './utils'
 
 const env = getEnv()
+export const AUTH_CONFIG: AuthConfig = createAuthConfig(YAML_CONFIG)
 export const APP_CONFIG: AppConfig = createAppConfig(env, YAML_CONFIG)
 export const OPENAPI_CONFIG: OpenapiConfig = createOpenapiConfig(env, YAML_CONFIG)
 export const LOGGER_CONFIG: LoggerConfig = createLoggerConfig(env.isProduction, YAML_CONFIG)
 export const DATABASE_CONFIG: DatabaseConfig = createDatabaseConfig(env)
-export const BETTER_AUTH_CONFIG: BetterAuthConfig = createBetterAuthConfig(env, YAML_CONFIG)
+export const BETTER_AUTH_CONFIG: BetterAuthConfig = createBetterAuthConfig(env, YAML_CONFIG, AUTH_CONFIG)
 
 export const CONFIG = {
+  auth: AUTH_CONFIG,
   app: APP_CONFIG,
   logger: LOGGER_CONFIG,
   openapi: OPENAPI_CONFIG,
@@ -32,5 +36,6 @@ export const CONFIG = {
 }
 
 // 导出类型
+export type { AuthConfig, AuthMethodId, AuthMethodKind, AuthMethodPolicy, AuthMethodsConfig } from './auth.config'
 export type { AppConfig, DatabaseConfig, LoggerConfig, OpenapiConfig }
 export type { LogLevel, RuntimeEnv, YamlConfig } from './utils'

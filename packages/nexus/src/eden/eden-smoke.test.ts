@@ -245,6 +245,27 @@ describe('eden smoke', () => {
     })
   })
 
+  it('应可读取当前登录方式开关', async () => {
+    const result = await anonymousClient.api.auth.methods.get()
+
+    expect(result.status).toBe(200)
+    expect(result.error).toBeNull()
+    expect(result.data?.methods).toEqual([
+      {
+        id: 'emailPassword',
+        kind: 'credential',
+        enabled: true,
+        allowSignUp: true,
+      },
+      {
+        id: 'github',
+        kind: 'oauth',
+        enabled: true,
+        allowSignUp: true,
+      },
+    ])
+  })
+
   it('应支持 GitHub 登录跳转，并在入口参数错误时回跳登录页', async () => {
     const validResponse = await app.handle(
       new Request(

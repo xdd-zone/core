@@ -1,4 +1,4 @@
-import type { SessionPayload, SignInEmailBody } from './auth.types'
+import type { AuthMethodsResponse, SessionPayload, SignInEmailBody } from './auth.types'
 
 import { api, ConsoleApiError, resolveApiUrl, unwrapEdenResponse } from '@console/shared/api'
 
@@ -21,6 +21,10 @@ export const authApi = {
 
   async getSession(): Promise<SessionPayload> {
     return unwrapEdenResponse(await authApiRoot['get-session'].get())
+  },
+
+  async getMethods(): Promise<AuthMethodsResponse> {
+    return unwrapEdenResponse(await authApiRoot.methods.get())
   },
 
   async signIn(body: SignInEmailBody): Promise<void> {

@@ -24,6 +24,7 @@ describe('openapi smoke', () => {
     expect(paths['/api/health/']).toBeTruthy()
     expect(paths['/api/auth/me']).toBeTruthy()
     expect(paths['/api/auth/get-session']).toBeTruthy()
+    expect(paths['/api/auth/methods']).toBeTruthy()
     expect(paths['/api/auth/sign-in/github']).toBeTruthy()
     expect(paths['/api/auth/callback/github']).toBeTruthy()
     expect(paths['/api/user/']).toBeTruthy()
