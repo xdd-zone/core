@@ -4,17 +4,16 @@ import { AppSidebar } from '../components/app-sidebar/AppSidebar'
 import { TabBar } from '../components/tab-bar/TabBar'
 
 /**
- * 上下布局模式
- * 上部：Logo + 标题 + 搜索 + 操作按钮
- * 下部：左侧菜单 + 右侧（标签栏 + 内容区）
+ * 后台主布局
+ * 上部放品牌和操作区，下部放菜单、标签栏和页面内容
  */
 export function TopBottomLayout() {
   return (
     <div className="guide-shell flex h-screen flex-col">
       {/* 顶部头部 */}
-      <AppHeader variant="topBottom" showBrand />
+      <AppHeader showBrand />
 
-      {/* 下部左右布局 */}
+      {/* 下部内容区 */}
       <div className="flex flex-1 overflow-hidden">
         {/* 左侧菜单 */}
         <AppSidebar />

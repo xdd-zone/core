@@ -15,8 +15,8 @@ logger:
 auth:
   methods:
     emailPassword:
-      enabled: true
-      allowSignUp: true
+      enabled: false
+      allowSignUp: false
     github:
       enabled: true
       allowSignUp: true

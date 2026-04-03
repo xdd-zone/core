@@ -6,17 +6,16 @@
 
   .guide-header {
     padding: clamp(0.85rem, 1.2vw, 1.15rem) clamp(1rem, 1.8vw, 1.5rem);
-    border-bottom-color: color-mix(in srgb, var(--color-border-subtle) 80%, transparent);
     background: color-mix(in srgb, var(--color-surface) 68%, transparent);
     backdrop-filter: blur(8px);
   }
 
-  .guide-sidebar {
-    border-right-color: color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
+  .guide-sidebar,
+  .guide-tab-bar {
     background: linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-surface) 76%, transparent),
-      color-mix(in srgb, var(--color-surface-muted) 68%, transparent)
+      color-mix(in srgb, var(--color-surface) 74%, transparent),
+      color-mix(in srgb, var(--color-surface-muted) 66%, transparent)
     );
     backdrop-filter: blur(8px);
   }
@@ -29,11 +28,6 @@
     width: 100%;
     max-width: 96rem;
     margin-inline: auto;
-  }
-
-  .guide-tab-bar {
-    background: color-mix(in srgb, var(--color-surface-muted) 60%, transparent);
-    backdrop-filter: blur(6px);
   }
 
   .guide-menu.ant-menu {

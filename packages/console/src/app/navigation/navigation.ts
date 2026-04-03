@@ -2,6 +2,7 @@ import type { MenuProps } from 'antd'
 import type { LucideProps } from 'lucide-react'
 import type { ComponentType } from 'react'
 
+import { canAccessConsolePath } from '@console/app/access/access-control'
 import { renderIcon } from '@console/utils/pathUtils'
 
 import {
@@ -159,6 +160,31 @@ export const navigationItems: NavigationItem[] = [
   },
 ]
 
+function filterNavigationItems(items: NavigationItem[], permissionKeys: Iterable<string>): NavigationItem[] {
+  return items.reduce<NavigationItem[]>((visibleItems, item) => {
+    const visibleChildren = item.children ? filterNavigationItems(item.children, permissionKeys) : undefined
+    const canAccessCurrentItem = item.path ? canAccessConsolePath(item.path, permissionKeys) : true
+
+    if (visibleChildren && visibleChildren.length > 0) {
+      visibleItems.push({
+        ...item,
+        children: visibleChildren,
+      })
+      return visibleItems
+    }
+
+    if (item.children) {
+      return visibleItems
+    }
+
+    if (canAccessCurrentItem) {
+      visibleItems.push(item)
+    }
+
+    return visibleItems
+  }, [])
+}
+
 function toMenuItem(item: NavigationItem, t?: (key: string) => string): MenuItem {
   return {
     children: item.children?.map((child) => toMenuItem(child, t)),
@@ -171,6 +197,10 @@ function toMenuItem(item: NavigationItem, t?: (key: string) => string): MenuItem
 /**
  * 构建 Antd 导航菜单数据。
  */
-export function buildNavigationMenuItems(t?: (key: string) => string): MenuItem[] {
-  return navigationItems.map((item) => toMenuItem(item, t))
+export function buildNavigationMenuItems(t?: (key: string) => string, permissionKeys?: Iterable<string>): MenuItem[] {
+  const visibleNavigationItems = permissionKeys
+    ? filterNavigationItems(navigationItems, permissionKeys)
+    : navigationItems
+
+  return visibleNavigationItems.map((item) => toMenuItem(item, t))
 }

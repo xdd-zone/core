@@ -7,8 +7,9 @@ import { rbacApi } from './rbac.api'
 const ROLE_LIST_QUERY_KEY = ['roles'] as const
 const USER_ROLES_QUERY_KEY = (userId: string) => ['users', userId, 'roles'] as const
 const USER_PERMISSIONS_QUERY_KEY = (userId: string) => ['users', userId, 'permissions'] as const
-const CURRENT_USER_PERMISSIONS_KEY = ['current-user', 'permissions'] as const
-const CURRENT_USER_ROLES_KEY = ['current-user', 'roles'] as const
+export const CURRENT_USER_ACCESS_QUERY_KEY = ['current-user'] as const
+const CURRENT_USER_PERMISSIONS_KEY = [...CURRENT_USER_ACCESS_QUERY_KEY, 'permissions'] as const
+const CURRENT_USER_ROLES_KEY = [...CURRENT_USER_ACCESS_QUERY_KEY, 'roles'] as const
 
 /**
  * 角色列表查询配置。
@@ -115,7 +116,6 @@ export function useAssignRoleMutation() {
  */
 export function useRemoveRoleMutation() {
   return useMutation({
-    mutationFn: ({ userId, roleId }: { userId: string; roleId: string }) =>
-      rbacApi.removeRoleFromUser(userId, roleId),
+    mutationFn: ({ userId, roleId }: { userId: string; roleId: string }) => rbacApi.removeRoleFromUser(userId, roleId),
   })
 }

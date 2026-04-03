@@ -431,16 +431,12 @@ export default {
   setting: {
     catppuccinTheme: '主题颜色',
     catppuccinThemeDescription: '选择 Catppuccin 主题预设',
-    layoutMode: '布局模式',
-    layoutModeDescription: '选择应用的布局方式',
-    leftRightLayout: '左右布局',
     primaryColor: '主题色',
     primaryColorDescription: '选择应用的主题色',
     recommendedColors: '推荐色彩',
     systemSettings: '系统设置',
     themeMode: '主题模式',
     themeModeDescription: '选择应用的主题模式',
-    topBottomLayout: '上下布局',
   },
   tabBar: {
     closeAll: '关闭全部',

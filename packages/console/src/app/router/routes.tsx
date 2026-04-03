@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 
+import { ensureConsolePathAccess } from '@console/app/access/access-control'
 import { ErrorBoundary } from '@console/components/ui'
 import { RootLayout } from '@console/layout'
 
@@ -84,6 +85,7 @@ const notFoundRoute = createRoute({
 const protectedRoute = createRoute({
   beforeLoad: async ({ context, location }) => {
     await requireAuth(context.queryClient, location.href)
+    await ensureConsolePathAccess(context.queryClient, location.pathname)
   },
   getParentRoute: () => rootRoute,
   id: 'protected',

@@ -28,12 +28,10 @@ export interface SettingState extends BaseStore {
   isSettingDrawerOpen: boolean
   isSidebarCollapsed: boolean
   language: string
-  layoutMode: 'leftRight' | 'topBottom'
   resetToSystemTheme: () => void
   setCatppuccinTheme: (theme: CatppuccinThemeId) => void
   setDarkMode: (isDark: boolean) => void
   setLanguage: (language: string) => void
-  setLayoutMode: (mode: 'leftRight' | 'topBottom') => void
   setMobileMenuOpen: (open: boolean) => void
   setSettingDrawerOpen: (open: boolean) => void
   setSidebarCollapsed: (collapsed: boolean) => void
@@ -135,15 +133,12 @@ export const useSettingStore = create<SettingState>()(
 
         language: initialTheme.language,
 
-        layoutMode: 'leftRight' as const,
-
         reset: () => {
           set({
             catppuccinTheme: 'latte',
             isDark: false,
             isSidebarCollapsed: false,
             language: 'zh',
-            layoutMode: 'leftRight' as const,
             themeMode: 'system' as const,
           })
         },
@@ -187,10 +182,6 @@ export const useSettingStore = create<SettingState>()(
           // 动态导入 i18n 实例访问器，避免与 App.tsx 的静态导入冲突
           const { getI18nInstance } = await import('@console/i18n/instance')
           getI18nInstance().changeLanguage(language)
-        },
-
-        setLayoutMode: (layoutMode: 'leftRight' | 'topBottom') => {
-          set({ layoutMode })
         },
 
         setMobileMenuOpen: (open: boolean) => {
@@ -262,7 +253,6 @@ export const useSettingStore = create<SettingState>()(
       partialize: (state) => ({
         catppuccinTheme: state.catppuccinTheme,
         language: state.language,
-        layoutMode: state.layoutMode,
         themeMode: state.themeMode,
       }),
     },

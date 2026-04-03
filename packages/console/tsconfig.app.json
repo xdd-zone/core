@@ -11,7 +11,8 @@
       "@console/*": ["src/*"],
       "@nexus/*": ["../nexus/src/*"],
       "@xdd-zone/nexus/eden": ["../nexus/src/public/eden.ts"],
-      "@xdd-zone/nexus/auth-types": ["../nexus/src/public/auth-types.ts"]
+      "@xdd-zone/nexus/auth-types": ["../nexus/src/public/auth-types.ts"],
+      "@xdd-zone/nexus/rbac": ["../nexus/src/public/rbac.ts"]
     },
     "allowImportingTsExtensions": true,
     "noFallthroughCasesInSwitch": true,

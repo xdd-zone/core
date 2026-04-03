@@ -4,7 +4,7 @@ import { useRoleListQuery } from '@console/modules/rbac'
 
 import { Button, Card, Input, Table, Tag } from 'antd'
 import dayjs from 'dayjs'
-import { RefreshCw, Search, ShieldCheck } from 'lucide-react'
+import { RefreshCw, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -62,28 +62,20 @@ export function RoleList() {
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
-        <div className="flex flex-col gap-5">
-          <div className="max-w-3xl">
-            <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
-              {t('role.list.eyebrow')}
-            </div>
-            <div className="mt-3 flex items-start gap-3">
-              <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
-                <ShieldCheck className="size-5" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-semibold tracking-tight">{t('menu.roleManagement')}</h1>
-                <p className="text-fg-muted mt-2 text-sm">{t('role.list.description')}</p>
-              </div>
+      <section className="rounded-3xl border border-border-subtle bg-surface/72 px-4 py-4 shadow-sm backdrop-blur-xs">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0 max-w-2xl">
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">{t('menu.roleManagement')}</h1>
+              <p className="text-fg-muted mt-1.5 text-sm">{t('role.list.description')}</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 xl:max-w-[44%] xl:justify-end">
             {summaryItems.map((item) => (
               <span
                 key={item.label}
-                className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-overlay-0/20 px-3 py-1.5 text-sm"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-overlay-0/16 px-2.5 py-1 text-xs"
               >
                 <span className="text-fg-muted">{item.label}</span>
                 <span className="font-medium text-fg">{item.value}</span>

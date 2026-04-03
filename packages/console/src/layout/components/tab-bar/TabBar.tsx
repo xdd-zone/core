@@ -196,7 +196,7 @@ export function TabBar() {
   }, [isMobile])
 
   return (
-    <div className="guide-tab-bar border-b border-border p-1 md:p-2">
+    <div className="guide-tab-bar p-1 md:p-2">
       <div className="flex items-center justify-between">
         <div
           ref={scrollContainerRef}

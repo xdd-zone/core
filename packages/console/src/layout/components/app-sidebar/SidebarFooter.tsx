@@ -1,18 +1,10 @@
 import { CollapseButton } from '@console/layout/atoms'
-import { useSettingStore } from '@console/stores'
 
 /**
  * 侧边栏底部组件
- * 在上下布局模式下显示折叠按钮
+ * 用于控制侧边栏折叠状态
  */
 export function SidebarFooter() {
-  const { layoutMode } = useSettingStore()
-
-  // 只在上下布局模式下显示折叠按钮
-  if (layoutMode !== 'topBottom') {
-    return null
-  }
-
   return (
     <div className="mb-2 flex w-full justify-center">
       <CollapseButton />

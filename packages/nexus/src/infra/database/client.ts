@@ -1,4 +1,4 @@
-import { DATABASE_CONFIG } from '@nexus/core'
+import { DATABASE_CONFIG } from '@nexus/core/config'
 import { PrismaClient } from '@nexus/infra/database/prisma/generated/client'
 import { createModuleLogger } from '@nexus/infra/logger'
 /**

@@ -1,5 +1,5 @@
 import type { SecuritySession } from './security.types'
-import { prisma } from '@nexus/infra'
+import { prisma } from '@nexus/infra/database/client'
 import { betterAuthInstance } from './better-auth'
 
 /**

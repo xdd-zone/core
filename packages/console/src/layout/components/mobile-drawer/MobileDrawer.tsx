@@ -1,7 +1,10 @@
+import { createPermissionKeySet } from '@console/app/access/access-control'
 import { buildNavigationMenuItems } from '@console/app/navigation/navigation'
+import { useCurrentUserPermissionsQuery } from '@console/modules/rbac'
 import { useSettingStore } from '@console/stores'
 
 import { Drawer } from 'antd'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { NavigationMenu } from '../menu/NavigationMenu'
@@ -13,8 +16,13 @@ import { NavigationMenu } from '../menu/NavigationMenu'
 export function MobileDrawer() {
   const { t } = useTranslation()
   const { isMobileMenuOpen, setMobileMenuOpen } = useSettingStore()
+  const currentUserPermissionsQuery = useCurrentUserPermissionsQuery()
+  const permissionKeys = useMemo(
+    () => createPermissionKeySet(currentUserPermissionsQuery.data?.permissions),
+    [currentUserPermissionsQuery.data?.permissions],
+  )
 
-  const menuItems = buildNavigationMenuItems(t)
+  const menuItems = buildNavigationMenuItems(t, permissionKeys)
 
   const onClose = () => setMobileMenuOpen(false)
 

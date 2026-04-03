@@ -18,11 +18,17 @@ const StyledWrapper = styled.div<{ $fullScreen: boolean }>`
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 1.5rem 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, transparent);
+    border-radius: 1.75rem;
+    background: color-mix(in srgb, var(--color-surface) 74%, transparent);
+    box-shadow: 0 18px 42px -34px color-mix(in srgb, var(--color-primary) 16%, transparent);
+    backdrop-filter: blur(8px);
   }
 
   .loading-eyebrow {
     margin-top: 1rem;
-    color: var(--color-fg-muted);
+    color: color-mix(in srgb, var(--color-fg) 60%, var(--color-surface));
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.18em;
@@ -39,9 +45,10 @@ const StyledWrapper = styled.div<{ $fullScreen: boolean }>`
 
   .loading-description {
     margin: 0.5rem 0 0;
-    color: var(--color-fg-muted);
+    color: color-mix(in srgb, var(--color-fg) 76%, var(--color-surface));
     font-size: 0.875rem;
     line-height: 1.8;
+    max-width: 20rem;
   }
 
   .loading-wave {
@@ -97,6 +104,12 @@ const StyledWrapper = styled.div<{ $fullScreen: boolean }>`
       animation: none;
       height: 1.5rem;
       opacity: 0.85;
+    }
+  }
+
+  @supports not (backdrop-filter: blur(8px)) {
+    .loading-content {
+      background: color-mix(in srgb, var(--color-surface) 92%, transparent);
     }
   }
 `

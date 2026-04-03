@@ -445,16 +445,12 @@ export default {
   setting: {
     catppuccinTheme: 'Theme Color',
     catppuccinThemeDescription: 'Select a Catppuccin theme preset',
-    layoutMode: 'Layout Mode',
-    layoutModeDescription: 'Choose the layout style of the application',
-    leftRightLayout: 'Left-Right Layout',
     primaryColor: 'Primary Color',
     primaryColorDescription: 'Choose the primary color of the application',
     recommendedColors: 'Recommended Colors',
     systemSettings: 'System Settings',
     themeMode: 'Theme Mode',
     themeModeDescription: 'Choose the theme mode of the application',
-    topBottomLayout: 'Top-Bottom Layout',
   },
   tabBar: {
     closeAll: 'Close All',

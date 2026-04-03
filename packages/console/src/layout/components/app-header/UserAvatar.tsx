@@ -1,11 +1,14 @@
 import type { MenuProps } from 'antd'
+import { canAccessConsolePath, createPermissionKeySet } from '@console/app/access/access-control'
 import { useAuthStore, useLogoutMutation } from '@console/modules/auth'
+import { useCurrentUserPermissionsQuery } from '@console/modules/rbac'
 
 import { useTabBarStore } from '@console/stores'
 import { useNavigate } from '@tanstack/react-router'
 import { Avatar, Dropdown } from 'antd'
 
 import { KeyRound, LogOut, User, UserCog } from 'lucide-react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -17,11 +20,40 @@ export function UserAvatar() {
   const logoutMutation = useLogoutMutation()
   const user = useAuthStore((state) => state.user)
   const resetTabs = useTabBarStore((state) => state.reset)
+  const currentUserPermissionsQuery = useCurrentUserPermissionsQuery()
+  const permissionKeys = useMemo(
+    () => createPermissionKeySet(currentUserPermissionsQuery.data?.permissions),
+    [currentUserPermissionsQuery.data?.permissions],
+  )
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync()
     resetTabs()
     await navigate({ replace: true, to: '/login' })
+  }
+
+  const shortcutItems: MenuProps['items'] = []
+
+  if (canAccessConsolePath('/profile', permissionKeys)) {
+    shortcutItems.push({
+      icon: <UserCog size={20} />,
+      key: 'profile',
+      label: t('menu.myProfile'),
+      onClick: () => {
+        void navigate({ to: '/profile' })
+      },
+    })
+  }
+
+  if (canAccessConsolePath('/my-access', permissionKeys)) {
+    shortcutItems.push({
+      icon: <KeyRound size={20} />,
+      key: 'my-access',
+      label: t('menu.myAccess'),
+      onClick: () => {
+        void navigate({ to: '/my-access' })
+      },
+    })
   }
 
   const menuItems: MenuProps['items'] = [
@@ -37,25 +69,8 @@ export function UserAvatar() {
     {
       type: 'divider',
     },
-    {
-      icon: <UserCog size={20} />,
-      key: 'profile',
-      label: t('menu.myProfile'),
-      onClick: () => {
-        void navigate({ to: '/profile' })
-      },
-    },
-    {
-      icon: <KeyRound size={20} />,
-      key: 'my-access',
-      label: t('menu.myAccess'),
-      onClick: () => {
-        void navigate({ to: '/my-access' })
-      },
-    },
-    {
-      type: 'divider',
-    },
+    ...shortcutItems,
+    ...(shortcutItems.length > 0 ? [{ type: 'divider' as const }] : []),
     {
       danger: true,
       icon: <LogOut size={20} />,

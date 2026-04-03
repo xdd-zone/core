@@ -6,7 +6,7 @@ import { useMyProfileQuery, useUpdateMeMutation } from '@console/modules/user'
 import { useQueryClient } from '@tanstack/react-query'
 import { App as AntdApp, Button, Form, Input, Spin, Tag } from 'antd'
 import dayjs from 'dayjs'
-import { IdCard, Save } from 'lucide-react'
+import { Save } from 'lucide-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -86,11 +86,14 @@ export function MyProfile() {
 
   const profile = profileQuery.data
 
-  const infoItems = [
+  const summaryItems = [
     { label: t('user.columns.username'), value: profile.username || '-' },
     { label: t('user.columns.email'), value: profile.email || '-' },
     { label: t('user.columns.phone'), value: profile.phone || '-' },
     { label: t('user.columns.status'), value: t(`user.status.${profile.status.toLowerCase()}`) },
+  ]
+
+  const infoItems = [
     {
       label: t('user.columns.lastLogin'),
       value: profile.lastLogin ? dayjs(profile.lastLogin).format('YYYY-MM-DD HH:mm') : '-',
@@ -102,49 +105,54 @@ export function MyProfile() {
   ]
 
   return (
-    <section className="rounded-[28px] border border-border-subtle bg-surface/84 p-[clamp(20px,3vw,32px)] shadow-sm backdrop-blur-xs">
-      <div className="max-w-4xl">
-        <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
-          {t('profile.summary.eyebrow')}
+    <section className="rounded-3xl border border-border-subtle bg-surface/78 p-5 shadow-sm backdrop-blur-xs">
+      <div className="flex flex-col gap-4 border-b border-border-subtle pb-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">{t('menu.myProfile')}</h1>
         </div>
-        <div className="mt-3 flex items-start gap-3">
-          <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
-            <IdCard className="size-5" />
-          </div>
-          <div>
-            <h1 className="text-[clamp(2rem,3vw,3rem)] font-semibold tracking-[-0.04em] text-fg">
-              {t('menu.myProfile')}
-            </h1>
-            <p className="text-fg-muted mt-3 text-sm leading-7">{t('profile.summary.description')}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Tag>{profile.username || '-'}</Tag>
-              <Tag>{profile.email || '-'}</Tag>
-              <Tag color={profile.status === 'ACTIVE' ? 'success' : profile.status === 'BANNED' ? 'error' : 'default'}>
-                {t(`user.status.${profile.status.toLowerCase()}`)}
-              </Tag>
-            </div>
-          </div>
+
+        <div className="flex flex-wrap gap-2 lg:max-w-[60%] lg:justify-end">
+          {summaryItems.map((item) => (
+            <span
+              key={item.label}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-overlay-0/16 px-2.5 py-1 text-xs"
+            >
+              <span className="text-fg-muted">{item.label}</span>
+              <span className="font-medium text-fg">{item.value}</span>
+            </span>
+          ))}
         </div>
       </div>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.1fr)]">
+      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(280px,0.84fr)_minmax(0,1.16fr)]">
         <div>
           <h2 className="text-base font-semibold text-fg">{t('profile.summary.title')}</h2>
-          <div className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+          <div className="mt-3 space-y-2.5">
             {infoItems.map((item) => (
-              <div key={item.label} className="border-border-subtle flex items-center justify-between gap-4 border-b py-2">
+              <div
+                key={item.label}
+                className="flex items-center justify-between gap-4 rounded-2xl border border-border-subtle bg-surface-subtle/18 px-3.5 py-3"
+              >
                 <span className="text-sm text-fg-muted">{item.label}</span>
                 <span className="text-right text-sm font-medium text-fg">{item.value}</span>
               </div>
             ))}
           </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Tag>{profile.username || '-'}</Tag>
+            <Tag>{profile.email || '-'}</Tag>
+            <Tag color={profile.status === 'ACTIVE' ? 'success' : profile.status === 'BANNED' ? 'error' : 'default'}>
+              {t(`user.status.${profile.status.toLowerCase()}`)}
+            </Tag>
+          </div>
         </div>
 
         <div>
           <h2 className="text-base font-semibold text-fg">{t('profile.form.title')}</h2>
-          <div className="mt-4">
+          <div className="mt-3 rounded-2xl border border-border-subtle bg-surface-subtle/18 p-4">
             <Form form={form} layout="vertical" onFinish={handleSubmit}>
-              <div className="grid gap-x-6 md:grid-cols-2">
+              <div className="grid gap-x-5 md:grid-cols-2">
                 <Form.Item label={t('user.columns.username')} name="username">
                   <Input placeholder={t('profile.form.usernamePlaceholder')} />
                 </Form.Item>

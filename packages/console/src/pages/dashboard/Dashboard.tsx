@@ -1,14 +1,12 @@
-import type { LucideIcon } from 'lucide-react'
-
+import { canAccessConsolePath, createPermissionKeySet } from '@console/app/access/access-control'
 import { useAuthStore } from '@console/modules/auth'
-import { roleListQueryOptions, useCurrentUserPermissionsQuery, useCurrentUserRolesQuery } from '@console/modules/rbac'
-import { userListQueryOptions } from '@console/modules/user'
+import { useCurrentUserPermissionsQuery, useCurrentUserRolesQuery } from '@console/modules/rbac'
 
-import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { Empty, Skeleton } from 'antd'
+import { Permissions } from '@xdd-zone/nexus/rbac'
+import { Skeleton } from 'antd'
 import dayjs from 'dayjs'
-import { ArrowRight, KeyRound, ShieldCheck, UserRound, Users } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 type DashboardActionTarget = '/my-access' | '/profile' | '/roles' | '/users'
@@ -16,7 +14,6 @@ type DashboardActionTarget = '/my-access' | '/profile' | '/roles' | '/users'
 interface DashboardAction {
   available: boolean
   description: string
-  icon: LucideIcon
   key: string
   title: string
   to: DashboardActionTarget
@@ -51,23 +48,11 @@ export function Dashboard() {
   const permissions = currentUserPermissionsQuery.data?.permissions ?? []
   const rolesReady = currentUserRolesQuery.isSuccess
   const permissionsReady = currentUserPermissionsQuery.isSuccess
-  const loadingMetricValue = '...'
 
-  const permissionKeys = new Set(permissions.map((permission) => permission.key))
-  const canReadAllUsers = permissionsReady && permissionKeys.has('user:read:all')
-  const canReadAllRoles = permissionsReady && permissionKeys.has('role:read:all')
-  const canManageSystem = permissionsReady && permissionKeys.has('system:manage')
-
-  const userListQuery = useQuery({
-    ...userListQueryOptions({ page: 1, pageSize: 8 }),
-    enabled: currentUserPermissionsQuery.isSuccess && canReadAllUsers,
-  })
-
-  const roleListQuery = useQuery({
-    ...roleListQueryOptions({ page: 1, pageSize: 8 }),
-    enabled: currentUserPermissionsQuery.isSuccess && canReadAllRoles,
-  })
-
+  const permissionKeys = createPermissionKeySet(permissions)
+  const canReadAllUsers = permissionsReady && canAccessConsolePath('/users', permissionKeys)
+  const canReadAllRoles = permissionsReady && canAccessConsolePath('/roles', permissionKeys)
+  const canManageSystem = permissionsReady && permissionKeys.has(Permissions.SYSTEM.MANAGE)
   const coveredModulesCount = new Set(permissions.map((permission) => permission.resource)).size
 
   const resolveStatusLabel = (status: string | null | undefined) => {
@@ -96,9 +81,20 @@ export function Dashboard() {
     return t('dashboard.scope.selfService')
   }
 
-  const summaryRoleCount = formatLoadedMetricValue(rolesReady, roles.length)
-  const summaryPermissionCount = formatLoadedMetricValue(permissionsReady, permissions.length)
-  const summaryModuleCount = formatLoadedMetricValue(permissionsReady, coveredModulesCount)
+  const summaryItems = [
+    {
+      label: t('dashboard.metrics.activeRoles'),
+      value: formatLoadedMetricValue(rolesReady, roles.length),
+    },
+    {
+      label: t('dashboard.metrics.permissionTotal'),
+      value: formatLoadedMetricValue(permissionsReady, permissions.length),
+    },
+    {
+      label: t('dashboard.metrics.coveredModules'),
+      value: formatLoadedMetricValue(permissionsReady, coveredModulesCount),
+    },
+  ]
 
   const infoItems: DashboardInfoItem[] = [
     {
@@ -114,18 +110,6 @@ export function Dashboard() {
       value: resolveScopeLabel(),
     },
     {
-      label: t('dashboard.metrics.activeRoles'),
-      value: summaryRoleCount,
-    },
-    {
-      label: t('dashboard.metrics.permissionTotal'),
-      value: summaryPermissionCount,
-    },
-    {
-      label: t('dashboard.metrics.coveredModules'),
-      value: summaryModuleCount,
-    },
-    {
       label: t('dashboard.account.items.lastLogin'),
       value: user?.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : t('dashboard.account.fallback'),
     },
@@ -137,43 +121,8 @@ export function Dashboard() {
 
   const actionItems: DashboardAction[] = [
     {
-      available: canReadAllUsers,
-      description: canReadAllUsers
-        ? t('dashboard.actions.users.description')
-        : t('dashboard.actions.users.unavailableDescription'),
-      icon: Users,
-      key: 'users',
-      title: t('dashboard.actions.users.title'),
-      to: '/users',
-      value: canReadAllUsers
-        ? userListQuery.isSuccess
-          ? t('dashboard.actions.users.value', {
-              count: userListQuery.data?.total ?? 0,
-            })
-          : loadingMetricValue
-        : t('dashboard.actions.unavailable'),
-    },
-    {
-      available: canReadAllRoles,
-      description: canReadAllRoles
-        ? t('dashboard.actions.roles.description')
-        : t('dashboard.actions.roles.unavailableDescription'),
-      icon: ShieldCheck,
-      key: 'roles',
-      title: t('dashboard.actions.roles.title'),
-      to: '/roles',
-      value: canReadAllRoles
-        ? roleListQuery.isSuccess
-          ? t('dashboard.actions.roles.value', {
-              count: roleListQuery.data?.total ?? 0,
-            })
-          : loadingMetricValue
-        : t('dashboard.actions.unavailable'),
-    },
-    {
       available: true,
       description: t('dashboard.actions.access.description'),
-      icon: KeyRound,
       key: 'my-access',
       title: t('dashboard.actions.access.title'),
       to: '/my-access',
@@ -181,234 +130,143 @@ export function Dashboard() {
         ? t('dashboard.actions.access.value', {
             count: permissions.length,
           })
-        : loadingMetricValue,
+        : '...',
     },
     {
       available: true,
       description: t('dashboard.actions.profile.description'),
-      icon: UserRound,
       key: 'profile',
       title: t('dashboard.actions.profile.title'),
       to: '/profile',
-      value: user?.name || user?.email || t('dashboard.account.fallback'),
+      value: resolveStatusLabel(user?.status),
+    },
+    {
+      available: canReadAllUsers,
+      description: canReadAllUsers
+        ? t('dashboard.actions.users.description')
+        : t('dashboard.actions.users.unavailableDescription'),
+      key: 'users',
+      title: t('dashboard.actions.users.title'),
+      to: '/users',
+      value: canReadAllUsers ? t('dashboard.visibility.available') : t('dashboard.visibility.unavailable'),
+    },
+    {
+      available: canReadAllRoles,
+      description: canReadAllRoles
+        ? t('dashboard.actions.roles.description')
+        : t('dashboard.actions.roles.unavailableDescription'),
+      key: 'roles',
+      title: t('dashboard.actions.roles.title'),
+      to: '/roles',
+      value: canReadAllRoles ? t('dashboard.visibility.available') : t('dashboard.visibility.unavailable'),
     },
   ]
 
-  const permissionGroups = Array.from(
-    permissions.reduce((groupMap, permission) => {
-      const currentGroup = groupMap.get(permission.resource) ?? []
-      currentGroup.push(permission)
-      groupMap.set(permission.resource, currentGroup)
-      return groupMap
-    }, new Map<string, typeof permissions>()),
-  )
-    .sort((left, right) => right[1].length - left[1].length || left[0].localeCompare(right[0]))
-    .map(([resource, groupPermissions]) => ({
-      description: t(`access.permissionMeta.groupDescriptions.${resource}`, {
-        defaultValue: t('access.permissionMeta.groupDescriptions.other'),
-      }),
-      label: t(`access.permissionMeta.groups.${resource}`, {
-        defaultValue: t('access.permissionMeta.groups.other'),
-      }),
-      permissions: groupPermissions,
-      resource,
-    }))
+  const primaryAction = canReadAllUsers ? '/users' : canReadAllRoles ? '/roles' : '/my-access'
+  const primaryActionLabel = canReadAllUsers
+    ? t('dashboard.primaryAction.users')
+    : canReadAllRoles
+      ? t('dashboard.primaryAction.roles')
+      : t('dashboard.primaryAction.access')
+
+  if (currentUserRolesQuery.isLoading || currentUserPermissionsQuery.isLoading) {
+    return (
+      <section className="rounded-3xl border border-border-subtle bg-surface/78 p-5 shadow-sm backdrop-blur-xs">
+        <Skeleton active paragraph={{ rows: 6 }} title={{ width: '28%' }} />
+      </section>
+    )
+  }
 
   return (
-    <>
-      <style>{`
-        @keyframes dashboard-enter {
-          from {
-            opacity: 0;
-            transform: translateY(4px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
+    <section className="rounded-3xl border border-border-subtle bg-surface/78 p-5 shadow-sm backdrop-blur-xs">
+      <div className="flex flex-col gap-4 border-b border-border-subtle pb-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">
+            {t('dashboard.title', {
+              name: user?.name || user?.username || t('dashboard.defaultName'),
+            })}
+          </h1>
+          <p className="text-fg-muted mt-1.5 text-sm">{t('dashboard.description')}</p>
+        </div>
 
-        @media (prefers-reduced-motion: reduce) {
-          .dashboard-page-enter {
-            animation: none !important;
-          }
-        }
-
-        .dashboard-page-enter {
-          animation: dashboard-enter 220ms ease-out both;
-        }
-      `}</style>
-
-      <div className="dashboard-page-enter">
-        <section className="rounded-[28px] border border-border-subtle bg-surface/84 p-[clamp(20px,3vw,32px)] shadow-sm backdrop-blur-xs">
-          <div className="max-w-4xl">
-            <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
-              {t('dashboard.eyebrow')}
-            </div>
-            <h1 className="mt-3 text-[clamp(2rem,3vw,3rem)] font-semibold leading-[1.08] tracking-[-0.04em] text-fg">
-              {t('dashboard.title', {
-                name: user?.name || user?.username || t('dashboard.defaultName'),
-              })}
-            </h1>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-fg-muted md:text-[15px]">
-              {t('dashboard.description')}
-            </p>
-            <p className="mt-3 max-w-3xl text-sm font-medium leading-7 text-fg md:text-[15px]">
-              {t('dashboard.summary', {
-                moduleCount: summaryModuleCount,
-                permissionCount: summaryPermissionCount,
-                roleCount: summaryRoleCount,
-                scope: resolveScopeLabel(),
-              })}
-            </p>
-          </div>
-
-          <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-base font-semibold text-fg">{t('dashboard.account.title')}</h2>
-                <div className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
-                  {infoItems.map((item) => (
-                    <div key={item.label} className="border-border-subtle flex items-center justify-between gap-4 border-b py-2">
-                      <span className="text-sm text-fg-muted">{item.label}</span>
-                      <span className="text-right text-sm font-medium text-fg">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h2 className="text-base font-semibold text-fg">{t('dashboard.actions.title')}</h2>
-                <div className="mt-4 space-y-2">
-                  {actionItems.map((item) => {
-                    const ActionIcon = item.icon
-
-                    return (
-                      <button
-                        key={item.key}
-                        type="button"
-                        disabled={!item.available}
-                        className={[
-                          'flex w-full items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-left transition-colors',
-                          item.available
-                            ? 'border-border-subtle bg-surface-muted/45 hover:border-primary/35 hover:bg-surface-muted/60'
-                            : 'border-border-subtle bg-surface-muted/28 opacity-70',
-                        ].join(' ')}
-                        onClick={() => {
-                          if (!item.available) {
-                            return
-                          }
-
-                          void navigate({ to: item.to })
-                        }}
-                      >
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-2xl">
-                            <ActionIcon className="size-4" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-sm font-medium text-fg">{item.title}</span>
-                              <span className="text-fg-muted text-xs">{item.value}</span>
-                            </div>
-                            <p className="text-fg-muted mt-1 text-xs leading-6">{item.description}</p>
-                          </div>
-                        </div>
-
-                        {item.available ? <ArrowRight className="text-fg-muted size-4 shrink-0" /> : null}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-base font-semibold text-fg">{t('dashboard.roles.title')}</h2>
-                <div className="mt-4">
-                  {currentUserRolesQuery.isLoading ? (
-                    <Skeleton active paragraph={{ rows: 2 }} title={false} />
-                  ) : roles.length > 0 ? (
-                    <div className="space-y-2">
-                      {roles.map((role) => (
-                        <div
-                          key={role.id}
-                          className="border-border-subtle flex flex-wrap items-center justify-between gap-3 border-b py-3"
-                        >
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-sm font-medium text-fg">
-                                {role.displayName || role.name || t('dashboard.roles.fallbackTitle')}
-                              </span>
-                              <span className="text-fg-muted text-xs">
-                                {t(`access.current.roleSource.${role.source}`, {
-                                  defaultValue: role.source,
-                                })}
-                              </span>
-                            </div>
-                            <p className="text-fg-muted mt-1 text-xs leading-6">
-                              {t('dashboard.roles.permissionCount', {
-                                count: role.permissions.length,
-                              })}
-                            </p>
-                          </div>
-                          <span className="text-fg-muted text-xs">
-                            {dayjs(role.assignedAt).format('YYYY-MM-DD HH:mm')}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <Empty description={t('dashboard.roles.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h2 className="text-base font-semibold text-fg">{t('dashboard.coverage.title')}</h2>
-                <div className="mt-4">
-                  {currentUserPermissionsQuery.isLoading ? (
-                    <Skeleton active paragraph={{ rows: 3 }} title={false} />
-                  ) : permissionGroups.length > 0 ? (
-                    <div className="space-y-3">
-                      {permissionGroups.map((group) => (
-                        <div key={group.resource} className="border-border-subtle border-b pb-3">
-                          <div className="flex items-center justify-between gap-3">
-                            <h3 className="text-sm font-medium text-fg">{group.label}</h3>
-                            <span className="text-fg-muted text-xs">
-                              {t('access.permissionMeta.groupCount', { count: group.permissions.length })}
-                            </span>
-                          </div>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {group.permissions.slice(0, 4).map((permission) => (
-                              <span
-                                key={permission.key}
-                                className="rounded-full border border-border-subtle bg-surface/60 px-2.5 py-1 text-xs text-fg"
-                              >
-                                {t(`access.permissionMeta.titles.${permission.key}`, {
-                                  defaultValue: permission.displayName || permission.key,
-                                })}
-                              </span>
-                            ))}
-                            {group.permissions.length > 4 ? (
-                              <span className="text-fg-muted px-1 py-1 text-xs">
-                                +{group.permissions.length - 4}
-                              </span>
-                            ) : null}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <Empty description={t('dashboard.coverage.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <div className="flex flex-wrap gap-2 lg:max-w-[56%] lg:justify-end">
+          {summaryItems.map((item) => (
+            <span
+              key={item.label}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-overlay-0/16 px-2.5 py-1 text-xs"
+            >
+              <span className="text-fg-muted">{item.label}</span>
+              <span className="font-medium text-fg">{item.value}</span>
+            </span>
+          ))}
+        </div>
       </div>
-    </>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.92fr)]">
+        <div>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-fg">{t('dashboard.actions.title')}</h2>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary"
+              onClick={() => {
+                void navigate({ to: primaryAction })
+              }}
+            >
+              <span>{primaryActionLabel}</span>
+              <ArrowRight className="size-4" />
+            </button>
+          </div>
+
+          <div className="mt-3 grid gap-2.5 md:grid-cols-2">
+            {actionItems.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                disabled={!item.available}
+                className={[
+                  'rounded-2xl border px-4 py-3 text-left transition-colors',
+                  item.available
+                    ? 'border-border-subtle bg-surface-subtle/18 hover:border-primary/35 hover:bg-surface-subtle/28'
+                    : 'border-border-subtle bg-surface-subtle/12 opacity-70',
+                ].join(' ')}
+                onClick={() => {
+                  if (!item.available) {
+                    return
+                  }
+
+                  void navigate({ to: item.to })
+                }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-fg">{item.title}</div>
+                    <p className="text-fg-muted mt-1 text-xs leading-6">{item.description}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-border-subtle bg-overlay-0/16 px-2 py-0.5 text-xs text-fg-muted">
+                    {item.value}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-base font-semibold text-fg">{t('dashboard.account.title')}</h2>
+          <div className="mt-3 space-y-2.5">
+            {infoItems.map((item) => (
+              <div
+                key={item.label}
+                className="flex items-center justify-between gap-4 rounded-2xl border border-border-subtle bg-surface-subtle/18 px-3.5 py-3"
+              >
+                <span className="text-sm text-fg-muted">{item.label}</span>
+                <span className="text-right text-sm font-medium text-fg">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }

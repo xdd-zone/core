@@ -4,17 +4,16 @@ import { HeaderLeft } from './HeaderLeft'
 interface AppHeaderProps {
   showBrand?: boolean
   showBreadcrumb?: boolean
-  variant: 'leftRight' | 'topBottom'
 }
 
 /**
  * 应用头部组件
- * 统一的头部组件，支持不同的布局模式
+ * 统一的头部区域容器
  */
-export function AppHeader({ showBrand = false, showBreadcrumb = false, variant }: AppHeaderProps) {
+export function AppHeader({ showBrand = false, showBreadcrumb = false }: AppHeaderProps) {
   return (
-    <header className="guide-header flex items-center justify-between border-b">
-      <HeaderLeft variant={variant} showBrand={showBrand} showBreadcrumb={showBreadcrumb} />
+    <header className="guide-header flex items-center justify-between">
+      <HeaderLeft showBrand={showBrand} showBreadcrumb={showBreadcrumb} />
       <HeaderActions />
     </header>
   )

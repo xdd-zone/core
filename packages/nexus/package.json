@@ -26,6 +26,11 @@
       "types": "./src/public/auth-types.ts",
       "import": "./src/public/auth-types.ts",
       "default": "./src/public/auth-types.ts"
+    },
+    "./rbac": {
+      "types": "./src/public/rbac.ts",
+      "import": "./src/public/rbac.ts",
+      "default": "./src/public/rbac.ts"
     }
   },
   "engines": {

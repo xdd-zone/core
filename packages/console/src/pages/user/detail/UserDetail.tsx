@@ -1,4 +1,5 @@
-import { useUserRolesQuery } from '@console/modules/rbac'
+import { canAccessConsolePath, createPermissionKeySet } from '@console/app/access/access-control'
+import { useCurrentUserPermissionsQuery, useUserRolesQuery } from '@console/modules/rbac'
 
 import { useUserDetailQuery } from '@console/modules/user'
 import { useNavigate, useParams } from '@tanstack/react-router'
@@ -6,6 +7,7 @@ import { Badge, Button, Card, Descriptions, Empty, Space, Spin, Tag } from 'antd
 import dayjs from 'dayjs'
 
 import { ArrowLeft, ShieldCheck, UserRound } from 'lucide-react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -18,6 +20,11 @@ export function UserDetail() {
 
   const userQuery = useUserDetailQuery(id)
   const userRolesQuery = useUserRolesQuery(id)
+  const currentUserPermissionsQuery = useCurrentUserPermissionsQuery()
+  const permissionKeys = useMemo(
+    () => createPermissionKeySet(currentUserPermissionsQuery.data?.permissions),
+    [currentUserPermissionsQuery.data?.permissions],
+  )
 
   if (userQuery.isLoading) {
     return (
@@ -37,6 +44,8 @@ export function UserDetail() {
 
   const user = userQuery.data
   const roles = userRolesQuery.data || []
+  const accessPath = `/users/${id}/access`
+  const editPath = `/users/${id}/edit`
 
   const statusMap: Record<string, { color: string; text: string }> = {
     ACTIVE: { color: 'success', text: t('user.status.active') },
@@ -74,20 +83,32 @@ export function UserDetail() {
             </div>
 
             <Space wrap>
-              <Button onClick={() => void navigate({ to: '/users/$id/access', params: { id } })}>
-                {t('access.manage.title')}
-              </Button>
-              <Button type="primary" onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>
-                {t('common.edit')}
-              </Button>
+              {canAccessConsolePath(accessPath, permissionKeys) ? (
+                <Button onClick={() => void navigate({ to: '/users/$id/access', params: { id } })}>
+                  {t('access.manage.title')}
+                </Button>
+              ) : null}
+              {canAccessConsolePath(editPath, permissionKeys) ? (
+                <Button type="primary" onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>
+                  {t('common.edit')}
+                </Button>
+              ) : null}
             </Space>
           </div>
 
           <div className="flex flex-wrap gap-3 text-sm text-fg-muted">
-            <span>{t('user.columns.lastLogin')} {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}</span>
-            <span>{t('user.columns.createdAt')} {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}</span>
-            <span>{t('user.detail.roles')} {roles.length}</span>
-            <span>{t('user.columns.updatedAt')} {dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}</span>
+            <span>
+              {t('user.columns.lastLogin')} {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
+            </span>
+            <span>
+              {t('user.columns.createdAt')} {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}
+            </span>
+            <span>
+              {t('user.detail.roles')} {roles.length}
+            </span>
+            <span>
+              {t('user.columns.updatedAt')} {dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}
+            </span>
           </div>
         </div>
       </section>

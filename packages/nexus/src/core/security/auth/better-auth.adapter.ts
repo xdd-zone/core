@@ -1,7 +1,7 @@
 import type { Session as PrismaSession } from '@nexus/infra/database/prisma/generated'
 import type { BetterAuthOptions } from 'better-auth'
 import { BadRequestError } from '@nexus/core/http'
-import { prisma } from '@nexus/infra'
+import { prisma } from '@nexus/infra/database/client'
 import { getCookieCache, getCookies } from 'better-auth/cookies'
 import { betterAuthInstance } from './better-auth'
 import { SessionService } from './session.service'

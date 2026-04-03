@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { SessionPayload, SignInEmailBody } from './auth.types'
 
+import { CURRENT_USER_ACCESS_QUERY_KEY } from '@console/modules/rbac'
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { authApi } from './auth.api'
@@ -48,6 +49,7 @@ export async function ensureAuthSession(queryClient: QueryClient): Promise<Sessi
     return payload
   } catch {
     queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, EMPTY_SESSION_PAYLOAD)
+    queryClient.removeQueries({ queryKey: CURRENT_USER_ACCESS_QUERY_KEY })
     clearAuthState()
     return EMPTY_SESSION_PAYLOAD
   }
@@ -66,6 +68,7 @@ export function useLoginMutation() {
     },
     onSuccess: (session) => {
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, session)
+      queryClient.removeQueries({ queryKey: CURRENT_USER_ACCESS_QUERY_KEY })
       applySessionPayload(session)
     },
   })
@@ -83,6 +86,7 @@ export function useLogoutMutation() {
     },
     onSettled: () => {
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, EMPTY_SESSION_PAYLOAD)
+      queryClient.removeQueries({ queryKey: CURRENT_USER_ACCESS_QUERY_KEY })
       clearAuthState()
     },
   })
