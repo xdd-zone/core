@@ -373,6 +373,9 @@ Markdown 能力当前由 `markdown-to-jsx` 与 Shiki 组合完成：
 
 - GitHub 登录通过浏览器重定向进入，不走 Eden Treaty 请求封装
 - 邮箱登录、登出和 session 查询继续通过现有 Query / Mutation 处理
+- 用户、角色和权限相关请求直接通过 `packages/console/src/shared/api/eden.ts` 中的 Treaty 客户端处理
+- HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types` 引入
+- 权限常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
 
 当前系统管理页面还会调用：
 

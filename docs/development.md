@@ -27,7 +27,7 @@ bun run db:local:prepare
 修改后台前端时，默认按下面顺序推进：
 
 1. 确认 `nexus` 现有接口和登录态约定
-2. 先接 `console` 的 Eden 公共请求层、模块 API 适配层，或确认当前是否走浏览器重定向
+2. 先接 `console` 的 Eden Treaty 公共请求层，或确认当前是否走浏览器重定向
 3. 再改 `app/router`、`app/navigation`、`layout` 或页面
 4. 完成 `lint / type-check / build`
 
@@ -130,7 +130,7 @@ bun run db:local:prepare
 - `/api/auth/get-session`
 - `/api/auth/sign-in/email`
 - `/api/auth/sign-out`
-- 基于 Eden Treaty 的 auth API 适配层
+- GitHub 登录地址 helper
 - auth query
 - auth store 中的会话快照使用范围
 
@@ -138,7 +138,22 @@ bun run db:local:prepare
 
 - GitHub 登录地址由 `packages/console/src/modules/auth/auth.api.ts` 统一构造
 - 这条流程仍然是浏览器跳转，不经过 Eden Treaty 请求封装
+- 其他认证 query / mutation 直接调用 `packages/console/src/shared/api/eden.ts` 中的 Treaty 客户端
 - 如果修改 GitHub 登录入口，要同时检查 API 基址配置、`trustedOrigins`、GitHub callback URL，并确认浏览器可以直接访问这条地址；本地开发再检查 `/api` 代理
+
+### `packages/console/src/modules/user/*` 与 `packages/console/src/modules/rbac/*`
+
+放：
+
+- 基于 Eden Treaty 的 query / mutation
+- 只在前端使用的 query key 和组合逻辑
+- 从 `@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types` 引入的 HTTP 类型
+
+补充说明：
+
+- 不再为 `user`、`rbac` 额外维护一层 1:1 的 API wrapper
+- 页面直接通过 query / mutation 调用 Treaty 客户端
+- 权限判断需要的常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
 
 ## 新增接口的推荐流程
 
@@ -230,6 +245,8 @@ bun run type-check
 
 - 禁止 `any`
 - route 的 `body / query / params / response` 优先从模块 `model.ts` 推导
+- 提供给前端使用的 HTTP 类型统一从 `packages/nexus/src/public/*-types.ts` 导出
+- Console 不单独维护第二套接口类型
 - repository 优先复用 Prisma 生成类型
 - service 方法签名写清楚入参与返回值
 

@@ -1,9 +1,9 @@
 import type { PermissionSummary } from '@console/modules/rbac'
 import type { QueryClient } from '@tanstack/react-query'
-import type { PermissionString, SystemPermissionKey } from '@xdd-zone/nexus/rbac'
+import type { PermissionString, SystemPermissionKey } from '@xdd-zone/nexus/permissions'
 import { currentUserPermissionsQueryOptions } from '@console/modules/rbac'
 import { redirect } from '@tanstack/react-router'
-import { matchPermission, Permissions } from '@xdd-zone/nexus/rbac'
+import { matchPermission, Permissions } from '@xdd-zone/nexus/permissions'
 
 interface ConsoleAccessRequirement {
   all?: readonly SystemPermissionKey[]

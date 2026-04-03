@@ -3,7 +3,7 @@ import { useAuthStore } from '@console/modules/auth'
 import { useCurrentUserPermissionsQuery, useCurrentUserRolesQuery } from '@console/modules/rbac'
 
 import { useNavigate } from '@tanstack/react-router'
-import { Permissions } from '@xdd-zone/nexus/rbac'
+import { Permissions } from '@xdd-zone/nexus/permissions'
 import { Skeleton } from 'antd'
 import dayjs from 'dayjs'
 import { ArrowRight } from 'lucide-react'

@@ -65,6 +65,9 @@ packages/console
 - 路由 `beforeLoad` 处理登录态校验与重定向
 - `staticData` 统一维护页面标题、TabBar、面包屑元信息
 - TanStack Query 管理 `/api/auth/get-session`、邮箱登录与登出
+- query / mutation 直接调用 Eden Treaty 客户端
+- HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types` 引入
+- 权限常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
 - GitHub 登录地址统一通过 auth 模块构造，并复用当前 API 基址配置
 - 独立导航配置
 - 细粒度权限以后端 `401 / 403` 语义为准
@@ -193,11 +196,11 @@ src/
 - `src/app/navigation`
   - 独立导航配置
 - `src/modules/auth`
-  - session API、auth query 与 auth store
+  - GitHub 登录地址 helper、auth query 与 auth store
 - `src/modules/user`
-  - 用户列表、用户详情、当前用户资料与更新请求
+  - 用户列表、用户详情、当前用户资料与更新 query / mutation
 - `src/modules/rbac`
-  - 角色列表、用户角色、用户权限与分配角色请求
+  - 角色列表、用户角色、用户权限与分配角色 query / mutation
 - `src/pages/user`
   - 用户列表、详情、编辑、当前用户资料和指定用户权限页面
 - `src/pages/role`
@@ -242,10 +245,12 @@ src/
 前端开发时，默认以前后端同仓协作为前提：
 
 - 接口结构优先参考 `packages/nexus` 的接口定义 / OpenAPI
+- HTTP 类型优先从 `@xdd-zone/nexus/*-types` 引入
 - 认证与权限行为以后端实现为准
 - 页面联调优先通过根目录 `bun run dev` 完成
 - 本地开发默认通过 `/api` 代理到 `nexus`
 - GitHub 登录入口和 Eden 请求共用同一套 API 基址配置
+- 用户、角色和权限相关 query / mutation 直接调用 `src/shared/api/eden.ts` 中的 Treaty 客户端
 - 生产环境可继续使用同域 `/api` 或反向代理
 - 如果使用独立 API 域名，这条地址需要和当前会话策略匹配，并同步检查 cookie 与来源配置
 - Better Auth 需要信任前端来源，例如 `http://localhost:2333`

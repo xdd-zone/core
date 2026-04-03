@@ -1,3 +1,3 @@
-export * from './user.api'
 export * from './user.query'
-export * from './user.types'
+export type * from './user.types'
+export { ConsoleApiError as UserRequestError } from '@console/shared/api'

@@ -141,8 +141,8 @@ export const authModule = new Elysia({
 export {
   type AuthMethod,
   type AuthMethodId,
-  type AuthMethodKind,
   AuthMethodIdSchema,
+  type AuthMethodKind,
   AuthMethodKindSchema,
   AuthMethodSchema,
   type AuthMethodsResponse,

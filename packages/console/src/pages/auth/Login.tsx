@@ -2,7 +2,7 @@ import type { AuthMethod, SignInEmailBody } from '@console/modules/auth'
 import { DASHBOARD_ROUTE_PATH, sanitizeRedirectPath } from '@console/app/router/guards'
 
 import { AuthContainer } from '@console/components/business'
-import { authApi, AuthRequestError, useAuthMethodsQuery, useLoginMutation } from '@console/modules/auth'
+import { AuthRequestError, getGithubSignInUrl, useAuthMethodsQuery, useLoginMutation } from '@console/modules/auth'
 import { useNavigate, useRouter, useSearch } from '@tanstack/react-router'
 
 import { Alert, App as AntdApp, Button, Divider, Form, Input } from 'antd'
@@ -111,7 +111,7 @@ export function Login() {
 
     const callbackURL = sanitizeRedirectPath(redirect) ?? DASHBOARD_ROUTE_PATH
     const callbackTarget = new URL(callbackURL, window.location.origin).toString()
-    window.location.href = authApi.getGithubSignInUrl(callbackTarget)
+    window.location.href = getGithubSignInUrl(callbackTarget)
   }
 
   return (

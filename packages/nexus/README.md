@@ -12,6 +12,7 @@ src/
 ├── modules/
 ├── core/
 ├── infra/
+├── public/
 ├── shared/
 └── eden/
 ```
@@ -29,6 +30,8 @@ src/
   - 应用配置
 - `infra/`
   - 数据库与日志
+- `public/`
+  - 提供给前端和联调层使用的公共类型与权限工具
 - `shared/`
   - OpenAPI 辅助函数与通用 schema
 - `eden/`
@@ -155,10 +158,29 @@ bun run seed
 - 删除或无 body 接口返回 `204`
 - 错误响应统一由错误插件处理
 
+## 公共导出
+
+当前对外导出分成两类：
+
+- HTTP 类型
+  - `@xdd-zone/nexus/auth-types`
+  - `@xdd-zone/nexus/user-types`
+  - `@xdd-zone/nexus/rbac-types`
+  - `@xdd-zone/nexus/public`
+- 权限运行时工具
+  - `@xdd-zone/nexus/permissions`
+
+说明：
+
+- `*-types` 只放接口相关类型
+- `permissions` 放权限常量、角色常量和权限匹配辅助函数
+- `public` 当前聚合 Eden 类型和三组 HTTP 类型，不聚合权限运行时工具
+
 ## 开发约定
 
 - 模块入口 `index.ts` 直接定义路由
 - route schema 与 response schema 统一从模块 `model.ts` 引用
+- 给前端使用的 HTTP 类型统一从 `src/public/*-types.ts` 导出
 - service 负责业务编排
 - repository 负责 Prisma 访问
 - OpenAPI 统一使用 `apiDetail(...)`

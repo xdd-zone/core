@@ -1,4 +1,4 @@
-export { authApi, AuthRequestError } from './auth.api'
+export { AuthRequestError, getGithubSignInUrl } from './auth.api'
 export {
   ensureAuthSession,
   getAuthMethodsQueryOptions,
@@ -9,7 +9,6 @@ export {
 } from './auth.query'
 export { useAuthStore } from './auth.store'
 export type {
-  ApiErrorResponse,
   AuthMethod,
   AuthMethodId,
   AuthMethodKind,

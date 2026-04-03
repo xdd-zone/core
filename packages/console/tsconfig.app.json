@@ -12,7 +12,9 @@
       "@nexus/*": ["../nexus/src/*"],
       "@xdd-zone/nexus/eden": ["../nexus/src/public/eden.ts"],
       "@xdd-zone/nexus/auth-types": ["../nexus/src/public/auth-types.ts"],
-      "@xdd-zone/nexus/rbac": ["../nexus/src/public/rbac.ts"]
+      "@xdd-zone/nexus/user-types": ["../nexus/src/public/user-types.ts"],
+      "@xdd-zone/nexus/permissions": ["../nexus/src/public/permissions.ts"],
+      "@xdd-zone/nexus/rbac-types": ["../nexus/src/public/rbac-types.ts"]
     },
     "allowImportingTsExtensions": true,
     "noFallthroughCasesInSwitch": true,

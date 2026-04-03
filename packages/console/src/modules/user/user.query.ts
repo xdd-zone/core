@@ -1,8 +1,9 @@
 import type { UpdateMyProfileBody, UpdateUserBody, UpdateUserStatusBody, UserListQuery } from './user.types'
 
+import { api, unwrapEdenResponse } from '@console/shared/api'
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query'
 
-import { userApi } from './user.api'
+const userApiRoot = api.user
 
 const USER_LIST_QUERY_KEY = ['users'] as const
 const USER_DETAIL_QUERY_KEY = (id: string) => ['users', id] as const
@@ -13,7 +14,17 @@ const MY_PROFILE_QUERY_KEY = ['users', 'me'] as const
  */
 export function userListQueryOptions(query: UserListQuery = {}) {
   return queryOptions({
-    queryFn: () => userApi.list(query),
+    queryFn: async () =>
+      unwrapEdenResponse(
+        await userApiRoot.get({
+          query: {
+            page: query.page,
+            pageSize: query.pageSize,
+            status: query.status,
+            keyword: query.keyword,
+          },
+        }),
+      ),
     queryKey: [...USER_LIST_QUERY_KEY, query],
     staleTime: 30_000,
   })
@@ -24,7 +35,7 @@ export function userListQueryOptions(query: UserListQuery = {}) {
  */
 export function userDetailQueryOptions(id: string) {
   return queryOptions({
-    queryFn: () => userApi.findById(id),
+    queryFn: async () => unwrapEdenResponse(await userApiRoot({ id }).get()),
     queryKey: USER_DETAIL_QUERY_KEY(id),
     staleTime: 30_000,
   })
@@ -35,7 +46,7 @@ export function userDetailQueryOptions(id: string) {
  */
 export function myProfileQueryOptions() {
   return queryOptions({
-    queryFn: () => userApi.getMe(),
+    queryFn: async () => unwrapEdenResponse(await userApiRoot.me.get()),
     queryKey: MY_PROFILE_QUERY_KEY,
     staleTime: 30_000,
   })
@@ -67,7 +78,7 @@ export function useMyProfileQuery() {
  */
 export function useUpdateMeMutation() {
   return useMutation({
-    mutationFn: (body: UpdateMyProfileBody) => userApi.updateMe(body),
+    mutationFn: async (body: UpdateMyProfileBody) => unwrapEdenResponse(await userApiRoot.me.patch(body)),
   })
 }
 
@@ -76,7 +87,8 @@ export function useUpdateMeMutation() {
  */
 export function useUpdateUserMutation() {
   return useMutation({
-    mutationFn: ({ id, ...body }: UpdateUserBody & { id: string }) => userApi.updateByAdmin(id, body),
+    mutationFn: async ({ id, ...body }: UpdateUserBody & { id: string }) =>
+      unwrapEdenResponse(await userApiRoot({ id }).patch(body)),
   })
 }
 
@@ -85,7 +97,7 @@ export function useUpdateUserMutation() {
  */
 export function useUpdateUserStatusMutation() {
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: UpdateUserStatusBody['status'] }) =>
-      userApi.updateStatus(id, { status }),
+    mutationFn: async ({ id, status }: { id: string; status: UpdateUserStatusBody['status'] }) =>
+      unwrapEdenResponse(await userApiRoot({ id }).status.patch({ status })),
   })
 }

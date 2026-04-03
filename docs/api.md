@@ -121,6 +121,8 @@ GitHub 登录相关接口由浏览器完成重定向，不返回 JSON body。`/a
 内部联调优先使用 Eden：
 
 - 直接基于 `createApp()` 的 route 类型
+- Console 的 HTTP 类型统一从 `packages/nexus/src/public/*-types.ts` 导出
+- Console 的 query / mutation 直接调用 Treaty 客户端
 - 用于 smoke test 与类型漂移检查
 
 ### OpenAPI 入口

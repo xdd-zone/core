@@ -1,8 +1,10 @@
-import type { App } from '@nexus/eden'
+import type { App } from '../public/eden'
 import { treaty } from '@elysiajs/eden'
-import { createApp } from '@nexus/app'
-import { prisma } from '@nexus/infra/database'
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import { createApp } from '../app'
+import { AUTH_CONFIG } from '../core/config'
+import { betterAuthInstance } from '../core/security/auth'
+import { prisma } from '../infra/database'
 
 const app = createApp()
 const baseUrl = 'http://localhost'
@@ -63,7 +65,12 @@ function createCookieFetcher() {
     },
   ) as typeof fetch
 
-  return fetcher
+  return {
+    fetcher,
+    setCookie(name: string, value: string) {
+      cookies.set(name, value)
+    },
+  }
 }
 
 const directFetcher = Object.assign(
@@ -80,8 +87,10 @@ const anonymousClient = treaty<App>(baseUrl, {
   fetcher: directFetcher,
 })
 
+const authenticatedCookieSession = createCookieFetcher()
+
 const authenticatedClient = treaty<App>(baseUrl, {
-  fetcher: createCookieFetcher(),
+  fetcher: authenticatedCookieSession.fetcher,
 })
 
 const tempSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -111,8 +120,15 @@ let subjectUserId = ''
 let superAdminRoleId = ''
 let adminRoleId = ''
 let userRoleId = ''
+const originalEmailPasswordEnabled = AUTH_CONFIG.methods.emailPassword.enabled
+const originalEmailPasswordAllowSignUp = AUTH_CONFIG.methods.emailPassword.allowSignUp
+const originalBetterAuthEmailPasswordEnabled = betterAuthInstance.options.emailAndPassword.enabled
 
 beforeAll(async () => {
+  AUTH_CONFIG.methods.emailPassword.enabled = true
+  AUTH_CONFIG.methods.emailPassword.allowSignUp = true
+  betterAuthInstance.options.emailAndPassword.enabled = true
+
   const actorResult = await authenticatedClient.api.auth['sign-up'].email.post(actorUser)
 
   expect(actorResult.status).toBe(200)
@@ -187,6 +203,10 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  AUTH_CONFIG.methods.emailPassword.enabled = originalEmailPasswordEnabled
+  AUTH_CONFIG.methods.emailPassword.allowSignUp = originalEmailPasswordAllowSignUp
+  betterAuthInstance.options.emailAndPassword.enabled = originalBetterAuthEmailPasswordEnabled
+
   if (createdUserIds.length > 0) {
     await prisma.userRole.deleteMany({
       where: {
@@ -260,8 +280,8 @@ describe('eden smoke', () => {
       {
         id: 'github',
         kind: 'oauth',
-        enabled: true,
-        allowSignUp: true,
+        enabled: AUTH_CONFIG.methods.github.enabled,
+        allowSignUp: AUTH_CONFIG.methods.github.allowSignUp,
       },
     ])
   })
@@ -391,10 +411,10 @@ describe('eden smoke', () => {
     expect(statusResult.data?.id).toBe(subjectUserId)
     expect(statusResult.data?.status).toBe('BANNED')
 
-    const subjectPermissionsResult = await authenticatedClient.api.rbac
-      .users({ userId: subjectUserId })
-      .permissions
-      .get()
+    const subjectUserPermissionsApi = authenticatedClient.api.rbac.users({
+      userId: subjectUserId,
+    }).permissions
+    const subjectPermissionsResult = await subjectUserPermissionsApi.get()
     expect(subjectPermissionsResult.status).toBe(200)
     expect(subjectPermissionsResult.error).toBeNull()
     expect(subjectPermissionsResult.data?.permissions.some((permission) => permission.key === 'user:read:own')).toBe(

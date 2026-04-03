@@ -1,3 +1,3 @@
-export * from './rbac.api'
 export * from './rbac.query'
-export * from './rbac.types'
+export type * from './rbac.types'
+export { ConsoleApiError as RbacRequestError } from '@console/shared/api'

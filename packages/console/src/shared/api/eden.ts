@@ -71,11 +71,7 @@ export function normalizeEdenBaseUrl(rawValue?: string) {
     const pathname = stripApiPrefix(url.pathname)
     return `${url.origin}${pathname}`
   } catch {
-    if (/^localhost(?::\d+)?$/i.test(value)) {
-      return value
-    }
-
-    return trimTrailingSlash(value)
+    return normalizeBrowserBaseUrl(trimTrailingSlash(value))
   }
 }
 
@@ -143,7 +139,6 @@ const edenClient = treaty<App>(resolveConfiguredApiBaseUrl(), {
   fetch: {
     credentials: 'include',
   },
-  parseDate: true,
   throwHttpError: false,
 })
 

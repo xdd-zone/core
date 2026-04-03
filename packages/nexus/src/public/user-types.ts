@@ -7,4 +7,4 @@ export type {
   UserList,
   UserListQuery,
   UserStatus,
-} from '@xdd-zone/nexus/user-types'
+} from '../modules/user/model'

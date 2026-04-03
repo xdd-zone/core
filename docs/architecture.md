@@ -8,6 +8,7 @@
 - `packages/nexus/src/modules` 按功能组织 Elysia 模块
 - 每个模块自己的 `index.ts` 直接作为路由入口
 - `model.ts` 统一定义 HTTP schema
+- `packages/nexus/src/public` 统一提供给前端和联调层使用的公共类型与权限工具
 - `core/http/` 放 HTTP 基础能力
 - `core/security/` 放认证上下文、守卫、插件和权限能力
 - OpenAPI 作为接口说明导出
@@ -61,6 +62,7 @@ src/
 ├── modules/
 ├── core/
 ├── infra/
+├── public/
 ├── shared/
 └── eden/
 ```
@@ -161,6 +163,21 @@ modules/<feature>/
 - `shared/openapi/`
   - `apiDetail(...)`
 
+### `public/`
+
+放给前端、联调脚本和其他包直接引用的公共导出：
+
+- `auth-types.ts`
+  - 认证相关 HTTP 类型
+- `user-types.ts`
+  - 用户相关 HTTP 类型
+- `rbac-types.ts`
+  - 角色与权限接口的 HTTP 类型
+- `permissions.ts`
+  - 权限常量、角色常量和权限匹配辅助函数
+- `eden.ts`
+  - `createApp()` 推导出的 Eden 类型入口
+
 ## Route / Model / Service / Repository 的职责
 
 ### 模块 `index.ts`
@@ -237,6 +254,9 @@ src/
 
 - 是否允许进入后台，只由 `nexus` session 决定
 - 会话初始化和认证 mutation 交给 TanStack Query 处理
+- Query / Mutation 直接调用 Eden Treaty 客户端
+- HTTP 类型统一从 `@xdd-zone/nexus/*-types` 引入
+- 权限运行时工具统一从 `@xdd-zone/nexus/permissions` 引入
 - 菜单负责导航组织
 - 页面级权限以后端 `401 / 403` 为准
 

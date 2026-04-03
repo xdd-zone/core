@@ -22,15 +22,30 @@
       "import": "./src/public/eden.ts",
       "default": "./src/public/eden.ts"
     },
+    "./public": {
+      "types": "./src/public/index.ts",
+      "import": "./src/public/index.ts",
+      "default": "./src/public/index.ts"
+    },
     "./auth-types": {
       "types": "./src/public/auth-types.ts",
       "import": "./src/public/auth-types.ts",
       "default": "./src/public/auth-types.ts"
     },
-    "./rbac": {
-      "types": "./src/public/rbac.ts",
-      "import": "./src/public/rbac.ts",
-      "default": "./src/public/rbac.ts"
+    "./user-types": {
+      "types": "./src/public/user-types.ts",
+      "import": "./src/public/user-types.ts",
+      "default": "./src/public/user-types.ts"
+    },
+    "./permissions": {
+      "types": "./src/public/permissions.ts",
+      "import": "./src/public/permissions.ts",
+      "default": "./src/public/permissions.ts"
+    },
+    "./rbac-types": {
+      "types": "./src/public/rbac-types.ts",
+      "import": "./src/public/rbac-types.ts",
+      "default": "./src/public/rbac-types.ts"
     }
   },
   "engines": {

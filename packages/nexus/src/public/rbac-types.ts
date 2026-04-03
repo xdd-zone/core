@@ -2,8 +2,8 @@ export type {
   AssignRoleToUserBody,
   CurrentUserPermissions,
   CurrentUserRole,
-  CurrentUserRoleSource,
   CurrentUserRoles,
+  CurrentUserRoleSource,
   PermissionScope,
   PermissionString,
   PermissionSummary,
@@ -17,4 +17,4 @@ export type {
   UserRoleIdParams,
   UserRoleItem,
   UserRoles,
-} from '@xdd-zone/nexus/rbac-types'
+} from '../modules/rbac/model'

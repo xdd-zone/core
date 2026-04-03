@@ -1,5 +1,5 @@
-import { createApp } from '@nexus/app'
 import { describe, expect, it } from 'bun:test'
+import { createApp } from '../app'
 
 describe('openapi smoke', () => {
   it('应导出当前关键 API 路径', async () => {

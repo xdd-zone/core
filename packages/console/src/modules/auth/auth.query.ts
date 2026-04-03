@@ -2,10 +2,12 @@ import type { QueryClient } from '@tanstack/react-query'
 import type { SessionPayload, SignInEmailBody } from './auth.types'
 
 import { CURRENT_USER_ACCESS_QUERY_KEY } from '@console/modules/rbac'
+import { api, unwrapEdenResponse } from '@console/shared/api'
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { authApi } from './auth.api'
 import { applySessionPayload, clearAuthState, EMPTY_SESSION_PAYLOAD } from './auth.store'
+
+const authApiRoot = api.auth
 
 const AUTH_METHODS_QUERY_KEY = ['auth', 'methods'] as const
 const AUTH_SESSION_QUERY_KEY = ['auth', 'session'] as const
@@ -15,7 +17,7 @@ const AUTH_SESSION_QUERY_KEY = ['auth', 'session'] as const
  */
 export function getAuthMethodsQueryOptions() {
   return queryOptions({
-    queryFn: authApi.getMethods,
+    queryFn: async () => unwrapEdenResponse(await authApiRoot.methods.get()),
     queryKey: AUTH_METHODS_QUERY_KEY,
     staleTime: 60_000,
   })
@@ -33,7 +35,7 @@ export function useAuthMethodsQuery() {
  */
 export function getAuthSessionQueryOptions() {
   return queryOptions({
-    queryFn: authApi.getSession,
+    queryFn: async () => unwrapEdenResponse(await authApiRoot['get-session'].get()),
     queryKey: AUTH_SESSION_QUERY_KEY,
     staleTime: 60_000,
   })
@@ -63,8 +65,8 @@ export function useLoginMutation() {
 
   return useMutation({
     mutationFn: async (payload: SignInEmailBody) => {
-      await authApi.signIn(payload)
-      return await authApi.getSession()
+      await unwrapEdenResponse(await authApiRoot['sign-in'].email.post(payload))
+      return await unwrapEdenResponse(await authApiRoot['get-session'].get())
     },
     onSuccess: (session) => {
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, session)
@@ -82,7 +84,7 @@ export function useLogoutMutation() {
 
   return useMutation({
     mutationFn: async () => {
-      await authApi.signOut()
+      await unwrapEdenResponse(await authApiRoot['sign-out'].post())
     },
     onSettled: () => {
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, EMPTY_SESSION_PAYLOAD)

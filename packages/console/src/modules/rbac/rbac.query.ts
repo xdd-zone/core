@@ -1,8 +1,9 @@
 import type { AssignRoleToUserBody, RoleListQuery } from './rbac.types'
 
+import { api, unwrapEdenResponse } from '@console/shared/api'
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query'
 
-import { rbacApi } from './rbac.api'
+const rbacApiRoot = api.rbac
 
 const ROLE_LIST_QUERY_KEY = ['roles'] as const
 const USER_ROLES_QUERY_KEY = (userId: string) => ['users', userId, 'roles'] as const
@@ -16,7 +17,16 @@ const CURRENT_USER_ROLES_KEY = [...CURRENT_USER_ACCESS_QUERY_KEY, 'roles'] as co
  */
 export function roleListQueryOptions(query: RoleListQuery = {}) {
   return queryOptions({
-    queryFn: () => rbacApi.listRoles(query),
+    queryFn: async () =>
+      unwrapEdenResponse(
+        await rbacApiRoot.roles.get({
+          query: {
+            page: query.page,
+            pageSize: query.pageSize,
+            keyword: query.keyword,
+          },
+        }),
+      ),
     queryKey: [...ROLE_LIST_QUERY_KEY, query],
     staleTime: 30_000,
   })
@@ -27,7 +37,7 @@ export function roleListQueryOptions(query: RoleListQuery = {}) {
  */
 export function userRolesQueryOptions(userId: string) {
   return queryOptions({
-    queryFn: () => rbacApi.getUserRoles(userId),
+    queryFn: async () => unwrapEdenResponse(await rbacApiRoot.users({ userId }).roles.get()),
     queryKey: USER_ROLES_QUERY_KEY(userId),
     staleTime: 30_000,
   })
@@ -38,7 +48,7 @@ export function userRolesQueryOptions(userId: string) {
  */
 export function userPermissionsQueryOptions(userId: string) {
   return queryOptions({
-    queryFn: () => rbacApi.getUserPermissions(userId),
+    queryFn: async () => unwrapEdenResponse(await rbacApiRoot.users({ userId }).permissions.get()),
     queryKey: USER_PERMISSIONS_QUERY_KEY(userId),
     staleTime: 30_000,
   })
@@ -49,7 +59,7 @@ export function userPermissionsQueryOptions(userId: string) {
  */
 export function currentUserPermissionsQueryOptions() {
   return queryOptions({
-    queryFn: () => rbacApi.getCurrentUserPermissions(),
+    queryFn: async () => unwrapEdenResponse(await rbacApiRoot.users.me.permissions.get()),
     queryKey: CURRENT_USER_PERMISSIONS_KEY,
     staleTime: 30_000,
   })
@@ -60,7 +70,7 @@ export function currentUserPermissionsQueryOptions() {
  */
 export function currentUserRolesQueryOptions() {
   return queryOptions({
-    queryFn: () => rbacApi.getCurrentUserRoles(),
+    queryFn: async () => unwrapEdenResponse(await rbacApiRoot.users.me.roles.get()),
     queryKey: CURRENT_USER_ROLES_KEY,
     staleTime: 30_000,
   })
@@ -106,8 +116,8 @@ export function useCurrentUserRolesQuery() {
  */
 export function useAssignRoleMutation() {
   return useMutation({
-    mutationFn: ({ userId, ...body }: AssignRoleToUserBody & { userId: string }) =>
-      rbacApi.assignRoleToUser(userId, body),
+    mutationFn: async ({ userId, ...body }: AssignRoleToUserBody & { userId: string }) =>
+      unwrapEdenResponse(await rbacApiRoot.users({ userId }).roles.post(body)),
   })
 }
 
@@ -116,6 +126,7 @@ export function useAssignRoleMutation() {
  */
 export function useRemoveRoleMutation() {
   return useMutation({
-    mutationFn: ({ userId, roleId }: { userId: string; roleId: string }) => rbacApi.removeRoleFromUser(userId, roleId),
+    mutationFn: async ({ userId, roleId }: { userId: string; roleId: string }) =>
+      unwrapEdenResponse(await rbacApiRoot.users({ userId }).roles({ roleId }).delete()),
   })
 }

@@ -37,6 +37,7 @@ packages/nexus/src/
 ├── modules/
 ├── core/
 ├── infra/
+├── public/
 ├── shared/
 └── eden/
 ```
@@ -55,6 +56,10 @@ packages/nexus/src/
   - 认证上下文、守卫、插件和权限能力
 - `infra/`
   - Prisma、数据库辅助能力、日志
+- `public/`
+  - 提供给前端和联调层使用的公共导出
+  - `auth-types`、`user-types`、`rbac-types` 放 HTTP 类型
+  - `permissions` 放权限常量和匹配辅助函数
 - `shared/`
   - OpenAPI 辅助函数和通用 schema
 - `eden/`
@@ -184,11 +189,11 @@ bun run seed
 - `packages/console/src/app/navigation`
   - 侧边栏和移动端菜单配置
 - `packages/console/src/modules/auth`
-  - 登录、登出和 session 查询
+  - 登录、登出、session 查询和 GitHub 登录地址 helper
 - `packages/console/src/modules/user`
-  - 用户列表、用户详情和资料更新请求
+  - 用户列表、用户详情和资料更新 query / mutation
 - `packages/console/src/modules/rbac`
-  - 角色、用户角色和权限请求
+  - 角色、用户角色和权限 query / mutation
 - `packages/console/src/layout`
   - 后台布局、头部和标签页
 - `packages/console/src/pages`
@@ -208,8 +213,18 @@ bun run seed
   - 认证上下文、守卫、插件和权限能力
 - `packages/nexus/src/shared/openapi`
   - `apiDetail(...)`
+- `packages/nexus/src/public`
+  - `auth-types`、`user-types`、`rbac-types`
+  - `permissions`
 - `packages/nexus/src/eden`
   - Eden 类型与 smoke test
+
+前后端当前默认按下面方式协作：
+
+- Console 的 query / mutation 直接调用 `packages/console/src/shared/api/eden.ts` 中的 Treaty 客户端
+- Console 的 HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types` 引入
+- Console 的权限常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
+- GitHub 登录继续通过浏览器跳转，地址由 `packages/console/src/modules/auth/auth.api.ts` 统一构造
 
 新增或修改接口时，默认按下面顺序推进：
 
