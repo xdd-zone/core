@@ -10,6 +10,7 @@
 2. [architecture.md](./architecture.md)
 3. [development.md](./development.md)
 4. [api.md](./api.md)
+5. [eden.md](./eden.md)
 
 然后再按关注点补：
 
@@ -27,6 +28,7 @@
 2. [architecture.md](./architecture.md)
 3. [authentication.md](./authentication.md)
 4. [rbac.md](./rbac.md)
+5. [eden.md](./eden.md)
 
 再看代码目录：
 
@@ -35,7 +37,7 @@
 - `packages/nexus/src/core/http`
 - `packages/nexus/src/modules/*/model.ts`
 
-## 如果你要修改后台前端
+## 如果你要修改 Console 前端
 
 优先阅读：
 
@@ -44,6 +46,7 @@
 3. [theme.md](./theme.md)
 4. [authentication.md](./authentication.md)
 5. [development.md](./development.md)
+6. [eden.md](./eden.md)
 
 再看代码目录：
 
@@ -66,6 +69,7 @@
 1. [api.md](./api.md)
 2. [development.md](./development.md)
 3. [architecture.md](./architecture.md)
+4. [eden.md](./eden.md)
 
 修改后至少检查：
 
@@ -111,10 +115,11 @@
 
 - [README.md](../README.md)：仓库总览
 - [architecture.md](./architecture.md)：架构说明
-- [console.md](./console.md)：后台前端架构与开发说明
+- [console.md](./console.md)：Console 前端架构与开发说明
 - [packages/console/README.md](../packages/console/README.md)：Console 包说明与页面入口
 - [development.md](./development.md)：开发流程与标准动作
 - [api.md](./api.md)：HTTP 接口与端点概览
+- [eden.md](./eden.md)：Eden 接入方式、前后端交互流程和维护方法
 - [authentication.md](./authentication.md)：认证与登录态
 - [OAuth2/github.md](./OAuth2/github.md)：GitHub OAuth App 创建、参数获取和项目接入
 - [rbac.md](./rbac.md)：权限模型与声明式写法
