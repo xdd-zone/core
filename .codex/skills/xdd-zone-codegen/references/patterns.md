@@ -35,7 +35,6 @@ src/
 - `public/permissions.ts` 给 Console 复用权限常量和 helper
 - `shared/openapi` 统一放 `apiDetail(...)`
 
-不要继续参考旧的 `contract.ts`、`routes/*.route.ts`、`core/access-control` 结构。
 
 ## 写模块时先看哪里
 

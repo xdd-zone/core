@@ -1,8 +1,8 @@
 # 项目 Skill
 
-仓库提供项目级 Skill，用于让 AI 快速建立当前项目上下文，并在生成代码时保持 XDD Zone Core 的结构和风格一致。
+仓库提供项目级 Skill，用于让 AI 快速建立当前项目上下文，先判断任务该看哪里、该补什么前置技能，再按 XDD Zone Core 的现行结构实现。
 
-## xdd-zone-codegen
+## xdd-zone-codegen（XDD Zone Starter）
 
 位置：
 
@@ -16,8 +16,8 @@
 - 新增或修改 `packages/nexus` 内的接口定义
 - 新增或修改 `packages/nexus` 的模块、service、repository
 - 新增或修改 `packages/console` 的页面、路由、导航、布局、认证联调
-- 处理认证、RBAC、GitHub 登录、Eden、OpenAPI 或前后端联调问题
-- 明确要求“按 XDD Zone Core 风格生成代码”
+- 明确要求“按当前项目方式实现”
+- 明确要求先判断任务落点、先定位文档和代码入口
 
 这个 Skill 的核心要求：
 
