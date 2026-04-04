@@ -1,294 +1,215 @@
-# XDD Zone Console 前端参考
+# XDD Zone Console 参考
 
-这个文件提供 `packages/console` 后台管理前端的开发落点、骨架和检查清单。生成前端代码时，优先参考现有同类文件，再按这里的结构补齐。
+## 目录
 
-## 先看哪些文件
+1. 当前前端结构
+2. 改页面前先看哪里
+3. 当前前端协作方式
+4. 路由、导航、访问控制骨架
+5. 页面与联调检查清单
 
-根据任务类型，优先打开：
+## 当前前端结构
 
-- 路由与守卫：
-  - `packages/console/src/app/router/routes.tsx`
-  - `packages/console/src/app/router/guards.tsx`
-  - `packages/console/src/app/router/types.ts`
-- 导航与标签：
-  - `packages/console/src/app/navigation/navigation.ts`
-  - `packages/console/src/hooks/useRouteListener.ts`
-  - `packages/console/src/utils/routeUtils.ts`
-  - `packages/console/src/stores/modules/tabBar.ts`
-- 认证：
-  - `packages/console/src/modules/auth/auth.api.ts`
-  - `packages/console/src/modules/auth/auth.store.ts`
-  - `packages/console/src/pages/auth/Login.tsx`
-- 布局与页面壳：
-  - `packages/console/src/layout/RootLayout.tsx`
-  - `packages/console/src/layout/components/app-content/AppContent.tsx`
-  - `packages/console/src/components/common/Breadcrumb.tsx`
-- 主题与样式：
-  - `packages/console/docs/theme.md`
-  - `packages/console/src/stores/modules/setting.ts`
-  - `packages/console/src/utils/theme.ts`
-  - `packages/console/src/assets/styles/theme/*`
+当前 `packages/console/src/` 重点目录：
 
-## 分层落点
-
-新增一个后台页面时，通常涉及这些层：
-
-1. `packages/console/src/pages/*`
-2. `packages/console/src/app/router/routes.tsx`
-3. `packages/console/src/app/navigation/navigation.ts`
-4. `packages/console/src/i18n/locales/zh.ts` 与 `en.ts`
-5. 按需补 `modules/*`、`layout/*`、`stores/modules/*`
-
-## 路由模型
-
-当前路由模型只有两层：
-
-- `GuestOnly`
-  - `/login`
-- `RequireAuth`
-  - 所有后台页面
-
-根路径 `/` 统一由 `RootIndexRedirect` 根据登录态重定向，不要把这层逻辑拆到页面内部。
-
-## 路由骨架
-
-新增后台页面时，优先沿用现有 lazy route 形式：
-
-```tsx
-{
-  handle: {
-    icon: Users,
-    title: 'menu.userManagement',
-  },
-  lazy: async () => {
-    const { UserList } = await import('@console/pages/user/UserList')
-
-    return { Component: UserList }
-  },
-  path: 'users',
-}
+```text
+src/
+├── app/
+│   ├── access/
+│   ├── navigation/
+│   └── router/
+├── modules/
+│   ├── auth/
+│   ├── rbac/
+│   └── user/
+├── pages/
+├── layout/
+├── hooks/
+├── stores/
+└── shared/api/
 ```
 
-注意：
+关键结论：
 
-- `handle.title` 优先使用 i18n key，不直接写死展示文案。
-- 这个标题会被 `TabBar` 和面包屑复用。
-- 如果页面不应该生成标签页，显式设置 `handle.tab = false`。
-- 纯容器路由、重定向路由、错误页不要当成普通页面标签。
+- 路由集中在 `app/router/routes.tsx`
+- 登录重定向和游客/登录校验在 `app/router/guards.tsx`
+- 页面访问权限在 `app/access/access-control.ts`
+- 菜单在 `app/navigation/navigation.ts`
+- 认证、用户、RBAC 请求都通过模块内 `*.query.ts` 直接调用 Eden Treaty
+- GitHub 登录地址由 `modules/auth/auth.api.ts` 构造
+- 后台壳层统一在 `layout/*`
 
-## 导航骨架
+不要继续沿用旧的 `user.api.ts`、`rbac.api.ts` 或在页面里自己写一层平行请求封装。
 
-新增后台入口时，导航与路由通常需要同步：
+## 改页面前先看哪里
+
+### 所有 Console 界面任务
+
+先看：
+
+- `packages/console/.impeccable.md`
+- `docs/console.md`
+- `packages/console/README.md`
+
+### 路由、页面入口、TabBar、面包屑
+
+- `packages/console/src/app/router/routes.tsx`
+- `packages/console/src/app/router/guards.tsx`
+- `packages/console/src/hooks/useRouteListener.ts`
+
+### 菜单和后台入口
+
+- `packages/console/src/app/navigation/navigation.ts`
+- `packages/console/src/app/access/access-control.ts`
+
+### 认证、GitHub 登录、会话恢复
+
+- `packages/console/src/modules/auth/auth.api.ts`
+- `packages/console/src/modules/auth/auth.query.ts`
+- `packages/console/src/modules/auth/auth.store.ts`
+- `packages/console/src/pages/auth/Login.tsx`
+
+### 用户、角色、权限页面
+
+- `packages/console/src/modules/user/`
+- `packages/console/src/modules/rbac/`
+- `packages/console/src/pages/user/`
+- `packages/console/src/pages/role/`
+- `packages/console/src/pages/access/`
+- `packages/console/src/pages/dashboard/Dashboard.tsx`
+
+### 布局、主题、移动端菜单
+
+- `packages/console/src/layout/`
+- `packages/console/src/stores/modules/`
+- `packages/console/src/assets/styles/theme/`
+- `docs/theme.md`
+
+## 当前前端协作方式
+
+### 与 Nexus 的接口协作
+
+- `packages/console/src/shared/api/eden.ts` 统一创建 Treaty 客户端
+- 默认带 `credentials: 'include'`
+- 统一通过 `unwrapEdenResponse(...)` 拆错误
+- 页面和 query 文件直接调用 `api`
+
+常见调用方式：
+
+```ts
+await api.auth.methods.get()
+await api.auth['get-session'].get()
+await api.user.get({ query })
+await api.user({ id }).get()
+await api.rbac.users({ userId }).roles.get()
+```
+
+### GitHub 登录是例外
+
+GitHub 登录继续走浏览器重定向：
+
+1. 前端读取登录页 `redirect`
+2. `getGithubSignInUrl(...)` 生成可访问地址
+3. 浏览器跳到 `/api/auth/sign-in/github`
+4. Nexus 回调并写 cookie
+5. Router 再通过 `ensureAuthSession(...)` 恢复登录态
+
+不要把这条流程改成普通 JSON 请求。
+
+### 页面访问控制
+
+当前 Console 有两层保护：
+
+1. `requireAuth(...)`
+   - 先确认有没有登录
+2. `ensureConsolePathAccess(...)`
+   - 再按当前用户权限判断页面是否可访问
+
+所以：
+
+- 菜单不是唯一权限入口
+- 页面组件内部不要重复写整页级权限跳转
+- 访问 `/users/$id/access`、`/users/$id/edit`、`/roles` 这类页面时，优先复用 `app/access/access-control.ts`
+
+## 路由、导航、访问控制骨架
+
+### 路由骨架
+
+```tsx
+const exampleRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/example/ExamplePage'), 'ExamplePage'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'example',
+  staticData: {
+    icon: LayoutTemplate,
+    title: 'menu.example',
+  },
+})
+```
+
+规则：
+
+- 后台页面默认挂在 `appLayoutRoute` 下
+- `staticData.title` 优先用 i18n key
+- 不进 TabBar 的页面显式设 `tab: false`
+
+### 导航骨架
 
 ```ts
 {
-  icon: Users,
-  key: 'system',
-  label: 'menu.systemManagement',
-  children: [
-    {
-      key: 'users',
-      label: 'menu.userManagement',
-      path: '/users',
-    },
-  ],
+  icon: LayoutTemplate,
+  key: 'example',
+  label: 'menu.example',
+  path: '/example',
 }
 ```
 
-注意：
+规则：
 
-- `key` 保持稳定，不要用随机值。
-- `path` 使用绝对路径。
-- 菜单负责导航入口，不负责权限裁剪。
-- 如果需求只是隐藏入口，不要顺手把路由权限逻辑塞进导航层。
+- `path` 用绝对路径
+- `key` 保持稳定
+- 菜单负责入口组织，不负责服务端权限判定
 
-## 页面组件骨架
+### 访问控制骨架
 
-页面入口组件保持函数组件和具名导出：
+如果新增后台页面会受权限影响，先补：
 
-```tsx
-import { Alert, Card, Table } from 'antd'
-import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+- `packages/console/src/app/access/access-control.ts`
 
-import { Loading } from '@console/components/ui'
-import { useDynamicTableHeight } from '@console/hooks/useDynamicTableHeight'
+参考现有写法：
 
-interface UserRow {
-  id: string
-  nickname: string
-}
-
-/**
- * 用户列表页
- */
-export function UserList() {
-  const { t } = useTranslation()
-  const [loading, setLoading] = useState(true)
-  const [items, setItems] = useState<UserRow[]>([])
-  const { cardRef, tableScrollY } = useDynamicTableHeight(loading)
-
-  useEffect(() => {
-    void loadUsers()
-  }, [])
-
-  async function loadUsers() {
-    try {
-      setLoading(true)
-      setItems([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
-    return <Loading />
-  }
-
-  return (
-    <Card ref={cardRef} title={t('menu.userManagement')}>
-      <Alert type="info" showIcon message={t('common.loading')} />
-      <Table<UserRow> rowKey="id" dataSource={items} scroll={{ y: tableScrollY }} />
-    </Card>
-  )
+```ts
+{
+  matcher: createPathMatcher('/users/$id/edit'),
+  pathPattern: '/users/$id/edit',
+  requirement: {
+    all: [Permissions.USER.READ_ALL, Permissions.USER.UPDATE_ALL],
+  },
 }
 ```
 
-页面约定：
+规则：
 
-- 用户可见文案优先使用 `useTranslation()`。
-- 加载态优先复用 `<Loading />`。
-- 错误提示优先复用 Antd `Alert` 或 `message`。
-- 页面局部状态留在组件内部；只有跨页面复用或需要持久化时才上移。
+- 先判断当前路径是不是已经落在现有规则里
+- 只有新增页面真的需要独立访问控制时，才补新的 path rule
+- 不要把这一层逻辑散落到导航过滤和页面组件里
 
-## Auth 相关约定
+## 页面与联调检查清单
 
-认证能力集中在 `packages/console/src/modules/auth/*`：
+- 是否已经先遵守 `packages/console/.impeccable.md`
+- 新页面是否在正确路由分组下
+- 是否需要同步 `navigation.ts`
+- 是否需要补 `app/access/access-control.ts`
+- 用户可见文案是否同时补 `zh.ts` 和 `en.ts`
+- 是否继续复用 `RootLayout`
+- 是否复用 `Loading`、Antd `Alert`、`message`
+- 是否直接使用 `api` 和模块内 query / mutation，而不是新建平行 API 层
+- 是否误把权限判断写进页面、菜单或路由之外的随机位置
+- 如果涉及 GitHub 登录，是否同时检查 API 基址、`trustedOrigins`、callback URL
 
-- `auth.api.ts`
-  - `/api/auth/get-session`
-  - `/api/auth/sign-in/email`
-  - `/api/auth/sign-out`
-- `auth.store.ts`
-  - `bootstrapSession`
-  - `login`
-  - `logout`
+推荐收尾命令：
 
-不要在以下位置复制认证流程：
-
-- `app/router/*`
-- `layout/*`
-- 普通业务页面
-
-如果页面只是使用当前登录用户状态，优先从 `useAuthStore()` 读取，而不是重新请求 session。
-
-## 布局与壳层约定
-
-后台壳层由 `RootLayout` 统一负责：
-
-- 背景 `Pattern`
-- 左右 / 上下布局切换
-- `SettingDrawer`
-- `MobileDrawer`
-- 路由监听与 TabBar 联动
-
-这意味着：
-
-- 页面组件只写内容区，不重复包一层后台壳。
-- 如果改动会影响导航、标签、移动端菜单或设置抽屉，优先去 `layout/*`、`hooks/useRouteListener.ts`、`stores/modules/*` 查。
-
-## TabBar 与面包屑约定
-
-- `TabBar` 通过路由 `handle.title` 生成标题。
-- `Breadcrumb` 通过 `handle.breadcrumbTitle || handle.title` 生成层级。
-- `/login`、`/403`、`/404` 默认不进 TabBar。
-- 想让页面标题、标签和面包屑一致，优先从路由 `handle` 统一维护。
-
-## 样式与主题约定
-
-当前项目是 `Ant Design + Tailwind + Catppuccin` 的组合：
-
-- 基础控件优先使用 Antd。
-- 布局、间距、细节状态优先使用 Tailwind。
-- 优先使用语义类：
-  - `bg-surface`
-  - `bg-surface-muted`
-  - `text-fg`
-  - `text-fg-muted`
-  - `border-border`
-  - `bg-overlay-0`
-  - `text-primary`
-- 不要新建一套平行主题系统。
-- 除非现有代码已经这样做，否则不要到处硬编码 hex 颜色。
-
-## i18n 约定
-
-新增文案时：
-
-1. 先确定 key 的命名空间，例如 `menu.*`、`common.*`、`auth.*`
-2. 同步修改：
-   - `packages/console/src/i18n/locales/zh.ts`
-   - `packages/console/src/i18n/locales/en.ts`
-3. 页面和导航里只引用 key，不直接写死文案
-
-## 与 Nexus 联调时的判断顺序
-
-如果需求涉及接口联调，先问自己：
-
-1. `nexus` 接口是否已经存在
-2. 登录态是否只依赖 `/api/auth/get-session`
-3. 这个页面是未登录不可访问，还是接口返回 `403` 后再提示
-
-如果后端接口还没准备好，先改 `packages/nexus`，不要在前端临时发明兼容协议。
-
-## 常见坏味道与替代写法
-
-坏味道：
-
-```tsx
-if (user.role !== 'admin') {
-  return <Navigate to="/403" replace />
-}
+```bash
+bun run --filter @xdd-zone/console type-check
+bun run build:console
 ```
-
-替代：
-
-```tsx
-// 前端只做是否登录判断，细粒度权限以后端接口结果为准
-```
-
-坏味道：
-
-```tsx
-const routes = [{ path: '/users', title: '用户管理' }]
-```
-
-替代：
-
-```tsx
-const routes = [{ path: '/users', handle: { title: 'menu.userManagement' } }]
-```
-
-坏味道：
-
-```tsx
-<div style={{ background: '#fff', color: '#333' }} />
-```
-
-替代：
-
-```tsx
-<div className="bg-surface text-fg" />
-```
-
-## 完成后的检查清单
-
-- 页面是否放在正确的 `pages/*` 位置
-- 路由是否挂在正确的 public / protected 分组
-- 导航是否只承担入口职责，没有混入权限判断
-- `handle.title / breadcrumbTitle / tab` 是否符合页面语义
-- `zh / en` 文案是否补齐
-- 认证请求是否仍然集中在 `modules/auth/*`
-- 是否复用了现有布局和主题语义类
-- TabBar、面包屑、移动端菜单和设置抽屉行为是否未回退
-- 是否完成 `lint / type-check / build`

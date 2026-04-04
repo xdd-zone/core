@@ -1,4 +1,4 @@
 interface:
-  display_name: "XDD Zone Codegen"
-  short_description: "按仓库现有边界生成标准前后端代码"
-  default_prompt: "使用 $xdd-zone-codegen 按当前仓库边界生成或修改代码，优先复用现有 contract、session、权限、路由、导航、主题和文档约定。项目处于早期阶段，除非用户明确要求兼容或过渡方案，否则默认直接重构到当前目标实现，不主动保留兼容层、旧接口行为、过渡开关或双写逻辑。编写注释、JSDoc、README 或 docs 文案时，只按当前实现说明，不写历史对比，不解释重构过程，不保留旧架构或旧实现说明；避免出现“由旧方案改为当前方案”“之前使用 A，现在改成 B”“为了兼容旧实现”这类描述。文案优先使用自然、直接、便于阅读的中文，尽量写清用途、位置、规则和使用方式；避免使用“真相源、类型基线、消费边界、职责边界、能力收敛、统一出口”这类抽象术语。"
+  display_name: "XDD Zone Starter"
+  short_description: "先判断任务该看哪里、该调什么技能、再按当前结构实现"
+  default_prompt: "当用户在当前仓库里提出“先看看这个仓库”“这次该从哪改”“先帮我定位相关文档和代码入口”“这个需求该走 packages/nexus 还是 packages/console”“按当前项目方式实现”“先别急着写代码，先判断落点”这类请求时，先使用 $xdd-zone-codegen 为当前 XDD Zone Core 任务建立项目上下文。先按任务类型读取最少必要的 README、docs 和目标包说明，再判断这次改动落在 packages/nexus、packages/console、auth、RBAC、Eden、OpenAPI、文案还是联调。命中 packages/nexus 时先调用 $elysiajs；命中 Console 界面时先读取 packages/console/.impeccable.md 并调用 $frontend-design；命中说明性文案时先调用 $write-xdd-docs。先完成分流和前置判断，再进入实现。实现时严格按当前仓库结构落地：Nexus 先改 model.ts，再改 service/repository，再改模块 index.ts；Console 直接复用 Eden Treaty、现有路由、导航、layout、access-control 和 i18n 结构，不新增旧式 contract、平行 API wrapper、第二套权限规则或第二套 HTTP 类型。"

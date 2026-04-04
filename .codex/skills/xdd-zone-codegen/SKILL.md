@@ -1,212 +1,214 @@
 ---
 name: xdd-zone-codegen
-description: 为 XDD Zone Core 生成或修改标准前后端代码。用于仓库内新增或调整 Elysia-first 的 module、model、权限相关代码，或新增/改造 console 后台管理前端的页面、路由、导航、登录态处理、布局联动时，优先复用现有接口、session、权限与用户资料相关约定，保持目录结构、命名、JSDoc、响应格式、i18n、主题语义、apiDetail 与导出方式一致。
+description: 为 XDD Zone Core 建立当前会话上下文，并按仓库现状生成或修改标准前后端代码。适合用在这些开场需求：先看看这个仓库、这次该从哪改、先帮我定位相关文档和代码入口、这个需求该走 packages/nexus 还是 packages/console、按当前项目方式实现。只要任务涉及 packages/nexus、packages/console、认证、RBAC、Eden、OpenAPI、GitHub 登录、路由、导航、布局、项目级文案与类型导出约定，就先用这个 Skill 判断任务落点、补齐前置技能，再按当前结构实现，避免沿用旧目录、旧 API wrapper、旧权限写法或平行实现。
 ---
 
-# XDD Zone Codegen
+# XDD Zone Starter
 
-当用户要在仓库中新增接口、模块、schema、后台页面，或者明确要求“按 XDD Zone 风格生成代码”时，使用这个 Skill。目标是基于当前仓库已有结构与约定生成可直接落地的实现，而不是额外发明一套权限、角色、路由或前端壳层风格。
+把这个 Skill 当成当前仓库的开场入口。
+目标不是直接生成一段代码，而是先让 Agent 快速知道这次任务应该读哪些文档、先调哪些项目技能、应该改哪几层、哪些旧写法已经不能再用了。
 
-## 先做什么
+## 这些说法都适合直接用这个 Skill
 
-先读取这些公共文档：
+- 先帮我看看这个仓库现在怎么组织
+- 这次需求该从哪改
+- 先帮我定位相关文档和代码入口
+- 这个功能该走 `packages/nexus` 还是 `packages/console`
+- 先别急着写代码，先判断要读哪些文档
+- 按当前项目方式实现，不要沿用旧结构
+- 帮我接一下认证、RBAC、Eden、OpenAPI 或 GitHub 登录
+- 帮我看这次改动会不会同时影响前后端、公开类型或文档
 
-- `README.md`
-- `docs/architecture.md`
+如果用户表达的意思接近这些说法，也直接先用本 Skill 开场。
+
+## 会话启动顺序
+
+1. 先看 `AGENTS.md`、`README.md`、`docs/index.md`
+2. 再按任务类型补读文档，优先使用 `references/startup.md` 里的任务分流表
+3. 先判断任务落在哪些层：
+   - `packages/nexus`
+   - `packages/console`
+   - `docs / README / 注释 / 提示词`
+   - `auth / RBAC / GitHub 登录`
+   - `Eden / OpenAPI / 前后端联调`
+4. 在真正写代码前，先补齐必须调用的项目技能
+
+## 必须先补的项目技能
+
+只要命中下面场景，就先按这个顺序处理：
+
+- 任务涉及 `packages/nexus`
+  - 先调用 `elysiajs`
+  - 如果还要按当前仓库风格继续生成或改模块代码，再继续使用本 Skill
+- 任务涉及 `packages/console` 的界面、页面、布局、导航、展示型业务组件
+  - 先读取 `packages/console/.impeccable.md`
+  - 先调用 `frontend-design`
+  - 再继续使用本 Skill
+- 任务涉及 README、`docs/`、JSDoc、注释、错误提示、提示词或其他说明性文案
+  - 先调用 `write-xdd-docs`
+  - 再继续使用本 Skill
+- 任务同时涉及 `packages/console` 界面和说明性文案
+  - 顺序固定为：`packages/console/.impeccable.md` -> `frontend-design` -> `write-xdd-docs` -> 本 Skill
+
+不要跳过这些顺序，也不要把“是否需要调用”留给临时判断。
+
+## 当前仓库要先记住的事实
+
+- 这是一个 `Bun + React + Elysia` 的 monorepo，主包是 `@xdd-zone/console` 和 `@xdd-zone/nexus`
+- `packages/nexus` 只维护一套服务端 HTTP 接口
+- `packages/nexus/src/modules/*/index.ts` 直接就是模块路由入口，`model.ts` 放 HTTP schema
+- `packages/nexus/src/public/*-types.ts` 提供给前端复用的 HTTP 类型
+- `@xdd-zone/nexus/permissions` 提供权限常量、角色常量和匹配辅助函数
+- `packages/console` 直接通过 `src/shared/api/eden.ts` 里的 Treaty 客户端调接口
+- `packages/console` 里的 `user`、`rbac` 已经不再维护一层 1:1 的独立 API wrapper
+- GitHub 登录不是普通 JSON 请求，前端通过浏览器跳转到 `/api/auth/sign-in/github`
+- 登录方式开关统一在 `packages/nexus/config.yaml` 的 `auth.methods` 里维护
+- Console 现在有独立的页面访问控制层：`packages/console/src/app/access/access-control.ts`
+- Dashboard、菜单显示和页面入口已经按当前权限模型做过一轮收敛，生成代码时要复用这套结果
+
+如果你在任务里看到 `contract.ts`、旧 route 文件、前端手写第二套 HTTP 类型、前端单独维护权限规则，先停下来确认是不是旧结构残留；默认按当前结构实现。
+
+## 任务分流
+
+### 后端接口、模块、OpenAPI、权限
+
+先读：
+
 - `docs/development.md`
-- 目标包的 `README.md`
+- `docs/architecture.md`
+- `docs/api.md`
+- `docs/eden.md`
+- 认证相关再补 `docs/authentication.md`
+- 权限相关再补 `docs/rbac.md`
+- `packages/nexus/README.md`
 
-如果任务涉及 `console`，再读取：
+再看代码：
 
+- `packages/nexus/src/modules/user/`
+- `packages/nexus/src/modules/rbac/`
+- `packages/nexus/src/modules/auth/`
+- `packages/nexus/src/core/security/`
+- `packages/nexus/src/public/`
+
+然后打开 `references/patterns.md`。
+
+### Console 页面、路由、导航、布局
+
+先读：
+
+- `packages/console/.impeccable.md`
 - `docs/console.md`
+- `docs/development.md`
+- `docs/eden.md`
+- `docs/authentication.md`
 - `packages/console/README.md`
-- `packages/console/AGENTS.md`
-- `packages/console/docs/theme.md`
 
-如果任务涉及认证、权限或接口联调，再按需补读：
+主题相关再补：
+
+- `docs/theme.md`
+
+再看代码：
+
+- `packages/console/src/app/router/routes.tsx`
+- `packages/console/src/app/router/guards.tsx`
+- `packages/console/src/app/access/access-control.ts`
+- `packages/console/src/app/navigation/navigation.ts`
+- `packages/console/src/layout/`
+- `packages/console/src/modules/auth/`
+- `packages/console/src/modules/user/`
+- `packages/console/src/modules/rbac/`
+
+然后打开 `references/console.md`。
+
+### GitHub 登录、登录态、前后端联调
+
+先读：
 
 - `docs/authentication.md`
-- `docs/rbac.md`
+- `docs/OAuth2/github.md`
+- `docs/console.md`
+- `docs/eden.md`
+- `docs/api.md`
 
-然后打开最接近的现有实现作为参考。
+再看代码：
 
-后端优先参考：
+- `packages/nexus/src/core/security/auth/`
+- `packages/nexus/src/modules/auth/`
+- `packages/console/src/modules/auth/`
+- `packages/console/src/shared/api/eden.ts`
+- `packages/console/src/pages/auth/Login.tsx`
+- `packages/console/src/pages/dashboard/Dashboard.tsx`
 
-- 模块入口参考 `packages/nexus/src/modules/user/index.ts`
-- module 参考 `packages/nexus/src/modules/user/`
-- model 参考 `packages/nexus/src/modules/user/model.ts`
+### 会话开场还不确定该看哪里
 
-如果是 RBAC / 权限接口，优先参考 `packages/nexus/src/modules/rbac/index.ts` 与 `packages/nexus/src/modules/rbac/`。
+先打开 `references/startup.md`，按任务类型和关键词找文档、目录和最近更新点。
 
-前端优先参考：
+## 当前实现规则
 
-- 路由参考 `packages/console/src/app/router/routes.tsx`
-- 路由守卫参考 `packages/console/src/app/router/guards.tsx`
-- 导航参考 `packages/console/src/app/navigation/navigation.ts`
-- 认证参考 `packages/console/src/modules/auth/*`
-- 根布局参考 `packages/console/src/layout/RootLayout.tsx`
-- 页面参考 `packages/console/src/pages/auth/Login.tsx`
-- 页面参考 `packages/console/src/pages/dashboard/Dashboard.tsx`
+### Nexus
 
-## 先判断任务类型
+- 默认顺序：`model.ts` -> `service.ts / repository.ts` -> 模块 `index.ts` -> 回归验证
+- `index.ts` 只放 route、schema、鉴权声明、`apiDetail(...)` 和 service 调用
+- 只要求登录时优先用 `authPlugin + auth: 'required'`
+- 需要权限、`own`、`me` 时优先用 `accessPlugin`
+- `own` 只用于当前用户自己的资料场景，不把它泛化成任意资源归属模型
+- 当前固定角色只保留 `superAdmin / admin / user`
+- 成功响应直接返回业务数据，不包 `{ code, message, data }`
+- 删除或无 body 操作返回 `204`
+- 公开给前端复用的 HTTP 类型按需维护在 `packages/nexus/src/public/*-types.ts`
+- 运行时权限工具继续从 `packages/nexus/src/public/permissions.ts` 导出
 
-- 只改 `packages/nexus`：按后端 model -> service/repository -> 模块入口 -> OpenAPI 的顺序推进。
-- 只改 `packages/console`：先确认 `nexus` 现有接口和登录态约定，再改页面、路由、导航和布局。
-- 前后端联动：先改 `nexus`，再导出 OpenAPI / 完成接口自检，最后再接 `console`。
+### Console
 
-## 不可偏离的规则
+- 页面、路由、导航和布局改动之前，先遵守 `packages/console/.impeccable.md`
+- Query / mutation 直接走 `packages/console/src/shared/api/eden.ts` 的 `api`
+- GitHub 登录继续通过 `getGithubSignInUrl(...)` 和浏览器跳转处理，不改成普通 Treaty JSON 请求
+- 页面访问控制统一看 `packages/console/src/app/access/access-control.ts`
+- 菜单和路由分开维护；新增页面通常同时改 `routes.tsx` 和 `navigation.ts`
+- 根路径重定向继续放在 `RootIndexRedirect`
+- 后台壳层统一由 `layout/*` 提供，页面不要重复拼 Header / Sidebar
+- 用户可见文案优先走 i18n key，同时补 `zh.ts` 和 `en.ts`
+- 主题颜色优先复用语义类，不新开平行配色系统
 
-### 共享规则
+### Eden 与类型协作
 
-- 先复用仓库现有结构和约定，再考虑新增抽象。
-- 优先使用当前仓库约定的包内别名导入。
-- 导出函数、类、方法补齐中文 JSDoc；避免 `any`。
-- 命名和文件名遵循现有约定：camelCase / PascalCase / UPPER_SNAKE_CASE / kebab-case。
-- 项目处于早期阶段，除非用户明确要求兼容或过渡方案，否则默认直接重构到当前目标实现，不主动保留兼容层、过渡开关、双写逻辑或旧接口行为。
-- 编写注释、JSDoc、README 或 docs 文案时，只按当前实现说明，不保留旧架构、旧流程、旧接口说明，也不解释重构过程。
-- 文案优先使用自然、直接、便于阅读的中文，尽量写清用途、位置、规则和使用方式。
-- 避免使用“真相源、类型基线、消费边界、职责边界、能力收敛、统一出口”这类抽象术语。
+- `packages/nexus/src/public/eden.ts` 只导出 `type App = typeof app`
+- `packages/console/src/shared/api/eden.ts` 统一维护 API 基址、cookie 和错误拆包
+- Console 直接用 Treaty 推导路径、参数和返回值
+- 只有页面表单、表格或共享状态真的需要明确 HTTP 类型时，才补 `@xdd-zone/nexus/*-types`
 
-### Nexus 后端规则
+## 最近更新后最容易踩错的点
 
-- `packages/nexus` 模块 `model.ts` 用来集中定义服务端 HTTP schema。先定义或修改 model，再写模块入口、service。
-- `packages/nexus/src/modules/*/index.ts` 直接作为模块路由入口，负责 route、schema、plugin、`apiDetail(...)` 和调用 service。
-- `packages/nexus/src/modules/*` 承载业务逻辑；涉及 Prisma 访问时优先落到 repository。
-- 当前仓库默认复用固定角色和固定权限。新增接口前先确认是否能落到现有 `USER / ROLE / USER_ROLE / USER_PERMISSION` 等模块划分，不要默认新增角色、权限组或动态授权模型。
-- 成功响应直接返回业务数据，不包一层 `{ code, message, data }`。
-- 删除或无 body 操作返回 `204`。
-- 错误交给统一错误处理；缺失资源优先抛 `NotFoundError`。
-- `apiDetail` 统一从当前仓库约定的共享模块导入。
-
-### Console 前端规则
-
-- `packages/console` 只调用 `nexus` 提供的认证与业务接口，不复制一套接口定义，也不在前端单独维护权限计算规则。
-- 前端路由只区分 `public / protected`；未登录由 `guards.tsx` 处理，细粒度权限以后端 `401 / 403` 为准。
-- 菜单与路由解耦。新增后台页面时通常同时更新 `app/router/routes.tsx` 与 `app/navigation/navigation.ts`，但不要把菜单裁剪当成权限系统。
-- 根路径 `/` 的跳转逻辑保持在 `RootIndexRedirect`，不要把首页重定向散落到页面内部。
-- 认证相关请求与 store 只放 `packages/console/src/modules/auth/*`；页面、layout、router 不要直接复制 `get-session / sign-in / sign-out` 流程。
-- 布局壳层放 `packages/console/src/layout/*`；页面不要自己拼一套 Header / Sidebar / TabBar / SettingDrawer。
-- 可持久化的全局 UI 状态放 Zustand store；单页临时状态优先留在页面组件内部。
-- 页面、导航、Tab 标题、按钮等用户可见文案优先走 i18n key；新增文案同步更新 `packages/console/src/i18n/locales/zh.ts` 与 `en.ts`。
-- 基础控件优先复用 Ant Design；布局、间距、局部视觉优先用 Tailwind。主题颜色优先使用 `bg-surface`、`text-fg`、`border-border`、`text-fg-muted` 等语义类，不要另外发明一套配色。
-- 只有当一个业务接口会被多个页面复用、或需要共享状态时，才考虑新增 `packages/console/src/modules/<domain>/`；不要为了形式把单页逻辑过度模块化。
-
-## 类型安全底线
-
-- 禁止写 `any`、`as any`、`Array<any>`、`Promise<any>`、`Record<string, any>`。
-- 每个类型都要表达业务含义，优先使用 `UserListQuery`、`UpdateMyProfileBody`、`AssignRoleToUserBody`、`UserWhereInput` 这类语义化名称，避免空泛的 `Data`、`Result`、`Payload`。
-- route 的 `body / query / params / response` 类型优先从模块内 `model.ts` 或 `shared/schema` 的 Zod schema 推导。
-- repository 的输入输出优先复用 Prisma 生成类型、`WhereInput`、`Select`、`GetPayload` 或模块内显式定义的 `*.types.ts`。
-- service 的方法签名必须写清楚入参与返回值，不能把 `Promise` 返回值留成隐式宽类型。
-- 真正动态的数据先用 `unknown`，再通过 schema、类型守卫或字段收窄转换；不要直接退回 `any`。
-- 如果一个对象暂时无法精确定义，就先在 `*.types.ts` 或 `*.model.ts` 给它起一个有意义的名字，再继续写逻辑。
-
-## 类型来源优先级
-
-按下面顺序找类型来源，只有前一层无法表达时才进入下一层：
-
-1. `packages/nexus/src/modules/*/model.ts` 或 `packages/nexus/src/shared/schema/*` 的 `z.infer`、`_input`、`_output`
-2. Prisma 生成类型和 `select` 对应的 payload 类型
-3. 现有基础泛型，例如 `PaginatedList<T>`、`PaginationQuery`、`RequestFn`
-4. 模块内新增的语义化 `type` / `interface`
-
-不要为了省事跳过前两层，直接写宽泛对象类型。
-
-## 生成顺序
-
-### 后端任务
-
-1. 在 `packages/nexus/src/modules/<name>/model.ts` 定义 `body / query / params / response`，并更新对应 `index.ts`
-2. 在 `packages/nexus/src/modules/<name>/` 实现 `service / repository / types / constants`
-3. 在 `packages/nexus/src/modules/<name>/index.ts` 注册接口
-4. 检查是否需要补充 OpenAPI、文档或导出
-
-### Console 任务
-
-1. 先确认 `nexus` 现有接口、session 与权限约定是否已满足需求
-2. 在 `packages/console/src/pages/*` 新增或修改页面入口
-3. 在 `packages/console/src/app/router/routes.tsx` 注册路由；按需补 `handle.title / breadcrumbTitle / tab`
-4. 如果页面需要后台入口，再同步 `packages/console/src/app/navigation/navigation.ts`
-5. 如果改动涉及登录态或会话使用，修改 `packages/console/src/modules/auth/*`
-6. 如果改动涉及后台壳层、TabBar、移动端菜单或主题设置，修改 `packages/console/src/layout/*`、`hooks/*`、`stores/modules/*`
-7. 同步 i18n 文案与主题语义类
-8. 完成 `lint / type-check / build` 验证
-
-### 前后端联动任务
-
-1. 先按后端顺序改 `nexus`
-2. 导出 OpenAPI，并做至少一轮接口 / 权限自检
-3. 再接 `console` 的页面、路由、导航和联调
-
-如果用户只要求后端内部能力，不要默认新增调用方包装层。
-
-## plugin 选择
-
-- 提供认证上下文：`authPlugin`
-- 仅要求登录：在 route 上声明 `auth: 'required'`
-- 需要权限判断：`permissionPlugin`
-- `own` 只用于当前登录用户查看或修改自己的资料场景，不要把它泛化成通用资源归属模型。
-
-常见 route 写法：
-
-- `permission: Permissions.USER.READ_ALL`
-- `permission: Permissions.USER_ROLE.ASSIGN_ALL`
-- `me: Permissions.USER.READ_OWN`
-- `me: Permissions.USER_PERMISSION.READ_OWN`
-- 当前用户角色列表这类只要求登录的接口，可以只声明 `auth: 'required'`
-
-如果 handler 需要直接使用已认证的 `auth.user` / `auth.session`，推荐同时显式声明：
-
-- `auth: 'required'`
-
-## OpenAPI 与响应约定
-
-- route detail 统一走 `apiDetail(...)`
-- 列表分页结构固定为 `items / total / page / pageSize / totalPages`
-- `204` 接口只设置 `set.status = 204`
-
-## Console 路由与页面约定
-
-- 受保护页面默认挂到 `RequireAuth` 下，不要绕过现有守卫。
-- 页面路由优先用 lazy import，和现有 `routes.tsx` 保持一致。
-- `handle.title` 优先填写 i18n key，这会同时影响 TabBar 与面包屑。
-- 不应该出现在 TabBar 的页面，例如 `/login`、错误页、纯重定向页，显式设 `handle.tab = false`。
-- 页面内的 loading / error 优先复用现有模式：`<Loading />`、Antd `Alert`、`message`。
-- 使用表格页时，优先检查是否适合复用 `useDynamicTableHeight`，避免固定高度写死。
-
-## 生成前检查
-
-在真正写代码前，先判断这次改动是否需要同时更新以下层：
-
-- `packages/nexus`
-- `packages/console`
-- `packages/nexus/openapi/openapi.json`
-- `docs`
-- 相关 smoke test 或回归验证
-
-涉及公共 API 的新增或变更，默认同时检查这些层是否一致。
+- 不要继续给 `packages/console/src/modules/user`、`packages/console/src/modules/rbac` 新增一层 1:1 `*.api.ts` 包装
+- 不要在前端复制一套权限常量或手写第二套 HTTP 类型
+- 不要把 GitHub 登录接成普通异步 JSON 登录按钮请求
+- 不要忽略 `packages/nexus/config.yaml` 的 `auth.methods`、`trustedOrigins`
+- 不要绕过 `app/access/access-control.ts` 自己散落地写页面访问限制
+- 不要继续参考旧的 `contract.ts` 或 `routes/*.route.ts` 模式
 
 ## 收尾检查
 
-完成代码后，再做一次类型安全自检：
+真正改代码前，先判断这次任务是否还要同步这些层：
 
-- 搜索是否残留 `any` 或 `as any`
-- 检查导出类型名是否表达业务语义
-- 检查 route / service / repository 的返回值是否明确
-- 检查动态数据是否经过 schema parse 或显式收窄
+- `packages/nexus`
+- `packages/console`
+- `packages/nexus/src/public/*`
+- `/openapi`
+- `docs`
+- Nexus smoke test
 
-如果出现“先写 `any`，后面再改”的冲动，直接停下来补类型，不要把这个债留给后续修改。
+完成后至少做这些检查：
 
-前端收尾时，再额外检查：
+- `bun run format`
+- `bun run lint`
+- `bun run type-check`
 
-- 新页面是否已在正确的路由分组下
-- 导航、TabBar、面包屑标题是否一致
-- `zh / en` 文案是否补齐
-- 是否误把权限判断写进了菜单或前端路由
-- 是否复用了现有主题语义类，而不是硬编码颜色
-- 登录后刷新、退出登录、移动端菜单等行为是否没有回退
+如果动了接口、认证、权限、OpenAPI、Eden 或公开类型，再补：
 
-## 模板与清单
+- `bun run --filter @xdd-zone/nexus test`
 
-- 创建 `nexus` 新模块或新接口时，打开 `references/patterns.md`，按其中的骨架与检查清单生成。
-- 创建或修改 `console` 后台页面时，打开 `references/console.md`，按其中的路由、导航、auth、布局、主题和验证清单生成。
+## 参考文件
+
+- 会话启动与任务定位：`references/startup.md`
+- Nexus 代码骨架与检查清单：`references/patterns.md`
+- Console 入口、路由、导航、认证和布局参考：`references/console.md`

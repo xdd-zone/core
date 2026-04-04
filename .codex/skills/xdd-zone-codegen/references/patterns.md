@@ -1,52 +1,92 @@
-# XDD Zone 代码骨架
+# XDD Zone Nexus 代码参考
 
-这个文件提供仓库内常见代码骨架与补漏清单。生成代码时，优先参考现有同类文件，再按这里的结构补齐。
+## 目录
 
-## 分层落点
+1. 当前后端结构
+2. 写模块时先看哪里
+3. 标准生成顺序
+4. route / model / service / repository 骨架
+5. `public/*` 导出约定
+6. 检查清单
 
-新增一个公开 API 时，通常涉及四层：
+## 当前后端结构
 
-1. `packages/nexus/src/modules/<domain>/<domain>.contract.ts`
-2. `packages/nexus/src/modules/<domain>/`
-3. `packages/nexus/src/routes/*.route.ts`
-4. `packages/nexus/openapi/openapi.json` 或相关导出
+当前 `packages/nexus/src/` 主要按下面几层组织：
 
-## 类型来源优先级
+```text
+src/
+├── app.ts
+├── server.ts
+├── modules/
+├── core/
+├── infra/
+├── public/
+├── shared/
+└── eden/
+```
 
-生成代码时，按下面顺序取类型：
+关键结论：
 
-1. contract / shared schema 推导类型
-2. Prisma 生成类型
-3. 现有基础泛型
-4. 新增语义化模块类型
+- `modules/*/index.ts` 直接定义模块路由
+- `model.ts` 统一放 body / query / params / response schema
+- `service.ts` 做业务编排
+- `repository.ts` 或 `*.repository.ts` 放 Prisma 查询
+- `public/*-types.ts` 给 Console 复用 HTTP 类型
+- `public/permissions.ts` 给 Console 复用权限常量和 helper
+- `shared/openapi` 统一放 `apiDetail(...)`
 
-不要跳过前两层直接写宽泛对象，更不要用 `any` 占位。
+不要继续参考旧的 `contract.ts`、`routes/*.route.ts`、`core/access-control` 结构。
 
-## 权限检查
+## 写模块时先看哪里
 
-写 route 之前，先判断当前需求是否已经落在现有权限设计里：
+最常用的现成实现：
 
-- 用户资料与后台用户管理，优先复用 `Permissions.USER.*`
-- 角色分配与移除，优先复用 `Permissions.USER_ROLE.*`
-- 用户权限读取，优先复用 `Permissions.USER_PERMISSION.*`
-- 角色列表读取，优先复用 `Permissions.ROLE.READ_ALL`
+- 用户模块：`packages/nexus/src/modules/user/`
+- RBAC 模块：`packages/nexus/src/modules/rbac/`
+- 认证模块：`packages/nexus/src/modules/auth/`
 
-不要默认新增 `Permissions.EXAMPLE.*` 或新建动态权限管理接口。
+权限与认证：
 
-## contract 骨架
+- `packages/nexus/src/core/security/plugins/`
+- `packages/nexus/src/core/security/auth/`
+- `packages/nexus/src/core/security/permissions/`
+
+公开导出：
+
+- `packages/nexus/src/public/auth-types.ts`
+- `packages/nexus/src/public/user-types.ts`
+- `packages/nexus/src/public/rbac-types.ts`
+- `packages/nexus/src/public/permissions.ts`
+- `packages/nexus/src/public/eden.ts`
+
+## 标准生成顺序
+
+新增或修改接口时，默认按下面顺序：
+
+1. 改 `model.ts`
+2. 改 `service.ts / repository.ts`
+3. 改模块 `index.ts`
+4. 按需补 `packages/nexus/src/public/*-types.ts`
+5. 回归 `/openapi`、Eden 和测试
+
+如果只是内部能力，不要为了形式额外补一层调用方包装。
+
+## route / model / service / repository 骨架
+
+### model.ts
 
 ```ts
 import { z } from 'zod'
+
+import { createPaginatedListSchema, PaginationQuerySchema } from '@nexus/shared/schema'
 
 export const ExampleIdParamsSchema = z.object({
   id: z.string().min(1, 'ID 不能为空'),
 })
 
-export type ExampleIdParams = z.infer<typeof ExampleIdParamsSchema>
-```
-
-```ts
-import { createPaginatedListSchema } from '@nexus/shared/schema'
+export const ExampleQuerySchema = PaginationQuerySchema.extend({
+  keyword: z.string().trim().optional(),
+})
 
 export const ExampleSchema = z.object({
   id: z.string(),
@@ -55,164 +95,166 @@ export const ExampleSchema = z.object({
 
 export const ExampleListSchema = createPaginatedListSchema(ExampleSchema)
 
-export type ExampleList = typeof ExampleListSchema._output
+export type ExampleIdParams = z.infer<typeof ExampleIdParamsSchema>
+export type ExampleQuery = z.infer<typeof ExampleQuerySchema>
+export type Example = z.infer<typeof ExampleSchema>
+export type ExampleList = z.infer<typeof ExampleListSchema>
 ```
 
-导出时别漏掉对应 `index.ts`。
+规则：
 
-## route 骨架
+- 先用 schema 把 body / query / params / response 定义清楚
+- route 复用的 HTTP 类型优先直接从 schema 推导
+- 真正动态的数据先用 `unknown`，再 parse 或收窄
+
+### index.ts
 
 ```ts
-import { Elysia } from 'elysia'
-import { assertAuthenticated, authPlugin, permissionPlugin, Permissions } from '@nexus/core/access-control'
-import * as Schemas from '@nexus/modules/example'
-import { ExampleService } from '@nexus/modules/example'
+import { accessPlugin, Permissions } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
+import { Elysia } from 'elysia'
 
-export const exampleRoutes = new Elysia({
+import { ExampleIdParamsSchema, ExampleListSchema, ExampleQuerySchema } from './model'
+import { ExampleService } from './service'
+
+export const exampleModule = new Elysia({
+  name: 'example-module',
   prefix: '/example',
   tags: ['Example'],
 })
-  .use(authPlugin)
-  .use(permissionPlugin)
+  .use(accessPlugin)
   .get('/', async ({ query }) => await ExampleService.list(query), {
     permission: Permissions.USER.READ_ALL,
-    query: Schemas.ExampleListQuerySchema,
-    response: Schemas.ExampleListSchema,
+    query: ExampleQuerySchema,
+    response: ExampleListSchema,
     detail: apiDetail({
       summary: '获取示例列表',
-      response: Schemas.ExampleListSchema,
+      response: ExampleListSchema,
       errors: [400, 401, 403],
+    }),
+  })
+  .get('/:id', async ({ params }) => await ExampleService.findById(params.id), {
+    permission: Permissions.USER.READ_ALL,
+    params: ExampleIdParamsSchema,
+    response: ExampleListSchema,
+    detail: apiDetail({
+      summary: '获取示例详情',
+      response: ExampleListSchema,
+      errors: [401, 403, 404],
     }),
   })
 ```
 
-如果是当前用户资料类接口，优先使用 `me`，不要把 `own` 当成通用资源语义：
+规则：
+
+- `index.ts` 只保留 HTTP 结构、鉴权声明和 service 调用
+- 只要求登录但不做权限判断时，优先 `authPlugin + auth: 'required'`
+- 需要权限、`own`、`me` 时，优先 `accessPlugin`
+- `own` 只用于用户自己的资料场景
+- 删除类接口返回 `204`
+
+### service.ts
 
 ```ts
-.get('/me', async ({ auth }) => {
-  assertAuthenticated(auth)
+import type { Example, ExampleList, ExampleQuery } from './model'
 
-  return await ExampleService.getProfile(auth.user.id)
-}, {
-  auth: 'required',
-  me: Permissions.USER.READ_OWN,
-  response: Schemas.ExampleSchema,
-  detail: apiDetail({
-    summary: '获取当前用户资料',
-    response: Schemas.ExampleSchema,
-    errors: [401, 403, 404],
-  }),
-})
-```
-
-如果当前仓库已经存在匹配权限，就直接复用；只有设计和实现都明确要求扩展时，才修改权限常量、seed 和相关文档。
-
-路由文件只保留 HTTP 结构，不把复杂业务塞进 handler。
-
-## service 骨架
-
-```ts
-import type { ExampleList, ExampleListQuery } from './example.contract'
-import { ExampleListSchema } from './example.contract'
-import { ExampleRepository } from './example.repository'
+import { ExampleRepository } from './repository'
 
 /**
- * 示例服务类
+ * 示例服务。
  */
 export class ExampleService {
   /**
-   * 获取示例列表
+   * 获取示例列表。
    */
-  static async list(query: ExampleListQuery): Promise<ExampleList> {
-    return ExampleListSchema.parse(await ExampleRepository.paginate({}, query))
+  static async list(query: ExampleQuery): Promise<ExampleList> {
+    return await ExampleRepository.list(query)
+  }
+
+  /**
+   * 获取示例详情。
+   */
+  static async findById(id: string): Promise<Example> {
+    return await ExampleRepository.findById(id)
   }
 }
 ```
 
-service 负责业务编排、参数转换和调用 repository。
+规则：
 
-## repository 骨架
+- service 负责业务编排、校验和规则判断
+- 方法签名写清楚入参与返回值
+- 不要把 Prisma 查询直接塞进 route
+
+### repository.ts
 
 ```ts
 import type { Prisma } from '@nexus/infra/database/prisma/generated'
+import type { Example, ExampleList, ExampleQuery } from './model'
 
-import type { ExampleListQuery } from './example.contract'
-import type { ExampleBaseData } from './example.types'
-import type { PaginatedList } from '@nexus/infra/database'
-import { PrismaService } from '@nexus/infra/database/prisma.service'
+import { prisma } from '@nexus/infra/database'
 
 export class ExampleRepository {
-  static async paginate(
-    where: Prisma.ExampleWhereInput,
-    query: ExampleListQuery,
-  ): Promise<PaginatedList<ExampleBaseData>> {
-    return await PrismaService.paginate<ExampleBaseData>('example', where, query, {
-      orderBy: { createdAt: 'desc' },
-    })
+  static async list(query: ExampleQuery): Promise<ExampleList> {
+    const where: Prisma.UserWhereInput = {}
+
+    return {
+      items: [],
+      page: query.page,
+      pageSize: query.pageSize,
+      total: 0,
+      totalPages: 0,
+    }
+  }
+
+  static async findById(id: string): Promise<Example> {
+    return {
+      id,
+      name: 'example',
+    }
   }
 }
 ```
 
-如果只是轻量封装，也保持 repository 独立，避免 route / service 直接写 Prisma。
-即使是示例骨架，也不要用 `object`、`any` 这类无意义类型占位。
+规则：
 
-## 常见坏味道与替代写法
+- repository 负责 Prisma 查询、选择字段和持久化细节
+- 优先复用 Prisma 生成类型
+- 禁止 `any`、`as any`、`Record<string, any>`
 
-坏味道：
+## `public/*` 导出约定
 
-```ts
-async function getDetail(id: string): Promise<any> {}
-```
+如果 Console 页面要直接复用明确的 HTTP 类型，再按需补这些文件：
 
-替代：
+- `packages/nexus/src/public/auth-types.ts`
+- `packages/nexus/src/public/user-types.ts`
+- `packages/nexus/src/public/rbac-types.ts`
 
-```ts
-async function getDetail(id: string): Promise<ExampleDetail | null> {}
-```
+如果只是 Treaty 调用，一般不需要额外补导出。
 
-坏味道：
+权限运行时工具继续放：
 
-```ts
-const payload = body as any
-```
+- `packages/nexus/src/public/permissions.ts`
 
-替代：
+不要把 `permissions` 和 `public/index.ts` 混成一个入口后再到处二次转发。
 
-```ts
-const payload = CreateExampleBodySchema.parse(body)
-```
+## 检查清单
 
-坏味道：
-
-```ts
-type Query = Record<string, any>
-```
-
-替代：
-
-```ts
-type Query = ExampleListQuery
-```
-
-如果确实拿到外部动态数据，先定义为 `unknown`，再显式收窄。
-
-## 生成完成后的检查清单
-
-- contract 是否先于 route 更新
-- `index.ts` 导出是否补齐
-- route 是否使用正确 plugin 与声明式权限字段
-- 是否优先复用了现有固定权限和用户资料相关约定
-- OpenAPI 是否统一用 `apiDetail(...)`
+- `model.ts` 是否先于 route 更新
+- route 是否继续使用 `apiDetail(...)`
+- route 是否声明了正确的 `auth / permission / own / me`
+- 是否优先复用了现有固定角色和现有权限常量
+- service / repository 是否职责清楚
+- 是否需要同步 `packages/nexus/src/public/*-types.ts`
 - 成功响应是否直接返回业务数据
-- 删除接口是否返回 `204`
-- 是否补了中文 JSDoc
+- 删除类接口是否返回 `204`
 - 是否残留 `any`、`as any`、`Promise<any>`、`Record<string, any>`
-- 类型名是否表达业务语义，而不是 `Data`、`Result` 这类空泛命名
-- 是否复用了现有模块而不是另起一套风格
+- 是否需要同步 `/openapi`、Eden smoke、文档
 
-推荐在收尾时执行：
+推荐收尾命令：
 
 ```bash
-rg -n '\\bany\\b|as any\\b' packages
+rg -n '\\bany\\b|as any\\b' packages/nexus
+bun run --filter @xdd-zone/nexus type-check
+bun run --filter @xdd-zone/nexus test
 ```
