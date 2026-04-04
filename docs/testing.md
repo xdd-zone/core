@@ -52,13 +52,13 @@ bun run --filter @xdd-zone/nexus test
 
 ## 本地数据库
 
-仓库提供统一的本地数据库运行时：
+仓库提供统一的本地数据库 CLI：
 
 ```bash
-bun run db:local:up
-bun run db:local:down
-bun run db:local:reset
-bun run db:local:prepare
+bun run db up
+bun run db down
+bun run db reset
+bun run db prepare
 ```
 
 默认本地数据库信息：
@@ -72,7 +72,7 @@ bun run db:local:prepare
 推荐先执行：
 
 ```bash
-bun run db:local:prepare
+bun run db prepare
 ```
 
 然后再执行 `packages/nexus` 的测试或手动 Prisma 操作。

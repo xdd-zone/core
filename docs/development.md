@@ -12,7 +12,7 @@
 ```bash
 bun install
 bun run prisma:generate
-bun run db:local:prepare
+bun run db prepare
 ```
 
 ## 标准开发动作

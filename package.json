@@ -43,14 +43,7 @@
     "prisma:reset": "bun run --filter @xdd-zone/nexus prisma:reset",
     "prisma:push": "bun run --filter @xdd-zone/nexus prisma:push",
     "seed": "bun run --filter @xdd-zone/nexus seed",
-    "db:local": "bun run scripts/db/local.ts",
-    "db:local:up": "bun run scripts/db/local.ts up",
-    "db:local:down": "bun run scripts/db/local.ts down",
-    "db:local:reset": "bun run scripts/db/local.ts reset",
-    "db:local:status": "bun run scripts/db/local.ts status",
-    "db:local:url": "bun run scripts/db/local.ts url",
-    "db:local:logs": "bun run scripts/db/local.ts logs",
-    "db:local:prepare": "bun run scripts/db/local.ts prepare"
+    "db": "bun run scripts/db/local.ts"
   },
   "devDependencies": {
     "eslint": "^9.39.2",

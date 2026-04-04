@@ -49,8 +49,8 @@ bun run prisma:generate
 
 1. `.env` 中的 `DATABASE_URL`
 2. Docker 是否正常运行
-3. `bun run db:local:status` 是否显示数据库健康
-4. 首次准备环境时是否已经执行 `bun run db:local:prepare`
+3. `bun run db status` 是否显示数据库健康
+4. 首次准备环境时是否已经执行 `bun run db prepare`
 
 ## Better Auth session 不生效怎么办？
 

@@ -128,7 +128,7 @@ auth:
 
 ```bash
 bun run prisma:generate
-bun run db:local:prepare
+bun run db prepare
 ```
 
 ### 启动开发服务
@@ -166,13 +166,13 @@ bun run format:check
 bun run type-check
 
 # db
-bun run db:local:up
-bun run db:local:down
-bun run db:local:reset
-bun run db:local:status
-bun run db:local:url
-bun run db:local:logs
-bun run db:local:prepare
+bun run db up
+bun run db down
+bun run db reset
+bun run db status
+bun run db url
+bun run db logs
+bun run db prepare
 bun run prisma:generate
 bun run prisma:migrate
 bun run prisma:push
