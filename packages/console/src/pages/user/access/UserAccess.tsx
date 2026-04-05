@@ -1,5 +1,12 @@
 import { PermissionSummaryList } from '@console/components/business'
-import { RbacRequestError, useAssignRoleMutation, useRemoveRoleMutation, useRoleListQuery, useUserPermissionsQuery, useUserRolesQuery } from '@console/modules/rbac'
+import {
+  RbacRequestError,
+  useAssignRoleMutation,
+  useRemoveRoleMutation,
+  useRoleListQuery,
+  useUserPermissionsQuery,
+  useUserRolesQuery,
+} from '@console/modules/rbac'
 import { useUserDetailQuery } from '@console/modules/user'
 
 import { useNavigate, useParams } from '@tanstack/react-router'
@@ -27,7 +34,10 @@ export function UserAccess() {
   const assignRoleMutation = useAssignRoleMutation()
   const removeRoleMutation = useRemoveRoleMutation()
 
-  const assignedRoleIds = useMemo(() => new Set((userRolesQuery.data ?? []).map((role) => role.roleId)), [userRolesQuery.data])
+  const assignedRoleIds = useMemo(
+    () => new Set((userRolesQuery.data ?? []).map((role) => role.roleId)),
+    [userRolesQuery.data],
+  )
 
   const availableRoleOptions = useMemo(
     () =>
@@ -97,11 +107,16 @@ export function UserAccess() {
       <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
         <div className="flex flex-col gap-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Button icon={<ArrowLeft className="size-4" />} onClick={() => void navigate({ to: '/users/$id', params: { id } })}>
+            <Button
+              icon={<ArrowLeft className="size-4" />}
+              onClick={() => void navigate({ to: '/users/$id', params: { id } })}
+            >
               {t('common.back')}
             </Button>
             <Space>
-              <Button onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>{t('common.edit')}</Button>
+              <Button onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>
+                {t('common.edit')}
+              </Button>
             </Space>
           </div>
 
@@ -123,8 +138,13 @@ export function UserAccess() {
                 <Tag>{user.email || '-'}</Tag>
               </div>
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-fg-muted">
-                <span>{t('user.columns.lastLogin')} {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}</span>
-                <span>{t('user.columns.createdAt')} {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}</span>
+                <span>
+                  {t('user.columns.lastLogin')}{' '}
+                  {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
+                </span>
+                <span>
+                  {t('user.columns.createdAt')} {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}
+                </span>
               </div>
             </div>
           </div>
@@ -157,47 +177,58 @@ export function UserAccess() {
             </Button>
           </div>
 
-          {roles.length > 0
-            ? (
-                <div className="flex flex-col divide-y divide-border-subtle">
-                  {roles.map((role) => (
-                    <div key={role.id} className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0">
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium">{role.roleDisplayName || role.roleName}</div>
-                        <div className="mt-1 flex flex-col gap-1 text-sm text-fg-muted">
-                          <span>{role.roleName}</span>
-                          <span>{t('access.manage.assignedAt', { value: dayjs(role.assignedAt).format('YYYY-MM-DD HH:mm') })}</span>
-                        </div>
-                      </div>
-                      <Popconfirm
-                        title={t('access.manage.removeConfirmTitle')}
-                        description={t('access.manage.removeConfirmDescription')}
-                        okText={t('common.confirm')}
-                        cancelText={t('common.cancel')}
-                        onConfirm={() => void handleRemoveRole(role.roleId)}
-                      >
-                        <Button danger type="text" icon={<Trash2 className="size-4" />} loading={removeRoleMutation.isPending}>
-                          {t('access.manage.removeAction')}
-                        </Button>
-                      </Popconfirm>
+          {roles.length > 0 ? (
+            <div className="flex flex-col divide-y divide-border-subtle">
+              {roles.map((role) => (
+                <div key={role.id} className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">{role.roleDisplayName || role.roleName}</div>
+                    <div className="mt-1 flex flex-col gap-1 text-sm text-fg-muted">
+                      <span>{role.roleName}</span>
+                      <span>
+                        {t('access.manage.assignedAt', { value: dayjs(role.assignedAt).format('YYYY-MM-DD HH:mm') })}
+                      </span>
                     </div>
-                  ))}
+                  </div>
+                  <Popconfirm
+                    title={t('access.manage.removeConfirmTitle')}
+                    description={t('access.manage.removeConfirmDescription')}
+                    okText={t('common.confirm')}
+                    cancelText={t('common.cancel')}
+                    onConfirm={() => void handleRemoveRole(role.roleId)}
+                  >
+                    <Button
+                      danger
+                      type="text"
+                      icon={<Trash2 className="size-4" />}
+                      loading={removeRoleMutation.isPending}
+                    >
+                      {t('access.manage.removeAction')}
+                    </Button>
+                  </Popconfirm>
                 </div>
-              )
-            : <Empty description={t('access.empty.roles')} image={Empty.PRESENTED_IMAGE_SIMPLE} />}
+              ))}
+            </div>
+          ) : (
+            <Empty description={t('access.empty.roles')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          )}
         </Card>
 
         <Card
           title={t('access.manage.permissionsTitle')}
           extra={
-            <span className="text-fg-muted text-sm">{t('access.manage.permissionCount', { count: permissions.length })}</span>
+            <span className="text-fg-muted text-sm">
+              {t('access.manage.permissionCount', { count: permissions.length })}
+            </span>
           }
         >
           <p className="mb-4 text-sm text-fg-muted">{t('access.manage.permissionsDescription')}</p>
 
-          {permissions.length > 0
-            ? <PermissionSummaryList permissions={permissions} />
-            : <Empty description={t('access.empty.permissions')} image={Empty.PRESENTED_IMAGE_SIMPLE} />}
+          {permissions.length > 0 ? (
+            <PermissionSummaryList permissions={permissions} />
+          ) : (
+            <Empty description={t('access.empty.permissions')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          )}
         </Card>
       </div>
     </div>

@@ -201,12 +201,7 @@ export class AuthApiService {
       const trustedBrowserOrigin =
         resolveTrustedBrowserOrigin(request) ?? resolveTrustedCallbackOrigin(request, requestedCallbackURL)
       if (trustedBrowserOrigin) {
-        return createLoginRedirectUrl(
-          trustedBrowserOrigin,
-          redirectPath,
-          resolveSocialLoginErrorCode(error),
-          'github',
-        )
+        return createLoginRedirectUrl(trustedBrowserOrigin, redirectPath, resolveSocialLoginErrorCode(error), 'github')
       }
 
       throw error

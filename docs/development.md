@@ -15,6 +15,23 @@ bun run prisma:generate
 bun run db prepare
 ```
 
+## 数据库约定
+
+当前项目处于早期阶段，Prisma 暂不维护迁移文件，`.gitignore` 已忽略 `packages/nexus/src/infra/database/prisma/migrations`。
+
+数据库结构以当前 Prisma schema 为准。修改 schema 后，如果可以直接清空数据，默认执行：
+
+```bash
+bun run --filter @xdd-zone/nexus prisma:push:reset
+bun run seed
+```
+
+如果只想同步 schema，不清空当前数据，使用：
+
+```bash
+bun run --filter @xdd-zone/nexus prisma:push
+```
+
 ## 标准开发动作
 
 新增或修改公共 API 时，默认按下面顺序推进：

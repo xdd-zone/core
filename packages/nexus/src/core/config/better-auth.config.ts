@@ -29,7 +29,11 @@ function warnWeakBetterAuthSecret(secret: string, env: RuntimeEnv) {
   )
 }
 
-export function createBetterAuthConfig(env: RuntimeEnv, yamlConfig: YamlConfig, authConfig: AuthConfig): BetterAuthConfig {
+export function createBetterAuthConfig(
+  env: RuntimeEnv,
+  yamlConfig: YamlConfig,
+  authConfig: AuthConfig,
+): BetterAuthConfig {
   const secret = parseRequiredEnv(z.string().min(1), process.env.BETTER_AUTH_SECRET)
   const url = parseRequiredEnv(z.string().url(), process.env.BETTER_AUTH_URL)
   const trustedOrigins = parseOptionalEnv(z.array(z.string().url()), yamlConfig.trustedOrigins) ?? [
@@ -37,13 +41,12 @@ export function createBetterAuthConfig(env: RuntimeEnv, yamlConfig: YamlConfig, 
     'http://localhost:2233',
     'http://localhost:7788',
   ]
-  const github
-    = authConfig.methods.github.enabled
-      ? {
-          clientId: parseRequiredEnv(z.string().min(1), process.env.GITHUB_CLIENT_ID),
-          clientSecret: parseRequiredEnv(z.string().min(1), process.env.GITHUB_CLIENT_SECRET),
-        }
-      : undefined
+  const github = authConfig.methods.github.enabled
+    ? {
+        clientId: parseRequiredEnv(z.string().min(1), process.env.GITHUB_CLIENT_ID),
+        clientSecret: parseRequiredEnv(z.string().min(1), process.env.GITHUB_CLIENT_SECRET),
+      }
+    : undefined
 
   warnWeakBetterAuthSecret(secret, env)
 

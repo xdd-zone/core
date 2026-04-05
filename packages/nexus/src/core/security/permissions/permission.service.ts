@@ -6,7 +6,9 @@ import { Permissions, SYSTEM_PERMISSION_DEFINITIONS, SYSTEM_PERMISSION_KEYS } fr
 const permissionCache = new Map<string, { context: PermissionContext; expiresAt: number }>()
 const CACHE_TTL = 5 * 60 * 1000
 const systemPermissionOrderMap = new Map(SYSTEM_PERMISSION_KEYS.map((permission, index) => [permission, index]))
-const systemPermissionDefinitionMap = new Map(SYSTEM_PERMISSION_DEFINITIONS.map((definition) => [definition.key, definition]))
+const systemPermissionDefinitionMap = new Map(
+  SYSTEM_PERMISSION_DEFINITIONS.map((definition) => [definition.key, definition]),
+)
 
 /**
  * 权限服务。

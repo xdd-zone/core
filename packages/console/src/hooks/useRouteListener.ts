@@ -24,7 +24,7 @@ export function useRouteListener() {
 
     const currentPath = currentMatch.pathname
 
-     if (closingPath && currentPath !== closingPath) {
+    if (closingPath && currentPath !== closingPath) {
       clearClosingPath()
     }
 

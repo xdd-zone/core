@@ -103,8 +103,12 @@ export function UserEdit() {
                   </Tag>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-3 text-sm text-fg-muted">
-                  <span>{t('user.columns.createdAt')} {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}</span>
-                  <span>{t('user.columns.updatedAt')} {dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}</span>
+                  <span>
+                    {t('user.columns.createdAt')} {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}
+                  </span>
+                  <span>
+                    {t('user.columns.updatedAt')} {dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}
+                  </span>
                 </div>
               </div>
             </div>
@@ -149,9 +153,7 @@ export function UserEdit() {
               <Button type="primary" htmlType="submit" loading={updateMutation.isPending}>
                 {t('common.save')}
               </Button>
-              <Button onClick={() => void navigate({ to: '/users/$id', params: { id } })}>
-                {t('common.cancel')}
-              </Button>
+              <Button onClick={() => void navigate({ to: '/users/$id', params: { id } })}>{t('common.cancel')}</Button>
             </Space>
           </Form.Item>
         </Form>

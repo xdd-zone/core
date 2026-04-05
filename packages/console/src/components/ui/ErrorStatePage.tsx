@@ -48,9 +48,7 @@ export function ErrorStatePage({
             <p className="text-fg-muted mt-2 text-sm leading-7">{description}</p>
 
             {note ? (
-              <div className="mt-4 border-l border-border-subtle/80 pl-4 text-sm leading-6 text-fg-muted">
-                {note}
-              </div>
+              <div className="mt-4 border-l border-border-subtle/80 pl-4 text-sm leading-6 text-fg-muted">{note}</div>
             ) : null}
           </div>
         </div>

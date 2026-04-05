@@ -1,0 +1,16 @@
+model SiteConfig {
+  id                    String   @id @default("default")
+  title                 String
+  subtitle              String?
+  description           String?
+  logo                  String?
+  favicon               String?
+  footerText            String?  @map("footer_text")
+  socialLinks           Json?    @map("social_links")
+  defaultSeoTitle       String?  @map("default_seo_title")
+  defaultSeoDescription String?  @map("default_seo_description")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("site_configs")
+}

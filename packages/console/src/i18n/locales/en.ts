@@ -331,7 +331,8 @@ export default {
     title: '{{name}}, Console Overview',
     visibility: {
       available: 'Available',
-      description: 'This section shows which platform data is visible right now and where this account can continue next.',
+      description:
+        'This section shows which platform data is visible right now and where this account can continue next.',
       items: {
         manageScope: 'Current scope',
         nextStep: 'Suggested next step',

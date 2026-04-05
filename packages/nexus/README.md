@@ -106,6 +106,23 @@ auth:
 
 如果当前环境关闭 GitHub 登录，启动时不要求 `GITHUB_CLIENT_ID` 和 `GITHUB_CLIENT_SECRET`。
 
+数据库约定：
+
+当前项目处于早期阶段，Prisma 暂不维护迁移文件，数据库结构以当前 schema 为准。
+
+修改 schema 后，如果可以直接清空数据，默认执行：
+
+```bash
+bun run --filter @xdd-zone/nexus prisma:push:reset
+bun run seed
+```
+
+如果只想同步 schema，不清空当前数据，使用：
+
+```bash
+bun run --filter @xdd-zone/nexus prisma:push
+```
+
 ```bash
 bun run dev
 ```
@@ -123,8 +140,8 @@ bun run dev
 bun run build
 bun run type-check
 bun run prisma:generate
-bun run prisma:migrate
 bun run prisma:push
+bun run prisma:push:reset
 bun run prisma:reset
 bun run seed
 ```

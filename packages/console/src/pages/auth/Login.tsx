@@ -11,7 +11,14 @@ import { AiFillGithub, AiFillWechat, AiOutlineGoogle } from 'react-icons/ai'
 
 function resolveSocialLoginError(
   error?: string,
-): 'auth_method_disabled' | 'auth_sign_up_disabled' | 'email_not_found' | 'github_sign_in_failed' | 'invalid_callback_url' | 'unknown' | null {
+):
+  | 'auth_method_disabled'
+  | 'auth_sign_up_disabled'
+  | 'email_not_found'
+  | 'github_sign_in_failed'
+  | 'invalid_callback_url'
+  | 'unknown'
+  | null {
   if (!error) {
     return null
   }
@@ -132,25 +139,29 @@ export function Login() {
             <div className="space-y-2">
               <p className="text-sm leading-6">
                 {socialLoginError === 'auth_method_disabled'
-                  ? t('auth.socialLoginErrorMethodDisabled', { method: socialLoginMethodLabel ?? t('auth.githubLogin') })
+                  ? t('auth.socialLoginErrorMethodDisabled', {
+                      method: socialLoginMethodLabel ?? t('auth.githubLogin'),
+                    })
                   : socialLoginError === 'auth_sign_up_disabled'
-                    ? t('auth.socialLoginErrorSignUpDisabled', { method: socialLoginMethodLabel ?? t('auth.githubLogin') })
-                  : socialLoginError === 'email_not_found'
-                  ? t('auth.socialLoginErrorEmailNotFound')
-                  : socialLoginError === 'invalid_callback_url'
-                    ? t('auth.socialLoginErrorInvalidCallback')
-                    : t('auth.socialLoginErrorFallback')}
+                    ? t('auth.socialLoginErrorSignUpDisabled', {
+                        method: socialLoginMethodLabel ?? t('auth.githubLogin'),
+                      })
+                    : socialLoginError === 'email_not_found'
+                      ? t('auth.socialLoginErrorEmailNotFound')
+                      : socialLoginError === 'invalid_callback_url'
+                        ? t('auth.socialLoginErrorInvalidCallback')
+                        : t('auth.socialLoginErrorFallback')}
               </p>
               <p className="text-fg-muted text-xs leading-6">
                 {socialLoginError === 'auth_method_disabled'
                   ? t('auth.socialLoginDisabledHint')
                   : socialLoginError === 'auth_sign_up_disabled'
                     ? t('auth.socialLoginSignUpDisabledHint')
-                  : socialLoginError === 'email_not_found'
-                  ? t('auth.socialLoginAutoRegisterHint')
-                  : socialLoginError === 'invalid_callback_url'
-                    ? t('auth.socialLoginErrorConfigHint')
-                    : t('auth.socialLoginRetryHint')}
+                    : socialLoginError === 'email_not_found'
+                      ? t('auth.socialLoginAutoRegisterHint')
+                      : socialLoginError === 'invalid_callback_url'
+                        ? t('auth.socialLoginErrorConfigHint')
+                        : t('auth.socialLoginRetryHint')}
               </p>
             </div>
           }

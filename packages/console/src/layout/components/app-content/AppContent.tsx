@@ -12,9 +12,7 @@ export function AppContent() {
   })
   return (
     <main className="guide-content h-full flex-1 overflow-auto">
-      <div className="guide-content-inner text-fg h-full min-h-full">
-        {isNavigating ? <Loading /> : <Outlet />}
-      </div>
+      <div className="guide-content-inner text-fg h-full min-h-full">{isNavigating ? <Loading /> : <Outlet />}</div>
     </main>
   )
 }

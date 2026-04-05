@@ -1,0 +1,23 @@
+model Comment {
+  id          String        @id @default(cuid())
+  postId      String        @map("post_id")
+  authorName  String        @map("author_name")
+  authorEmail String?       @map("author_email")
+  content     String
+  status      CommentStatus @default(PENDING)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([status])
+  @@map("comments")
+}
+
+enum CommentStatus {
+  PENDING  @map("pending")
+  APPROVED @map("approved")
+  HIDDEN   @map("hidden")
+  DELETED  @map("deleted")
+}

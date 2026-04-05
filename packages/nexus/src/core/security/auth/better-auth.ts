@@ -4,8 +4,8 @@ import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { assignDefaultRoleToUser } from './hooks/assign-default-role.hook'
 
-const socialProviders
-  = AUTH_CONFIG.methods.github.enabled && BETTER_AUTH_CONFIG.github
+const socialProviders =
+  AUTH_CONFIG.methods.github.enabled && BETTER_AUTH_CONFIG.github
     ? {
         github: {
           clientId: BETTER_AUTH_CONFIG.github.clientId,

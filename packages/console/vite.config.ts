@@ -127,6 +127,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@console': path.resolve(__dirname, './src'),
+        '@nexus': path.resolve(__dirname, '../nexus/src'),
       },
     },
     server: {

@@ -63,11 +63,7 @@ function isPathKeyMatched(key: string, currentPath: string): boolean {
   return currentPath.startsWith(`${key}/`)
 }
 
-function findMatchedMenuResult(
-  items: MenuItem[],
-  currentPath: string,
-  ancestorKeys: string[] = [],
-): MatchedMenuResult {
+function findMatchedMenuResult(items: MenuItem[], currentPath: string, ancestorKeys: string[] = []): MatchedMenuResult {
   let matchedResult: MatchedMenuResult = {
     openKeys: [],
     selectedKey: null,

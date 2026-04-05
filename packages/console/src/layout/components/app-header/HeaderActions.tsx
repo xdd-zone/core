@@ -64,7 +64,9 @@ export function HeaderActions() {
         </div>
       </div>
 
-      <ResponsiveTooltip title={isActionsExpanded ? t('tooltip.collapseHeaderActions') : t('tooltip.expandHeaderActions')}>
+      <ResponsiveTooltip
+        title={isActionsExpanded ? t('tooltip.collapseHeaderActions') : t('tooltip.expandHeaderActions')}
+      >
         <button
           type="button"
           aria-label={isActionsExpanded ? t('tooltip.collapseHeaderActions') : t('tooltip.expandHeaderActions')}

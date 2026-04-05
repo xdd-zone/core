@@ -179,7 +179,12 @@ export function MyProfile() {
               </div>
 
               <Form.Item label={t('user.columns.introduce')} name="introduce">
-                <Input.TextArea rows={4} maxLength={500} placeholder={t('profile.form.introducePlaceholder')} showCount />
+                <Input.TextArea
+                  rows={4}
+                  maxLength={500}
+                  placeholder={t('profile.form.introducePlaceholder')}
+                  showCount
+                />
               </Form.Item>
 
               <Form.Item className="mb-0">

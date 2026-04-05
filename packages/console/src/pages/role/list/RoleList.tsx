@@ -87,7 +87,9 @@ export function RoleList() {
 
       <Card
         title={t('role.list.resultsTitle')}
-        extra={<span className="text-fg-muted text-sm">{t('common.total', { count: roleListQuery.data?.total ?? 0 })}</span>}
+        extra={
+          <span className="text-fg-muted text-sm">{t('common.total', { count: roleListQuery.data?.total ?? 0 })}</span>
+        }
       >
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <Input

@@ -126,9 +126,26 @@ auth:
 
 ### 准备数据库
 
+当前项目处于早期阶段，Prisma 暂不维护迁移文件，数据库结构以当前 schema 为准。
+
+首次准备本地数据库时，执行：
+
 ```bash
 bun run prisma:generate
 bun run db prepare
+```
+
+修改 schema 后，如果可以直接清空数据，默认执行：
+
+```bash
+bun run --filter @xdd-zone/nexus prisma:push:reset
+bun run seed
+```
+
+如果只想同步 schema，不清空当前数据，使用：
+
+```bash
+bun run --filter @xdd-zone/nexus prisma:push
 ```
 
 ### 启动开发服务
@@ -174,8 +191,8 @@ bun run db url
 bun run db logs
 bun run db prepare
 bun run prisma:generate
-bun run prisma:migrate
 bun run prisma:push
+bun run prisma:push:reset
 bun run prisma:reset
 bun run seed
 ```

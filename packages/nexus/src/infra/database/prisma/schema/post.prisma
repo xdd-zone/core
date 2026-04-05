@@ -1,0 +1,24 @@
+model Post {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  markdown    String
+  excerpt     String?
+  coverImage  String?       @map("cover_image")
+  status      ContentStatus @default(DRAFT)
+  category    String?
+  tags        String[]
+  publishedAt DateTime?     @map("published_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  comments    Comment[]
+
+  @@index([status])
+  @@index([category])
+  @@map("posts")
+}
+
+enum ContentStatus {
+  DRAFT     @map("draft")
+  PUBLISHED @map("published")
+}

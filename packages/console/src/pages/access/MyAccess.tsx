@@ -111,7 +111,9 @@ export function MyAccess() {
 
                       <div className="text-fg-muted mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
                         <span>{role.name}</span>
-                        <span>{t('access.current.roleAssignedAt')} {dayjs(role.assignedAt).format('YYYY-MM-DD HH:mm')}</span>
+                        <span>
+                          {t('access.current.roleAssignedAt')} {dayjs(role.assignedAt).format('YYYY-MM-DD HH:mm')}
+                        </span>
                         <span>{t('access.current.rolePermissionCount', { count: role.permissions.length })}</span>
                       </div>
 
