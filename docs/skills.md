@@ -1,12 +1,8 @@
-# 项目 Skill
+# 常用技能
 
-仓库提供项目级 Skill，用于让 AI 快速建立当前项目上下文，先判断任务该看哪里、该补什么前置技能，再按 XDD Zone Core 的现行结构实现。
+当前仓库相关任务，优先使用 `xdd-zone-codegen` 先建立上下文，再根据任务类型继续调用对应技能。
 
-## xdd-zone-codegen（XDD Zone Starter）
-
-位置：
-
-`../.codex/skills/xdd-zone-codegen/SKILL.md`
+## xdd-zone-codegen
 
 适用场景：
 
@@ -54,10 +50,10 @@
 - [navigation.ts](../packages/console/src/app/navigation/navigation.ts)
 - [eden.ts](../packages/console/src/shared/api/eden.ts)
 
-## 维护建议
+## 使用提醒
 
-如果后续项目结构或风格发生变化，更新下面两处即可：
-
-- Skill 本体：`../.codex/skills/xdd-zone-codegen/`
-- 项目文档：`./index.md`、`./skills.md`
-- 项目说明：`../AGENTS.md`
+- 只写技能名，不在项目文档里维护本机 Skill 路径
+- 需要先判断任务落点时，优先调用 `xdd-zone-codegen`
+- 涉及说明性文案时，再继续调用 `write-xdd-docs`
+- 涉及 `packages/nexus` 时，再继续调用 `elysiajs`
+- 涉及 `packages/console` 界面开发时，再继续调用 `frontend-design`

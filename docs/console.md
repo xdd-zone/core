@@ -35,17 +35,17 @@
 
 `packages/console` 的界面设计规则统一写在：
 
-- [packages/console/.impeccable.md](../packages/console/.impeccable.md)
+- [packages/console/design-context.md](../packages/console/design-context.md)
 
 只要任务涉及 React 组件、页面、布局、导航或其他界面调整，开始开发前统一按下面顺序执行：
 
-1. 先读取 `packages/console/.impeccable.md`
+1. 先读取 `packages/console/design-context.md`
 2. 先调用 `frontend-design` 技能
 3. 再继续界面实现
 
 如果任务继续涉及布局节奏、说明文案、排版和界面收尾，再继续调用对应设计技能。
 
-执行时以 `packages/console/.impeccable.md` 中的当前规则为准，不跳过设计上下文直接决定页面风格。
+执行时以 `packages/console/design-context.md` 中的当前规则为准，不跳过设计上下文直接决定页面风格。
 
 ## 目录结构
 

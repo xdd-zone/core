@@ -124,6 +124,6 @@
 - [OAuth2/github.md](./OAuth2/github.md)：GitHub OAuth App 创建、参数获取和项目接入
 - [rbac.md](./rbac.md)：权限模型与声明式写法
 - [testing.md](./testing.md)：测试分层与回归命令
-- [skills.md](./skills.md)：项目级 Skill 与代码生成约定
+- [skills.md](./skills.md)：常用技能与代码生成约定
 - [theme.md](./theme.md)：主题系统与颜色命名
 - [faq.md](./faq.md)：常见问题

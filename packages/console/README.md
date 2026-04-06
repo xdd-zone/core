@@ -220,17 +220,17 @@ src/
 
 `packages/console` 的界面设计上下文统一放在：
 
-- `packages/console/.impeccable.md`
+- `packages/console/design-context.md`
 
 只要任务涉及 React 组件、页面、布局、导航、展示型业务组件或其他界面调整，开始开发前按下面顺序执行：
 
-1. 先读取 `packages/console/.impeccable.md`
+1. 先读取 `packages/console/design-context.md`
 2. 先调用 `frontend-design` 技能
 3. 再继续页面、组件和样式实现
 
 如果后续还需要继续调整布局、说明文案、排版或界面收尾，再继续调用对应设计技能。
 
-不要跳过 `packages/console/.impeccable.md` 直接开始写界面，也不要临时另起一套和当前后台不一致的风格。
+不要跳过 `packages/console/design-context.md` 直接开始写界面，也不要临时另起一套和当前后台不一致的风格。
 
 ### 共享工程配置
 
