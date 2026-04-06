@@ -231,7 +231,7 @@ bun run seed
 - `packages/nexus/src/shared/openapi`
   - `apiDetail(...)`
 - `packages/nexus/src/public`
-  - `auth-types`、`user-types`、`rbac-types`、`post-types`、`page-types`、`media-types`、`comment-types`、`site-config-types`
+  - `auth-types`、`user-types`、`rbac-types`、`post-types`、`media-types`、`comment-types`、`site-config-types`
   - `permissions`
 - `packages/nexus/src/eden`
   - Eden 类型与 smoke test
@@ -239,7 +239,7 @@ bun run seed
 前后端当前默认按下面方式协作：
 
 - Console 的 query / mutation 直接调用 `packages/console/src/shared/api/eden.ts` 中的 Treaty 客户端
-- Console 的 HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types`、`@xdd-zone/nexus/post-types`、`@xdd-zone/nexus/page-types`、`@xdd-zone/nexus/media-types`、`@xdd-zone/nexus/comment-types`、`@xdd-zone/nexus/site-config-types` 引入
+- Console 的 HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types`、`@xdd-zone/nexus/post-types`、`@xdd-zone/nexus/media-types`、`@xdd-zone/nexus/comment-types`、`@xdd-zone/nexus/site-config-types` 引入
 - Console 的权限常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
 - GitHub 登录继续通过浏览器跳转，地址由 `packages/console/src/modules/auth/auth.api.ts` 统一构造
 
@@ -293,16 +293,6 @@ RBAC：
 - `DELETE /api/post/:id`
 - `POST /api/post/:id/publish`
 - `POST /api/post/:id/unpublish`
-
-页面：
-
-- `GET /api/page`
-- `POST /api/page`
-- `GET /api/page/:id`
-- `PATCH /api/page/:id`
-- `DELETE /api/page/:id`
-- `POST /api/page/:id/publish`
-- `POST /api/page/:id/unpublish`
 
 预览：
 

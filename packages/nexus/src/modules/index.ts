@@ -4,7 +4,6 @@ import { authModule } from './auth'
 import { commentModule } from './comment'
 import { healthModule } from './health'
 import { mediaModule } from './media'
-import { pageModule } from './page'
 import { postModule } from './post'
 import { previewModule } from './preview'
 import { rbacModule } from './rbac'
@@ -23,7 +22,6 @@ export const modules = new Elysia({
   .use(userModule)
   .use(rbacModule)
   .use(postModule)
-  .use(pageModule)
   .use(previewModule)
   .use(siteConfigModule)
   .use(mediaModule)
@@ -33,7 +31,6 @@ export * from './auth'
 export * from './comment'
 export * from './health'
 export * from './media'
-export * from './page'
 export * from './post'
 export * from './preview'
 export * from './rbac'

@@ -170,7 +170,7 @@ bun run --filter @xdd-zone/nexus prisma:push
 
 - 用户与权限相关请求统一放在 `packages/console/src/modules/user/*` 和 `packages/console/src/modules/rbac/*`
 - 页面直接通过 query / mutation 调用 Treaty 客户端
-- 如果页面还要复用文章、页面、媒体、评论或站点配置的 HTTP 类型，也统一从 `@xdd-zone/nexus/*-types` 引入
+- 如果页面还要复用文章、媒体、评论或站点配置的 HTTP 类型，也统一从 `@xdd-zone/nexus/*-types` 引入
 - 权限判断需要的常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
 
 ## 新增接口的推荐流程

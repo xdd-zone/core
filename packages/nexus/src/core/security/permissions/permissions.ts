@@ -27,11 +27,6 @@ export const Permissions = {
     WRITE_ALL: 'post:write:all' as PermissionString,
     PUBLISH_ALL: 'post:publish:all' as PermissionString,
   },
-  PAGE: {
-    READ_ALL: 'page:read:all' as PermissionString,
-    WRITE_ALL: 'page:write:all' as PermissionString,
-    PUBLISH_ALL: 'page:publish:all' as PermissionString,
-  },
   SITE_CONFIG: {
     READ: 'site_config:read' as PermissionString,
     WRITE: 'site_config:write' as PermissionString,
@@ -63,9 +58,6 @@ export const SYSTEM_PERMISSION_KEYS = [
   Permissions.POST.READ_ALL,
   Permissions.POST.WRITE_ALL,
   Permissions.POST.PUBLISH_ALL,
-  Permissions.PAGE.READ_ALL,
-  Permissions.PAGE.WRITE_ALL,
-  Permissions.PAGE.PUBLISH_ALL,
   Permissions.SITE_CONFIG.READ,
   Permissions.SITE_CONFIG.WRITE,
   Permissions.MEDIA.READ_ALL,
@@ -148,21 +140,6 @@ export const SYSTEM_PERMISSION_DEFINITIONS: ReadonlyArray<{
     description: '允许发布和取消发布文章。',
   },
   {
-    key: Permissions.PAGE.READ_ALL,
-    displayName: '查看页面',
-    description: '允许查看后台页面列表和页面详情。',
-  },
-  {
-    key: Permissions.PAGE.WRITE_ALL,
-    displayName: '编辑页面',
-    description: '允许创建、更新和删除页面。',
-  },
-  {
-    key: Permissions.PAGE.PUBLISH_ALL,
-    displayName: '发布页面',
-    description: '允许发布和取消发布页面。',
-  },
-  {
     key: Permissions.SITE_CONFIG.READ,
     displayName: '查看站点配置',
     description: '允许查看站点配置。',
@@ -204,7 +181,6 @@ export const RolePermissions = Permissions.ROLE
 export const UserRolePermissions = Permissions.USER_ROLE
 export const UserPermissionQueryPermissions = Permissions.USER_PERMISSION
 export const PostPermissions = Permissions.POST
-export const PagePermissions = Permissions.PAGE
 export const SiteConfigPermissions = Permissions.SITE_CONFIG
 export const MediaPermissions = Permissions.MEDIA
 export const CommentPermissions = Permissions.COMMENT

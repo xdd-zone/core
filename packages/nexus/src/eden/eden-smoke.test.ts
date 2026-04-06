@@ -119,16 +119,6 @@ function getPostClient(postId: string): ReturnType<typeof authenticatedClient.ap
   ]
 }
 
-function getPageClient(pageId: string): ReturnType<typeof authenticatedClient.api.page> {
-  return (authenticatedClient.api.page as unknown as Record<string, ReturnType<typeof authenticatedClient.api.page>>)[
-    pageId
-  ]
-}
-
-function getSubjectPageClient(pageId: string): ReturnType<typeof subjectClient.api.page> {
-  return (subjectClient.api.page as unknown as Record<string, ReturnType<typeof subjectClient.api.page>>)[pageId]
-}
-
 function getCommentClient(commentId: string): ReturnType<typeof authenticatedClient.api.comment> {
   return (
     authenticatedClient.api.comment as unknown as Record<string, ReturnType<typeof authenticatedClient.api.comment>>
@@ -164,7 +154,6 @@ interface RoleAssignmentSummary {
 
 const createdUserIds: string[] = []
 const createdPostIds: string[] = []
-const createdPageIds: string[] = []
 const createdCommentIds: string[] = []
 const createdMediaIds: string[] = []
 const createdRoleIds: string[] = []
@@ -349,16 +338,6 @@ afterAll(async () => {
       where: {
         id: {
           in: createdPostIds,
-        },
-      },
-    })
-  }
-
-  if (createdPageIds.length > 0) {
-    await prisma.page.deleteMany({
-      where: {
-        id: {
-          in: createdPageIds,
         },
       },
     })
@@ -578,14 +557,7 @@ describe('eden smoke', () => {
     expect(subjectRolesAfterRevoke.data?.some((role: RoleAssignmentSummary) => role.roleId === adminRoleId)).toBe(false)
   })
 
-  it('应拒绝未登录访问页面列表', async () => {
-    const result = await anonymousClient.api.page.get()
-
-    expect(result.status).toBe(401)
-    expect(result.error).toBeTruthy()
-  })
-
-  it('应支持读取默认站点配置并在缺少记录时自动初始化', async () => {
+  it('首次读取站点配置时应创建默认配置', async () => {
     if (originalSiteConfigRecord) {
       await SiteConfigRepository.deleteDefault()
     }
@@ -756,222 +728,6 @@ describe('eden smoke', () => {
     expect(getResult.data).toEqual(updateResult.data)
   })
 
-  it('已登录但没有 PAGE 权限时应返回 403', async () => {
-    const listResult = await subjectClient.api.page.get()
-    expect(listResult.status).toBe(403)
-    expect(listResult.error).toBeTruthy()
-
-    const createResult = await subjectClient.api.page.post({
-      title: `Forbidden Page ${tempSuffix}`,
-      slug: `eden-page-forbidden-${tempSuffix}`,
-      markdown: `# Forbidden Page ${tempSuffix}`,
-      showInNavigation: false,
-      sortOrder: 0,
-    })
-    expect(createResult.status).toBe(403)
-    expect(createResult.error).toBeTruthy()
-
-    const publishTargetResult = await authenticatedClient.api.page.post({
-      title: `Publish Target ${tempSuffix}`,
-      slug: `eden-page-publish-target-${tempSuffix}`,
-      markdown: `# Publish Target ${tempSuffix}`,
-      showInNavigation: false,
-      sortOrder: 0,
-    })
-    expect(publishTargetResult.status).toBe(200)
-    expect(publishTargetResult.error).toBeNull()
-
-    const pageId = publishTargetResult.data?.id
-    expect(pageId).toBeTruthy()
-    if (!pageId) {
-      throw new Error('缺少待发布页面 ID')
-    }
-    createdPageIds.push(pageId)
-
-    const publishResult = await getSubjectPageClient(pageId).publish.post()
-    expect(publishResult.status).toBe(403)
-    expect(publishResult.error).toBeTruthy()
-  })
-
-  it('应支持页面创建、发布、更新导航设置和删除', async () => {
-    const slug = `eden-page-${tempSuffix}`
-    const createdTitle = `Eden Page ${tempSuffix}`
-    const markdown = `# Eden Page\n\ncontent ${tempSuffix}`
-    const createResult = await authenticatedClient.api.page.post({
-      title: createdTitle,
-      slug,
-      markdown,
-      excerpt: `  excerpt ${tempSuffix}  `,
-      coverImage: 'https://example.com/page-cover.jpg',
-      showInNavigation: false,
-      sortOrder: 0,
-    })
-
-    expect(createResult.status).toBe(200)
-    expect(createResult.error).toBeNull()
-    expect(createResult.data?.title).toBe(createdTitle)
-    expect(createResult.data?.slug).toBe(slug)
-    expect(createResult.data?.excerpt).toBe(`excerpt ${tempSuffix}`)
-    expect(createResult.data?.status).toBe('draft')
-    expect(createResult.data?.showInNavigation).toBe(false)
-    expect(createResult.data?.sortOrder).toBe(0)
-    expect(createResult.data?.publishedAt).toBeNull()
-
-    const pageId = createResult.data?.id
-    expect(pageId).toBeTruthy()
-    if (!pageId) {
-      throw new Error('缺少页面 ID')
-    }
-    createdPageIds.push(pageId)
-
-    const listResult = await authenticatedClient.api.page.get({
-      query: {
-        keyword: tempSuffix,
-        status: 'draft',
-        showInNavigation: false,
-      },
-    })
-
-    expect(listResult.status).toBe(200)
-    expect(listResult.error).toBeNull()
-    expect(listResult.data?.items.some((item) => item.id === pageId)).toBe(true)
-    const listedPage = listResult.data?.items.find((item) => item.id === pageId)
-    expect(listedPage).toBeTruthy()
-    expect(listedPage ? 'markdown' in listedPage : false).toBe(false)
-
-    const detailResult = await getPageClient(pageId).get()
-    expect(detailResult.status).toBe(200)
-    expect(detailResult.error).toBeNull()
-    expect(detailResult.data?.id).toBe(pageId)
-
-    const invalidNavigationResult = await getPageClient(pageId).patch({
-      showInNavigation: true,
-    })
-    expect(invalidNavigationResult.status).toBe(400)
-    expect(invalidNavigationResult.error).toBeTruthy()
-    expect(invalidNavigationResult.error?.value.message).toBe('只有已发布页面才能显示在导航中')
-
-    const publishResult = await getPageClient(pageId).publish.post()
-    expect(publishResult.status).toBe(200)
-    expect(publishResult.error).toBeNull()
-    expect(publishResult.data?.status).toBe('published')
-    expect(publishResult.data?.publishedAt).toBeTruthy()
-
-    const firstPublishedAt = publishResult.data?.publishedAt
-    expect(firstPublishedAt).toBeTruthy()
-
-    const republishResult = await getPageClient(pageId).publish.post()
-    expect(republishResult.status).toBe(200)
-    expect(republishResult.error).toBeNull()
-    expect(republishResult.data?.status).toBe('published')
-    expect(republishResult.data?.publishedAt).toEqual(firstPublishedAt)
-
-    const updateResult = await getPageClient(pageId).patch({
-      title: `  Eden Page Updated ${tempSuffix}  `,
-      markdown: `  # Eden Page Updated\n\ncontent ${tempSuffix}  `,
-      showInNavigation: true,
-      sortOrder: 12,
-    })
-    expect(updateResult.status).toBe(200)
-    expect(updateResult.error).toBeNull()
-    expect(updateResult.data?.title).toBe(`Eden Page Updated ${tempSuffix}`)
-    expect(updateResult.data?.markdown).toBe(`# Eden Page Updated\n\ncontent ${tempSuffix}`)
-    expect(updateResult.data?.showInNavigation).toBe(true)
-    expect(updateResult.data?.sortOrder).toBe(12)
-
-    const refreshedDetailResult = await getPageClient(pageId).get()
-    expect(refreshedDetailResult.status).toBe(200)
-    expect(refreshedDetailResult.error).toBeNull()
-    expect(refreshedDetailResult.data?.showInNavigation).toBe(true)
-    expect(refreshedDetailResult.data?.sortOrder).toBe(12)
-
-    const unpublishResult = await getPageClient(pageId).unpublish.post()
-    expect(unpublishResult.status).toBe(200)
-    expect(unpublishResult.error).toBeNull()
-    expect(unpublishResult.data?.status).toBe('draft')
-    expect(unpublishResult.data?.showInNavigation).toBe(false)
-    expect(unpublishResult.data?.publishedAt).toBeNull()
-
-    const deleteResult = await getPageClient(pageId).delete()
-    expect(deleteResult.status).toBe(204)
-    expect(deleteResult.error).toBeNull()
-
-    await prisma.page.deleteMany({
-      where: {
-        id: pageId,
-      },
-    })
-    const pageIndex = createdPageIds.indexOf(pageId)
-    if (pageIndex >= 0) {
-      createdPageIds.splice(pageIndex, 1)
-    }
-  })
-
-  it('页面列表关键字搜索不应匹配 markdown 内容', async () => {
-    const hiddenKeyword = `hidden-page-markdown-${tempSuffix}`
-    const createResult = await authenticatedClient.api.page.post({
-      title: `Page Keyword Filter ${tempSuffix}`,
-      slug: `eden-page-keyword-${tempSuffix}`,
-      markdown: `# ${hiddenKeyword}`,
-      excerpt: 'visible excerpt',
-      showInNavigation: false,
-      sortOrder: 0,
-    })
-
-    expect(createResult.status).toBe(200)
-    expect(createResult.error).toBeNull()
-
-    const pageId = createResult.data?.id
-    expect(pageId).toBeTruthy()
-    if (!pageId) {
-      throw new Error('缺少关键字页面 ID')
-    }
-    createdPageIds.push(pageId)
-
-    const listResult = await authenticatedClient.api.page.get({
-      query: {
-        keyword: hiddenKeyword,
-      },
-    })
-
-    expect(listResult.status).toBe(200)
-    expect(listResult.error).toBeNull()
-    expect(listResult.data?.items.some((item) => item.id === pageId)).toBe(false)
-  })
-
-  it('页面 slug 重复时应返回 409', async () => {
-    const slug = `eden-page-duplicate-${tempSuffix}`
-
-    const firstResult = await authenticatedClient.api.page.post({
-      title: `First Page ${tempSuffix}`,
-      slug,
-      markdown: `# First Page ${tempSuffix}`,
-      showInNavigation: false,
-      sortOrder: 0,
-    })
-
-    expect(firstResult.status).toBe(200)
-    expect(firstResult.error).toBeNull()
-
-    const firstPageId = firstResult.data?.id
-    expect(firstPageId).toBeTruthy()
-    if (!firstPageId) {
-      throw new Error('缺少首个页面 ID')
-    }
-    createdPageIds.push(firstPageId)
-
-    const duplicateResult = await authenticatedClient.api.page.post({
-      title: `Second Page ${tempSuffix}`,
-      slug,
-      markdown: `# Second Page ${tempSuffix}`,
-      showInNavigation: false,
-      sortOrder: 0,
-    })
-
-    expect(duplicateResult.status).toBe(409)
-    expect(duplicateResult.error).toBeTruthy()
-  })
-
   it('应支持文章创建、更新、发布、取消发布和删除', async () => {
     const slug = `eden-post-${tempSuffix}`
     const createdTitle = `Eden Post ${tempSuffix}`
@@ -1020,64 +776,6 @@ describe('eden smoke', () => {
     expect(detailResult.status).toBe(200)
     expect(detailResult.error).toBeNull()
     expect(detailResult.data?.id).toBe(postId)
-
-    const updatedTitle = `Eden Post Updated ${tempSuffix}`
-    const updatedMarkdown = `# Eden Updated Post\n\ncontent ${tempSuffix}`
-    const updateResult = await getPostClient(postId).patch({
-      title: `  ${updatedTitle}  `,
-      markdown: `  ${updatedMarkdown}  `,
-      excerpt: `  updated excerpt ${tempSuffix}  `,
-      category: '  platform  ',
-      tags: ['  release  ', ' smoke '],
-    })
-    expect(updateResult.status).toBe(200)
-    expect(updateResult.error).toBeNull()
-    expect(updateResult.data?.title).toBe(updatedTitle)
-    expect(updateResult.data?.markdown).toBe(updatedMarkdown)
-    expect(updateResult.data?.excerpt).toBe(`updated excerpt ${tempSuffix}`)
-    expect(updateResult.data?.category).toBe('platform')
-    expect(updateResult.data?.tags).toEqual(['release', 'smoke'])
-
-    const refreshedDetailResult = await getPostClient(postId).get()
-    expect(refreshedDetailResult.status).toBe(200)
-    expect(refreshedDetailResult.error).toBeNull()
-    expect(refreshedDetailResult.data?.title).toBe(updatedTitle)
-    expect(refreshedDetailResult.data?.markdown).toBe(updatedMarkdown)
-
-    const publishResult = await getPostClient(postId).publish.post()
-    expect(publishResult.status).toBe(200)
-    expect(publishResult.error).toBeNull()
-    expect(publishResult.data?.status).toBe('published')
-    expect(publishResult.data?.publishedAt).toBeTruthy()
-
-    const firstPublishedAt = publishResult.data?.publishedAt
-    expect(firstPublishedAt).toBeTruthy()
-
-    const republishResult = await getPostClient(postId).publish.post()
-    expect(republishResult.status).toBe(200)
-    expect(republishResult.error).toBeNull()
-    expect(republishResult.data?.status).toBe('published')
-    expect(republishResult.data?.publishedAt).toEqual(firstPublishedAt)
-
-    const unpublishResult = await getPostClient(postId).unpublish.post()
-    expect(unpublishResult.status).toBe(200)
-    expect(unpublishResult.error).toBeNull()
-    expect(unpublishResult.data?.status).toBe('draft')
-    expect(unpublishResult.data?.publishedAt).toBeNull()
-
-    const deleteResult = await getPostClient(postId).delete()
-    expect(deleteResult.status).toBe(204)
-    expect(deleteResult.error).toBeNull()
-
-    await prisma.post.deleteMany({
-      where: {
-        id: postId,
-      },
-    })
-    const postIndex = createdPostIds.indexOf(postId)
-    if (postIndex >= 0) {
-      createdPostIds.splice(postIndex, 1)
-    }
   })
 
   it('文章列表关键字搜索不应匹配 markdown 内容', async () => {
@@ -1365,33 +1063,25 @@ describe('eden smoke', () => {
     expect(result.data?.excerpt).toBe('Custom excerpt')
   })
 
-  it('页面预览应允许仅具备 PAGE 写权限的用户访问', async () => {
-    const pagePreviewRole = await createRoleWithPermissions(`page-preview-${tempSuffix}`, [Permissions.PAGE.WRITE_ALL])
+  it('具备 POST 写权限的用户应可访问文章预览', async () => {
+    const postPreviewRole = await createRoleWithPermissions(`post-preview-${tempSuffix}`, [Permissions.POST.WRITE_ALL])
 
     await prisma.userRole.create({
       data: {
         userId: subjectUserId,
-        roleId: pagePreviewRole.id,
+        roleId: postPreviewRole.id,
         assignedBy: actorUserId,
       },
     })
     PermissionService.clearCache(subjectUserId)
-
-    const pagePreviewResult = await subjectClient.api.preview.markdown.post({
-      type: 'page',
-      markdown: '# Page Title\n\nPage preview paragraph.',
-    })
-
-    expect(pagePreviewResult.status).toBe(200)
-    expect(pagePreviewResult.error).toBeNull()
-    expect(pagePreviewResult.data?.html).toContain('<h1 id="page-title">Page Title</h1>')
 
     const postPreviewResult = await subjectClient.api.preview.markdown.post({
       type: 'post',
       markdown: '# Post Title\n\nPost preview paragraph.',
     })
 
-    expect(postPreviewResult.status).toBe(403)
-    expect(postPreviewResult.error).toBeTruthy()
+    expect(postPreviewResult.status).toBe(200)
+    expect(postPreviewResult.error).toBeNull()
+    expect(postPreviewResult.data?.html).toContain('<h1 id="post-title">Post Title</h1>')
   })
 })

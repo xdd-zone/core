@@ -184,7 +184,6 @@ bun run seed
   - `@xdd-zone/nexus/user-types`
   - `@xdd-zone/nexus/rbac-types`
   - `@xdd-zone/nexus/post-types`
-  - `@xdd-zone/nexus/page-types`
   - `@xdd-zone/nexus/media-types`
   - `@xdd-zone/nexus/comment-types`
   - `@xdd-zone/nexus/site-config-types`
@@ -248,16 +247,6 @@ RBAC：
 - `DELETE /api/post/:id`
 - `POST /api/post/:id/publish`
 - `POST /api/post/:id/unpublish`
-
-页面：
-
-- `GET /api/page`
-- `POST /api/page`
-- `GET /api/page/:id`
-- `PATCH /api/page/:id`
-- `DELETE /api/page/:id`
-- `POST /api/page/:id/publish`
-- `POST /api/page/:id/unpublish`
 
 预览：
 

@@ -5,7 +5,6 @@ import { matchPermission, normalizePermission, parsePermission } from '../core/s
 import {
   CommentPermissions,
   MediaPermissions,
-  PagePermissions,
   Permissions,
   PostPermissions,
   RolePermissions,
@@ -27,7 +26,6 @@ export {
   matchPermission,
   MediaPermissions,
   normalizePermission,
-  PagePermissions,
   parsePermission,
   Permissions,
   PostPermissions,

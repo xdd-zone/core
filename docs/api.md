@@ -133,24 +133,6 @@ OpenAPI 用来查看当前接口说明，可用于联调、调试和外部接入
 - 创建和更新 body 使用这些字段：`title`、`slug`、`markdown`、`excerpt`、`coverImage`、`category`、`tags`
 - `status` 当前只支持 `draft` 和 `published`
 
-### Page
-
-| 方法 | 路径 | 描述 |
-| ---- | ---- | ---- |
-| GET | `/api/page` | 获取页面列表 |
-| POST | `/api/page` | 创建页面 |
-| GET | `/api/page/:id` | 获取页面详情 |
-| PATCH | `/api/page/:id` | 更新页面 |
-| DELETE | `/api/page/:id` | 删除页面，返回 `204` |
-| POST | `/api/page/:id/publish` | 发布页面 |
-| POST | `/api/page/:id/unpublish` | 取消发布页面 |
-
-补充说明：
-
-- 列表 query 支持 `page`、`pageSize`、`keyword`、`status`、`showInNavigation`
-- 列表响应不包含 `markdown`，详情接口才返回完整 Markdown 内容
-- 创建和更新 body 使用这些字段：`title`、`slug`、`markdown`、`excerpt`、`coverImage`、`showInNavigation`、`sortOrder`
-
 ### Preview
 
 | 方法 | 路径 | 描述 |
@@ -160,7 +142,7 @@ OpenAPI 用来查看当前接口说明，可用于联调、调试和外部接入
 补充说明：
 
 - body 支持 `type`、`markdown`、`title`、`excerpt`、`coverImage`
-- `type` 当前可选 `post` 或 `page`
+- `type` 当前只支持 `post`
 - 返回字段包含 `html`、`toc`、`excerpt`
 
 ### SiteConfig

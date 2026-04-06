@@ -373,8 +373,8 @@ Markdown 能力当前由 `markdown-to-jsx` 与 Shiki 组合完成：
 
 - GitHub 登录通过浏览器重定向进入，不走 Eden Treaty 请求封装
 - 邮箱登录、登出和 session 查询继续通过现有 Query / Mutation 处理
-- 用户、角色、文章、页面、站点配置、媒体和评论相关请求直接通过 `packages/console/src/shared/api/eden.ts` 中的 Treaty 客户端处理
-- HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types`、`@xdd-zone/nexus/post-types`、`@xdd-zone/nexus/page-types`、`@xdd-zone/nexus/media-types`、`@xdd-zone/nexus/comment-types`、`@xdd-zone/nexus/site-config-types` 引入
+- 用户、角色、文章、站点配置、媒体和评论相关请求直接通过 `packages/console/src/shared/api/eden.ts` 中的 Treaty 客户端处理
+- HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types`、`@xdd-zone/nexus/post-types`、`@xdd-zone/nexus/media-types`、`@xdd-zone/nexus/comment-types`、`@xdd-zone/nexus/site-config-types` 引入
 - 权限常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
 
 当前系统管理页面还会调用：
@@ -382,7 +382,6 @@ Markdown 能力当前由 `markdown-to-jsx` 与 Shiki 组合完成：
 - 用户接口：`GET /api/user`、`GET /api/user/:id`、`PATCH /api/user/:id`、`GET /api/user/me`、`PATCH /api/user/me`
 - 角色与权限接口：`GET /api/rbac/roles`、`GET /api/rbac/users/:userId/roles`、`POST /api/rbac/users/:userId/roles`、`DELETE /api/rbac/users/:userId/roles/:roleId`、`GET /api/rbac/users/:userId/permissions`、`GET /api/rbac/users/me/roles`、`GET /api/rbac/users/me/permissions`
 - 内容接口：`GET /api/post`、`POST /api/post`、`GET /api/post/:id`、`PATCH /api/post/:id`、`DELETE /api/post/:id`、`POST /api/post/:id/publish`、`POST /api/post/:id/unpublish`
-- 页面接口：`GET /api/page`、`POST /api/page`、`GET /api/page/:id`、`PATCH /api/page/:id`、`DELETE /api/page/:id`、`POST /api/page/:id/publish`、`POST /api/page/:id/unpublish`
 - 预览接口：`POST /api/preview/markdown`
 - 站点配置接口：`GET /api/site-config`、`PUT /api/site-config`
 - 媒体接口：`GET /api/media`、`POST /api/media/upload`、`GET /api/media/:id`、`GET /api/media/:id/file`、`DELETE /api/media/:id`

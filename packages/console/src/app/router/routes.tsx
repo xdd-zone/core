@@ -138,6 +138,33 @@ const tagListRoute = createRoute({
   },
 })
 
+const createPostRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/article/post/CreatePost'), 'CreatePost'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'articles/new',
+  staticData: {
+    title: 'content.post.form.createTitle',
+  },
+})
+
+const postDetailRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/article/post/PostDetail'), 'PostDetail'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'articles/$id',
+  staticData: {
+    title: 'content.post.detail.title',
+  },
+})
+
+const editPostRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/article/post/EditPost'), 'EditPost'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'articles/$id/edit',
+  staticData: {
+    title: 'content.post.form.editTitle',
+  },
+})
+
 const commentListRoute = createRoute({
   component: lazyRouteComponent(() => import('@console/pages/article/comment/CommentList'), 'CommentList'),
   getParentRoute: () => appLayoutRoute,
@@ -300,6 +327,9 @@ const protectedRouteTree = protectedRoute.addChildren([
   appLayoutRoute.addChildren([
     dashboardRoute,
     articleListRoute,
+    createPostRoute,
+    postDetailRoute,
+    editPostRoute,
     categoryListRoute,
     tagListRoute,
     commentListRoute,

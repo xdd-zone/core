@@ -175,8 +175,6 @@ modules/<feature>/
   - 角色与权限接口的 HTTP 类型
 - `post-types.ts`
   - 文章相关 HTTP 类型
-- `page-types.ts`
-  - 页面相关 HTTP 类型
 - `media-types.ts`
   - 媒体相关 HTTP 类型
 - `comment-types.ts`

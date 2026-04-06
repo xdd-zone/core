@@ -4,7 +4,7 @@ import { z } from 'zod'
 const PreviewExcerptSchema = z.string().trim().max(300, '摘要最多 300 个字符')
 const PreviewCoverImageSchema = z.string().trim().url('请输入有效的封面 URL')
 
-export const PreviewTypeSchema = z.enum(['post', 'page'])
+export const PreviewTypeSchema = z.enum(['post'])
 export type PreviewType = z.infer<typeof PreviewTypeSchema>
 
 export const PreviewMarkdownBodySchema = z.object({

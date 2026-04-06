@@ -47,11 +47,6 @@
       "import": "./src/public/media-types.ts",
       "default": "./src/public/media-types.ts"
     },
-    "./page-types": {
-      "types": "./src/public/page-types.ts",
-      "import": "./src/public/page-types.ts",
-      "default": "./src/public/page-types.ts"
-    },
     "./post-types": {
       "types": "./src/public/post-types.ts",
       "import": "./src/public/post-types.ts",

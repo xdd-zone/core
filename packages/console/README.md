@@ -66,7 +66,7 @@ packages/console
 - `staticData` 统一维护页面标题、TabBar、面包屑元信息
 - TanStack Query 管理 `/api/auth/get-session`、邮箱登录与登出
 - query / mutation 直接调用 Eden Treaty 客户端
-- HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types`、`@xdd-zone/nexus/post-types`、`@xdd-zone/nexus/page-types`、`@xdd-zone/nexus/media-types`、`@xdd-zone/nexus/comment-types`、`@xdd-zone/nexus/site-config-types` 引入
+- HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types`、`@xdd-zone/nexus/post-types`、`@xdd-zone/nexus/media-types`、`@xdd-zone/nexus/comment-types`、`@xdd-zone/nexus/site-config-types` 引入
 - 权限常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
 - GitHub 登录地址统一通过 auth 模块构造，并复用当前 API 基址配置
 - 独立导航配置
@@ -252,7 +252,7 @@ src/
 - 页面联调优先通过根目录 `bun run dev` 完成
 - 本地开发默认通过 `/api` 代理到 `nexus`
 - GitHub 登录入口和 Eden 请求共用同一套 API 基址配置
-- 用户、角色、文章、页面、媒体、评论和站点配置相关请求统一通过 `src/shared/api/eden.ts` 中的 Treaty 客户端处理
+- 用户、角色、文章、媒体、评论和站点配置相关请求统一通过 `src/shared/api/eden.ts` 中的 Treaty 客户端处理
 - 生产环境可继续使用同域 `/api` 或反向代理
 - 如果使用独立 API 域名，这条地址需要和当前会话策略匹配，并同步检查 cookie 与来源配置
 - Better Auth 需要信任前端来源，例如 `http://localhost:2333`

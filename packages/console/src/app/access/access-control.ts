@@ -56,6 +56,67 @@ function hasPermission(permissionKeys: ReadonlySet<string>, permission: SystemPe
 
 export const consoleRouteAccessRules: readonly ConsoleRouteAccessRule[] = [
   {
+    matcher: createPathMatcher('/articles/new'),
+    pathPattern: '/articles/new',
+    requirement: {
+      all: [Permissions.POST.WRITE_ALL],
+    },
+  },
+  {
+    matcher: createPathMatcher('/articles/$id/edit'),
+    pathPattern: '/articles/$id/edit',
+    requirement: {
+      all: [Permissions.POST.WRITE_ALL],
+    },
+  },
+  {
+    matcher: createPathMatcher('/articles/$id'),
+    pathPattern: '/articles/$id',
+    requirement: {
+      all: [Permissions.POST.READ_ALL],
+    },
+  },
+  {
+    matcher: createPathMatcher('/articles'),
+    pathPattern: '/articles',
+    requirement: {
+      all: [Permissions.POST.READ_ALL],
+    },
+  },
+  {
+    matcher: createPathMatcher('/categories'),
+    pathPattern: '/categories',
+    requirement: {
+      all: [Permissions.POST.READ_ALL],
+    },
+  },
+  {
+    matcher: createPathMatcher('/tags'),
+    pathPattern: '/tags',
+    requirement: {
+      all: [Permissions.POST.READ_ALL],
+    },
+  },
+  {
+    matcher: createPathMatcher('/comments'),
+    pathPattern: '/comments',
+    requirement: {
+      all: [Permissions.COMMENT.READ_ALL],
+    },
+  },
+  {
+    matcher: createPathMatcher('/article-settings'),
+    pathPattern: '/article-settings',
+    requirement: {
+      any: [
+        Permissions.MEDIA.READ_ALL,
+        Permissions.MEDIA.WRITE_ALL,
+        Permissions.SITE_CONFIG.READ,
+        Permissions.SITE_CONFIG.WRITE,
+      ],
+    },
+  },
+  {
     matcher: createPathMatcher('/users/$id/access'),
     pathPattern: '/users/$id/access',
     requirement: {
