@@ -84,8 +84,10 @@ packages/console
   - 由用户列表和用户详情页的操作按钮进入
 - 当前用户：`/profile`、`/my-access`
   - 用于维护当前登录用户资料，以及查看当前用户角色和权限
-- 功能示例：`/ui-showcase`、`/markdown-example`、`/image-crop`
-  - 用于验证主题、Markdown 和图片裁剪相关界面
+- 功能示例：`/ui-showcase`、`/markdown-example`、`/tiptap-example`、`/image-crop`
+  - 用于验证主题、Markdown、Tiptap 编辑和图片裁剪相关界面
+  - Tiptap 示例页左侧使用 `packages/console/src/components/content/editor/TiptapMarkdownEditor.tsx` 编辑内容
+  - 右侧继续复用 `packages/console/src/components/ui/markdown/Markdown.tsx` 做 Markdown 预览
 
 ## 快速开始
 

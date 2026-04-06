@@ -412,10 +412,43 @@ export default {
     roleManagement: 'Role Management',
     systemManagement: 'System Management',
     tagManagement: 'Tag Management',
+    tiptapExample: 'Tiptap',
     uiShowcase: 'Components & Theme',
     userDetail: 'User Detail',
     userEdit: 'Edit User',
     userManagement: 'User Management',
+  },
+  tiptapExample: {
+    description:
+      'Use Tiptap on the left and keep the current Markdown preview pipeline on the right so the same content demonstrates editing and preview together.',
+    editorDescription:
+      'The toolbar covers the core formats required by this example, and every update is serialized to Markdown in real time.',
+    editorPlaceholder: 'Start typing here and the preview will update on the right.',
+    editorTitle: 'Editor',
+    eyebrow: 'Editor Example',
+    previewDescription:
+      'The preview reuses the existing Markdown component, theme integration, and code highlighting already used in this repo.',
+    previewHint: 'The editor outputs Markdown, and the right side renders it with the current Markdown preview stack.',
+    previewTitle: 'Preview',
+    summary: {
+      characters: 'Characters',
+      lines: 'Lines',
+      sync: 'Content Flow',
+      syncValue: 'Live Markdown Sync',
+    },
+    toolbar: {
+      blockquote: 'Blockquote',
+      bold: 'Bold',
+      bulletList: 'Bullet List',
+      codeBlock: 'Code Block',
+      heading1: 'Heading 1',
+      heading2: 'Heading 2',
+      heading3: 'Heading 3',
+      horizontalRule: 'Horizontal Rule',
+      italic: 'Italic',
+      orderedList: 'Ordered List',
+      paragraph: 'Paragraph',
+    },
   },
   profile: {
     form: {

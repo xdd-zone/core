@@ -42,11 +42,12 @@ import { useMarkdownTheme } from './theme/useTheme'
 import { Toc } from './toc'
 import { hexToRgb } from './utils/color'
 
-interface MarkdownProps {
+export interface MarkdownProps {
   accentColor?: string
   catppuccinTheme?: CatppuccinThemeId
   children?: string
   className?: string
+  showToc?: boolean
   theme?: MarkdownTheme
   value?: string
 }
@@ -57,7 +58,17 @@ interface MarkdownProps {
  * - 通过 `overrides` 将各 HTML 标签映射到自定义渲染组件
  * - 集成文本选择弹窗（复制）与右侧目录（TOC）
  */
-function MarkdownInner({ accentColor, className, md }: { accentColor?: string; className?: string; md: string }) {
+function MarkdownInner({
+  accentColor,
+  className,
+  md,
+  showToc = true,
+}: {
+  accentColor?: string
+  className?: string
+  md: string
+  showToc?: boolean
+}) {
   const theme = useMarkdownTheme()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const { copy, onMouseUp, position, visible } = useSelectionPopup(containerRef)
@@ -73,7 +84,7 @@ function MarkdownInner({ accentColor, className, md }: { accentColor?: string; c
     }
   }
   return (
-    <div className={clsx('relative lg:grid lg:grid-cols-[1fr_280px] lg:gap-8', className)}>
+    <div className={clsx(showToc ? 'relative lg:grid lg:grid-cols-[1fr_280px] lg:gap-8' : 'relative', className)}>
       <div ref={containerRef} onMouseUp={onMouseUp} className={clsx(theme.container)} style={style}>
         {compiler(md, {
           disableParsingRawHTML: true,
@@ -107,9 +118,11 @@ function MarkdownInner({ accentColor, className, md }: { accentColor?: string; c
         })}
         <SelectionPopup visible={visible} position={position} onCopy={copy} />
       </div>
-      <div className="hidden lg:block">
-        <Toc containerRef={containerRef} />
-      </div>
+      {showToc ? (
+        <div className="hidden lg:block">
+          <Toc containerRef={containerRef} />
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -125,6 +138,7 @@ export function Markdown({
   catppuccinTheme,
   children,
   className,
+  showToc = true,
   theme,
   value,
 }: MarkdownProps): ReactNode {
@@ -132,7 +146,7 @@ export function Markdown({
   return (
     <MarkdownThemeProvider catppuccinTheme={catppuccinTheme} theme={theme}>
       <MarkdownErrorBoundary>
-        <MarkdownInner accentColor={accentColor} className={className} md={md} />
+        <MarkdownInner accentColor={accentColor} className={className} md={md} showToc={showToc} />
       </MarkdownErrorBoundary>
     </MarkdownThemeProvider>
   )

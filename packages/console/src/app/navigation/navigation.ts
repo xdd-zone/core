@@ -21,6 +21,7 @@ import {
   Settings,
   Shield,
   ShieldCheck,
+  SquarePen,
   Tags,
   User,
   Users,
@@ -131,6 +132,12 @@ export const navigationItems: NavigationItem[] = [
         key: 'markdown-example',
         label: 'menu.markdownExample',
         path: '/markdown-example',
+      },
+      {
+        icon: SquarePen,
+        key: 'tiptap-example',
+        label: 'menu.tiptapExample',
+        path: '/tiptap-example',
       },
       {
         icon: Crop,

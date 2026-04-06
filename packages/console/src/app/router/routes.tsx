@@ -23,6 +23,7 @@ import {
   Settings,
   Shield,
   ShieldCheck,
+  SquarePen,
   Tag,
   UserCog,
   Users,
@@ -187,6 +188,16 @@ const markdownExampleRoute = createRoute({
   },
 })
 
+const tiptapExampleRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/example/TiptapExample'), 'TiptapExample'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'tiptap-example',
+  staticData: {
+    icon: SquarePen,
+    title: 'menu.tiptapExample',
+  },
+})
+
 const errorStateExampleRoute = createRoute({
   component: lazyRouteComponent(() => import('@console/pages/example/ErrorStateExample'), 'ErrorStateExample'),
   getParentRoute: () => appLayoutRoute,
@@ -295,6 +306,7 @@ const protectedRouteTree = protectedRoute.addChildren([
     articleSettingsRoute,
     uiShowcaseRoute,
     markdownExampleRoute,
+    tiptapExampleRoute,
     imageCropRoute,
     errorStateExampleRoute,
     forbiddenExampleRoute,
