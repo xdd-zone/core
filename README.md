@@ -58,7 +58,7 @@ packages/nexus/src/
   - Prisma、数据库辅助能力、日志
 - `public/`
   - 提供给前端和联调层使用的公共导出
-  - `auth-types`、`user-types`、`rbac-types` 放 HTTP 类型
+  - `*-types` 放 HTTP 类型
   - `permissions` 放权限常量和匹配辅助函数
 - `shared/`
   - OpenAPI 辅助函数和通用 schema
@@ -231,7 +231,7 @@ bun run seed
 - `packages/nexus/src/shared/openapi`
   - `apiDetail(...)`
 - `packages/nexus/src/public`
-  - `auth-types`、`user-types`、`rbac-types`
+  - `auth-types`、`user-types`、`rbac-types`、`post-types`、`page-types`、`media-types`、`comment-types`、`site-config-types`
   - `permissions`
 - `packages/nexus/src/eden`
   - Eden 类型与 smoke test
@@ -239,7 +239,7 @@ bun run seed
 前后端当前默认按下面方式协作：
 
 - Console 的 query / mutation 直接调用 `packages/console/src/shared/api/eden.ts` 中的 Treaty 客户端
-- Console 的 HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types` 引入
+- Console 的 HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types`、`@xdd-zone/nexus/post-types`、`@xdd-zone/nexus/page-types`、`@xdd-zone/nexus/media-types`、`@xdd-zone/nexus/comment-types`、`@xdd-zone/nexus/site-config-types` 引入
 - Console 的权限常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
 - GitHub 登录继续通过浏览器跳转，地址由 `packages/console/src/modules/auth/auth.api.ts` 统一构造
 
@@ -283,6 +283,50 @@ RBAC：
 - `GET /api/rbac/users/:userId/permissions`
 - `GET /api/rbac/users/me/roles`
 - `GET /api/rbac/users/me/permissions`
+
+内容：
+
+- `GET /api/post`
+- `POST /api/post`
+- `GET /api/post/:id`
+- `PATCH /api/post/:id`
+- `DELETE /api/post/:id`
+- `POST /api/post/:id/publish`
+- `POST /api/post/:id/unpublish`
+
+页面：
+
+- `GET /api/page`
+- `POST /api/page`
+- `GET /api/page/:id`
+- `PATCH /api/page/:id`
+- `DELETE /api/page/:id`
+- `POST /api/page/:id/publish`
+- `POST /api/page/:id/unpublish`
+
+预览：
+
+- `POST /api/preview/markdown`
+
+站点配置：
+
+- `GET /api/site-config`
+- `PUT /api/site-config`
+
+媒体：
+
+- `GET /api/media`
+- `POST /api/media/upload`
+- `GET /api/media/:id`
+- `GET /api/media/:id/file`
+- `DELETE /api/media/:id`
+
+评论：
+
+- `GET /api/comment`
+- `GET /api/comment/:id`
+- `PATCH /api/comment/:id/status`
+- `DELETE /api/comment/:id`
 
 ## 权限模型
 

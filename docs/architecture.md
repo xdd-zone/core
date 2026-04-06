@@ -173,6 +173,16 @@ modules/<feature>/
   - 用户相关 HTTP 类型
 - `rbac-types.ts`
   - 角色与权限接口的 HTTP 类型
+- `post-types.ts`
+  - 文章相关 HTTP 类型
+- `page-types.ts`
+  - 页面相关 HTTP 类型
+- `media-types.ts`
+  - 媒体相关 HTTP 类型
+- `comment-types.ts`
+  - 评论相关 HTTP 类型
+- `site-config-types.ts`
+  - 站点配置相关 HTTP 类型
 - `permissions.ts`
   - 权限常量、角色常量和权限匹配辅助函数
 - `eden.ts`

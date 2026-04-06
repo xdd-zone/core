@@ -77,15 +77,20 @@ OpenAPI 用来查看当前接口说明，可用于联调、调试和外部接入
 
 | 方法 | 路径 | 描述 |
 | ---- | ---- | ---- |
+| GET | `/api/auth/methods` | 获取当前开放的登录方式 |
 | POST | `/api/auth/sign-up/email` | 注册用户 |
 | POST | `/api/auth/sign-in/email` | 登录 |
 | GET | `/api/auth/sign-in/github` | 发起 GitHub 登录，成功返回 `302` |
 | GET | `/api/auth/callback/github` | 处理 GitHub 回调，写 session cookie 后返回 `302` |
 | POST | `/api/auth/sign-out` | 登出，返回 `204` |
-| GET | `/api/auth/get-session` | 获取 session |
-| GET | `/api/auth/me` | 获取登录用户 |
+| GET | `/api/auth/get-session` | 获取当前会话 |
+| GET | `/api/auth/me` | 获取当前登录用户 |
 
-GitHub 登录相关接口由浏览器完成重定向，不返回 JSON body。`/api/auth/sign-in/github` 支持 `callbackURL` query。
+补充说明：
+
+- `/api/auth/methods` 返回 `methods` 数组，字段包含 `id`、`kind`、`enabled`、`allowSignUp`
+- GitHub 登录相关接口由浏览器完成重定向，不返回 JSON body
+- `/api/auth/sign-in/github` 支持 `callbackURL` query
 
 ### User
 
@@ -109,6 +114,97 @@ GitHub 登录相关接口由浏览器完成重定向，不返回 JSON body。`/a
 | GET | `/api/rbac/users/:userId/permissions` | 获取用户权限 |
 | GET | `/api/rbac/users/me/roles` | 获取登录用户角色 |
 | GET | `/api/rbac/users/me/permissions` | 获取登录用户权限 |
+
+### Post
+
+| 方法 | 路径 | 描述 |
+| ---- | ---- | ---- |
+| GET | `/api/post` | 获取文章列表 |
+| POST | `/api/post` | 创建文章 |
+| GET | `/api/post/:id` | 获取文章详情 |
+| PATCH | `/api/post/:id` | 更新文章 |
+| DELETE | `/api/post/:id` | 删除文章，返回 `204` |
+| POST | `/api/post/:id/publish` | 发布文章 |
+| POST | `/api/post/:id/unpublish` | 取消发布文章 |
+
+补充说明：
+
+- 列表 query 支持 `page`、`pageSize`、`keyword`、`status`、`category`、`tag`
+- 创建和更新 body 使用这些字段：`title`、`slug`、`markdown`、`excerpt`、`coverImage`、`category`、`tags`
+- `status` 当前只支持 `draft` 和 `published`
+
+### Page
+
+| 方法 | 路径 | 描述 |
+| ---- | ---- | ---- |
+| GET | `/api/page` | 获取页面列表 |
+| POST | `/api/page` | 创建页面 |
+| GET | `/api/page/:id` | 获取页面详情 |
+| PATCH | `/api/page/:id` | 更新页面 |
+| DELETE | `/api/page/:id` | 删除页面，返回 `204` |
+| POST | `/api/page/:id/publish` | 发布页面 |
+| POST | `/api/page/:id/unpublish` | 取消发布页面 |
+
+补充说明：
+
+- 列表 query 支持 `page`、`pageSize`、`keyword`、`status`、`showInNavigation`
+- 列表响应不包含 `markdown`，详情接口才返回完整 Markdown 内容
+- 创建和更新 body 使用这些字段：`title`、`slug`、`markdown`、`excerpt`、`coverImage`、`showInNavigation`、`sortOrder`
+
+### Preview
+
+| 方法 | 路径 | 描述 |
+| ---- | ---- | ---- |
+| POST | `/api/preview/markdown` | 生成 Markdown 预览 |
+
+补充说明：
+
+- body 支持 `type`、`markdown`、`title`、`excerpt`、`coverImage`
+- `type` 当前可选 `post` 或 `page`
+- 返回字段包含 `html`、`toc`、`excerpt`
+
+### SiteConfig
+
+| 方法 | 路径 | 描述 |
+| ---- | ---- | ---- |
+| GET | `/api/site-config` | 获取站点配置 |
+| PUT | `/api/site-config` | 更新站点配置 |
+
+补充说明：
+
+- 当前是单例配置接口
+- 更新 body 支持 `title`、`subtitle`、`description`、`logo`、`favicon`、`footerText`、`socialLinks`、`defaultSeoTitle`、`defaultSeoDescription`
+
+### Media
+
+| 方法 | 路径 | 描述 |
+| ---- | ---- | ---- |
+| GET | `/api/media` | 获取媒体列表 |
+| POST | `/api/media/upload` | 上传媒体 |
+| GET | `/api/media/:id` | 获取媒体详情 |
+| GET | `/api/media/:id/file` | 读取媒体文件 |
+| DELETE | `/api/media/:id` | 删除媒体，返回 `204` |
+
+补充说明：
+
+- 列表 query 支持 `page`、`pageSize`
+- 上传接口使用 `multipart/form-data`
+- body 字段为 `file`，单文件最大 `10MB`
+
+### Comment
+
+| 方法 | 路径 | 描述 |
+| ---- | ---- | ---- |
+| GET | `/api/comment` | 获取评论列表 |
+| GET | `/api/comment/:id` | 获取评论详情 |
+| PATCH | `/api/comment/:id/status` | 更新评论状态 |
+| DELETE | `/api/comment/:id` | 删除评论，返回 `204` |
+
+补充说明：
+
+- 列表 query 支持 `page`、`pageSize`、`status`、`postId`、`keyword`、`createdFrom`、`createdTo`
+- 评论状态当前支持 `pending`、`approved`、`hidden`、`deleted`
+- 更新状态接口的 body 字段为 `status`，只允许传 `pending`、`approved`、`hidden`
 
 ## 接口来源与使用方式
 

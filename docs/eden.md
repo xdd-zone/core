@@ -181,7 +181,7 @@ await api.user.get({
 这里有一个区分：
 
 - 如果只是通过 Eden 调接口，很多时候直接靠 Treaty 推导就够了
-- 如果前端表单、表格、页面 props 需要复用明确的 HTTP 类型，再从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types` 引入
+- 如果前端表单、表格、页面 props 需要复用明确的 HTTP 类型，再从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types`、`@xdd-zone/nexus/post-types`、`@xdd-zone/nexus/page-types`、`@xdd-zone/nexus/media-types`、`@xdd-zone/nexus/comment-types`、`@xdd-zone/nexus/site-config-types` 引入
 
 ### 场景三：需要新增一个新的业务模块
 

@@ -183,6 +183,11 @@ bun run seed
   - `@xdd-zone/nexus/auth-types`
   - `@xdd-zone/nexus/user-types`
   - `@xdd-zone/nexus/rbac-types`
+  - `@xdd-zone/nexus/post-types`
+  - `@xdd-zone/nexus/page-types`
+  - `@xdd-zone/nexus/media-types`
+  - `@xdd-zone/nexus/comment-types`
+  - `@xdd-zone/nexus/site-config-types`
   - `@xdd-zone/nexus/public`
 - 权限运行时工具
   - `@xdd-zone/nexus/permissions`
@@ -191,7 +196,7 @@ bun run seed
 
 - `*-types` 只放接口相关类型
 - `permissions` 放权限常量、角色常量和权限匹配辅助函数
-- `public` 当前聚合 Eden 类型和三组 HTTP 类型，不聚合权限运行时工具
+- `public` 当前聚合 Eden 类型和全部 HTTP 类型，不聚合权限运行时工具
 
 ## 开发约定
 
@@ -233,6 +238,50 @@ RBAC：
 - `GET /api/rbac/users/:userId/permissions`
 - `GET /api/rbac/users/me/roles`
 - `GET /api/rbac/users/me/permissions`
+
+内容：
+
+- `GET /api/post`
+- `POST /api/post`
+- `GET /api/post/:id`
+- `PATCH /api/post/:id`
+- `DELETE /api/post/:id`
+- `POST /api/post/:id/publish`
+- `POST /api/post/:id/unpublish`
+
+页面：
+
+- `GET /api/page`
+- `POST /api/page`
+- `GET /api/page/:id`
+- `PATCH /api/page/:id`
+- `DELETE /api/page/:id`
+- `POST /api/page/:id/publish`
+- `POST /api/page/:id/unpublish`
+
+预览：
+
+- `POST /api/preview/markdown`
+
+站点配置：
+
+- `GET /api/site-config`
+- `PUT /api/site-config`
+
+媒体：
+
+- `GET /api/media`
+- `POST /api/media/upload`
+- `GET /api/media/:id`
+- `GET /api/media/:id/file`
+- `DELETE /api/media/:id`
+
+评论：
+
+- `GET /api/comment`
+- `GET /api/comment/:id`
+- `PATCH /api/comment/:id/status`
+- `DELETE /api/comment/:id`
 
 ## 相关文档
 

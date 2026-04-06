@@ -158,18 +158,19 @@ bun run --filter @xdd-zone/nexus prisma:push
 - 其他认证 query / mutation 直接调用 `packages/console/src/shared/api/eden.ts` 中的 Treaty 客户端
 - 如果修改 GitHub 登录入口，要同时检查 API 基址配置、`trustedOrigins`、GitHub callback URL，并确认浏览器可以直接访问这条地址；本地开发再检查 `/api` 代理
 
-### `packages/console/src/modules/user/*` 与 `packages/console/src/modules/rbac/*`
+### `packages/console/src/modules/*`
 
 放：
 
 - 基于 Eden Treaty 的 query / mutation
 - 只在前端使用的 query key 和组合逻辑
-- 从 `@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types` 引入的 HTTP 类型
+- 从 `@xdd-zone/nexus/*-types` 引入的 HTTP 类型
 
 补充说明：
 
-- 不再为 `user`、`rbac` 额外维护一层 1:1 的 API wrapper
+- 用户与权限相关请求统一放在 `packages/console/src/modules/user/*` 和 `packages/console/src/modules/rbac/*`
 - 页面直接通过 query / mutation 调用 Treaty 客户端
+- 如果页面还要复用文章、页面、媒体、评论或站点配置的 HTTP 类型，也统一从 `@xdd-zone/nexus/*-types` 引入
 - 权限判断需要的常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
 
 ## 新增接口的推荐流程
