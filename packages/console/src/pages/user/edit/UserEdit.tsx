@@ -1,12 +1,14 @@
+import { ConsolePageHeader } from '@console/components/common/ConsolePageHeader'
 import { UserRequestError, useUpdateUserMutation, useUserDetailQuery } from '@console/modules/user'
+import { ARTICLE_PAGE_CLASSNAME } from '@console/pages/article/shared/page-layout'
 
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 
-import { App as AntdApp, Button, Card, Form, Input, Space, Spin, Tag } from 'antd'
+import { App as AntdApp, Button, Card, Form, Input, Space, Spin } from 'antd'
 import dayjs from 'dayjs'
 
-import { ArrowLeft, PencilLine } from 'lucide-react'
+import { Save } from 'lucide-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -58,7 +60,7 @@ export function UserEdit() {
 
   if (userQuery.isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <Spin size="large" />
       </div>
     )
@@ -66,57 +68,33 @@ export function UserEdit() {
 
   if (!userQuery.data) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <span>{t('common.notFound')}</span>
       </div>
     )
   }
 
   const user = userQuery.data
+  const summaryItems = [
+    { label: t('user.columns.username'), value: user.username || '-' },
+    { label: t('user.columns.email'), value: user.email || '-' },
+    { label: t('user.columns.status'), value: t(`user.status.${user.status.toLowerCase()}`) },
+    { label: t('user.columns.updatedAt'), value: dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm') },
+  ]
 
   return (
-    <div className="flex flex-col gap-5">
-      <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
-        <div className="flex flex-col gap-6">
-          <div className="max-w-3xl">
-            <Button
-              icon={<ArrowLeft className="size-4" />}
-              onClick={() => void navigate({ to: '/users/$id', params: { id } })}
-            >
-              {t('common.back')}
-            </Button>
-            <div className="mt-4 flex items-start gap-3">
-              <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
-                <PencilLine className="size-5" />
-              </div>
-              <div>
-                <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
-                  {t('user.edit.eyebrow')}
-                </div>
-                <h1 className="mt-2 text-2xl font-semibold tracking-tight">{t('user.edit.title')}</h1>
-                <p className="text-fg-muted mt-2 text-sm">{t('user.edit.description')}</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Tag>{user.username || '-'}</Tag>
-                  <Tag>{user.email || '-'}</Tag>
-                  <Tag color={user.status === 'ACTIVE' ? 'success' : user.status === 'BANNED' ? 'error' : 'default'}>
-                    {t(`user.status.${user.status.toLowerCase()}`)}
-                  </Tag>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-3 text-sm text-fg-muted">
-                  <span>
-                    {t('user.columns.createdAt')} {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}
-                  </span>
-                  <span>
-                    {t('user.columns.updatedAt')} {dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className={ARTICLE_PAGE_CLASSNAME}>
+      <ConsolePageHeader
+        backLabel={t('common.back')}
+        description={t('user.edit.description')}
+        onBack={() => {
+          void navigate({ to: '/users/$id', params: { id } })
+        }}
+        summaryItems={summaryItems}
+        title={t('user.edit.title')}
+      />
 
-      <Card title={t('user.edit.formTitle')}>
+      <Card className="rounded-3xl" title={t('user.edit.formTitle')}>
         <p className="mb-4 text-sm text-fg-muted">{t('user.edit.formDescription')}</p>
 
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
@@ -150,7 +128,12 @@ export function UserEdit() {
 
           <Form.Item className="mb-0">
             <Space wrap>
-              <Button type="primary" htmlType="submit" loading={updateMutation.isPending}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                icon={<Save className="size-4" />}
+                loading={updateMutation.isPending}
+              >
                 {t('common.save')}
               </Button>
               <Button onClick={() => void navigate({ to: '/users/$id', params: { id } })}>{t('common.cancel')}</Button>

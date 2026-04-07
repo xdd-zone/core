@@ -1,12 +1,13 @@
 import { canAccessConsolePath, createPermissionKeySet } from '@console/app/access/access-control'
+import { ConsolePageHeader } from '@console/components/common/ConsolePageHeader'
 import { useCurrentUserPermissionsQuery, useUserRolesQuery } from '@console/modules/rbac'
-
 import { useUserDetailQuery } from '@console/modules/user'
+import { ARTICLE_PAGE_CLASSNAME } from '@console/pages/article/shared/page-layout'
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { Badge, Button, Card, Descriptions, Empty, Space, Spin, Tag } from 'antd'
+import { Badge, Button, Card, Descriptions, Empty, Spin } from 'antd'
 import dayjs from 'dayjs'
 
-import { ArrowLeft, ShieldCheck, UserRound } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -28,7 +29,7 @@ export function UserDetail() {
 
   if (userQuery.isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <Spin size="large" />
       </div>
     )
@@ -36,7 +37,7 @@ export function UserDetail() {
 
   if (!userQuery.data) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <span>{t('common.notFound')}</span>
       </div>
     )
@@ -53,68 +54,49 @@ export function UserDetail() {
     BANNED: { color: 'error', text: t('user.status.banned') },
   }
   const statusConfig = statusMap[user.status] || { color: 'default', text: user.status }
+  const summaryItems = [
+    { label: t('user.columns.status'), value: statusConfig.text },
+    { label: t('user.columns.username'), value: user.username || t('user.detail.noUsername') },
+    { label: t('user.columns.email'), value: user.email || t('user.detail.noEmail') },
+    { label: t('user.detail.roles'), value: roles.length },
+  ]
 
   return (
-    <div className="flex flex-col gap-5">
-      <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
-        <div className="flex flex-col gap-5">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div className="max-w-3xl">
-              <Button icon={<ArrowLeft className="size-4" />} onClick={() => void navigate({ to: '/users' })}>
-                {t('common.back')}
+    <div className={ARTICLE_PAGE_CLASSNAME}>
+      <ConsolePageHeader
+        backLabel={t('common.back')}
+        description={t('user.detail.description')}
+        onBack={() => {
+          void navigate({ to: '/users' })
+        }}
+        summaryItems={summaryItems}
+        title={user.name}
+        actions={
+          <>
+            {canAccessConsolePath(accessPath, permissionKeys) ? (
+              <Button onClick={() => void navigate({ to: '/users/$id/access', params: { id } })}>
+                {t('access.manage.title')}
               </Button>
-              <div className="mt-4 flex items-start gap-3">
-                <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
-                  <UserRound className="size-5" />
-                </div>
-                <div>
-                  <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
-                    {t('user.detail.eyebrow')}
-                  </div>
-                  <h1 className="mt-2 text-2xl font-semibold tracking-tight">{user.name}</h1>
-                  <p className="text-fg-muted mt-2 text-sm">{t('user.detail.description')}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
-                    <Tag>{user.username || t('user.detail.noUsername')}</Tag>
-                    <Tag>{user.email || t('user.detail.noEmail')}</Tag>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Space wrap>
-              {canAccessConsolePath(accessPath, permissionKeys) ? (
-                <Button onClick={() => void navigate({ to: '/users/$id/access', params: { id } })}>
-                  {t('access.manage.title')}
-                </Button>
-              ) : null}
-              {canAccessConsolePath(editPath, permissionKeys) ? (
-                <Button type="primary" onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>
-                  {t('common.edit')}
-                </Button>
-              ) : null}
-            </Space>
-          </div>
-
-          <div className="flex flex-wrap gap-3 text-sm text-fg-muted">
-            <span>
-              {t('user.columns.lastLogin')} {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
-            </span>
-            <span>
-              {t('user.columns.createdAt')} {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}
-            </span>
-            <span>
-              {t('user.detail.roles')} {roles.length}
-            </span>
-            <span>
-              {t('user.columns.updatedAt')} {dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}
-            </span>
-          </div>
-        </div>
-      </section>
+            ) : null}
+            {canAccessConsolePath(editPath, permissionKeys) ? (
+              <Button type="primary" onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>
+                {t('common.edit')}
+              </Button>
+            ) : null}
+          </>
+        }
+      />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
-        <Card title={t('user.detail.title')}>
+        <Card
+          className="rounded-3xl"
+          title={t('user.detail.title')}
+          extra={
+            <span className="text-fg-muted text-sm">
+              {t('user.columns.updatedAt')} {dayjs(user.updatedAt).format('YYYY-MM-DD HH:mm')}
+            </span>
+          }
+        >
           <Descriptions column={2}>
             <Descriptions.Item label={t('user.columns.username')}>{user.username || '-'}</Descriptions.Item>
             <Descriptions.Item label={t('user.columns.name')}>{user.name}</Descriptions.Item>
@@ -139,6 +121,7 @@ export function UserDetail() {
 
         <div className="flex flex-col gap-5">
           <Card
+            className="rounded-3xl"
             title={t('user.detail.roles')}
             extra={
               <span className="text-fg-muted text-sm">{t('access.manage.roleCount', { count: roles.length })}</span>

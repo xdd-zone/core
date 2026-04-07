@@ -1,4 +1,5 @@
 import { PermissionSummaryList } from '@console/components/business'
+import { ConsolePageHeader } from '@console/components/common/ConsolePageHeader'
 import {
   RbacRequestError,
   useAssignRoleMutation,
@@ -8,11 +9,12 @@ import {
   useUserRolesQuery,
 } from '@console/modules/rbac'
 import { useUserDetailQuery } from '@console/modules/user'
+import { ARTICLE_PAGE_CLASSNAME } from '@console/pages/article/shared/page-layout'
 
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { App as AntdApp, Button, Card, Empty, Popconfirm, Select, Space, Spin, Tag } from 'antd'
+import { App as AntdApp, Button, Card, Empty, Popconfirm, Select, Spin } from 'antd'
 import dayjs from 'dayjs'
-import { ArrowLeft, KeyRound, ShieldPlus, Trash2 } from 'lucide-react'
+import { ShieldPlus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -84,7 +86,7 @@ export function UserAccess() {
 
   if (userQuery.isLoading || userRolesQuery.isLoading || userPermissionsQuery.isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <Spin size="large" />
       </div>
     )
@@ -92,7 +94,7 @@ export function UserAccess() {
 
   if (!userQuery.data) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <span>{t('common.notFound')}</span>
       </div>
     )
@@ -101,58 +103,34 @@ export function UserAccess() {
   const user = userQuery.data
   const roles = userRolesQuery.data ?? []
   const permissions = userPermissionsQuery.data?.permissions ?? []
+  const summaryItems = [
+    { label: t('user.columns.status'), value: t(`user.status.${user.status.toLowerCase()}`) },
+    { label: t('access.manage.roleCount', { count: roles.length }), value: roles.length },
+    { label: t('access.manage.permissionCount', { count: permissions.length }), value: permissions.length },
+    {
+      label: t('user.columns.lastLogin'),
+      value: user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-',
+    },
+  ]
 
   return (
-    <div className="flex flex-col gap-5">
-      <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
-        <div className="flex flex-col gap-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Button
-              icon={<ArrowLeft className="size-4" />}
-              onClick={() => void navigate({ to: '/users/$id', params: { id } })}
-            >
-              {t('common.back')}
-            </Button>
-            <Space>
-              <Button onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>
-                {t('common.edit')}
-              </Button>
-            </Space>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
-              <KeyRound className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
-                {t('access.manage.title')}
-              </div>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-fg">{user.name}</h1>
-              <p className="mt-2 text-sm text-fg-muted">{t('access.manage.description')}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Tag color={user.status === 'ACTIVE' ? 'success' : user.status === 'BANNED' ? 'error' : 'default'}>
-                  {t(`user.status.${user.status.toLowerCase()}`)}
-                </Tag>
-                <Tag>{user.username || '-'}</Tag>
-                <Tag>{user.email || '-'}</Tag>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-3 text-sm text-fg-muted">
-                <span>
-                  {t('user.columns.lastLogin')}{' '}
-                  {user.lastLogin ? dayjs(user.lastLogin).format('YYYY-MM-DD HH:mm') : '-'}
-                </span>
-                <span>
-                  {t('user.columns.createdAt')} {dayjs(user.createdAt).format('YYYY-MM-DD HH:mm')}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className={ARTICLE_PAGE_CLASSNAME}>
+      <ConsolePageHeader
+        backLabel={t('common.back')}
+        description={t('access.manage.description')}
+        onBack={() => {
+          void navigate({ to: '/users/$id', params: { id } })
+        }}
+        summaryItems={summaryItems}
+        title={user.name}
+        actions={
+          <Button onClick={() => void navigate({ to: '/users/$id/edit', params: { id } })}>{t('common.edit')}</Button>
+        }
+      />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)]">
         <Card
+          className="rounded-3xl"
           title={t('access.manage.rolesTitle')}
           extra={<span className="text-fg-muted text-sm">{t('access.manage.roleCount', { count: roles.length })}</span>}
         >
@@ -215,6 +193,7 @@ export function UserAccess() {
         </Card>
 
         <Card
+          className="rounded-3xl"
           title={t('access.manage.permissionsTitle')}
           extra={
             <span className="text-fg-muted text-sm">

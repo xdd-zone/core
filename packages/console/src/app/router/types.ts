@@ -5,6 +5,8 @@ import type { ComponentType } from 'react'
  * 简化后的路由元信息。
  */
 export interface AppRouteMeta {
+  contentWidth?: 'default' | 'full'
+
   /**
    * 面包屑标题。
    */

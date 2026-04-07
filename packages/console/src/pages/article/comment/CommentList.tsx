@@ -31,7 +31,7 @@ import {
   Typography,
 } from 'antd'
 import { Eye, FilterX, RefreshCw, Search, Trash2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -40,6 +40,12 @@ import {
   formatDateTime,
   renderCommentStatus,
 } from '../shared/content-utils'
+import {
+  ARTICLE_PAGE_CLASSNAME,
+  ARTICLE_PANEL_BODY_STYLE,
+  ARTICLE_PANEL_CLASSNAME,
+  ARTICLE_TABLE_CLASSNAME,
+} from '../shared/page-layout'
 
 const { Paragraph, Text } = Typography
 const { RangePicker } = DatePicker
@@ -107,12 +113,12 @@ export function CommentList() {
     },
   ]
 
-  const openDetail = (comment: Comment) => {
+  const openDetail = useCallback((comment: Comment) => {
     setSelectedCommentId(comment.id)
     setSelectedComment(comment)
     setEditableStatus(comment.status === 'deleted' ? undefined : comment.status)
     setDrawerOpen(true)
-  }
+  }, [])
 
   const resetFilters = () => {
     setKeyword('')
@@ -123,11 +129,11 @@ export function CommentList() {
     setPageSize(20)
   }
 
-  const refreshComments = async () => {
+  const refreshComments = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: COMMENT_LIST_QUERY_KEY })
-  }
+  }, [queryClient])
 
-  const handleUpdateStatus = async () => {
+  const handleUpdateStatus = useCallback(async () => {
     if (!selectedCommentId || !editableStatus) {
       message.warning(t('content.comment.messages.statusRequired'))
       return
@@ -147,106 +153,112 @@ export function CommentList() {
       const errorMessage = error instanceof CommentRequestError ? error.message : t('common.error')
       message.error(errorMessage)
     }
-  }
+  }, [editableStatus, message, queryClient, refreshComments, selectedCommentId, t, updateCommentStatusMutation])
 
-  const handleDeleteComment = async (commentId: string) => {
-    try {
-      await deleteCommentMutation.mutateAsync(commentId)
-      await refreshComments()
-      await queryClient.invalidateQueries({ queryKey: COMMENT_DETAIL_QUERY_KEY(commentId) })
+  const handleDeleteComment = useCallback(
+    async (commentId: string) => {
+      try {
+        await deleteCommentMutation.mutateAsync(commentId)
+        await refreshComments()
+        await queryClient.invalidateQueries({ queryKey: COMMENT_DETAIL_QUERY_KEY(commentId) })
 
-      if (selectedCommentId === commentId) {
-        setDrawerOpen(false)
-        setSelectedCommentId(undefined)
-        setSelectedComment(undefined)
+        if (selectedCommentId === commentId) {
+          setDrawerOpen(false)
+          setSelectedCommentId(undefined)
+          setSelectedComment(undefined)
+        }
+
+        message.success(t('content.comment.messages.deleted'))
+      } catch (error) {
+        const errorMessage = error instanceof CommentRequestError ? error.message : t('common.error')
+        message.error(errorMessage)
       }
-
-      message.success(t('content.comment.messages.deleted'))
-    } catch (error) {
-      const errorMessage = error instanceof CommentRequestError ? error.message : t('common.error')
-      message.error(errorMessage)
-    }
-  }
-
-  const columns: TableProps<Comment>['columns'] = [
-    {
-      dataIndex: 'content',
-      key: 'content',
-      title: t('content.comment.columns.content'),
-      render: (value: string) => (
-        <div className="max-w-[36rem]">
-          <Paragraph className="mb-0 text-fg" ellipsis={{ rows: 2 }}>
-            {value}
-          </Paragraph>
-        </div>
-      ),
     },
-    {
-      key: 'author',
-      title: t('content.comment.columns.author'),
-      render: (_, record) => (
-        <div className="min-w-0">
-          <div className="font-medium text-fg">{record.authorName}</div>
-          <div className="text-fg-muted mt-1 text-xs">{record.authorEmail || t('content.comment.value.none')}</div>
-        </div>
-      ),
-    },
-    {
-      key: 'post',
-      title: t('content.comment.columns.post'),
-      render: (_, record) => {
-        const post = postTitleMap.get(record.postId)
+    [deleteCommentMutation, message, queryClient, refreshComments, selectedCommentId, t],
+  )
 
-        return (
-          <div className="min-w-0">
-            <div className="font-medium text-fg">{post?.title || record.postId}</div>
-            <div className="text-fg-muted mt-1 text-xs">{post?.slug || t('content.comment.value.unknown')}</div>
+  const columns = useMemo<TableProps<Comment>['columns']>(
+    () => [
+      {
+        dataIndex: 'content',
+        key: 'content',
+        title: t('content.comment.columns.content'),
+        render: (value: string) => (
+          <div className="max-w-[36rem]">
+            <Paragraph className="mb-0 text-fg" ellipsis={{ rows: 2 }}>
+              {value}
+            </Paragraph>
           </div>
-        )
+        ),
       },
-    },
-    {
-      dataIndex: 'status',
-      key: 'status',
-      title: t('content.comment.columns.status'),
-      render: (value: Comment['status']) => renderCommentStatus(value, t),
-    },
-    {
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      title: t('content.comment.columns.createdAt'),
-      render: (value: string) => formatDateTime(value),
-    },
-    {
-      key: 'actions',
-      title: t('common.actions'),
-      width: 180,
-      render: (_, record) => (
-        <Space>
-          <Button type="link" size="small" icon={<Eye className="size-4" />} onClick={() => openDetail(record)}>
-            {t('common.view')}
-          </Button>
-          <Popconfirm
-            title={t('content.comment.deleteConfirmTitle')}
-            description={t('content.comment.deleteConfirmDescription')}
-            okText={t('common.confirm')}
-            cancelText={t('common.cancel')}
-            onConfirm={() => void handleDeleteComment(record.id)}
-          >
-            <Button type="link" danger size="small" icon={<Trash2 className="size-4" />}>
-              {t('common.delete')}
+      {
+        key: 'author',
+        title: t('content.comment.columns.author'),
+        render: (_, record) => (
+          <div className="min-w-0">
+            <div className="font-medium text-fg">{record.authorName}</div>
+            <div className="text-fg-muted mt-1 text-xs">{record.authorEmail || t('content.comment.value.none')}</div>
+          </div>
+        ),
+      },
+      {
+        key: 'post',
+        title: t('content.comment.columns.post'),
+        render: (_, record) => {
+          const post = postTitleMap.get(record.postId)
+
+          return (
+            <div className="min-w-0">
+              <div className="font-medium text-fg">{post?.title || record.postId}</div>
+              <div className="text-fg-muted mt-1 text-xs">{post?.slug || t('content.comment.value.unknown')}</div>
+            </div>
+          )
+        },
+      },
+      {
+        dataIndex: 'status',
+        key: 'status',
+        title: t('content.comment.columns.status'),
+        render: (value: Comment['status']) => renderCommentStatus(value, t),
+      },
+      {
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        title: t('content.comment.columns.createdAt'),
+        render: (value: string) => formatDateTime(value),
+      },
+      {
+        key: 'actions',
+        title: t('common.actions'),
+        width: 180,
+        render: (_, record) => (
+          <Space>
+            <Button type="link" size="small" icon={<Eye className="size-4" />} onClick={() => openDetail(record)}>
+              {t('common.view')}
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ]
+            <Popconfirm
+              title={t('content.comment.deleteConfirmTitle')}
+              description={t('content.comment.deleteConfirmDescription')}
+              okText={t('common.confirm')}
+              cancelText={t('common.cancel')}
+              onConfirm={() => void handleDeleteComment(record.id)}
+            >
+              <Button type="link" danger size="small" icon={<Trash2 className="size-4" />}>
+                {t('common.delete')}
+              </Button>
+            </Popconfirm>
+          </Space>
+        ),
+      },
+    ],
+    [handleDeleteComment, openDetail, postTitleMap, t],
+  )
 
   const detailComment = commentDetailQuery.data ?? selectedComment
   const canEditStatus = detailComment?.status !== 'deleted'
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className={ARTICLE_PAGE_CLASSNAME}>
       <section className="rounded-3xl border border-border-subtle bg-surface/72 px-4 py-4 shadow-sm backdrop-blur-xs">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 max-w-2xl">
@@ -268,25 +280,18 @@ export function CommentList() {
         </div>
       </section>
 
-      <Table
-        columns={columns}
-        dataSource={currentItems}
-        loading={commentListQuery.isLoading || postListQuery.isLoading}
-        rowKey="id"
-        pagination={{
-          current: page,
-          onChange: (nextPage, nextPageSize) => {
-            setPage(nextPage)
-            setPageSize(nextPageSize)
-          },
-          pageSize,
-          showQuickJumper: true,
-          showSizeChanger: true,
-          showTotal: (total) => t('common.total', { count: total }),
-          total: commentListQuery.data?.total,
-        }}
-        title={() => (
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <Card
+        className={ARTICLE_PANEL_CLASSNAME}
+        styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
+        title={t('content.comment.title')}
+        extra={
+          <span className="text-fg-muted text-sm">
+            {t('common.total', { count: commentListQuery.data?.total ?? 0 })}
+          </span>
+        }
+      >
+        <div className="flex flex-1 flex-col">
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 flex-1 flex-wrap gap-3">
               <Input
                 allowClear
@@ -343,8 +348,28 @@ export function CommentList() {
               </Button>
             </Space>
           </div>
-        )}
-      />
+
+          <Table
+            className={ARTICLE_TABLE_CLASSNAME}
+            columns={columns}
+            dataSource={currentItems}
+            loading={commentListQuery.isLoading || postListQuery.isLoading}
+            rowKey="id"
+            pagination={{
+              current: page,
+              onChange: (nextPage, nextPageSize) => {
+                setPage(nextPage)
+                setPageSize(nextPageSize)
+              },
+              pageSize,
+              showQuickJumper: true,
+              showSizeChanger: true,
+              showTotal: (total) => t('common.total', { count: total }),
+              total: commentListQuery.data?.total,
+            }}
+          />
+        </div>
+      </Card>
 
       <Drawer
         open={drawerOpen}

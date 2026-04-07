@@ -24,10 +24,16 @@ import { Permissions } from '@xdd-zone/nexus/permissions'
 import { App as AntdApp, Button, Card, Descriptions, Empty, Form, Input, Popconfirm, Space, Table, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { Copy, ExternalLink, ImagePlus, RefreshCw, Trash2, Upload } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { canUsePermission } from '../shared/content-utils'
+import {
+  ARTICLE_PAGE_CLASSNAME,
+  ARTICLE_PANEL_BODY_STYLE,
+  ARTICLE_PANEL_CLASSNAME,
+  ARTICLE_TABLE_CLASSNAME,
+} from '../shared/page-layout'
 
 interface SocialLinkEntry {
   platform?: string
@@ -91,6 +97,20 @@ function socialLinksFromEntries(entries?: SocialLinkEntry[]) {
   )
 }
 
+function buildSiteConfigFormValues(siteConfig?: SiteConfig): SiteConfigFormValues {
+  return {
+    defaultSeoDescription: siteConfig?.defaultSeoDescription,
+    defaultSeoTitle: siteConfig?.defaultSeoTitle,
+    description: siteConfig?.description,
+    favicon: siteConfig?.favicon,
+    footerText: siteConfig?.footerText,
+    logo: siteConfig?.logo,
+    socialLinksEntries: entriesFromSocialLinks(siteConfig),
+    subtitle: siteConfig?.subtitle,
+    title: siteConfig?.title,
+  }
+}
+
 /**
  * 内容设置页面。
  */
@@ -100,6 +120,8 @@ export function ArticleSettings() {
   const queryClient = useQueryClient()
   const [form] = Form.useForm<SiteConfigFormValues>()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const hydratedSiteConfigSnapshotRef = useRef<string | null>(null)
+  const isEditingSiteConfigRef = useRef(false)
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(MEDIA_PAGE_SIZE)
@@ -116,28 +138,26 @@ export function ArticleSettings() {
   const updateSiteConfigMutation = useUpdateSiteConfigMutation()
   const uploadMediaMutation = useUploadMediaMutation()
   const deleteMediaMutation = useDeleteMediaMutation()
+  const siteConfigFormValues = useMemo(() => buildSiteConfigFormValues(siteConfigQuery.data), [siteConfigQuery.data])
 
   useEffect(() => {
     if (!siteConfigQuery.data) {
       return
     }
 
-    form.setFieldsValue({
-      defaultSeoDescription: siteConfigQuery.data.defaultSeoDescription,
-      defaultSeoTitle: siteConfigQuery.data.defaultSeoTitle,
-      description: siteConfigQuery.data.description,
-      favicon: siteConfigQuery.data.favicon,
-      footerText: siteConfigQuery.data.footerText,
-      logo: siteConfigQuery.data.logo,
-      socialLinksEntries: entriesFromSocialLinks(siteConfigQuery.data),
-      subtitle: siteConfigQuery.data.subtitle,
-      title: siteConfigQuery.data.title,
-    })
-  }, [form, siteConfigQuery.data])
+    const nextSnapshot = JSON.stringify(siteConfigFormValues)
 
-  const refreshMediaList = async () => {
+    if (isEditingSiteConfigRef.current || hydratedSiteConfigSnapshotRef.current === nextSnapshot) {
+      return
+    }
+
+    form.setFieldsValue(siteConfigFormValues)
+    hydratedSiteConfigSnapshotRef.current = nextSnapshot
+  }, [form, siteConfigFormValues, siteConfigQuery.data])
+
+  const refreshMediaList = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: MEDIA_LIST_QUERY_KEY })
-  }
+  }, [queryClient])
 
   const summaryItems = [
     {
@@ -154,112 +174,118 @@ export function ArticleSettings() {
     },
   ]
 
-  async function handleDeleteMedia(id: string) {
-    try {
-      await deleteMediaMutation.mutateAsync(id)
-      await refreshMediaList()
-      message.success(t('content.settings.media.deleted'))
-    } catch (error) {
-      const errorMessage = error instanceof MediaRequestError ? error.message : t('common.error')
-      message.error(errorMessage)
-    }
-  }
+  const handleDeleteMedia = useCallback(
+    async (id: string) => {
+      try {
+        await deleteMediaMutation.mutateAsync(id)
+        await refreshMediaList()
+        message.success(t('content.settings.media.deleted'))
+      } catch (error) {
+        const errorMessage = error instanceof MediaRequestError ? error.message : t('common.error')
+        message.error(errorMessage)
+      }
+    },
+    [deleteMediaMutation, message, refreshMediaList, t],
+  )
 
-  const columns: TableProps<Media>['columns'] = [
-    {
-      key: 'preview',
-      title: t('content.settings.media.columns.preview'),
-      width: 120,
-      render: (_, record) =>
-        isImageMimeType(record.mimeType) ? (
-          <img
-            alt={record.originalName}
-            className="h-14 w-20 rounded-xl border border-border-subtle object-cover"
-            src={mediaUrl(record)}
-          />
-        ) : (
-          <div className="flex h-14 w-20 items-center justify-center rounded-xl border border-border-subtle bg-surface-subtle/25 text-xs text-fg-muted">
-            {t('content.settings.media.file')}
+  const columns = useMemo<TableProps<Media>['columns']>(
+    () => [
+      {
+        key: 'preview',
+        title: t('content.settings.media.columns.preview'),
+        width: 120,
+        render: (_, record) =>
+          isImageMimeType(record.mimeType) ? (
+            <img
+              alt={record.originalName}
+              className="h-14 w-20 rounded-xl border border-border-subtle object-cover"
+              src={mediaUrl(record)}
+            />
+          ) : (
+            <div className="flex h-14 w-20 items-center justify-center rounded-xl border border-border-subtle bg-surface-subtle/25 text-xs text-fg-muted">
+              {t('content.settings.media.file')}
+            </div>
+          ),
+      },
+      {
+        key: 'name',
+        title: t('content.settings.media.columns.name'),
+        render: (_, record) => (
+          <div className="min-w-0">
+            <div className="font-medium text-fg">{record.originalName}</div>
+            <div className="text-fg-muted mt-1 text-xs">{record.fileName}</div>
           </div>
         ),
-    },
-    {
-      key: 'name',
-      title: t('content.settings.media.columns.name'),
-      render: (_, record) => (
-        <div className="min-w-0">
-          <div className="font-medium text-fg">{record.originalName}</div>
-          <div className="text-fg-muted mt-1 text-xs">{record.fileName}</div>
-        </div>
-      ),
-    },
-    {
-      dataIndex: 'mimeType',
-      key: 'mimeType',
-      title: t('content.settings.media.columns.mimeType'),
-      render: (value: string) => <Tag>{value}</Tag>,
-    },
-    {
-      dataIndex: 'size',
-      key: 'size',
-      title: t('content.settings.media.columns.size'),
-      render: (value: number) => formatBytes(value),
-    },
-    {
-      key: 'url',
-      title: t('content.settings.media.columns.url'),
-      render: (_, record) => <div className="break-all text-xs text-fg-muted">{mediaUrl(record)}</div>,
-    },
-    {
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      title: t('content.settings.media.columns.createdAt'),
-      render: (value: string) => dayjs(value).format('YYYY-MM-DD HH:mm'),
-    },
-    {
-      key: 'actions',
-      title: t('common.actions'),
-      width: 220,
-      render: (_, record) => (
-        <Space wrap>
-          <Button
-            type="link"
-            size="small"
-            icon={<Copy className="size-4" />}
-            onClick={() => {
-              void navigator.clipboard
-                .writeText(mediaUrl(record))
-                .then(() => message.success(t('content.settings.media.copySuccess')))
-                .catch(() => message.error(t('content.settings.media.copyFailed')))
-            }}
-          >
-            {t('content.settings.media.copy')}
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<ExternalLink className="size-4" />}
-            onClick={() => {
-              window.open(mediaUrl(record), '_blank', 'noopener,noreferrer')
-            }}
-          >
-            {t('content.settings.media.open')}
-          </Button>
-          <Popconfirm
-            title={t('content.settings.media.deleteConfirmTitle')}
-            description={t('content.settings.media.deleteConfirmDescription')}
-            okText={t('common.confirm')}
-            cancelText={t('common.cancel')}
-            onConfirm={() => void handleDeleteMedia(record.id)}
-          >
-            <Button danger type="link" size="small" icon={<Trash2 className="size-4" />}>
-              {t('common.delete')}
+      },
+      {
+        dataIndex: 'mimeType',
+        key: 'mimeType',
+        title: t('content.settings.media.columns.mimeType'),
+        render: (value: string) => <Tag>{value}</Tag>,
+      },
+      {
+        dataIndex: 'size',
+        key: 'size',
+        title: t('content.settings.media.columns.size'),
+        render: (value: number) => formatBytes(value),
+      },
+      {
+        key: 'url',
+        title: t('content.settings.media.columns.url'),
+        render: (_, record) => <div className="break-all text-xs text-fg-muted">{mediaUrl(record)}</div>,
+      },
+      {
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        title: t('content.settings.media.columns.createdAt'),
+        render: (value: string) => dayjs(value).format('YYYY-MM-DD HH:mm'),
+      },
+      {
+        key: 'actions',
+        title: t('common.actions'),
+        width: 220,
+        render: (_, record) => (
+          <Space wrap>
+            <Button
+              type="link"
+              size="small"
+              icon={<Copy className="size-4" />}
+              onClick={() => {
+                void navigator.clipboard
+                  .writeText(mediaUrl(record))
+                  .then(() => message.success(t('content.settings.media.copySuccess')))
+                  .catch(() => message.error(t('content.settings.media.copyFailed')))
+              }}
+            >
+              {t('content.settings.media.copy')}
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ]
+            <Button
+              type="link"
+              size="small"
+              icon={<ExternalLink className="size-4" />}
+              onClick={() => {
+                window.open(mediaUrl(record), '_blank', 'noopener,noreferrer')
+              }}
+            >
+              {t('content.settings.media.open')}
+            </Button>
+            <Popconfirm
+              title={t('content.settings.media.deleteConfirmTitle')}
+              description={t('content.settings.media.deleteConfirmDescription')}
+              okText={t('common.confirm')}
+              cancelText={t('common.cancel')}
+              onConfirm={() => void handleDeleteMedia(record.id)}
+            >
+              <Button danger type="link" size="small" icon={<Trash2 className="size-4" />}>
+                {t('common.delete')}
+              </Button>
+            </Popconfirm>
+          </Space>
+        ),
+      },
+    ],
+    [handleDeleteMedia, message, t],
+  )
 
   const handleSaveSiteConfig = async (values: SiteConfigFormValues) => {
     try {
@@ -275,7 +301,11 @@ export function ArticleSettings() {
         title: values.title?.trim() || undefined,
       })
 
+      const nextFormValues = buildSiteConfigFormValues(updatedConfig)
       queryClient.setQueryData(SITE_CONFIG_QUERY_KEY, updatedConfig)
+      form.setFieldsValue(nextFormValues)
+      hydratedSiteConfigSnapshotRef.current = JSON.stringify(nextFormValues)
+      isEditingSiteConfigRef.current = false
       message.success(t('content.settings.messages.saved'))
     } catch (error) {
       const errorMessage = error instanceof SiteConfigRequestError ? error.message : t('common.error')
@@ -319,21 +349,13 @@ export function ArticleSettings() {
   }
 
   const resetSiteConfigForm = () => {
-    form.setFieldsValue({
-      defaultSeoDescription: siteConfigQuery.data?.defaultSeoDescription,
-      defaultSeoTitle: siteConfigQuery.data?.defaultSeoTitle,
-      description: siteConfigQuery.data?.description,
-      favicon: siteConfigQuery.data?.favicon,
-      footerText: siteConfigQuery.data?.footerText,
-      logo: siteConfigQuery.data?.logo,
-      socialLinksEntries: entriesFromSocialLinks(siteConfigQuery.data),
-      subtitle: siteConfigQuery.data?.subtitle,
-      title: siteConfigQuery.data?.title,
-    })
+    form.setFieldsValue(siteConfigFormValues)
+    hydratedSiteConfigSnapshotRef.current = JSON.stringify(siteConfigFormValues)
+    isEditingSiteConfigRef.current = false
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className={ARTICLE_PAGE_CLASSNAME}>
       <section className="rounded-3xl border border-border-subtle bg-surface/72 px-4 py-4 shadow-sm backdrop-blur-xs">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 max-w-2xl">
@@ -355,9 +377,10 @@ export function ArticleSettings() {
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+      <div className="grid flex-1 gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <Card
-          className="rounded-3xl"
+          className={ARTICLE_PANEL_CLASSNAME}
+          styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
           title={t('content.settings.form.title')}
           extra={
             <Space wrap>
@@ -378,7 +401,14 @@ export function ArticleSettings() {
           {canReadSiteConfig || canWriteSiteConfig ? (
             <>
               <p className="text-fg-muted mb-5 text-sm">{t('content.settings.form.description')}</p>
-              <Form form={form} layout="vertical" onFinish={handleSaveSiteConfig}>
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={handleSaveSiteConfig}
+                onValuesChange={() => {
+                  isEditingSiteConfigRef.current = true
+                }}
+              >
                 <div className="grid gap-x-5 md:grid-cols-2">
                   <Form.Item
                     label={t('content.settings.form.fields.title')}
@@ -518,7 +548,8 @@ export function ArticleSettings() {
         </Card>
 
         <Card
-          className="rounded-3xl"
+          className={ARTICLE_PANEL_CLASSNAME}
+          styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
           title={t('content.settings.media.title')}
           extra={
             <span className="text-fg-muted text-sm">
@@ -527,7 +558,7 @@ export function ArticleSettings() {
           }
         >
           {canReadMedia || canWriteMedia ? (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-1 flex-col gap-4">
               <div className="rounded-2xl border border-dashed border-border-subtle bg-surface-subtle/18 p-4">
                 <div className="flex flex-col gap-3">
                   <div>
@@ -562,6 +593,7 @@ export function ArticleSettings() {
               </div>
 
               <Table
+                className={ARTICLE_TABLE_CLASSNAME}
                 columns={columns}
                 dataSource={mediaListQuery.data?.items}
                 loading={canReadMedia && mediaListQuery.isLoading}

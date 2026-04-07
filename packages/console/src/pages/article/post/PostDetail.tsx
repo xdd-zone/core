@@ -16,11 +16,12 @@ import { getPrimaryColorByTheme } from '@console/utils/theme'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { App as AntdApp, Button, Card, Descriptions, Empty, Popconfirm, Space, Spin, Tag } from 'antd'
-import { ArrowLeft, Eye, SquarePen, Trash2 } from 'lucide-react'
+import { ArrowLeft, SquarePen, Trash2 } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { canUsePermission, formatDateTime, POST_PUBLISH_PERMISSION, renderPostStatus } from '../shared/content-utils'
+import { ARTICLE_PAGE_CLASSNAME, ARTICLE_PANEL_BODY_STYLE, ARTICLE_PANEL_CLASSNAME } from '../shared/page-layout'
 
 /**
  * 文章详情页。
@@ -93,7 +94,7 @@ export function PostDetail() {
 
   if (postQuery.isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <Spin size="large" />
       </div>
     )
@@ -101,7 +102,7 @@ export function PostDetail() {
 
   if (!postQuery.data) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <Empty description={t('common.notFound')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
       </div>
     )
@@ -110,39 +111,45 @@ export function PostDetail() {
   const post = postQuery.data
   const summaryItems = [
     { label: t('content.post.summary.slug'), value: post.slug },
-    { label: t('content.post.summary.tags'), value: String(post.tags.length) },
-    { label: t('content.post.summary.status'), value: t(`content.post.status.${post.status}`) },
+    { label: t('content.post.fields.updatedAt'), value: formatDateTime(post.updatedAt) },
+    { label: t('content.post.fields.publishedAt'), value: formatDateTime(post.publishedAt) },
   ]
 
   return (
-    <div className="flex flex-col gap-5">
-      <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
-        <div className="flex flex-col gap-5">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div className="max-w-3xl">
-              <Button icon={<ArrowLeft className="size-4" />} onClick={() => void navigate({ to: '/articles' })}>
-                {t('common.back')}
-              </Button>
-              <div className="mt-4 flex items-start gap-3">
-                <div className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
-                  <Eye className="size-5" />
-                </div>
-                <div>
-                  <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">
-                    {t('content.post.detail.eyebrow')}
-                  </div>
-                  <h1 className="mt-2 text-2xl font-semibold tracking-tight">{post.title}</h1>
-                  <p className="text-fg-muted mt-2 text-sm">{t('content.post.detail.description')}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {renderPostStatus(post.status, t)}
-                    <Tag>{post.slug}</Tag>
-                    {post.category ? <Tag>{post.category}</Tag> : null}
-                    {post.tags.map((tag) => (
-                      <Tag key={tag}>{tag}</Tag>
-                    ))}
-                  </div>
-                </div>
-              </div>
+    <div className={ARTICLE_PAGE_CLASSNAME}>
+      <section className="rounded-[28px] border border-border-subtle bg-surface/85 px-5 py-5 shadow-sm backdrop-blur-xs sm:px-6">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0 max-w-3xl">
+            <Button
+              type="text"
+              className="-ml-3 px-3"
+              icon={<ArrowLeft className="size-4" />}
+              onClick={() => void navigate({ to: '/articles' })}
+            >
+              {t('common.back')}
+            </Button>
+            <h1 className="mt-3 text-xl font-semibold tracking-tight sm:text-2xl">{post.title}</h1>
+            <p className="text-fg-muted mt-2 max-w-2xl text-sm">{t('content.post.detail.description')}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {renderPostStatus(post.status, t)}
+              {post.category ? <Tag>{post.category}</Tag> : null}
+              {post.tags.map((tag) => (
+                <Tag key={tag}>{tag}</Tag>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-start gap-3 xl:max-w-[44%] xl:items-end">
+            <div className="flex flex-wrap gap-2 xl:justify-end">
+              {summaryItems.map((item) => (
+                <span
+                  key={item.label}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-overlay-0/16 px-2.5 py-1 text-xs"
+                >
+                  <span className="text-fg-muted">{item.label}</span>
+                  <span className="font-medium text-fg">{item.value}</span>
+                </span>
+              ))}
             </div>
 
             <Space wrap>
@@ -178,28 +185,30 @@ export function PostDetail() {
               ) : null}
             </Space>
           </div>
-
-          <div className="flex flex-wrap gap-2">
-            {summaryItems.map((item) => (
-              <span
-                key={item.label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-overlay-0/16 px-2.5 py-1 text-xs"
-              >
-                <span className="text-fg-muted">{item.label}</span>
-                <span className="font-medium text-fg">{item.value}</span>
-              </span>
-            ))}
-          </div>
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)]">
-        <Card title={t('content.post.detail.previewTitle')}>
-          <Markdown accentColor={primaryColor} catppuccinTheme={catppuccinTheme} value={post.markdown} />
+      <div className="grid flex-1 gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)]">
+        <Card
+          className={ARTICLE_PANEL_CLASSNAME}
+          styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
+          title={t('content.post.detail.previewTitle')}
+        >
+          <div className="flex flex-1 flex-col">
+            {post.excerpt ? (
+              <div className="mb-4 rounded-2xl border border-border-subtle bg-surface-subtle/18 p-3">
+                <div className="text-fg-muted text-xs">{t('content.post.fields.excerpt')}</div>
+                <div className="mt-1 text-sm leading-6 text-fg">{post.excerpt}</div>
+              </div>
+            ) : null}
+            <div className="min-h-0 flex-1 overflow-auto">
+              <Markdown accentColor={primaryColor} catppuccinTheme={catppuccinTheme} value={post.markdown} />
+            </div>
+          </div>
         </Card>
 
         <div className="flex flex-col gap-5">
-          <Card title={t('content.post.detail.metaTitle')}>
+          <Card className="rounded-3xl" title={t('content.post.detail.metaTitle')}>
             <Descriptions column={1} size="small">
               <Descriptions.Item label={t('content.post.fields.slug')}>{post.slug}</Descriptions.Item>
               <Descriptions.Item label={t('content.post.fields.category')}>{post.category || '-'}</Descriptions.Item>
@@ -225,14 +234,14 @@ export function PostDetail() {
             </Descriptions>
           </Card>
 
-          <Card title={t('content.post.detail.markdownTitle')}>
+          <Card className="rounded-3xl" title={t('content.post.detail.markdownTitle')}>
             <pre className="max-h-[420px] overflow-auto whitespace-pre-wrap break-words rounded-2xl bg-surface-subtle/20 p-3 text-xs text-fg-muted">
               {post.markdown}
             </pre>
           </Card>
 
           {post.coverImage ? (
-            <Card title={t('content.post.detail.coverTitle')}>
+            <Card className="rounded-3xl" title={t('content.post.detail.coverTitle')}>
               <div className="overflow-hidden rounded-2xl border border-border-subtle">
                 <img src={post.coverImage} alt={post.title} className="h-48 w-full object-cover" />
               </div>

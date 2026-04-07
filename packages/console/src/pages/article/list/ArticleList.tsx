@@ -16,7 +16,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { App as AntdApp, Button, Card, Input, Popconfirm, Select, Space, Table, Tag } from 'antd'
 import { FilePlus2, RefreshCw, Search } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -26,6 +26,12 @@ import {
   POST_STATUS_OPTIONS,
   renderPostStatus,
 } from '../shared/content-utils'
+import {
+  ARTICLE_PAGE_CLASSNAME,
+  ARTICLE_PANEL_BODY_STYLE,
+  ARTICLE_PANEL_CLASSNAME,
+  ARTICLE_TABLE_CLASSNAME,
+} from '../shared/page-layout'
 
 /**
  * 文章列表页面。
@@ -64,38 +70,48 @@ export function ArticleList() {
   const currentItems = postListQuery.data?.items ?? []
   const canCreate = canAccessConsolePath('/articles/new', permissionKeys)
   const canPublish = canUsePermission(permissionKeys, POST_PUBLISH_PERMISSION)
+  const canEditPost = useCallback(
+    (postId: string) => canAccessConsolePath(`/articles/${postId}/edit`, permissionKeys),
+    [permissionKeys],
+  )
 
-  const handlePublishToggle = async (record: Post) => {
-    try {
-      const nextPost =
-        record.status === 'published'
-          ? await unpublishPostMutation.mutateAsync(record.id)
-          : await publishPostMutation.mutateAsync(record.id)
+  const handlePublishToggle = useCallback(
+    async (record: Post) => {
+      try {
+        const nextPost =
+          record.status === 'published'
+            ? await unpublishPostMutation.mutateAsync(record.id)
+            : await publishPostMutation.mutateAsync(record.id)
 
-      queryClient.setQueryData(POST_DETAIL_QUERY_KEY(record.id), nextPost)
-      await queryClient.invalidateQueries({ queryKey: POST_LIST_QUERY_KEY })
-      message.success(
-        record.status === 'published'
-          ? t('content.post.messages.unpublishSuccess')
-          : t('content.post.messages.publishSuccess'),
-      )
-    } catch (error) {
-      const errorMessage = error instanceof PostRequestError ? error.message : t('common.error')
-      message.error(errorMessage)
-    }
-  }
+        queryClient.setQueryData(POST_DETAIL_QUERY_KEY(record.id), nextPost)
+        await queryClient.invalidateQueries({ queryKey: POST_LIST_QUERY_KEY })
+        message.success(
+          record.status === 'published'
+            ? t('content.post.messages.unpublishSuccess')
+            : t('content.post.messages.publishSuccess'),
+        )
+      } catch (error) {
+        const errorMessage = error instanceof PostRequestError ? error.message : t('common.error')
+        message.error(errorMessage)
+      }
+    },
+    [message, publishPostMutation, queryClient, t, unpublishPostMutation],
+  )
 
-  const handleDelete = async (record: Post) => {
-    try {
-      await deletePostMutation.mutateAsync(record.id)
-      queryClient.removeQueries({ queryKey: POST_DETAIL_QUERY_KEY(record.id) })
-      await queryClient.invalidateQueries({ queryKey: POST_LIST_QUERY_KEY })
-      message.success(t('content.post.messages.deleteSuccess'))
-    } catch (error) {
-      const errorMessage = error instanceof PostRequestError ? error.message : t('common.error')
-      message.error(errorMessage)
-    }
-  }
+  const handleDelete = useCallback(
+    async (record: Post) => {
+      try {
+        await deletePostMutation.mutateAsync(record.id)
+        queryClient.removeQueries({ queryKey: POST_DETAIL_QUERY_KEY(record.id) })
+        await queryClient.invalidateQueries({ queryKey: POST_LIST_QUERY_KEY })
+        message.success(t('content.post.messages.deleteSuccess'))
+      } catch (error) {
+        const errorMessage = error instanceof PostRequestError ? error.message : t('common.error')
+        message.error(errorMessage)
+      }
+    },
+    [deletePostMutation, message, queryClient, t],
+  )
 
   const summaryItems = [
     { label: t('content.post.summary.total'), value: postListQuery.data?.total ?? 0 },
@@ -109,105 +125,108 @@ export function ArticleList() {
     },
   ]
 
-  const columns: TableProps<Post>['columns'] = [
-    {
-      dataIndex: 'title',
-      key: 'title',
-      title: t('content.post.fields.title'),
-      render: (_, record) => (
-        <div className="min-w-0">
-          <button
-            type="button"
-            className="text-left text-sm font-medium text-fg transition-colors hover:text-primary"
-            onClick={() => void navigate({ to: '/articles/$id', params: { id: record.id } })}
-          >
-            {record.title}
-          </button>
-          <div className="text-fg-muted mt-1 text-xs">{record.slug}</div>
-        </div>
-      ),
-    },
-    {
-      dataIndex: 'status',
-      key: 'status',
-      title: t('content.post.fields.status'),
-      render: (value) => renderPostStatus(value, t),
-    },
-    {
-      dataIndex: 'category',
-      key: 'category',
-      title: t('content.post.fields.category'),
-      render: (value: string | null) => value || '-',
-    },
-    {
-      dataIndex: 'tags',
-      key: 'tags',
-      title: t('content.post.fields.tags'),
-      render: (value: string[]) =>
-        value.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {value.slice(0, 3).map((item) => (
-              <Tag key={item}>{item}</Tag>
-            ))}
-            {value.length > 3 ? <Tag>+{value.length - 3}</Tag> : null}
+  const columns = useMemo<TableProps<Post>['columns']>(
+    () => [
+      {
+        dataIndex: 'title',
+        key: 'title',
+        title: t('content.post.fields.title'),
+        render: (_, record) => (
+          <div className="min-w-0">
+            <button
+              type="button"
+              className="text-left text-sm font-medium text-fg transition-colors hover:text-primary"
+              onClick={() => void navigate({ to: '/articles/$id', params: { id: record.id } })}
+            >
+              {record.title}
+            </button>
+            <div className="text-fg-muted mt-1 text-xs">{record.slug}</div>
           </div>
-        ) : (
-          '-'
         ),
-    },
-    {
-      dataIndex: 'updatedAt',
-      key: 'updatedAt',
-      title: t('content.post.fields.updatedAt'),
-      render: (value) => formatDateTime(value),
-    },
-    {
-      key: 'actions',
-      title: t('common.actions'),
-      width: 280,
-      render: (_, record) => (
-        <Space wrap size="small">
-          <Button
-            type="link"
-            size="small"
-            onClick={() => void navigate({ to: '/articles/$id', params: { id: record.id } })}
-          >
-            {t('common.view')}
-          </Button>
-          {canAccessConsolePath(`/articles/${record.id}/edit`, permissionKeys) ? (
+      },
+      {
+        dataIndex: 'status',
+        key: 'status',
+        title: t('content.post.fields.status'),
+        render: (value) => renderPostStatus(value, t),
+      },
+      {
+        dataIndex: 'category',
+        key: 'category',
+        title: t('content.post.fields.category'),
+        render: (value: string | null) => value || '-',
+      },
+      {
+        dataIndex: 'tags',
+        key: 'tags',
+        title: t('content.post.fields.tags'),
+        render: (value: string[]) =>
+          value.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {value.slice(0, 3).map((item) => (
+                <Tag key={item}>{item}</Tag>
+              ))}
+              {value.length > 3 ? <Tag>+{value.length - 3}</Tag> : null}
+            </div>
+          ) : (
+            '-'
+          ),
+      },
+      {
+        dataIndex: 'updatedAt',
+        key: 'updatedAt',
+        title: t('content.post.fields.updatedAt'),
+        render: (value) => formatDateTime(value),
+      },
+      {
+        key: 'actions',
+        title: t('common.actions'),
+        width: 280,
+        render: (_, record) => (
+          <Space wrap size="small">
             <Button
               type="link"
               size="small"
-              onClick={() => void navigate({ to: '/articles/$id/edit', params: { id: record.id } })}
+              onClick={() => void navigate({ to: '/articles/$id', params: { id: record.id } })}
             >
-              {t('common.edit')}
+              {t('common.view')}
             </Button>
-          ) : null}
-          {canPublish ? (
-            <Button type="link" size="small" onClick={() => void handlePublishToggle(record)}>
-              {record.status === 'published' ? t('common.unpublish') : t('common.publish')}
-            </Button>
-          ) : null}
-          {canAccessConsolePath(`/articles/${record.id}/edit`, permissionKeys) ? (
-            <Popconfirm
-              title={t('content.post.confirmDeleteTitle')}
-              description={t('content.post.confirmDeleteDescription')}
-              okText={t('common.confirm')}
-              cancelText={t('common.cancel')}
-              onConfirm={() => void handleDelete(record)}
-            >
-              <Button type="link" danger size="small">
-                {t('common.delete')}
+            {canEditPost(record.id) ? (
+              <Button
+                type="link"
+                size="small"
+                onClick={() => void navigate({ to: '/articles/$id/edit', params: { id: record.id } })}
+              >
+                {t('common.edit')}
               </Button>
-            </Popconfirm>
-          ) : null}
-        </Space>
-      ),
-    },
-  ]
+            ) : null}
+            {canPublish ? (
+              <Button type="link" size="small" onClick={() => void handlePublishToggle(record)}>
+                {record.status === 'published' ? t('common.unpublish') : t('common.publish')}
+              </Button>
+            ) : null}
+            {canEditPost(record.id) ? (
+              <Popconfirm
+                title={t('content.post.confirmDeleteTitle')}
+                description={t('content.post.confirmDeleteDescription')}
+                okText={t('common.confirm')}
+                cancelText={t('common.cancel')}
+                onConfirm={() => void handleDelete(record)}
+              >
+                <Button type="link" danger size="small">
+                  {t('common.delete')}
+                </Button>
+              </Popconfirm>
+            ) : null}
+          </Space>
+        ),
+      },
+    ],
+    [canEditPost, canPublish, handleDelete, handlePublishToggle, navigate, t],
+  )
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className={ARTICLE_PAGE_CLASSNAME}>
       <section className="rounded-3xl border border-border-subtle bg-surface/72 px-4 py-4 shadow-sm backdrop-blur-xs">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 max-w-2xl">
@@ -230,6 +249,8 @@ export function ArticleList() {
       </section>
 
       <Card
+        className={ARTICLE_PANEL_CLASSNAME}
+        styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
         title={t('content.post.list.resultsTitle')}
         extra={
           <Space>
@@ -248,83 +269,86 @@ export function ArticleList() {
           </Space>
         }
       >
-        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center">
-            <Input
-              allowClear
-              className="min-w-0 lg:w-80"
-              placeholder={t('content.post.list.keywordPlaceholder')}
-              prefix={<Search className="text-fg-muted size-4" />}
-              value={keyword}
-              onChange={(event) => {
-                setKeyword(event.target.value)
+        <div className="flex flex-1 flex-col">
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center">
+              <Input
+                allowClear
+                className="min-w-0 lg:w-80"
+                placeholder={t('content.post.list.keywordPlaceholder')}
+                prefix={<Search className="text-fg-muted size-4" />}
+                value={keyword}
+                onChange={(event) => {
+                  setKeyword(event.target.value)
+                  setPage(1)
+                }}
+              />
+              <Select
+                className="w-full lg:w-44"
+                options={POST_STATUS_OPTIONS.map((item) => ({ label: t(item.label), value: item.value }))}
+                value={status}
+                onChange={(value) => {
+                  setStatus(value)
+                  setPage(1)
+                }}
+              />
+              <Input
+                allowClear
+                className="w-full lg:w-44"
+                placeholder={t('content.post.list.categoryPlaceholder')}
+                value={category}
+                onChange={(event) => {
+                  setCategory(event.target.value)
+                  setPage(1)
+                }}
+              />
+              <Input
+                allowClear
+                className="w-full lg:w-44"
+                placeholder={t('content.post.list.tagPlaceholder')}
+                value={tag}
+                onChange={(event) => {
+                  setTag(event.target.value)
+                  setPage(1)
+                }}
+              />
+            </div>
+
+            <Button
+              icon={<RefreshCw className="size-4" />}
+              onClick={() => {
+                setKeyword('')
+                setStatus('')
+                setCategory('')
+                setTag('')
                 setPage(1)
+                setPageSize(20)
               }}
-            />
-            <Select
-              className="w-full lg:w-44"
-              options={POST_STATUS_OPTIONS.map((item) => ({ label: t(item.label), value: item.value }))}
-              value={status}
-              onChange={(value) => {
-                setStatus(value)
-                setPage(1)
-              }}
-            />
-            <Input
-              allowClear
-              className="w-full lg:w-44"
-              placeholder={t('content.post.list.categoryPlaceholder')}
-              value={category}
-              onChange={(event) => {
-                setCategory(event.target.value)
-                setPage(1)
-              }}
-            />
-            <Input
-              allowClear
-              className="w-full lg:w-44"
-              placeholder={t('content.post.list.tagPlaceholder')}
-              value={tag}
-              onChange={(event) => {
-                setTag(event.target.value)
-                setPage(1)
-              }}
-            />
+            >
+              {t('common.reset')}
+            </Button>
           </div>
 
-          <Button
-            icon={<RefreshCw className="size-4" />}
-            onClick={() => {
-              setKeyword('')
-              setStatus('')
-              setCategory('')
-              setTag('')
-              setPage(1)
-              setPageSize(20)
+          <Table
+            className={ARTICLE_TABLE_CLASSNAME}
+            columns={columns}
+            dataSource={postListQuery.data?.items}
+            loading={postListQuery.isLoading}
+            rowKey="id"
+            pagination={{
+              current: page,
+              onChange: (nextPage, nextPageSize) => {
+                setPage(nextPage)
+                setPageSize(nextPageSize)
+              },
+              pageSize,
+              showQuickJumper: true,
+              showSizeChanger: true,
+              showTotal: (total) => t('common.total', { count: total }),
+              total: postListQuery.data?.total,
             }}
-          >
-            {t('common.reset')}
-          </Button>
+          />
         </div>
-
-        <Table
-          columns={columns}
-          dataSource={postListQuery.data?.items}
-          loading={postListQuery.isLoading}
-          rowKey="id"
-          pagination={{
-            current: page,
-            onChange: (nextPage, nextPageSize) => {
-              setPage(nextPage)
-              setPageSize(nextPageSize)
-            },
-            pageSize,
-            showQuickJumper: true,
-            showSizeChanger: true,
-            showTotal: (total) => t('common.total', { count: total }),
-            total: postListQuery.data?.total,
-          }}
-        />
       </Card>
     </div>
   )

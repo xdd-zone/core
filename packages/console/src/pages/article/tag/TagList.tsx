@@ -7,6 +7,12 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { formatDateTime } from '../shared/content-utils'
+import {
+  ARTICLE_PAGE_CLASSNAME,
+  ARTICLE_PANEL_BODY_STYLE,
+  ARTICLE_PANEL_CLASSNAME,
+  ARTICLE_TABLE_CLASSNAME,
+} from '../shared/page-layout'
 
 interface TagRow {
   examples: string[]
@@ -61,48 +67,51 @@ export function TagList() {
       .sort((left, right) => right.postCount - left.postCount)
   }, [keyword, postListQuery.data?.items])
 
-  const columns: TableProps<TagRow>['columns'] = [
-    {
-      dataIndex: 'name',
-      key: 'name',
-      title: t('content.tag.fields.name'),
-      render: (value) => <span className="font-medium text-fg">{value}</span>,
-    },
-    {
-      dataIndex: 'postCount',
-      key: 'postCount',
-      title: t('content.tag.fields.postCount'),
-    },
-    {
-      dataIndex: 'publishedCount',
-      key: 'publishedCount',
-      title: t('content.tag.fields.publishedCount'),
-    },
-    {
-      dataIndex: 'examples',
-      key: 'examples',
-      title: t('content.tag.fields.examples'),
-      render: (value: string[]) =>
-        value.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {value.map((item) => (
-              <Tag key={item}>{item}</Tag>
-            ))}
-          </div>
-        ) : (
-          '-'
-        ),
-    },
-    {
-      dataIndex: 'updatedAt',
-      key: 'updatedAt',
-      title: t('content.tag.fields.updatedAt'),
-      render: (value) => formatDateTime(value),
-    },
-  ]
+  const columns = useMemo<TableProps<TagRow>['columns']>(
+    () => [
+      {
+        dataIndex: 'name',
+        key: 'name',
+        title: t('content.tag.fields.name'),
+        render: (value) => <span className="font-medium text-fg">{value}</span>,
+      },
+      {
+        dataIndex: 'postCount',
+        key: 'postCount',
+        title: t('content.tag.fields.postCount'),
+      },
+      {
+        dataIndex: 'publishedCount',
+        key: 'publishedCount',
+        title: t('content.tag.fields.publishedCount'),
+      },
+      {
+        dataIndex: 'examples',
+        key: 'examples',
+        title: t('content.tag.fields.examples'),
+        render: (value: string[]) =>
+          value.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {value.map((item) => (
+                <Tag key={item}>{item}</Tag>
+              ))}
+            </div>
+          ) : (
+            '-'
+          ),
+      },
+      {
+        dataIndex: 'updatedAt',
+        key: 'updatedAt',
+        title: t('content.tag.fields.updatedAt'),
+        render: (value) => formatDateTime(value),
+      },
+    ],
+    [t],
+  )
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className={ARTICLE_PAGE_CLASSNAME}>
       <section className="rounded-3xl border border-border-subtle bg-surface/72 px-4 py-4 shadow-sm backdrop-blur-xs">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 max-w-2xl">
@@ -123,30 +132,37 @@ export function TagList() {
         </div>
       </section>
 
-      <Card title={t('content.tag.resultsTitle')}>
-        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <Input
-            allowClear
-            className="w-full max-w-md"
-            placeholder={t('content.tag.keywordPlaceholder')}
-            prefix={<Search className="text-fg-muted size-4" />}
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-          />
-          <span className="text-fg-muted text-sm">{t('content.tag.aggregationHint')}</span>
-        </div>
+      <Card
+        className={ARTICLE_PANEL_CLASSNAME}
+        styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
+        title={t('content.tag.resultsTitle')}
+      >
+        <div className="flex flex-1 flex-col">
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <Input
+              allowClear
+              className="w-full max-w-md"
+              placeholder={t('content.tag.keywordPlaceholder')}
+              prefix={<Search className="text-fg-muted size-4" />}
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+            />
+            <span className="text-fg-muted text-sm">{t('content.tag.aggregationHint')}</span>
+          </div>
 
-        {tagRows.length > 0 ? (
-          <Table
-            columns={columns}
-            dataSource={tagRows}
-            loading={postListQuery.isLoading}
-            rowKey="name"
-            pagination={false}
-          />
-        ) : (
-          <Empty description={t('content.tag.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        )}
+          {tagRows.length > 0 ? (
+            <Table
+              className={ARTICLE_TABLE_CLASSNAME}
+              columns={columns}
+              dataSource={tagRows}
+              loading={postListQuery.isLoading}
+              rowKey="name"
+              pagination={false}
+            />
+          ) : (
+            <Empty description={t('content.tag.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          )}
+        </div>
       </Card>
     </div>
   )

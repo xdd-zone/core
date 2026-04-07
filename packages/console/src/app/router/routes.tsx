@@ -103,6 +103,7 @@ const dashboardRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'dashboard',
   staticData: {
+    contentWidth: 'full',
     icon: BarChart3,
     title: 'menu.dashboard',
   },
@@ -113,6 +114,7 @@ const articleListRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'articles',
   staticData: {
+    contentWidth: 'full',
     icon: List,
     title: 'menu.articleList',
   },
@@ -123,6 +125,7 @@ const categoryListRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'categories',
   staticData: {
+    contentWidth: 'full',
     icon: Folder,
     title: 'menu.categoryManagement',
   },
@@ -133,6 +136,7 @@ const tagListRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'tags',
   staticData: {
+    contentWidth: 'full',
     icon: Tag,
     title: 'menu.tagManagement',
   },
@@ -143,6 +147,7 @@ const createPostRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'articles/new',
   staticData: {
+    contentWidth: 'full',
     title: 'content.post.form.createTitle',
   },
 })
@@ -152,6 +157,7 @@ const postDetailRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'articles/$id',
   staticData: {
+    contentWidth: 'full',
     title: 'content.post.detail.title',
   },
 })
@@ -161,6 +167,7 @@ const editPostRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'articles/$id/edit',
   staticData: {
+    contentWidth: 'full',
     title: 'content.post.form.editTitle',
   },
 })
@@ -170,6 +177,7 @@ const commentListRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'comments',
   staticData: {
+    contentWidth: 'full',
     icon: MessageCircle,
     title: 'menu.commentManagement',
   },
@@ -180,6 +188,7 @@ const articleSettingsRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'article-settings',
   staticData: {
+    contentWidth: 'full',
     icon: Settings,
     title: 'menu.articleSettings',
   },
@@ -260,6 +269,7 @@ const userListRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'users',
   staticData: {
+    contentWidth: 'full',
     icon: Users,
     title: 'menu.userManagement',
   },
@@ -270,6 +280,7 @@ const userDetailRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'users/$id',
   staticData: {
+    contentWidth: 'full',
     title: 'menu.userDetail',
   },
 })
@@ -279,6 +290,7 @@ const userEditRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'users/$id/edit',
   staticData: {
+    contentWidth: 'full',
     title: 'menu.userEdit',
   },
 })
@@ -288,6 +300,7 @@ const roleListRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'roles',
   staticData: {
+    contentWidth: 'full',
     icon: Shield,
     title: 'menu.roleManagement',
   },
@@ -298,6 +311,7 @@ const myProfileRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'profile',
   staticData: {
+    contentWidth: 'full',
     icon: UserCog,
     title: 'menu.myProfile',
   },
@@ -308,6 +322,7 @@ const myAccessRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'my-access',
   staticData: {
+    contentWidth: 'full',
     icon: ShieldCheck,
     title: 'menu.myAccess',
   },
@@ -318,6 +333,7 @@ const userAccessRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: 'users/$id/access',
   staticData: {
+    contentWidth: 'full',
     icon: KeyRound,
     title: 'access.manage.title',
   },

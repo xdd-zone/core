@@ -1,10 +1,15 @@
 import { canAccessConsolePath, createPermissionKeySet } from '@console/app/access/access-control'
 import { useAuthStore } from '@console/modules/auth'
 import { useCurrentUserPermissionsQuery, useCurrentUserRolesQuery } from '@console/modules/rbac'
+import {
+  ARTICLE_PAGE_CLASSNAME,
+  ARTICLE_PANEL_BODY_STYLE,
+  ARTICLE_PANEL_CLASSNAME,
+} from '@console/pages/article/shared/page-layout'
 
 import { useNavigate } from '@tanstack/react-router'
 import { Permissions } from '@xdd-zone/nexus/permissions'
-import { Skeleton } from 'antd'
+import { Card, Skeleton } from 'antd'
 import dayjs from 'dayjs'
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -171,41 +176,47 @@ export function Dashboard() {
 
   if (currentUserRolesQuery.isLoading || currentUserPermissionsQuery.isLoading) {
     return (
-      <section className="rounded-3xl border border-border-subtle bg-surface/78 p-5 shadow-sm backdrop-blur-xs">
-        <Skeleton active paragraph={{ rows: 6 }} title={{ width: '28%' }} />
-      </section>
+      <div className={ARTICLE_PAGE_CLASSNAME}>
+        <Card className={ARTICLE_PANEL_CLASSNAME} styles={{ body: ARTICLE_PANEL_BODY_STYLE }}>
+          <Skeleton active paragraph={{ rows: 6 }} title={{ width: '28%' }} />
+        </Card>
+      </div>
     )
   }
 
   return (
-    <section className="rounded-3xl border border-border-subtle bg-surface/78 p-5 shadow-sm backdrop-blur-xs">
-      <div className="flex flex-col gap-4 border-b border-border-subtle pb-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-fg">
-            {t('dashboard.title', {
-              name: user?.name || user?.username || t('dashboard.defaultName'),
-            })}
-          </h1>
-          <p className="text-fg-muted mt-1.5 text-sm">{t('dashboard.description')}</p>
-        </div>
+    <div className={ARTICLE_PAGE_CLASSNAME}>
+      <section className="rounded-3xl border border-border-subtle bg-surface/72 px-4 py-4 shadow-sm backdrop-blur-xs">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0 max-w-2xl">
+            <h1 className="text-fg text-xl font-semibold tracking-tight">
+              {t('dashboard.title', {
+                name: user?.name || user?.username || t('dashboard.defaultName'),
+              })}
+            </h1>
+            <p className="text-fg-muted mt-1.5 text-sm">{t('dashboard.description')}</p>
+          </div>
 
-        <div className="flex flex-wrap gap-2 lg:max-w-[56%] lg:justify-end">
-          {summaryItems.map((item) => (
-            <span
-              key={item.label}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-overlay-0/16 px-2.5 py-1 text-xs"
-            >
-              <span className="text-fg-muted">{item.label}</span>
-              <span className="font-medium text-fg">{item.value}</span>
-            </span>
-          ))}
+          <div className="flex flex-wrap gap-2 xl:max-w-[44%] xl:justify-end">
+            {summaryItems.map((item) => (
+              <span
+                key={item.label}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-overlay-0/16 px-2.5 py-1 text-xs"
+              >
+                <span className="text-fg-muted">{item.label}</span>
+                <span className="font-medium text-fg">{item.value}</span>
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.92fr)]">
-        <div>
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-fg">{t('dashboard.actions.title')}</h2>
+      <div className="grid flex-1 gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.92fr)]">
+        <Card
+          className={ARTICLE_PANEL_CLASSNAME}
+          styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
+          title={t('dashboard.actions.title')}
+          extra={
             <button
               type="button"
               className="inline-flex items-center gap-1 text-sm font-medium text-primary"
@@ -216,9 +227,9 @@ export function Dashboard() {
               <span>{primaryActionLabel}</span>
               <ArrowRight className="size-4" />
             </button>
-          </div>
-
-          <div className="mt-3 grid gap-2.5 md:grid-cols-2">
+          }
+        >
+          <div className="grid gap-2.5 md:grid-cols-2">
             {actionItems.map((item) => (
               <button
                 key={item.key}
@@ -250,11 +261,14 @@ export function Dashboard() {
               </button>
             ))}
           </div>
-        </div>
+        </Card>
 
-        <div>
-          <h2 className="text-base font-semibold text-fg">{t('dashboard.account.title')}</h2>
-          <div className="mt-3 space-y-2.5">
+        <Card
+          className={ARTICLE_PANEL_CLASSNAME}
+          styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
+          title={t('dashboard.account.title')}
+        >
+          <div className="space-y-2.5">
             {infoItems.map((item) => (
               <div
                 key={item.label}
@@ -265,8 +279,8 @@ export function Dashboard() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
-    </section>
+    </div>
   )
 }

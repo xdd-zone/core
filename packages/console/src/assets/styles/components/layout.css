@@ -30,6 +30,12 @@
     margin-inline: auto;
   }
 
+  .guide-content-inner--full {
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+  }
+
   .guide-menu.ant-menu {
     background: transparent;
     border-inline-end: none;

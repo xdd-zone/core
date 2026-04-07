@@ -1,11 +1,17 @@
 import type { TableProps } from 'antd'
 
 import { useRoleListQuery } from '@console/modules/rbac'
+import {
+  ARTICLE_PAGE_CLASSNAME,
+  ARTICLE_PANEL_BODY_STYLE,
+  ARTICLE_PANEL_CLASSNAME,
+  ARTICLE_TABLE_CLASSNAME,
+} from '@console/pages/article/shared/page-layout'
 
 import { Button, Card, Input, Table, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { RefreshCw, Search } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -27,46 +33,49 @@ export function RoleList() {
     { label: t('role.list.stats.currentPage'), value: currentItems.length },
   ]
 
-  const columns: TableProps['columns'] = [
-    {
-      title: t('role.columns.name'),
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: t('role.columns.displayName'),
-      dataIndex: 'displayName',
-      key: 'displayName',
-      render: (value: string) => value || '-',
-    },
-    {
-      title: t('role.columns.description'),
-      dataIndex: 'description',
-      key: 'description',
-      render: (value: string) => value || '-',
-    },
-    {
-      title: t('role.columns.isSystem'),
-      dataIndex: 'isSystem',
-      key: 'isSystem',
-      render: (isSystem: boolean) =>
-        isSystem ? <Tag color="blue">{t('role.systemRole')}</Tag> : <Tag>{t('role.customRole')}</Tag>,
-    },
-    {
-      title: t('role.columns.createdAt'),
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (value: string) => dayjs(value).format('YYYY-MM-DD HH:mm'),
-    },
-  ]
+  const columns = useMemo<TableProps['columns']>(
+    () => [
+      {
+        title: t('role.columns.name'),
+        dataIndex: 'name',
+        key: 'name',
+      },
+      {
+        title: t('role.columns.displayName'),
+        dataIndex: 'displayName',
+        key: 'displayName',
+        render: (value: string) => value || '-',
+      },
+      {
+        title: t('role.columns.description'),
+        dataIndex: 'description',
+        key: 'description',
+        render: (value: string) => value || '-',
+      },
+      {
+        title: t('role.columns.isSystem'),
+        dataIndex: 'isSystem',
+        key: 'isSystem',
+        render: (isSystem: boolean) =>
+          isSystem ? <Tag color="blue">{t('role.systemRole')}</Tag> : <Tag>{t('role.customRole')}</Tag>,
+      },
+      {
+        title: t('role.columns.createdAt'),
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        render: (value: string) => dayjs(value).format('YYYY-MM-DD HH:mm'),
+      },
+    ],
+    [t],
+  )
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className={ARTICLE_PAGE_CLASSNAME}>
       <section className="rounded-3xl border border-border-subtle bg-surface/72 px-4 py-4 shadow-sm backdrop-blur-xs">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 max-w-2xl">
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">{t('menu.roleManagement')}</h1>
+              <h1 className="text-fg text-xl font-semibold tracking-tight">{t('menu.roleManagement')}</h1>
               <p className="text-fg-muted mt-1.5 text-sm">{t('role.list.description')}</p>
             </div>
           </div>
@@ -86,54 +95,59 @@ export function RoleList() {
       </section>
 
       <Card
+        className={ARTICLE_PANEL_CLASSNAME}
+        styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
         title={t('role.list.resultsTitle')}
         extra={
           <span className="text-fg-muted text-sm">{t('common.total', { count: roleListQuery.data?.total ?? 0 })}</span>
         }
       >
-        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <Input
-            placeholder={t('role.searchPlaceholder')}
-            prefix={<Search className="text-fg-muted size-4" />}
-            value={keyword}
-            onChange={(e) => {
-              setKeyword(e.target.value)
-              setPage(1)
+        <div className="flex flex-1 flex-col">
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <Input
+              placeholder={t('role.searchPlaceholder')}
+              prefix={<Search className="text-fg-muted size-4" />}
+              value={keyword}
+              onChange={(e) => {
+                setKeyword(e.target.value)
+                setPage(1)
+              }}
+              className="w-full max-w-md"
+              allowClear
+            />
+
+            <Button
+              icon={<RefreshCw className="size-4" />}
+              onClick={() => {
+                setKeyword('')
+                setPage(1)
+                setPageSize(20)
+              }}
+            >
+              {t('role.list.resetFilters')}
+            </Button>
+          </div>
+
+          <Table
+            className={ARTICLE_TABLE_CLASSNAME}
+            columns={columns}
+            dataSource={roleListQuery.data?.items}
+            rowKey="id"
+            loading={roleListQuery.isLoading}
+            pagination={{
+              current: page,
+              pageSize,
+              total: roleListQuery.data?.total,
+              onChange: (nextPage, nextPageSize) => {
+                setPage(nextPage)
+                setPageSize(nextPageSize)
+              },
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total) => t('common.total', { count: total }),
             }}
-            className="w-full max-w-md"
-            allowClear
           />
-
-          <Button
-            icon={<RefreshCw className="size-4" />}
-            onClick={() => {
-              setKeyword('')
-              setPage(1)
-              setPageSize(20)
-            }}
-          >
-            {t('role.list.resetFilters')}
-          </Button>
         </div>
-
-        <Table
-          columns={columns}
-          dataSource={roleListQuery.data?.items}
-          rowKey="id"
-          loading={roleListQuery.isLoading}
-          pagination={{
-            current: page,
-            pageSize,
-            total: roleListQuery.data?.total,
-            onChange: (nextPage, nextPageSize) => {
-              setPage(nextPage)
-              setPageSize(nextPageSize)
-            },
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total) => t('common.total', { count: total }),
-          }}
-        />
       </Card>
     </div>
   )

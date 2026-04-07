@@ -1,10 +1,12 @@
 import type { SessionPayload } from '@console/modules/auth'
 
+import { ConsolePageHeader } from '@console/components/common/ConsolePageHeader'
 import { useAuthStore } from '@console/modules/auth'
 import { useMyProfileQuery, useUpdateMeMutation } from '@console/modules/user'
+import { ARTICLE_PAGE_CLASSNAME } from '@console/pages/article/shared/page-layout'
 
 import { useQueryClient } from '@tanstack/react-query'
-import { App as AntdApp, Button, Form, Input, Spin, Tag } from 'antd'
+import { App as AntdApp, Button, Card, Form, Input, Spin, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { Save } from 'lucide-react'
 import { useEffect } from 'react'
@@ -70,7 +72,7 @@ export function MyProfile() {
 
   if (profileQuery.isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <Spin size="large" />
       </div>
     )
@@ -78,7 +80,7 @@ export function MyProfile() {
 
   if (!profileQuery.data) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <span>{t('common.notFound')}</span>
       </div>
     )
@@ -105,28 +107,15 @@ export function MyProfile() {
   ]
 
   return (
-    <section className="rounded-3xl border border-border-subtle bg-surface/78 p-5 shadow-sm backdrop-blur-xs">
-      <div className="flex flex-col gap-4 border-b border-border-subtle pb-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-fg">{t('menu.myProfile')}</h1>
-        </div>
+    <div className={ARTICLE_PAGE_CLASSNAME}>
+      <ConsolePageHeader
+        description={t('profile.summary.description')}
+        summaryItems={summaryItems}
+        title={t('menu.myProfile')}
+      />
 
-        <div className="flex flex-wrap gap-2 lg:max-w-[60%] lg:justify-end">
-          {summaryItems.map((item) => (
-            <span
-              key={item.label}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-overlay-0/16 px-2.5 py-1 text-xs"
-            >
-              <span className="text-fg-muted">{item.label}</span>
-              <span className="font-medium text-fg">{item.value}</span>
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(280px,0.84fr)_minmax(0,1.16fr)]">
-        <div>
-          <h2 className="text-base font-semibold text-fg">{t('profile.summary.title')}</h2>
+      <div className="grid gap-5 xl:grid-cols-[minmax(280px,0.84fr)_minmax(0,1.16fr)]">
+        <Card className="rounded-3xl" title={t('profile.summary.title')}>
           <div className="mt-3 space-y-2.5">
             {infoItems.map((item) => (
               <div
@@ -146,11 +135,11 @@ export function MyProfile() {
               {t(`user.status.${profile.status.toLowerCase()}`)}
             </Tag>
           </div>
-        </div>
+        </Card>
 
-        <div>
-          <h2 className="text-base font-semibold text-fg">{t('profile.form.title')}</h2>
-          <div className="mt-3 rounded-2xl border border-border-subtle bg-surface-subtle/18 p-4">
+        <Card className="rounded-3xl" title={t('profile.form.title')}>
+          <p className="mb-4 text-sm text-fg-muted">{t('profile.form.description')}</p>
+          <div className="rounded-2xl border border-border-subtle bg-surface-subtle/18 p-4">
             <Form form={form} layout="vertical" onFinish={handleSubmit}>
               <div className="grid gap-x-5 md:grid-cols-2">
                 <Form.Item label={t('user.columns.username')} name="username">
@@ -199,8 +188,8 @@ export function MyProfile() {
               </Form.Item>
             </Form>
           </div>
-        </div>
+        </Card>
       </div>
-    </section>
+    </div>
   )
 }
