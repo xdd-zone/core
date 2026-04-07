@@ -4,16 +4,21 @@ import type { App } from '../public/eden'
 import { treaty } from '@elysiajs/eden'
 import { Prisma } from '@nexus/infra/database/prisma/generated/client'
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import pino from 'pino'
 import { createApp } from '../app'
 import { AUTH_CONFIG } from '../core/config'
 import { parsePermission, Permissions, PermissionService, SYSTEM_PERMISSION_DEFINITIONS } from '../core/security'
 import { betterAuthInstance } from '../core/security/auth'
 import { prisma } from '../infra/database'
+import { seedPermissions } from '../infra/database/prisma/seed/seeds/seed-permissions'
+import { seedRolePermissions } from '../infra/database/prisma/seed/seeds/seed-role-permissions'
+import { seedRoles } from '../infra/database/prisma/seed/seeds/seed-roles'
 import { SiteConfigRepository } from '../modules/site-config/repository'
 
 const app = createApp()
 const baseUrl = 'http://localhost'
 const authBaseUrl = 'http://localhost:7788'
+const seedLogger = pino({ level: 'silent' })
 const siteConfigResetFields = {
   subtitle: null,
   description: null,
@@ -221,7 +226,6 @@ let originalSiteConfigRecord: SiteConfigRecord | null = null
 let actorUserId = ''
 let subjectUserId = ''
 let superAdminRoleId = ''
-let adminRoleId = ''
 let userRoleId = ''
 const originalEmailPasswordEnabled = AUTH_CONFIG.methods.emailPassword.enabled
 const originalEmailPasswordAllowSignUp = AUTH_CONFIG.methods.emailPassword.allowSignUp
@@ -232,6 +236,10 @@ beforeAll(async () => {
   AUTH_CONFIG.methods.emailPassword.allowSignUp = true
   betterAuthInstance.options.emailAndPassword.enabled = true
   originalSiteConfigRecord = await SiteConfigRepository.findDefault()
+
+  await seedRoles(prisma, seedLogger)
+  await seedPermissions(prisma, seedLogger)
+  await seedRolePermissions(prisma, seedLogger)
 
   const actorResult = await authenticatedClient.api.auth['sign-up'].email.post(actorUser)
 
@@ -265,26 +273,22 @@ beforeAll(async () => {
   subjectUserId = subjectId
   createdUserIds.push(subjectUserId)
 
-  const [superAdminRole, adminRole, userRole] = await Promise.all([
+  const [superAdminRole, userRole] = await Promise.all([
     prisma.role.findUnique({ where: { name: 'superAdmin' } }),
-    prisma.role.findUnique({ where: { name: 'admin' } }),
     prisma.role.findUnique({ where: { name: 'user' } }),
   ])
 
   const nextSuperAdminRoleId = superAdminRole?.id
-  const nextAdminRoleId = adminRole?.id
   const nextUserRoleId = userRole?.id
 
   expect(nextSuperAdminRoleId).toBeTruthy()
-  expect(nextAdminRoleId).toBeTruthy()
   expect(nextUserRoleId).toBeTruthy()
 
-  if (!nextSuperAdminRoleId || !nextAdminRoleId || !nextUserRoleId) {
+  if (!nextSuperAdminRoleId || !nextUserRoleId) {
     throw new Error('缺少默认角色 ID')
   }
 
   superAdminRoleId = nextSuperAdminRoleId
-  adminRoleId = nextAdminRoleId
   userRoleId = nextUserRoleId
 
   const ensureUserRole = async (userId: string, roleId: string, assignedBy: string | null) => {
@@ -521,7 +525,7 @@ describe('eden smoke', () => {
     expect(rolesResult.status).toBe(200)
     expect(rolesResult.error).toBeNull()
     const roleNames = (rolesResult.data?.items ?? []).map((role: RoleSummary) => role.name).sort()
-    expect(roleNames).toEqual(['admin', 'superAdmin', 'user'])
+    expect(roleNames).toEqual(['superAdmin', 'user'])
 
     const currentUserRolesResult = await authenticatedClient.api.rbac.users.me.roles.get()
     expect(currentUserRolesResult.status).toBe(200)
@@ -529,23 +533,25 @@ describe('eden smoke', () => {
     expect(currentUserRolesResult.data?.roles.some((role: RoleSummary) => role.name === 'superAdmin')).toBe(true)
 
     const assignResult = await authenticatedClient.api.rbac.users({ userId: subjectUserId }).roles.post({
-      roleId: adminRoleId,
+      roleId: superAdminRoleId,
     })
 
     expect(assignResult.status).toBe(200)
     expect(assignResult.error).toBeNull()
     expect(assignResult.data?.userId).toBe(subjectUserId)
-    expect(assignResult.data?.roleId).toBe(adminRoleId)
+    expect(assignResult.data?.roleId).toBe(superAdminRoleId)
 
     const subjectRolesAfterAssign = await authenticatedClient.api.rbac.users({ userId: subjectUserId }).roles.get()
     expect(subjectRolesAfterAssign.status).toBe(200)
     expect(subjectRolesAfterAssign.error).toBeNull()
-    expect(subjectRolesAfterAssign.data?.some((role: RoleAssignmentSummary) => role.roleId === adminRoleId)).toBe(true)
+    expect(subjectRolesAfterAssign.data?.some((role: RoleAssignmentSummary) => role.roleId === superAdminRoleId)).toBe(
+      true,
+    )
 
     const revokeResult = await authenticatedClient.api.rbac
       .users({ userId: subjectUserId })
       .roles({
-        roleId: adminRoleId,
+        roleId: superAdminRoleId,
       })
       .delete()
     expect(revokeResult.status).toBe(204)
@@ -554,7 +560,9 @@ describe('eden smoke', () => {
     const subjectRolesAfterRevoke = await authenticatedClient.api.rbac.users({ userId: subjectUserId }).roles.get()
     expect(subjectRolesAfterRevoke.status).toBe(200)
     expect(subjectRolesAfterRevoke.error).toBeNull()
-    expect(subjectRolesAfterRevoke.data?.some((role: RoleAssignmentSummary) => role.roleId === adminRoleId)).toBe(false)
+    expect(subjectRolesAfterRevoke.data?.some((role: RoleAssignmentSummary) => role.roleId === superAdminRoleId)).toBe(
+      false,
+    )
   })
 
   it('首次读取站点配置时应创建默认配置', async () => {

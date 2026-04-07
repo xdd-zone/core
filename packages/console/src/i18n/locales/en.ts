@@ -20,7 +20,7 @@ export default {
     socialLoginAutoRegisterHint:
       'If this GitHub account is signing in for the first time, the system will create the account automatically once a usable email is available.',
     socialLoginDisabledHint:
-      'Please check with an administrator to confirm which sign-in methods are currently available.',
+      'Please check with a super admin to confirm which sign-in methods are currently available.',
     socialLoginErrorConfigHint:
       'Please check the current Console origin, the API base URL configuration, and Nexus trustedOrigins before trying again.',
     socialLoginErrorEmailNotFound:
@@ -33,7 +33,7 @@ export default {
     socialLoginErrorSignUpDisabled: '{{method}} sign-in does not allow first-time account creation right now.',
     socialLoginErrorTitle: 'GitHub sign-in did not complete',
     socialLoginSignUpDisabledHint:
-      'If this is your first time using this sign-in method, ask an administrator to create your account or enable sign-up first.',
+      'If this is your first time using this sign-in method, ask a super admin to create your account or enable sign-up first.',
     socialLoginRetryHint: 'If this keeps happening, try again later or sign in with email and password first.',
     loginTitle: 'Login',
     loginWelcome: 'Welcome back',
@@ -84,11 +84,11 @@ export default {
       rolePermissionCount: '{{count}} default permissions',
       rolePermissionMore: '{{count}} more permission details',
       roleSource: {
-        manual: 'Admin assigned',
+        manual: 'Manually assigned',
         system: 'System default',
       },
       roleSourceNoteDescription:
-        'System default means the account gets it by default, while admin assigned means it was granted later.',
+        'System default means the account gets it by default, while manually assigned means it was granted later.',
       roleSourceNoteTitle: 'Role source',
       rolesDescription: 'This section lists the current effective roles.',
       rolesTitle: 'My Roles',
@@ -207,11 +207,11 @@ export default {
         'role:read:all': 'Allows viewing fixed system roles and current role assignments.',
         'site_config:read': 'Allows viewing the site configuration.',
         'site_config:write': 'Allows updating the site configuration.',
-        'system:manage': 'Platform-level global management capability held by super admins.',
-        'user:disable:all': 'Allows admins to enable, disable, or ban users.',
-        'user:read:all': 'Allows admins to view the user list and user details.',
+        'system:manage': 'Platform-level global management capability available only to super admins.',
+        'user:disable:all': 'Allows super admins to enable, disable, or ban users.',
+        'user:read:all': 'Allows super admins to view the user list and user details.',
         'user:read:own': 'Allows the signed-in user to view their own basic profile.',
-        'user:update:all': 'Allows admins to update user profile information.',
+        'user:update:all': 'Allows super admins to update user profile information.',
         'user:update:own': 'Allows the signed-in user to update their own basic profile.',
         'user_permission:read:all': 'Allows viewing the effective permissions of a specified user.',
         'user_permission:read:own': 'Allows the signed-in user to view their own effective permissions.',
@@ -309,7 +309,7 @@ export default {
       more: '{{count}} more actions',
       title: 'Permission coverage',
     },
-    defaultName: 'Admin',
+    defaultName: 'Current User',
     description: 'Overview of the current account and available entry points.',
     eyebrow: 'Workspace',
     focus: {
@@ -846,7 +846,7 @@ export default {
       createdDescription: 'Shows when this account first entered the console system.',
       description: 'Review the current profile and role details for this account.',
       eyebrow: 'User Detail',
-      infoDescription: 'This section contains the complete basic profile for administrator review.',
+      infoDescription: 'This section contains the complete basic profile for status review.',
       lastLoginDescription: 'Helps determine whether this account is still being used recently.',
       noEmail: 'No email provided',
       noRoles: 'No roles assigned',
@@ -864,7 +864,7 @@ export default {
         'Use a reachable email and phone number so the account is easier to identify and follow up.',
       noteContactTitle: 'Contact Details',
       noteIdentityDescription:
-        'Name supports human-readable admin workflows, while username is the account key and is not editable here.',
+        'Name supports readable account review, while username is the account key and is not editable here.',
       noteIdentityTitle: 'Identity Fields',
       noteIntroDescription:
         'Use the introduction to capture role, responsibility, or any note that helps explain this account.',

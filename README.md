@@ -320,7 +320,7 @@ RBAC：
 
 ## 权限模型
 
-- 固定角色：`superAdmin / admin / user`
+- 固定角色：`superAdmin / user`
 - 权限以 `packages/nexus/src/core/security/permissions/permissions.ts` 为准
 - `own` 只用于当前用户资料场景
 - 后台前端默认以后端 `401 / 403` 结果为准

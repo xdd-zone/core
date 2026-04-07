@@ -79,7 +79,7 @@ export const userModule = new Elysia({
     response: UserSchema,
     detail: apiDetail({
       summary: '更新用户状态',
-      description: '后台管理员启用、停用或封禁指定用户。',
+      description: '超级管理员启用、停用或封禁指定用户。',
       response: UserSchema,
       errors: [400, 401, 403, 404],
     }),
@@ -90,7 +90,7 @@ export const userModule = new Elysia({
     response: UserSchema,
     detail: apiDetail({
       summary: '获取用户详情',
-      description: '后台管理员查看指定用户的基础资料。',
+      description: '超级管理员查看指定用户的基础资料。',
       response: UserSchema,
       errors: [401, 403, 404],
     }),
@@ -102,7 +102,7 @@ export const userModule = new Elysia({
     response: UserSchema,
     detail: apiDetail({
       summary: '更新用户基础资料',
-      description: '后台管理员更新指定用户的基础资料，不包含状态变更。',
+      description: '超级管理员更新指定用户的基础资料，不包含状态变更。',
       response: UserSchema,
       errors: [400, 401, 403, 404, 409],
     }),

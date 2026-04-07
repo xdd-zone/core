@@ -16,7 +16,7 @@
 
 当前系统采用固定角色、固定权限的后台模型：
 
-- 固定角色：`superAdmin / admin / user`
+- 固定角色：`superAdmin / user`
 - 权限以 `packages/nexus/src/core/security/permissions/permissions.ts` 为准
 - `own` 只用于用户自己的资料场景
 

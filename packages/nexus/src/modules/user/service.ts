@@ -73,7 +73,7 @@ export class UserService {
   }
 
   /**
-   * 后台更新指定用户基础资料。
+   * 超级管理员更新指定用户基础资料。
    */
   static async updateByAdmin(userId: string, data: UpdateUserBody): Promise<User> {
     await this.findById(userId)
@@ -91,7 +91,7 @@ export class UserService {
   }
 
   /**
-   * 后台更新指定用户状态。
+   * 超级管理员更新指定用户状态。
    */
   static async updateStatus(userId: string, status: UserStatus): Promise<User> {
     await this.findById(userId)

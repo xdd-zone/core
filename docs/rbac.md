@@ -132,7 +132,7 @@ export const rbacRoutes = new Elysia({
 常见场景：
 
 - 匿名访问受保护接口：`401`
-- 普通用户访问管理员接口：`403`
+- 普通用户访问超管接口：`403`
 - own 接口访问自己：成功
 - own 接口访问别人且无 `:all`：`403`
 - me 接口缺少 own/base 权限：`403`
@@ -158,7 +158,7 @@ export const rbacRoutes = new Elysia({
 
 ### 系统角色与权限
 
-- 系统角色固定为 `superAdmin / admin / user`
+- 系统角色固定为 `superAdmin / user`
 - 权限以系统内置权限为准
 - 角色能力包括角色列表、用户角色分配、用户角色移除与用户权限查看
 
@@ -167,7 +167,7 @@ export const rbacRoutes = new Elysia({
 RBAC 调整后至少要覆盖：
 
 - 匿名访问返回 `401`
-- 普通用户访问管理员接口返回 `403`
+- 普通用户访问超管接口返回 `403`
 - own 接口访问自己成功、访问别人失败
 - me 接口在普通用户下可用
 - `204` 行为仍然保持正确

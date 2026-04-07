@@ -29,9 +29,9 @@ bun run --filter @xdd-zone/nexus test
   - 登录态 `/api/auth/me`
   - own `/api/user/me`
   - own `/api/user/:id`
-  - 管理员 `/api/user`
-  - 管理员 `/api/user/:id`
-  - 管理员 `/api/user/:id/status`
+  - 超管 `/api/user`
+  - 超管 `/api/user/:id`
+  - 超管 `/api/user/:id/status`
   - `/api/rbac/users/:userId/roles`
   - `/api/rbac/users/:userId/permissions`
   - me `/api/rbac/users/me/roles`

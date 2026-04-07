@@ -6,11 +6,7 @@ import { SYSTEM_ROLE_NAMES } from '@nexus/modules/rbac/constants'
 const ROLE_DEFINITIONS: Record<SystemRoleName, { displayName: string; description: string }> = {
   superAdmin: {
     displayName: '超级管理员',
-    description: '平台级超级管理员，拥有后台底座的稳定全局管理能力。',
-  },
-  admin: {
-    displayName: '管理员',
-    description: '后台管理员，负责用户管理、角色分配和权限查看。',
+    description: '平台级超级管理员，负责后台管理、角色分配和系统配置。',
   },
   user: {
     displayName: '普通用户',

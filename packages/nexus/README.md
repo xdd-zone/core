@@ -165,7 +165,7 @@ bun run seed
 
 约束：
 
-- 固定角色只保留 `superAdmin / admin / user`
+- 固定角色只保留 `superAdmin / user`
 - 权限以 `core/security/permissions/permissions.ts` 为准
 - `own` 只用于当前用户资料场景
 

@@ -1,7 +1,7 @@
 /**
  * 固定系统角色名称。
  */
-export const SYSTEM_ROLE_NAMES = ['superAdmin', 'admin', 'user'] as const
+export const SYSTEM_ROLE_NAMES = ['superAdmin', 'user'] as const
 
 export type SystemRoleName = (typeof SYSTEM_ROLE_NAMES)[number]
 

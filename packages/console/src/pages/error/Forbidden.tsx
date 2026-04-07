@@ -24,7 +24,7 @@ export function Forbidden() {
       icon={<Lock className="size-5" />}
       title="你当前没有权限访问这个页面"
       description="当前账号已登录，但没有这个页面的访问权限。返回首页，或回到上一页继续操作。"
-      note="如果你本来应该能看到这里，请联系管理员确认角色或权限配置。"
+      note="如果你本来应该能看到这里，请联系超管确认角色或权限配置。"
       actions={
         <>
           <Button type="primary" icon={<House className="size-4" />} onClick={handleGoHome}>

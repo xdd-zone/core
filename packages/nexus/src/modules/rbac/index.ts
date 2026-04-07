@@ -43,7 +43,7 @@ export const rbacModule = new Elysia({
     response: UserRolesSchema,
     detail: apiDetail({
       summary: '获取用户角色列表',
-      description: '后台管理员查看指定用户当前已分配的固定系统角色。',
+      description: '超级管理员查看指定用户当前已分配的固定系统角色。',
       response: UserRolesSchema,
       errors: [401, 403, 404],
     }),
@@ -92,7 +92,7 @@ export const rbacModule = new Elysia({
     response: UserPermissionsSchema,
     detail: apiDetail({
       summary: '获取用户权限',
-      description: '后台管理员查看指定用户的有效权限集合。',
+      description: '超级管理员查看指定用户的有效权限集合。',
       response: UserPermissionsSchema,
       errors: [401, 403, 404],
     }),

@@ -87,17 +87,17 @@ export const SYSTEM_PERMISSION_DEFINITIONS: ReadonlyArray<{
   {
     key: Permissions.USER.READ_ALL,
     displayName: '查看全部用户',
-    description: '允许后台管理员查看用户列表和用户详情。',
+    description: '允许超级管理员查看用户列表和用户详情。',
   },
   {
     key: Permissions.USER.UPDATE_ALL,
     displayName: '更新全部用户资料',
-    description: '允许后台管理员更新用户基础资料。',
+    description: '允许超级管理员更新用户基础资料。',
   },
   {
     key: Permissions.USER.DISABLE_ALL,
     displayName: '管理用户状态',
-    description: '允许后台管理员启用、停用或封禁用户。',
+    description: '允许超级管理员启用、停用或封禁用户。',
   },
   {
     key: Permissions.ROLE.READ_ALL,
@@ -172,7 +172,7 @@ export const SYSTEM_PERMISSION_DEFINITIONS: ReadonlyArray<{
   {
     key: Permissions.SYSTEM.MANAGE,
     displayName: '管理系统底座',
-    description: '平台级全局管理能力，由超级管理员稳定持有。',
+    description: '平台级全局管理能力，仅对超级管理员开放。',
   },
 ] as const
 

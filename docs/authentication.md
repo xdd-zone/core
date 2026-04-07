@@ -85,7 +85,7 @@ auth:
 使用约束：
 
 - `own` 只用于用户自己的资料场景
-- 固定角色只保留 `superAdmin / admin / user`
+- 固定角色只保留 `superAdmin / user`
 - 只要求登录且不需要权限声明时，优先使用 `authPlugin`
 
 ## Better Auth 接入位置
