@@ -113,6 +113,12 @@ auth:
     github:
       enabled: true
       allowSignUp: true
+    google:
+      enabled: false
+      allowSignUp: false
+    wechat:
+      enabled: false
+      allowSignUp: false
 ```
 
 字段说明：
@@ -121,6 +127,9 @@ auth:
   - 控制这条登录方式是否允许使用
 - `allowSignUp`
   - 控制这条登录方式是否允许首次创建用户
+- `google` / `wechat`
+  - 当前只用于控制登录页状态和后续接入口
+  - 这次还不会直接发起 OAuth2 登录
 
 如果关闭邮箱密码登录，Console 登录页会继续保留邮箱表单，但输入框和提交按钮会改为禁用状态，页面布局不会变化。
 

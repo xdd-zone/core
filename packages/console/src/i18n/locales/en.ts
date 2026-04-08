@@ -19,6 +19,9 @@ export default {
     loginSuccess: 'Login successful',
     socialLoginAutoRegisterHint:
       'If this GitHub account is signing in for the first time, the system will create the account automatically once a usable email is available.',
+    socialLoginComingSoon: '{{method}} sign-in is not connected yet.',
+    socialLoginComingSoonHint:
+      'Methods that are enabled but not connected yet stay visible here and can be turned on directly after the OAuth flow is added.',
     socialLoginDisabledHint:
       'Please check with a super admin to confirm which sign-in methods are currently available.',
     socialLoginErrorConfigHint:

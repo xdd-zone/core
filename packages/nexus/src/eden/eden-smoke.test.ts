@@ -436,12 +436,32 @@ describe('eden smoke', () => {
         kind: 'credential',
         enabled: true,
         allowSignUp: true,
+        implemented: true,
+        entryPath: '/api/auth/sign-in/email',
       },
       {
         id: 'github',
         kind: 'oauth',
         enabled: AUTH_CONFIG.methods.github.enabled,
         allowSignUp: AUTH_CONFIG.methods.github.allowSignUp,
+        implemented: true,
+        entryPath: '/api/auth/sign-in/github',
+      },
+      {
+        id: 'google',
+        kind: 'oauth',
+        enabled: AUTH_CONFIG.methods.google.enabled,
+        allowSignUp: AUTH_CONFIG.methods.google.allowSignUp,
+        implemented: false,
+        entryPath: null,
+      },
+      {
+        id: 'wechat',
+        kind: 'oauth',
+        enabled: AUTH_CONFIG.methods.wechat.enabled,
+        allowSignUp: AUTH_CONFIG.methods.wechat.allowSignUp,
+        implemented: false,
+        entryPath: null,
       },
     ])
   })

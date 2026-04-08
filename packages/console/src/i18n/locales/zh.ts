@@ -18,6 +18,8 @@ export default {
     loginNow: '立即登录',
     loginSuccess: '登录成功',
     socialLoginAutoRegisterHint: '如果这个 GitHub 账号是第一次使用，拿到可用邮箱后会自动创建账号并直接登录。',
+    socialLoginComingSoon: '{{method}} 登录入口暂未接入。',
+    socialLoginComingSoonHint: '已开放但暂未接入的登录方式会先保留入口，后续补齐后可直接启用。',
     socialLoginDisabledHint: '请联系超管确认当前系统开放的登录方式，然后再重试。',
     socialLoginErrorConfigHint: '请检查 Console 当前来源、API 地址配置和 Nexus 的 trustedOrigins，然后再重试。',
     socialLoginErrorEmailNotFound:

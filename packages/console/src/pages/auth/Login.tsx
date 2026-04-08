@@ -2,10 +2,10 @@ import type { AuthMethod, SignInEmailBody } from '@console/modules/auth'
 import { DASHBOARD_ROUTE_PATH, sanitizeRedirectPath } from '@console/app/router/guards'
 
 import { AuthContainer } from '@console/components/business'
-import { AuthRequestError, getGithubSignInUrl, useAuthMethodsQuery, useLoginMutation } from '@console/modules/auth'
+import { AuthRequestError, resolveAuthMethodAction, useAuthMethodsQuery, useLoginMutation } from '@console/modules/auth'
 import { useNavigate, useRouter, useSearch } from '@tanstack/react-router'
 
-import { Alert, App as AntdApp, Button, Divider, Form, Input } from 'antd'
+import { Alert, App as AntdApp, Button, Divider, Form, Input, Tooltip } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { AiFillGithub, AiFillWechat, AiOutlineGoogle } from 'react-icons/ai'
 
@@ -50,9 +50,15 @@ function resolveMethodState(methods: AuthMethod[] | undefined, methodId: AuthMet
   const method = methods?.find((item) => item.id === methodId)
 
   if (!method) {
+    const fallbackKind: AuthMethod['kind'] = methodId === 'emailPassword' ? 'credential' : 'oauth'
+
     return {
       allowSignUp: true,
       enabled: !isLoading,
+      entryPath: null,
+      id: methodId,
+      implemented: false,
+      kind: fallbackKind,
     }
   }
 
@@ -62,6 +68,33 @@ function resolveMethodState(methods: AuthMethod[] | undefined, methodId: AuthMet
 function resolveSocialLoginMethodLabel(method?: string) {
   if (method === 'github') {
     return 'GitHub'
+  }
+
+  if (method === 'wechat') {
+    return '微信'
+  }
+
+  if (method === 'google') {
+    return 'Google'
+  }
+
+  return null
+}
+
+function resolveMethodDisabledReason(
+  method: AuthMethod,
+  t: (key: string, options?: Record<string, unknown>) => string,
+) {
+  if (!method.enabled) {
+    return t('auth.socialLoginErrorMethodDisabled', {
+      method: resolveSocialLoginMethodLabel(method.id) ?? method.id,
+    })
+  }
+
+  if (!method.implemented) {
+    return t('auth.socialLoginComingSoon', {
+      method: resolveSocialLoginMethodLabel(method.id) ?? method.id,
+    })
   }
 
   return null
@@ -83,8 +116,14 @@ export function Login() {
   const authMethods = authMethodsQuery.data?.methods
   const emailPasswordMethod = resolveMethodState(authMethods, 'emailPassword', authMethodsQuery.isLoading)
   const githubMethod = resolveMethodState(authMethods, 'github', authMethodsQuery.isLoading)
+  const wechatMethod = resolveMethodState(authMethods, 'wechat', authMethodsQuery.isLoading)
+  const googleMethod = resolveMethodState(authMethods, 'google', authMethodsQuery.isLoading)
   const isEmailPasswordDisabled = !emailPasswordMethod.enabled
-  const isGithubDisabled = !githubMethod.enabled
+  const socialMethods = [
+    { icon: <AiFillGithub />, method: githubMethod, textKey: 'auth.githubLogin' as const },
+    { icon: <AiFillWechat />, method: wechatMethod, textKey: 'auth.wechatLogin' as const },
+    { icon: <AiOutlineGoogle />, method: googleMethod, textKey: 'auth.googleLogin' as const },
+  ] as const
 
   const handleLogin = async (values: SignInEmailBody) => {
     if (isEmailPasswordDisabled) {
@@ -111,14 +150,27 @@ export function Login() {
     }
   }
 
-  const handleGithubLogin = () => {
-    if (isGithubDisabled) {
+  const handleSocialLogin = (method: AuthMethod) => {
+    const disabledReason = resolveMethodDisabledReason(method, t)
+    if (disabledReason) {
+      message.info(disabledReason)
       return
     }
 
     const callbackURL = sanitizeRedirectPath(redirect) ?? DASHBOARD_ROUTE_PATH
     const callbackTarget = new URL(callbackURL, window.location.origin).toString()
-    window.location.href = getGithubSignInUrl(callbackTarget)
+    const action = resolveAuthMethodAction(method, callbackTarget)
+
+    if (!action) {
+      message.info(
+        t('auth.socialLoginComingSoon', {
+          method: resolveSocialLoginMethodLabel(method.id) ?? method.id,
+        }),
+      )
+      return
+    }
+
+    window.location.assign(action.url)
   }
 
   return (
@@ -225,29 +277,39 @@ export function Login() {
 
       {/* 社交登录按钮 */}
       <div className="flex gap-4">
-        <Button
-          icon={<AiFillGithub />}
-          onClick={handleGithubLogin}
-          disabled={isGithubDisabled}
-          className="border-border text-fg hover:border-primary hover:text-primary h-12 flex-1 rounded-lg bg-transparent transition-colors"
-        >
-          {t('auth.githubLogin')}
-        </Button>
-        <Button
-          icon={<AiFillWechat />}
-          disabled
-          className="border-border text-fg-muted hover:border-success hover:text-success h-12 flex-1 rounded-lg bg-transparent transition-colors"
-        >
-          {t('auth.wechatLogin')}
-        </Button>
-        <Button
-          icon={<AiOutlineGoogle />}
-          disabled
-          className="border-border text-fg-muted hover:border-error hover:text-error h-12 flex-1 rounded-lg bg-transparent transition-colors"
-        >
-          {t('auth.googleLogin')}
-        </Button>
+        {socialMethods.map(({ icon, method, textKey }) => {
+          const disabledReason = resolveMethodDisabledReason(method, t)
+          const disabled = !!disabledReason
+          const button = (
+            <Button
+              icon={icon}
+              onClick={() => handleSocialLogin(method)}
+              disabled={disabled}
+              className="border-border text-fg hover:border-primary hover:text-primary h-12 flex-1 rounded-lg bg-transparent transition-colors disabled:text-fg-muted"
+            >
+              {t(textKey)}
+            </Button>
+          )
+
+          if (!disabledReason) {
+            return (
+              <div key={method.id} className="flex-1">
+                {button}
+              </div>
+            )
+          }
+
+          return (
+            <Tooltip key={method.id} title={disabledReason}>
+              <div className="flex-1">{button}</div>
+            </Tooltip>
+          )
+        })}
       </div>
+
+      {socialMethods.some(({ method }) => method.enabled && !method.implemented) ? (
+        <p className="text-fg-muted mt-3 text-center text-xs leading-6">{t('auth.socialLoginComingSoonHint')}</p>
+      ) : null}
 
       {/* 注册链接 */}
       <div className="mt-6 text-center">

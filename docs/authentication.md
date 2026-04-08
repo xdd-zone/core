@@ -38,6 +38,12 @@ auth:
     github:
       enabled: true
       allowSignUp: true
+    google:
+      enabled: false
+      allowSignUp: false
+    wechat:
+      enabled: false
+      allowSignUp: false
 ```
 
 字段说明：
@@ -48,6 +54,7 @@ auth:
   - 控制这条登录方式是否允许首次创建用户
 
 如果 `github.enabled = false`，启动时不要求 `GITHUB_CLIENT_ID` 和 `GITHUB_CLIENT_SECRET`。
+当前 `google` 和 `wechat` 只参与登录页状态控制与后续入口预留，这次不会注册 OAuth provider。
 
 ## 职责划分
 
@@ -149,6 +156,10 @@ Better Auth 的 HTTP 适配位于：
   - 当前是否可用
 - `allowSignUp`
   - 当前是否允许首次创建用户
+- `implemented`
+  - 当前后端是否已经接入这条登录方式
+- `entryPath`
+  - 已接入方式对应的后端入口路径，未接入时返回 `null`
 
 ## 认证流程
 
@@ -253,6 +264,7 @@ export const userModule = new Elysia()
 
 - 请求默认使用 `credentials: 'include'`
 - 登录页根据 `/api/auth/methods` 控制当前可用入口
+- Google 和微信按钮也只根据 `/api/auth/methods` 控制状态
 - 是否已登录只看 `/api/auth/get-session`
 - 登录页继续解析 `redirect` 和 `error`
 - 如果邮箱密码登录关闭，登录页保留邮箱表单，但输入框和提交按钮改为禁用状态

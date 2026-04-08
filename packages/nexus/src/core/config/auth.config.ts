@@ -1,6 +1,6 @@
 import type { YamlConfig } from './utils'
 
-export type AuthMethodId = 'emailPassword' | 'github'
+export type AuthMethodId = 'emailPassword' | 'github' | 'google' | 'wechat'
 export type AuthMethodKind = 'credential' | 'oauth'
 
 export interface AuthMethodPolicy {
@@ -11,6 +11,8 @@ export interface AuthMethodPolicy {
 export interface AuthMethodsConfig {
   emailPassword: AuthMethodPolicy
   github: AuthMethodPolicy
+  google: AuthMethodPolicy
+  wechat: AuthMethodPolicy
 }
 
 export interface AuthConfig {
@@ -25,6 +27,14 @@ const DEFAULT_AUTH_METHODS_CONFIG: AuthMethodsConfig = {
   github: {
     enabled: true,
     allowSignUp: true,
+  },
+  google: {
+    enabled: false,
+    allowSignUp: false,
+  },
+  wechat: {
+    enabled: false,
+    allowSignUp: false,
   },
 }
 
@@ -48,6 +58,8 @@ export function createAuthConfig(yamlConfig: YamlConfig): AuthConfig {
     methods: {
       emailPassword: resolveAuthMethodPolicy(methods?.emailPassword, DEFAULT_AUTH_METHODS_CONFIG.emailPassword),
       github: resolveAuthMethodPolicy(methods?.github, DEFAULT_AUTH_METHODS_CONFIG.github),
+      google: resolveAuthMethodPolicy(methods?.google, DEFAULT_AUTH_METHODS_CONFIG.google),
+      wechat: resolveAuthMethodPolicy(methods?.wechat, DEFAULT_AUTH_METHODS_CONFIG.wechat),
     },
   }
 }

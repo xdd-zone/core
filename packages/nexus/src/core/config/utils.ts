@@ -25,6 +25,14 @@ interface YamlConfigRaw {
         enabled?: boolean
         allowSignUp?: boolean
       }
+      google?: {
+        enabled?: boolean
+        allowSignUp?: boolean
+      }
+      wechat?: {
+        enabled?: boolean
+        allowSignUp?: boolean
+      }
     }
   }
   port?: number

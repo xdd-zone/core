@@ -95,6 +95,12 @@ auth:
     github:
       enabled: true
       allowSignUp: true
+    google:
+      enabled: false
+      allowSignUp: false
+    wechat:
+      enabled: false
+      allowSignUp: false
 ```
 
 说明：
@@ -103,6 +109,9 @@ auth:
   - 控制当前方式是否允许登录
 - `allowSignUp`
   - 控制当前方式是否允许首次创建用户
+- `google` / `wechat`
+  - 当前只控制 Console 登录页状态和后续接入口
+  - 这次不注册 OAuth provider
 
 如果当前环境关闭 GitHub 登录，启动时不要求 `GITHUB_CLIENT_ID` 和 `GITHUB_CLIENT_SECRET`。
 
