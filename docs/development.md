@@ -1,278 +1,169 @@
 # 开发指南
 
-## 开发前提
+这份文档只写当前仓库的常用开发动作。
+
+## 开发前先确认
 
 - Bun 1.3.5
 - Docker 可用
-- `.env` 已配置 `DATABASE_URL`、`BETTER_AUTH_URL`、`BETTER_AUTH_SECRET`、`GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET`
-- `packages/nexus/config.yaml` 的 `trustedOrigins` 已包含当前 Console 来源
+- `.env` 里至少有 `DATABASE_URL`、`BETTER_AUTH_URL`、`BETTER_AUTH_SECRET`
+- 如果要测 GitHub 登录，再补 `GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET`
+- `packages/nexus/config.yaml` 的 `auth.trustedOrigins` 已包含当前 Console 地址
 
-常用初始化命令：
+## 初始化
 
 ```bash
 bun install
-bun run prisma:generate
 bun run db prepare
+```
+
+如果只想先生成 Prisma Client：
+
+```bash
+bun run prisma:generate
+```
+
+## 常用开发命令
+
+```bash
+# 前后端一起跑
+bun run dev
+
+# 只跑后端
+bun run dev:nexus
+
+# 只跑前端
+bun run dev:console
+
+# 基础检查
+bun run format
+bun run lint
+bun run type-check
 ```
 
 ## 数据库约定
 
-当前项目处于早期阶段，Prisma 暂不维护迁移文件，`.gitignore` 已忽略 `packages/nexus/src/infra/database/prisma/migrations`。
+当前项目不维护 Prisma migration 文件，数据库结构以当前 schema 为准。
 
-数据库结构以当前 Prisma schema 为准。修改 schema 后，如果可以直接清空数据，默认执行：
+改完 schema 后：
+
+- 可以清空数据时，优先执行：
 
 ```bash
-bun run --filter @xdd-zone/nexus prisma:push:reset
+bun run prisma:push:reset
 bun run seed
 ```
 
-如果只想同步 schema，不清空当前数据，使用：
+- 不想清空数据时，执行：
 
 ```bash
-bun run --filter @xdd-zone/nexus prisma:push
+bun run prisma:push
 ```
 
-## 标准开发动作
+## 改后端接口时怎么走
 
-新增或修改公共 API 时，默认按下面顺序推进：
+默认顺序：
 
-1. 改模块 `model.ts`
-2. 改 `service.ts / repository.ts`
-3. 在模块 `index.ts` 注册或调整路由
-4. 完成 Eden / OpenAPI / 权限回归
+1. 先改 `model.ts`
+2. 再改 `service.ts / repository.ts`
+3. 最后改 `index.ts`
+4. 跑检查
 
-修改后台前端时，默认按下面顺序推进：
+至少会碰到这些文件：
 
-1. 确认 `nexus` 现有接口和登录态约定
-2. 先接 `console` 的 Eden Treaty 公共请求层，或确认当前是否走浏览器重定向
-3. 再改 `app/router`、`app/navigation`、`layout` 或页面
-4. 完成 `lint / type-check / build`
+- `packages/nexus/src/modules/<feature>/model.ts`
+- `packages/nexus/src/modules/<feature>/service.ts`
+- `packages/nexus/src/modules/<feature>/repository.ts`
+- `packages/nexus/src/modules/<feature>/index.ts`
 
-## 代码放哪一层
+如果接口还要给前端复用明确的 HTTP 类型，再补：
 
-### `packages/nexus/src/modules/*/index.ts`
+- `packages/nexus/src/public/*-types.ts`
 
-放：
+## 改前端页面时怎么走
 
-- 模块 Elysia 实例
-- prefix / tags
-- route schema 绑定
-- `apiDetail(...)`
-- `auth / permission / own / me`
-- 调用当前模块 service
+默认顺序：
 
-不要在这里放：
+1. 先确认后端接口和登录态约定
+2. 再看页面路径和菜单是否要一起改
+3. 最后补 query / mutation 和页面实现
+4. 跑检查
 
-- Prisma 查询
-- 散落的业务判断
-- Better Auth 底层适配细节
+最常改的文件：
 
-### `packages/nexus/src/core/security/*`
+- `packages/console/src/app/router/routes.tsx`
+- `packages/console/src/app/router/guards.tsx`
+- `packages/console/src/app/navigation/navigation.ts`
+- `packages/console/src/app/access/access-control.ts`
+- `packages/console/src/modules/*`
+- `packages/console/src/pages/*`
 
-放：
+## 代码该放哪
 
-- `auth/`
-  - Better Auth 接入
-  - session 解析
-  - 认证接口动作
-  - 登出处理
-- `plugins/`
-  - 认证插件
-  - 权限插件
-- `guards/`
-  - 登录校验
-  - 权限校验
-  - 所有权校验
-- `permissions/`
-  - 权限常量
-  - 固定角色名称
-  - 权限查询
-  - 权限匹配辅助函数
+### 后端
 
-使用建议：
+- 路由、schema 绑定、鉴权声明：`modules/*/index.ts`
+- HTTP schema：`modules/*/model.ts`
+- 业务逻辑：`modules/*/service.ts`
+- Prisma 查询：`modules/*/repository.ts`
+- 认证和权限：`core/security/*`
+- HTTP 公共插件：`core/http/*`
+- 最终配置：`core/config/*`
 
-- `modules/auth` 只放 `/auth` 路由入口和 HTTP schema
-- 登录、注册、登出这类认证接口动作统一放 `core/security/auth/*`
-- 需要 `permission / own / me` 的模块只使用 `accessPlugin`
-- 只读取可选 session 的模块接 `authPlugin`
-- 只要求登录且不做权限判断的接口，优先使用 `authPlugin + auth: 'required'`
-- 使用 `accessPlugin` 时，也可以直接声明 `auth: 'required'`
-- `plugins/*` 只做 Elysia 上下文注入和路由守卫编排，不直接写业务查询
-- 固定角色名称统一在 `core/security/permissions/role.constants.ts` 维护
-- `auth`、`user` 等模块共用的基础 schema 统一放 `shared/schema/*`
+### 前端
 
-### `packages/nexus/src/modules/*/model.ts`
+- 路由树和重定向：`app/router/*`
+- 菜单：`app/navigation/*`
+- 页面访问控制：`app/access/access-control.ts`
+- Treaty 客户端：`shared/api/eden.ts`
+- 页面侧请求逻辑：`modules/*`
+- 页面组件：`pages/*`
+- 布局壳层：`layout/*`
 
-放：
+## 改认证或权限时要多看哪几处
 
-- body / query / params schema
-- 成功 response schema
-- route 复用的 HTTP 类型
+### 认证
 
-### `packages/nexus/src/modules/*/service.ts`
+- `packages/nexus/src/core/security/auth/*`
+- `packages/nexus/src/core/security/plugins/auth.plugin.ts`
+- `packages/nexus/src/modules/auth/*`
+- `packages/console/src/modules/auth/*`
+- `packages/console/src/pages/auth/Login.tsx`
 
-放：
+### 权限
 
-- 业务编排
-- 资源存在性校验
-- 领域层判断
+- `packages/nexus/src/core/security/plugins/access.plugin.ts`
+- `packages/nexus/src/core/security/guards/*`
+- `packages/nexus/src/core/security/permissions/*`
+- `packages/console/src/app/access/access-control.ts`
 
-### `packages/nexus/src/modules/*/repository.ts`
+## 回归检查
 
-放：
+### 只改文档
 
-- Prisma 查询与写入
-- 数据选择与持久化细节
-
-### `packages/console/src/app/router/*`
-
-放：
-
-- TanStack Router 路由树
-- `beforeLoad` 登录校验与重定向
-- 根路径重定向
-- 路由元信息
-
-### `packages/console/src/app/navigation/*`
-
-放：
-
-- 侧边栏与移动端菜单配置
-- 菜单分组与展示顺序
-
-### `packages/console/src/modules/auth/*`
-
-放：
-
-- `/api/auth/get-session`
-- `/api/auth/sign-in/email`
-- `/api/auth/sign-out`
-- GitHub 登录地址 helper
-- auth query
-- auth store 中的会话快照使用范围
-
-补充说明：
-
-- GitHub 登录地址由 `packages/console/src/modules/auth/auth.api.ts` 统一构造
-- 这条流程仍然是浏览器跳转，不经过 Eden Treaty 请求封装
-- 其他认证 query / mutation 直接调用 `packages/console/src/shared/api/eden.ts` 中的 Treaty 客户端
-- 如果修改 GitHub 登录入口，要同时检查 API 基址配置、`trustedOrigins`、GitHub callback URL，并确认浏览器可以直接访问这条地址；本地开发再检查 `/api` 代理
-
-### `packages/console/src/modules/*`
-
-放：
-
-- 基于 Eden Treaty 的 query / mutation
-- 只在前端使用的 query key 和组合逻辑
-- 从 `@xdd-zone/nexus/*-types` 引入的 HTTP 类型
-
-补充说明：
-
-- 用户与权限相关请求统一放在 `packages/console/src/modules/user/*` 和 `packages/console/src/modules/rbac/*`
-- 页面直接通过 query / mutation 调用 Treaty 客户端
-- 如果页面还要复用文章、媒体、评论或站点配置的 HTTP 类型，也统一从 `@xdd-zone/nexus/*-types` 引入
-- 权限判断需要的常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
-
-## 新增接口的推荐流程
-
-### 第 1 步：定义接口 schema
-
-推荐位置：
-
-- `packages/nexus/src/modules/<name>/model.ts`
-
-至少明确：
-
-- body
-- query
-- params
-- response
-
-### 第 2 步：实现 service / repository
-
-如果涉及数据库访问：
-
-- Prisma 访问下沉到 repository
-- service 只保留业务编排
-
-### 第 3 步：在模块入口注册路由
-
-推荐写法：
-
-```ts
-export const userModule = new Elysia({
-  prefix: '/user',
-  tags: ['User'],
-})
-  .use(accessPlugin)
-  .get('/', async ({ query }) => await UserService.list(query), {
-    permission: Permissions.USER.READ_ALL,
-    query: UserListQuerySchema,
-    response: UserListSchema,
-    detail: apiDetail({
-      summary: '获取用户列表',
-      response: UserListSchema,
-      errors: [400, 401, 403],
-    }),
-  })
+```bash
+bun run format:check
 ```
 
-必须登录但不做权限判断时：
+### 改前端
 
-```ts
-.get('/me', ({ auth }) => SessionSchema.parse(auth), {
-  auth: 'required',
-  response: SessionSchema,
-})
+```bash
+bun run lint:console
+bun run --filter @xdd-zone/console type-check
+bun run build:console
 ```
 
-### 第 4 步：验证
+### 改后端接口、认证、权限、OpenAPI、Eden
 
-至少执行：
+```bash
+bun run --filter @xdd-zone/nexus type-check
+bun run --filter @xdd-zone/nexus test
+```
+
+### 提交前最小检查
 
 ```bash
 bun run format
 bun run lint
 bun run type-check
 ```
-
-如果涉及公共 API，再补：
-
-- 访问 `/openapi` 或 `/openapi/json` 检查接口说明
-- Eden smoke test
-- 如果涉及 GitHub 登录，再检查 GitHub OAuth App callback URL、`trustedOrigins`、API 基址是否可以被浏览器直接访问；本地开发再检查 `/api` 代理
-
-## 命名建议
-
-模块目录统一使用：
-
-- `index.ts`
-- `model.ts`
-- `service.ts`
-- `repository.ts`
-- `constants.ts`
-- `types.ts`
-
-说明：
-
-- `model.ts` 表达 HTTP schema，不表示 Prisma model
-- schema 命名继续使用 `UserSchema`、`RoleListSchema` 这类写法
-- 模块实例统一使用 `userModule`、`authModule`、`rbacModule`
-
-## 类型安全要求
-
-- 禁止 `any`
-- route 的 `body / query / params / response` 优先从模块 `model.ts` 推导
-- 提供给前端使用的 HTTP 类型统一从 `packages/nexus/src/public/*-types.ts` 导出
-- Console 不单独维护第二套接口类型
-- repository 优先复用 Prisma 生成类型
-- service 方法签名写清楚入参与返回值
-
-## 收尾检查
-
-完成代码后，再做一次检查：
-
-- 搜索是否残留 `any` 或 `as any`
-- 检查 `model / service / repository` 是否职责清楚
-- 检查模块入口是否已经声明正确的鉴权
-- 检查 `/openapi` 页面和 Eden 是否还能正常工作

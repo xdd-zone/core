@@ -1,10 +1,10 @@
 import type { Session as PrismaSession } from '@nexus/infra/database/prisma/generated'
 import type { BetterAuthOptions } from 'better-auth'
+import type { BetterAuthInstance } from './better-auth'
+import type { SessionService } from './session.service'
 import { BadRequestError } from '@nexus/core/http'
 import { prisma } from '@nexus/infra/database/client'
 import { getCookieCache, getCookies } from 'better-auth/cookies'
-import { betterAuthInstance } from './better-auth'
-import { SessionService } from './session.service'
 
 type MutableHeaders = Headers | Record<string, string | number | string[]>
 
@@ -22,8 +22,6 @@ interface CachedSessionPayload {
   updatedAt: number
   version?: string
 }
-
-const betterAuthOptions = betterAuthInstance.options as BetterAuthOptions
 
 interface BetterAuthErrorPayload {
   code?: number | string
@@ -44,9 +42,6 @@ function getSetCookieValues(headers: Headers): string[] {
   return cookie ? [cookie] : []
 }
 
-/**
- * 向响应头追加 Set-Cookie。
- */
 function appendSetCookie(headers: MutableHeaders | undefined, value: string) {
   if (!headers) {
     return
@@ -84,11 +79,14 @@ function resolveBetterAuthErrorCode(payload: BetterAuthErrorPayload | null | und
   return typeof payload.code === 'string' && payload.code ? payload.code : undefined
 }
 
-/**
- * 从请求中解析当前会话标识。
- */
-async function resolveSessionIdentifiers(request: Request) {
-  const currentSession = await SessionService.getSession(request.headers)
+async function resolveSessionIdentifiers(
+  request: Request,
+  betterAuthInstance: BetterAuthInstance,
+  sessionService: SessionService,
+) {
+  const currentSession = await sessionService.getSession(request.headers)
+  const betterAuthOptions = betterAuthInstance.options as BetterAuthOptions
+
   if (currentSession.session) {
     return {
       sessionId: currentSession.session.id,
@@ -110,99 +108,110 @@ async function resolveSessionIdentifiers(request: Request) {
   }
 }
 
-/**
- * 将 Better Auth 响应转成项目接口响应，并透传 Set-Cookie。
- */
-export async function forwardBetterAuthResponse<T>(
-  request: Request,
-  options?: {
-    body?: unknown
-    headers?: MutableHeaders
-  },
-): Promise<T> {
-  const authRequest =
-    options?.body !== undefined
-      ? new Request(request.url, {
-          method: request.method,
-          headers: request.headers,
-          body: JSON.stringify(options.body),
+export interface BetterAuthAdapter {
+  clearBetterAuthCookies: (headers?: MutableHeaders) => void
+  forwardBetterAuthRedirect: (request: Request, headers?: MutableHeaders) => Promise<string>
+  forwardBetterAuthResponse: <T>(
+    request: Request,
+    options?: {
+      body?: unknown
+      headers?: MutableHeaders
+    },
+  ) => Promise<T>
+  revokeBetterAuthSession: (request: Request) => Promise<void>
+}
+
+export function createBetterAuthAdapter(
+  betterAuthInstance: BetterAuthInstance,
+  sessionService: SessionService,
+): BetterAuthAdapter {
+  const betterAuthOptions = betterAuthInstance.options as BetterAuthOptions
+
+  return {
+    async forwardBetterAuthResponse<T>(
+      request: Request,
+      options?: {
+        body?: unknown
+        headers?: MutableHeaders
+      },
+    ): Promise<T> {
+      const authRequest =
+        options?.body !== undefined
+          ? new Request(request.url, {
+              method: request.method,
+              headers: request.headers,
+              body: JSON.stringify(options.body),
+            })
+          : request
+
+      const response = await betterAuthInstance.handler(authRequest)
+      const data = (await response.json()) as T & BetterAuthErrorPayload
+
+      for (const cookie of getSetCookieValues(response.headers)) {
+        appendSetCookie(options?.headers, cookie)
+      }
+
+      if (!response.ok) {
+        throw new BadRequestError(data.message || '操作失败', resolveBetterAuthErrorCode(data))
+      }
+
+      return data as T
+    },
+
+    async forwardBetterAuthRedirect(request: Request, headers?: MutableHeaders): Promise<string> {
+      const response = await betterAuthInstance.handler(request)
+      for (const cookie of getSetCookieValues(response.headers)) {
+        appendSetCookie(headers, cookie)
+      }
+
+      const location = response.headers.get('location')
+      if (location) {
+        return location
+      }
+
+      let message = 'OAuth 重定向失败'
+      let errorCode: string | undefined
+
+      try {
+        const data = (await response.json()) as BetterAuthErrorPayload
+        if (data.message) {
+          message = data.message
+        }
+        errorCode = resolveBetterAuthErrorCode(data)
+      } catch {
+        // no-op
+      }
+
+      throw new BadRequestError(message, errorCode)
+    },
+
+    clearBetterAuthCookies(headers?: MutableHeaders) {
+      const cookies = getCookies(betterAuthOptions)
+
+      appendSetCookie(headers, `${cookies.sessionToken.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
+      appendSetCookie(headers, `${cookies.sessionData.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
+      appendSetCookie(headers, `${cookies.dontRememberToken.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
+    },
+
+    async revokeBetterAuthSession(request: Request) {
+      const { sessionId, sessionToken } = await resolveSessionIdentifiers(request, betterAuthInstance, sessionService)
+
+      if (sessionId) {
+        await prisma.session.deleteMany({
+          where: {
+            id: sessionId,
+          },
         })
-      : request
+        return
+      }
 
-  const response = await betterAuthInstance.handler(authRequest)
-  const data = (await response.json()) as T & BetterAuthErrorPayload
-
-  for (const cookie of getSetCookieValues(response.headers)) {
-    appendSetCookie(options?.headers, cookie)
-  }
-
-  if (!response.ok) {
-    throw new BadRequestError(data.message || '操作失败', resolveBetterAuthErrorCode(data))
-  }
-
-  return data as T
-}
-
-/**
- * 将 Better Auth 的重定向响应透传给客户端。
- */
-export async function forwardBetterAuthRedirect(request: Request, headers?: MutableHeaders): Promise<string> {
-  const response = await betterAuthInstance.handler(request)
-  for (const cookie of getSetCookieValues(response.headers)) {
-    appendSetCookie(headers, cookie)
-  }
-
-  const location = response.headers.get('location')
-  if (location) {
-    return location
-  }
-
-  let message = 'OAuth 重定向失败'
-  let errorCode: string | undefined
-  try {
-    const data = (await response.json()) as BetterAuthErrorPayload
-    if (data.message) {
-      message = data.message
-    }
-    errorCode = resolveBetterAuthErrorCode(data)
-  } catch {
-    // no-op
-  }
-
-  throw new BadRequestError(message, errorCode)
-}
-
-/**
- * 清理 Better Auth 相关 cookie。
- */
-export function clearBetterAuthCookies(headers?: MutableHeaders) {
-  const cookies = getCookies(betterAuthOptions)
-
-  appendSetCookie(headers, `${cookies.sessionToken.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
-  appendSetCookie(headers, `${cookies.sessionData.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
-  appendSetCookie(headers, `${cookies.dontRememberToken.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
-}
-
-/**
- * 幂等删除 Better Auth 会话。
- */
-export async function revokeBetterAuthSession(request: Request) {
-  const { sessionId, sessionToken } = await resolveSessionIdentifiers(request)
-
-  if (sessionId) {
-    await prisma.session.deleteMany({
-      where: {
-        id: sessionId,
-      },
-    })
-    return
-  }
-
-  if (sessionToken) {
-    await prisma.session.deleteMany({
-      where: {
-        token: sessionToken,
-      },
-    })
+      if (sessionToken) {
+        await prisma.session.deleteMany({
+          where: {
+            token: sessionToken,
+          },
+        })
+      }
+    },
   }
 }

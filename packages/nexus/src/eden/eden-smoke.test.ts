@@ -6,16 +6,26 @@ import { Prisma } from '@nexus/infra/database/prisma/generated/client'
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import pino from 'pino'
 import { createApp } from '../app'
-import { AUTH_CONFIG } from '../core/config'
+import { createAppContext } from '../bootstrap'
 import { parsePermission, Permissions, PermissionService, SYSTEM_PERMISSION_DEFINITIONS } from '../core/security'
-import { betterAuthInstance } from '../core/security/auth'
 import { prisma } from '../infra/database'
 import { seedPermissions } from '../infra/database/prisma/seed/seeds/seed-permissions'
 import { seedRolePermissions } from '../infra/database/prisma/seed/seeds/seed-role-permissions'
 import { seedRoles } from '../infra/database/prisma/seed/seeds/seed-roles'
 import { SiteConfigRepository } from '../modules/site-config/repository'
 
-const app = createApp()
+const appContext = createAppContext({
+  auth: {
+    methods: {
+      emailPassword: {
+        enabled: true,
+        allowSignUp: true,
+      },
+    },
+  },
+})
+
+const app = createApp(appContext)
 const baseUrl = 'http://localhost'
 const authBaseUrl = 'http://localhost:7788'
 const seedLogger = pino({ level: 'silent' })
@@ -227,14 +237,8 @@ let actorUserId = ''
 let subjectUserId = ''
 let superAdminRoleId = ''
 let userRoleId = ''
-const originalEmailPasswordEnabled = AUTH_CONFIG.methods.emailPassword.enabled
-const originalEmailPasswordAllowSignUp = AUTH_CONFIG.methods.emailPassword.allowSignUp
-const originalBetterAuthEmailPasswordEnabled = betterAuthInstance.options.emailAndPassword.enabled
 
 beforeAll(async () => {
-  AUTH_CONFIG.methods.emailPassword.enabled = true
-  AUTH_CONFIG.methods.emailPassword.allowSignUp = true
-  betterAuthInstance.options.emailAndPassword.enabled = true
   originalSiteConfigRecord = await SiteConfigRepository.findDefault()
 
   await seedRoles(prisma, seedLogger)
@@ -317,10 +321,6 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  AUTH_CONFIG.methods.emailPassword.enabled = originalEmailPasswordEnabled
-  AUTH_CONFIG.methods.emailPassword.allowSignUp = originalEmailPasswordAllowSignUp
-  betterAuthInstance.options.emailAndPassword.enabled = originalBetterAuthEmailPasswordEnabled
-
   if (originalSiteConfigRecord) {
     await SiteConfigRepository.restoreDefault(originalSiteConfigRecord)
   } else {
@@ -442,24 +442,24 @@ describe('eden smoke', () => {
       {
         id: 'github',
         kind: 'oauth',
-        enabled: AUTH_CONFIG.methods.github.enabled,
-        allowSignUp: AUTH_CONFIG.methods.github.allowSignUp,
+        enabled: appContext.config.auth.methods.github.enabled,
+        allowSignUp: appContext.config.auth.methods.github.allowSignUp,
         implemented: true,
         entryPath: '/api/auth/sign-in/github',
       },
       {
         id: 'google',
         kind: 'oauth',
-        enabled: AUTH_CONFIG.methods.google.enabled,
-        allowSignUp: AUTH_CONFIG.methods.google.allowSignUp,
+        enabled: appContext.config.auth.methods.google.enabled,
+        allowSignUp: appContext.config.auth.methods.google.allowSignUp,
         implemented: false,
         entryPath: null,
       },
       {
         id: 'wechat',
         kind: 'oauth',
-        enabled: AUTH_CONFIG.methods.wechat.enabled,
-        allowSignUp: AUTH_CONFIG.methods.wechat.allowSignUp,
+        enabled: appContext.config.auth.methods.wechat.enabled,
+        allowSignUp: appContext.config.auth.methods.wechat.allowSignUp,
         implemented: false,
         entryPath: null,
       },

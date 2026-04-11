@@ -1,4 +1,5 @@
-export { AuthApiService } from './auth-api.service'
+export { createAuthApiService } from './auth-api.service'
+export type { AuthApiService } from './auth-api.service'
 export type {
   AuthApiSession,
   AuthApiSessionRecord,
@@ -6,10 +7,13 @@ export type {
   SignInEmailPayload,
   SignUpEmailPayload,
 } from './auth-api.types'
-export { AuthMethodsService } from './auth-methods.service'
-export type { PublicAuthMethod } from './auth-methods.service'
-export { betterAuthInstance } from './better-auth'
-export * from './better-auth.adapter'
+export { createAuthMethodsService } from './auth-methods.service'
+export type { AuthMethodsService, PublicAuthMethod } from './auth-methods.service'
+export { createBetterAuthInstance } from './better-auth'
+export type { BetterAuthInstance } from './better-auth'
+export { createBetterAuthAdapter } from './better-auth.adapter'
+export type { BetterAuthAdapter } from './better-auth.adapter'
 export * from './hooks'
 export type { AuthenticatedSecuritySession, SecurityContext, SecuritySession } from './security.types'
-export { SessionService } from './session.service'
+export { createSessionService } from './session.service'
+export type { SessionService } from './session.service'

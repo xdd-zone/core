@@ -1,24 +1,26 @@
+import type { ResolvedConfig } from '@nexus/core/config'
 import { openapi } from '@elysiajs/openapi'
-import { OPENAPI_CONFIG } from '@nexus/core/config'
 import { Elysia } from 'elysia'
 import z from 'zod'
 
 /**
  * OpenAPI 文档插件。
  */
-export const openapiPlugin = new Elysia({ name: 'openapi' }).use(
-  openapi({
-    enabled: OPENAPI_CONFIG.enabled,
-    path: OPENAPI_CONFIG.path,
-    documentation: {
-      info: {
-        title: OPENAPI_CONFIG.title,
-        description: OPENAPI_CONFIG.description,
-        version: OPENAPI_CONFIG.version,
+export function createOpenapiPlugin(config: ResolvedConfig) {
+  return new Elysia({ name: 'openapi' }).use(
+    openapi({
+      enabled: config.openapi.enabled,
+      path: config.openapi.path,
+      documentation: {
+        info: {
+          title: config.openapi.title,
+          description: config.openapi.description,
+          version: config.openapi.version,
+        },
       },
-    },
-    mapJsonSchema: {
-      zod: z.toJSONSchema,
-    },
-  }),
-)
+      mapJsonSchema: {
+        zod: z.toJSONSchema,
+      },
+    }),
+  )
+}

@@ -1,90 +1,69 @@
 # 项目架构
 
-## 架构结论
+这份文档只说明当前代码怎么组织，不讲历史方案。
 
-仓库当前按下面几条规则组织：
+## 总体结构
 
-- `packages/nexus` 只维护一套服务端 HTTP 接口
-- `packages/nexus/src/modules` 按功能组织 Elysia 模块
-- 每个模块自己的 `index.ts` 直接作为路由入口
-- `model.ts` 统一定义 HTTP schema
-- `packages/nexus/src/public` 统一提供给前端和联调层使用的公共类型与权限工具
-- `core/http/` 放 HTTP 基础能力
-- `core/security/` 放认证上下文、守卫、插件和权限能力
-- OpenAPI 作为接口说明导出
-- Eden 作为仓库内联调与 smoke test 的类型入口
+仓库现在有两个主包：
 
-当前系统采用固定角色、固定权限的后台模型：
+- `packages/console`
+  后台前端。
+- `packages/nexus`
+  后端 API 服务。
 
-- 固定角色：`superAdmin / user`
-- 权限以 `packages/nexus/src/core/security/permissions/permissions.ts` 为准
-- `own` 只用于用户自己的资料场景
+前后端都在一个仓库里维护，接口类型和权限常量也一起放在仓库里。
 
 ## 包职责
 
 ### `@xdd-zone/console`
 
-负责：
+这里负责：
 
-- 后台管理前端页面与布局
-- 应用路由、导航与标签页
-- 登录态初始化、登录、登出与会话恢复
-- 调用 `@xdd-zone/nexus` 提供的认证与业务接口
+- 后台页面、布局、导航
+- 登录态恢复、登录、登出
+- 页面权限拦截
+- 调用 Nexus 接口并展示结果
 
-不负责：
+这里不负责：
 
-- 维护服务端接口定义
-- 在前端单独维护权限计算规则
-- 用菜单承担业务权限判定
+- 单独定义服务端接口
+- 复制一套权限常量
+- 自己算一套和后端不一致的权限结果
 
 ### `@xdd-zone/nexus`
 
-负责：
+这里负责：
 
-- Elysia app 与模块装配
-- HTTP 接口、OpenAPI、认证与权限
-- Prisma、日志、配置等基础设施
-- Eden smoke test
+- Elysia app 和模块路由
+- 认证、权限、守卫、OpenAPI
+- Prisma、日志、配置
+- 给前端导出 HTTP 类型和 Eden 类型
 
-不负责：
+这里不负责：
 
-- 维护第二套独立的 HTTP 接口定义
+- 维护第二套接口定义
 
-## 服务端结构
+## `packages/nexus` 怎么分层
 
-`packages/nexus/src/` 当前按下面的职责组织：
+当前目录：
 
 ```text
-src/
+packages/nexus/src/
 ├── app.ts
 ├── server.ts
 ├── index.ts
-├── modules/
+├── bootstrap/
 ├── core/
 ├── infra/
+├── modules/
 ├── public/
 ├── shared/
 └── eden/
 ```
 
-### `app.ts`
-
-负责创建 Elysia app，并装配：
-
-- `core/http` 全局插件
-- `modules/` 模块聚合入口
-
-### `server.ts`
-
-负责：
-
-- `app.listen(...)`
-- 启动日志
-- Prisma 断连与进程退出
-
 ### `modules/`
 
-每个功能模块都放在自己的目录里，目录中的 `index.ts` 直接定义该模块的 Elysia 路由。
+每个业务模块一个目录，`index.ts` 直接写路由。
 
 推荐结构：
 
@@ -98,187 +77,169 @@ modules/<feature>/
 └── types.ts
 ```
 
-说明：
+各文件怎么分：
 
 - `index.ts`
-  - Elysia 模块入口
-  - 定义 prefix、tags、鉴权声明、`apiDetail(...)`
-  - 调用当前模块 service
+  写 prefix、tags、schema 绑定、鉴权声明、`apiDetail(...)`、service 调用。
 - `model.ts`
-  - 定义 body / query / params / response schema
+  写 body / query / params / response schema。
 - `service.ts`
-  - 负责业务编排
+  写业务判断和流程。
 - `repository.ts`
-  - 负责 Prisma 查询与写入
-- `constants.ts`
-  - 放模块常量
-- `types.ts`
-  - 放模块内部类型
+  写 Prisma 查询和写入。
 
 ### `core/`
 
-只放跨业务框架能力：
+这里放跨业务的能力：
 
-- `core/http/`
-  - CORS
-  - OpenAPI
-  - 统一错误处理
-  - 请求日志
-- `core/security/`
-  - `auth/`
-    - Better Auth 接入
-    - session 解析
-    - 认证接口动作
-    - 登出处理
-  - `plugins/`
-    - 认证插件
-    - 权限插件
-  - `guards/`
-    - 登录校验
-    - 权限校验
-    - 所有权校验
-  - `permissions/`
-    - 权限常量
-    - 固定角色名称
-    - 权限服务
-    - 权限匹配辅助函数
+- `core/http`
+  CORS、OpenAPI、统一错误处理、请求日志。
+- `core/security`
+  Better Auth、session、插件、守卫、权限常量和权限判断。
+- `core/config`
+  读取 `config.yaml`、合并环境变量、返回最终配置。
+
+### `bootstrap/`
+
+这里把配置、日志、认证能力组起来，交给 app 启动。
+
+当前启动顺序：
+
+```text
+createConfig()
+-> createAppContext()
+-> createApp(context)
+-> startServer(app, context.config)
+```
 
 ### `infra/`
 
-基础设施实现：
+这里放基础设施实现：
 
-- Prisma 客户端
-- Prisma schema / seed
+- Prisma
 - logger
-
-### `shared/`
-
-轻量共享能力：
-
-- `shared/schema/`
-  - 常用基础 schema
-  - 分页 schema
-  - 用户状态等共享枚举
-  - query helper
-- `shared/openapi/`
-  - `apiDetail(...)`
+- 媒体存储
 
 ### `public/`
 
-放给前端、联调脚本和其他包直接引用的公共导出：
+这里放给前端和其他包直接引用的导出：
 
-- `auth-types.ts`
-  - 认证相关 HTTP 类型
-- `user-types.ts`
-  - 用户相关 HTTP 类型
-- `rbac-types.ts`
-  - 角色与权限接口的 HTTP 类型
-- `post-types.ts`
-  - 文章相关 HTTP 类型
-- `media-types.ts`
-  - 媒体相关 HTTP 类型
-- `comment-types.ts`
-  - 评论相关 HTTP 类型
-- `site-config-types.ts`
-  - 站点配置相关 HTTP 类型
+- `*-types.ts`
+  各模块的 HTTP 类型。
 - `permissions.ts`
-  - 权限常量、角色常量和权限匹配辅助函数
+  权限常量、角色常量、匹配函数。
 - `eden.ts`
-  - `createApp()` 推导出的 Eden 类型入口
+  `type App = typeof app`。
 
-## Route / Model / Service / Repository 的职责
+## `packages/console` 怎么分层
 
-### 模块 `index.ts`
-
-每个模块的 `index.ts` 只负责：
-
-1. 定义 Elysia 模块实例
-2. 注册当前模块的接口
-3. 绑定 `body / query / params / response`
-4. 声明 `auth / permission / own / me`
-5. 配置 `apiDetail(...)`
-6. 调用当前模块 service
-
-### `model.ts`
-
-负责：
-
-- body schema
-- query schema
-- params schema
-- response schema
-- route 可复用的 HTTP 类型
-
-### `service.ts`
-
-负责：
-
-- 业务编排
-- 存在性校验
-- 领域规则处理
-
-### `repository.ts`
-
-负责：
-
-- Prisma 查询与写入
-- 数据选择和持久化细节
-
-## 鉴权与权限模型
-
-鉴权与权限的统一入口是 `core/security/`。
-
-route 层优先使用下面 4 种声明式配置：
-
-- `auth: 'required'`
-  - 只要求登录
-- `permission`
-  - 要求固定权限
-- `own`
-  - 当前用户自己的资料接口
-- `me`
-  - 当前登录用户的 `/me` 类接口
-
-## 前端结构
-
-`packages/console/src/` 当前按下面的职责组织：
+当前最常改的目录：
 
 ```text
-src/
+packages/console/src/
 ├── app/
-│   ├── navigation/
-│   └── router/
-├── modules/
-│   └── auth/
-├── pages/
-├── layout/
 ├── components/
-├── hooks/
+├── layout/
+├── modules/
+├── pages/
 ├── stores/
 └── utils/
 ```
 
-当前前端约束：
+### `app/`
 
-- 是否允许进入后台，只由 `nexus` session 决定
-- 会话初始化和认证 mutation 交给 TanStack Query 处理
-- Query / Mutation 直接调用 Eden Treaty 客户端
-- HTTP 类型统一从 `@xdd-zone/nexus/*-types` 引入
-- 权限运行时工具统一从 `@xdd-zone/nexus/permissions` 引入
-- 菜单负责导航组织
-- 页面级权限以后端 `401 / 403` 为准
+- `app/router`
+  路由树、登录守卫、重定向。
+- `app/navigation`
+  菜单配置。
+- `app/access/access-control.ts`
+  页面访问控制。
+- `app/query-client.ts`
+  QueryClient 初始化。
 
-## 接口说明产物
+### `modules/`
 
-接口说明有两份直接可用的产物：
+按业务放 query / mutation 和页面侧逻辑。
 
-- OpenAPI
-- Eden route 类型
+当前已有：
 
-推荐顺序：
+- `auth`
+- `user`
+- `rbac`
+- `post`
+- `comment`
+- `media`
+- `preview`
+- `site-config`
 
-```text
-模块 model / 路由 / service
-  -> OpenAPI
-  -> Eden smoke
-```
+### `pages/`
+
+按页面入口放组件，比如：
+
+- `pages/dashboard`
+- `pages/user`
+- `pages/role`
+- `pages/article`
+- `pages/access`
+- `pages/example`
+- `pages/auth`
+- `pages/error`
+
+## 前后端怎么协作
+
+当前约定很直接：
+
+1. 后端在 `packages/nexus/src/modules/*` 定义接口。
+2. OpenAPI 从后端路由和 schema 自动导出。
+3. Eden 类型从 `type App = typeof app` 推导。
+4. 前端在 `packages/console/src/shared/api/eden.ts` 创建 Treaty 客户端。
+5. 页面通过 `modules/*` 里的 query / mutation 调接口。
+
+需要明确 HTTP 类型时，从这些导出拿：
+
+- `@xdd-zone/nexus/auth-types`
+- `@xdd-zone/nexus/user-types`
+- `@xdd-zone/nexus/rbac-types`
+- `@xdd-zone/nexus/post-types`
+- `@xdd-zone/nexus/comment-types`
+- `@xdd-zone/nexus/media-types`
+- `@xdd-zone/nexus/site-config-types`
+
+权限常量统一从 `@xdd-zone/nexus/permissions` 引入。
+
+## 当前认证和权限模型
+
+- 固定角色只有 `superAdmin / user`
+- 权限常量以 `packages/nexus/src/core/security/permissions/permissions.ts` 为准
+- `own` 只用于当前用户资料相关场景
+- 前端页面访问控制走 `packages/console/src/app/access/access-control.ts`
+- 后端接口权限校验走 `authPlugin` 或 `accessPlugin`
+
+## 改动时的默认落点
+
+### 新增或调整接口
+
+去 `packages/nexus/src/modules/<feature>/`。
+
+### 新增或调整页面
+
+同时检查：
+
+- `packages/console/src/app/router/routes.tsx`
+- `packages/console/src/app/navigation/navigation.ts`
+- `packages/console/src/app/access/access-control.ts`
+- `packages/console/src/pages/*`
+- `packages/console/src/modules/*`
+
+### 新增要给前端复用的类型
+
+去 `packages/nexus/src/public/*-types.ts`。
+
+### 改认证、GitHub 登录、权限
+
+同时检查：
+
+- `packages/nexus/src/core/security/*`
+- `packages/nexus/src/modules/auth`
+- `packages/console/src/modules/auth`
+- `packages/console/src/app/access/access-control.ts`

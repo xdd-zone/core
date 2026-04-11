@@ -1,5 +1,4 @@
-import type { AuthMethodId, AuthMethodKind, AuthMethodPolicy } from '@nexus/core/config'
-import { AUTH_CONFIG } from '@nexus/core/config'
+import type { AuthMethodId, AuthMethodKind, AuthMethodPolicy, ResolvedConfig } from '@nexus/core/config'
 import { BadRequestError } from '@nexus/core/http'
 
 export interface PublicAuthMethod extends AuthMethodPolicy {
@@ -30,95 +29,94 @@ interface AuthMethodMeta {
   kind: AuthMethodKind
 }
 
-const AUTH_METHOD_META_LIST: readonly AuthMethodMeta[] = [
-  {
-    id: 'emailPassword',
-    kind: 'credential',
-    implemented: true,
-    entryPath: '/api/auth/sign-in/email',
-  },
-  {
-    id: 'github',
-    kind: 'oauth',
-    implemented: true,
-    entryPath: '/api/auth/sign-in/github',
-  },
-  {
-    id: 'google',
-    kind: 'oauth',
-    implemented: false,
-    entryPath: null,
-  },
-  {
-    id: 'wechat',
-    kind: 'oauth',
-    implemented: false,
-    entryPath: null,
-  },
-] as const
-
-const AUTH_METHOD_META_MAP: Record<AuthMethodId, AuthMethodMeta> = Object.fromEntries(
-  AUTH_METHOD_META_LIST.map((method) => [method.id, method]),
-) as Record<AuthMethodId, AuthMethodMeta>
-
 /**
  * 登录方式规则服务。
  */
-export class AuthMethodsService {
-  /**
-   * 返回当前公开可读的登录方式配置。
-   */
-  static listPublicMethods(): PublicAuthMethod[] {
-    return AUTH_METHOD_META_LIST.map((methodMeta) => ({
-      ...methodMeta,
-      ...AUTH_CONFIG.methods[methodMeta.id],
-    }))
+export interface AuthMethodsService {
+  listPublicMethods: () => PublicAuthMethod[]
+  getMethodPolicy: (methodId: AuthMethodId) => AuthMethodPolicy
+  getMethodMeta: (methodId: AuthMethodId) => AuthMethodMeta
+  isMethodEnabled: (methodId: AuthMethodId) => boolean
+  canMethodSignUp: (methodId: AuthMethodId) => boolean
+  assertMethodEnabled: (methodId: AuthMethodId) => void
+  assertMethodSignUpAllowed: (methodId: AuthMethodId) => void
+}
+
+function createAuthMethodMetaList(config: Pick<ResolvedConfig, 'app'>): readonly AuthMethodMeta[] {
+  return [
+    {
+      id: 'emailPassword',
+      kind: 'credential',
+      implemented: true,
+      entryPath: `${config.app.apiPrefix}/auth/sign-in/email`,
+    },
+    {
+      id: 'github',
+      kind: 'oauth',
+      implemented: true,
+      entryPath: `${config.app.apiPrefix}/auth/sign-in/github`,
+    },
+    {
+      id: 'google',
+      kind: 'oauth',
+      implemented: false,
+      entryPath: null,
+    },
+    {
+      id: 'wechat',
+      kind: 'oauth',
+      implemented: false,
+      entryPath: null,
+    },
+  ] as const
+}
+
+export function createAuthMethodsService(config: Pick<ResolvedConfig, 'app' | 'auth'>): AuthMethodsService {
+  const authMethodMetaList = createAuthMethodMetaList(config)
+  const authMethodMetaMap: Record<AuthMethodId, AuthMethodMeta> = Object.fromEntries(
+    authMethodMetaList.map((method) => [method.id, method]),
+  ) as Record<AuthMethodId, AuthMethodMeta>
+
+  function getMethodPolicy(methodId: AuthMethodId): AuthMethodPolicy {
+    return config.auth.methods[methodId]
   }
 
-  /**
-   * 读取指定登录方式配置。
-   */
-  static getMethodPolicy(methodId: AuthMethodId): AuthMethodPolicy {
-    return AUTH_CONFIG.methods[methodId]
+  function getMethodMeta(methodId: AuthMethodId): AuthMethodMeta {
+    return authMethodMetaMap[methodId]
   }
 
-  /**
-   * 读取指定登录方式元信息。
-   */
-  static getMethodMeta(methodId: AuthMethodId): AuthMethodMeta {
-    return AUTH_METHOD_META_MAP[methodId]
+  function isMethodEnabled(methodId: AuthMethodId): boolean {
+    return getMethodPolicy(methodId).enabled
   }
 
-  /**
-   * 判断登录方式是否开启。
-   */
-  static isMethodEnabled(methodId: AuthMethodId): boolean {
-    return this.getMethodPolicy(methodId).enabled
-  }
-
-  /**
-   * 判断登录方式是否允许首次创建用户。
-   */
-  static canMethodSignUp(methodId: AuthMethodId): boolean {
-    const policy = this.getMethodPolicy(methodId)
+  function canMethodSignUp(methodId: AuthMethodId): boolean {
+    const policy = getMethodPolicy(methodId)
     return policy.enabled && policy.allowSignUp
   }
 
-  /**
-   * 要求当前登录方式处于开启状态。
-   */
-  static assertMethodEnabled(methodId: AuthMethodId) {
-    if (!this.isMethodEnabled(methodId)) {
+  function assertMethodEnabled(methodId: AuthMethodId) {
+    if (!isMethodEnabled(methodId)) {
       throw new BadRequestError(AUTH_METHOD_DISABLED_MESSAGES[methodId], 'AUTH_METHOD_DISABLED')
     }
   }
 
-  /**
-   * 要求当前登录方式允许首次创建用户。
-   */
-  static assertMethodSignUpAllowed(methodId: AuthMethodId) {
-    if (!this.canMethodSignUp(methodId)) {
+  function assertMethodSignUpAllowed(methodId: AuthMethodId) {
+    if (!canMethodSignUp(methodId)) {
       throw new BadRequestError(AUTH_METHOD_SIGN_UP_DISABLED_MESSAGES[methodId], 'AUTH_SIGN_UP_DISABLED')
     }
+  }
+
+  return {
+    listPublicMethods: () =>
+      authMethodMetaList.map((methodMeta) => ({
+        ...methodMeta,
+        ...config.auth.methods[methodMeta.id],
+      })),
+    getMethodPolicy,
+    getMethodMeta,
+    isMethodEnabled,
+    canMethodSignUp,
+    assertMethodEnabled,
+    assertMethodSignUpAllowed,
   }
 }

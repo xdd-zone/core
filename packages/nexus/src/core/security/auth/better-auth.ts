@@ -1,38 +1,39 @@
-import { AUTH_CONFIG, BETTER_AUTH_CONFIG } from '@nexus/core/config'
+import type { ResolvedConfig } from '@nexus/core/config'
 import { prisma } from '@nexus/infra/database/client'
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { assignDefaultRoleToUser } from './hooks/assign-default-role.hook'
 
-const socialProviders =
-  AUTH_CONFIG.methods.github.enabled && BETTER_AUTH_CONFIG.github
-    ? {
-        github: {
-          clientId: BETTER_AUTH_CONFIG.github.clientId,
-          clientSecret: BETTER_AUTH_CONFIG.github.clientSecret,
-        },
-      }
-    : undefined
+export function createBetterAuthInstance(config: Pick<ResolvedConfig, 'auth' | 'betterAuth'>) {
+  const socialProviders =
+    config.auth.methods.github.enabled && config.betterAuth.providers.github
+      ? {
+          github: {
+            clientId: config.betterAuth.providers.github.clientId,
+            clientSecret: config.betterAuth.providers.github.clientSecret,
+          },
+        }
+      : undefined
 
-/**
- * Better Auth 实例。
- */
-export const betterAuthInstance = betterAuth({
-  secret: BETTER_AUTH_CONFIG.secret,
-  url: BETTER_AUTH_CONFIG.url,
-  database: prismaAdapter(prisma, {
-    provider: 'postgresql',
-  }),
-  emailAndPassword: {
-    enabled: AUTH_CONFIG.methods.emailPassword.enabled,
-  },
-  socialProviders,
-  trustedOrigins: BETTER_AUTH_CONFIG.trustedOrigins,
-  databaseHooks: {
-    user: {
-      create: {
-        after: assignDefaultRoleToUser,
+  return betterAuth({
+    secret: config.betterAuth.secret,
+    url: config.betterAuth.url,
+    database: prismaAdapter(prisma, {
+      provider: 'postgresql',
+    }),
+    emailAndPassword: {
+      enabled: config.auth.methods.emailPassword.enabled,
+    },
+    socialProviders,
+    trustedOrigins: config.auth.trustedOrigins,
+    databaseHooks: {
+      user: {
+        create: {
+          after: assignDefaultRoleToUser,
+        },
       },
     },
-  },
-})
+  })
+}
+
+export type BetterAuthInstance = ReturnType<typeof createBetterAuthInstance>

@@ -1,31 +1,39 @@
-import { APP_CONFIG } from '@nexus/core/config'
+import type { AppBootstrapContext } from '../bootstrap'
 import { Elysia } from 'elysia'
-import { authModule } from './auth'
-import { commentModule } from './comment'
-import { healthModule } from './health'
-import { mediaModule } from './media'
-import { postModule } from './post'
-import { previewModule } from './preview'
-import { rbacModule } from './rbac'
-import { siteConfigModule } from './site-config'
-import { userModule } from './user'
+import { createAuthModule } from './auth'
+import { createCommentModule } from './comment'
+import { createHealthModule } from './health'
+import { createMediaModule } from './media'
+import { createPostModule } from './post'
+import { createPreviewModule } from './preview'
+import { createRbacModule } from './rbac'
+import { createSiteConfigModule } from './site-config'
+import { createUserModule } from './user'
 
 /**
  * API 模块聚合入口。
  */
-export const modules = new Elysia({
-  name: 'api-modules',
-  prefix: `/${APP_CONFIG.prefix}`,
-})
-  .use(healthModule)
-  .use(authModule)
-  .use(userModule)
-  .use(rbacModule)
-  .use(postModule)
-  .use(previewModule)
-  .use(siteConfigModule)
-  .use(mediaModule)
-  .use(commentModule)
+export function createModules(context: AppBootstrapContext) {
+  return new Elysia({
+    name: 'api-modules',
+    prefix: context.config.app.apiPrefix,
+  })
+    .use(createHealthModule())
+    .use(
+      createAuthModule({
+        authApiService: context.security.authApiService,
+        authMethodsService: context.security.authMethodsService,
+        authPlugin: context.security.authPlugin,
+      }),
+    )
+    .use(createUserModule({ accessPlugin: context.security.accessPlugin }))
+    .use(createRbacModule({ accessPlugin: context.security.accessPlugin }))
+    .use(createPostModule({ accessPlugin: context.security.accessPlugin }))
+    .use(createPreviewModule({ accessPlugin: context.security.accessPlugin }))
+    .use(createSiteConfigModule({ accessPlugin: context.security.accessPlugin }))
+    .use(createMediaModule({ accessPlugin: context.security.accessPlugin }))
+    .use(createCommentModule({ accessPlugin: context.security.accessPlugin }))
+}
 
 export * from './auth'
 export * from './comment'

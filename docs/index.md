@@ -1,10 +1,10 @@
 # 文档入口
 
-这份文档用于说明仓库的阅读顺序，以及不同任务下应先看哪些文档。
+这份文档只做一件事：告诉你现在该先看哪份文档。
 
-## 最先阅读
+## 第一次进仓库
 
-如果你第一次进入这个仓库，推荐按下面顺序看：
+按这个顺序读：
 
 1. [README.md](../README.md)
 2. [architecture.md](./architecture.md)
@@ -12,118 +12,95 @@
 4. [api.md](./api.md)
 5. [eden.md](./eden.md)
 
-然后再按关注点补：
+## 要改后端接口
 
-- [console.md](./console.md)
-- [authentication.md](./authentication.md)
-- [OAuth2/github.md](./OAuth2/github.md)
-- [rbac.md](./rbac.md)
-- [testing.md](./testing.md)
-
-## 如果你要开始写后端代码
-
-优先阅读：
+先看：
 
 1. [development.md](./development.md)
 2. [architecture.md](./architecture.md)
-3. [authentication.md](./authentication.md)
-4. [rbac.md](./rbac.md)
-5. [eden.md](./eden.md)
+3. [api.md](./api.md)
+4. [eden.md](./eden.md)
 
-再看代码目录：
+如果还碰到认证或权限，再补：
+
+- [authentication.md](./authentication.md)
+- [rbac.md](./rbac.md)
+
+代码入口：
 
 - `packages/nexus/src/modules`
 - `packages/nexus/src/core/security`
-- `packages/nexus/src/core/http`
-- `packages/nexus/src/modules/*/model.ts`
+- `packages/nexus/src/public`
 
-## 如果你要修改 Console 前端
+## 要改 Console 前端
 
-优先阅读：
+先看：
 
 1. [console.md](./console.md)
-2. [packages/console/README.md](../packages/console/README.md)
-3. [theme.md](./theme.md)
-4. [authentication.md](./authentication.md)
-5. [development.md](./development.md)
-6. [eden.md](./eden.md)
+2. [theme.md](./theme.md)
+3. [development.md](./development.md)
+4. [eden.md](./eden.md)
+5. [packages/console/README.md](../packages/console/README.md)
 
-再看代码目录：
+代码入口：
 
 - `packages/console/src/app/router`
-- `packages/console/src/app/query-client.ts`
 - `packages/console/src/app/navigation`
-- `packages/console/src/modules/auth`
-- `packages/console/src/modules/user`
-- `packages/console/src/modules/rbac`
-- `packages/console/src/layout`
-- `packages/console/src/pages/user`
-- `packages/console/src/pages/role`
-- `packages/console/src/pages/access`
+- `packages/console/src/app/access/access-control.ts`
+- `packages/console/src/modules`
 - `packages/console/src/pages`
 
-## 如果你要修改 HTTP 接口定义
+## 要改认证或 GitHub 登录
 
-优先阅读：
-
-1. [api.md](./api.md)
-2. [development.md](./development.md)
-3. [architecture.md](./architecture.md)
-4. [eden.md](./eden.md)
-
-修改后至少检查：
-
-- `packages/nexus`
-- `/openapi`
-- Eden smoke
-
-## 如果你要处理 GitHub 登录或登录后的 Dashboard 页面权限
-
-优先阅读：
+先看：
 
 1. [authentication.md](./authentication.md)
 2. [OAuth2/github.md](./OAuth2/github.md)
 3. [console.md](./console.md)
-4. [development.md](./development.md)
-5. [api.md](./api.md)
+4. [api.md](./api.md)
 
-再看代码目录：
+代码入口：
 
 - `packages/nexus/src/core/security/auth`
-- `packages/console/src/app/router`
-- `packages/console/src/pages/auth`
-- `packages/console/src/pages/dashboard`
+- `packages/nexus/src/modules/auth`
+- `packages/console/src/modules/auth`
+- `packages/console/src/pages/auth/Login.tsx`
 
-## 如果你要排查权限问题
+## 要改权限
 
-优先阅读：
+先看：
 
-1. [authentication.md](./authentication.md)
-2. [rbac.md](./rbac.md)
+1. [rbac.md](./rbac.md)
+2. [authentication.md](./authentication.md)
 3. [testing.md](./testing.md)
 
-建议排查顺序：
+代码入口：
 
-1. `/api/auth/get-session`
-2. `/api/rbac/users/me/permissions`
-3. 问题是 `401` 还是 `403`
-4. route 用的是 `auth: 'required'`、`permission`、`own` 还是 `me`
-5. 如果涉及 GitHub 登录，再检查 callback URL、`trustedOrigins`、API 基址是否正确，并确认浏览器可以直接访问这条地址；本地开发再检查 `/api` 代理
-6. Eden smoke 与 Nexus 测试是否已覆盖
+- `packages/nexus/src/core/security/permissions`
+- `packages/nexus/src/core/security/plugins/access.plugin.ts`
+- `packages/nexus/src/core/security/guards`
+- `packages/console/src/app/access/access-control.ts`
 
-## 文档集合
+## 要排查联调问题
 
-- [README.md](../README.md)：仓库总览
-- [architecture.md](./architecture.md)：架构说明
-- [console.md](./console.md)：Console 前端架构与开发说明
-- [packages/console/README.md](../packages/console/README.md)：Console 包说明与页面入口
-- [development.md](./development.md)：开发流程与标准动作
-- [api.md](./api.md)：HTTP 接口与端点概览
-- [eden.md](./eden.md)：Eden 接入方式、前后端交互流程和维护方法
-- [authentication.md](./authentication.md)：认证与登录态
-- [OAuth2/github.md](./OAuth2/github.md)：GitHub OAuth App 创建、参数获取和项目接入
-- [rbac.md](./rbac.md)：权限模型与声明式写法
-- [testing.md](./testing.md)：测试分层与回归命令
-- [skills.md](./skills.md)：常用技能与代码生成约定
-- [theme.md](./theme.md)：主题系统与颜色命名
+先看：
+
+1. [eden.md](./eden.md)
+2. [api.md](./api.md)
+3. [authentication.md](./authentication.md)
+4. [faq.md](./faq.md)
+
+排查顺序：
+
+1. 先看请求是不是打到了正确的 `/api/*`
+2. 再看 `/api/auth/get-session` 有没有拿到登录态
+3. 再区分是 `401` 还是 `403`
+4. 最后看 OpenAPI、Eden smoke 和前端路由守卫
+
+## 其他文档
+
+- [console.md](./console.md)：前端结构、路由、导航、页面入口
+- [theme.md](./theme.md)：主题、颜色类名、切换方式
+- [skills.md](./skills.md)：仓库常用技能和使用顺序
+- [testing.md](./testing.md)：测试、数据库、回归命令
 - [faq.md](./faq.md)：常见问题

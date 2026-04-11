@@ -1,5 +1,7 @@
+import type { ResolvedConfig } from '@nexus/core/config'
 import type { Logger } from '@nexus/infra/logger'
 import type { Elysia } from 'elysia'
+import { CONFIG } from '@nexus/core/config'
 import {
   PrismaClientInitializationError,
   PrismaClientKnownRequestError,
@@ -7,10 +9,7 @@ import {
   PrismaClientUnknownRequestError,
   PrismaClientValidationError,
 } from '@nexus/infra/database/prisma/generated/runtime/client'
-import { createModuleLogger } from '@nexus/infra/logger'
-import { getEnv } from '../config/utils'
-
-const errorLogger: Logger = createModuleLogger('error')
+import { createModuleLogger, logger as defaultLogger } from '@nexus/infra/logger'
 
 /**
  * 统一错误响应结构（与 responsePlugin 对齐）
@@ -58,8 +57,7 @@ interface ErrorHandlingResult {
   logContext?: Record<string, unknown>
 }
 
-const env = getEnv()
-const isDev = env.isDevelopment
+type ErrorPluginConfig = Pick<ResolvedConfig, 'env'>
 
 /**
  * 根据日志级别记录日志
@@ -282,9 +280,10 @@ function formatPrismaUniqueMessage(targetFields: string[]): string {
  * - PrismaClientUnknownRequestError: 未知请求错误
  *
  * @param error - 错误对象
+ * @param isDev - 当前是否为开发环境
  * @returns 错误处理结果，如果不是 Prisma 错误则返回 null
  */
-function handlePrismaError(error: unknown): ErrorHandlingResult | null {
+function handlePrismaError(error: unknown, isDev: boolean): ErrorHandlingResult | null {
   if (error instanceof PrismaClientKnownRequestError) {
     const prismaCode = error.code
     const details = isDev
@@ -302,7 +301,7 @@ function handlePrismaError(error: unknown): ErrorHandlingResult | null {
         }
 
     if (prismaCode === 'P2002') {
-      const targetFields = normalizePrismaUniqueTarget((error.meta as any)?.target)
+      const targetFields = normalizePrismaUniqueTarget((error.meta as { target?: unknown })?.target)
       return {
         status: 409,
         response: buildErrorResponse(409, formatPrismaUniqueMessage(targetFields), {
@@ -481,10 +480,12 @@ export class InternalServerError extends HttpError {
  * throw new Error('Something went wrong')
  * ```
  */
-export function errorPlugin(app: Elysia) {
-  return (
-    app
-      // 注册错误类型到 app 实例，方便导入使用
+export function createErrorPlugin(config: ErrorPluginConfig = CONFIG, baseLogger: Logger = defaultLogger) {
+  const isDev = config.env.isDevelopment
+  const errorLogger = createModuleLogger('error', undefined, baseLogger)
+
+  return function errorPlugin(app: Elysia) {
+    return app
       .derive(() => ({
         HttpError,
         BadRequestError,
@@ -494,8 +495,6 @@ export function errorPlugin(app: Elysia) {
         ConflictError,
         InternalServerError,
       }))
-
-      // 全局错误处理器
       .onError(({ code: errorCode, error, set, store }) => {
         const requestContext = extractRequestContext(store)
         const startTime = typeof requestContext.startTime === 'number' ? requestContext.startTime : undefined
@@ -507,7 +506,6 @@ export function errorPlugin(app: Elysia) {
 
         let result: ErrorHandlingResult
 
-        // 1) 路由不存在：Elysia 内部抛出的 NOT_FOUND
         if (errorCode === 'NOT_FOUND') {
           result = {
             status: 404,
@@ -516,9 +514,7 @@ export function errorPlugin(app: Elysia) {
             }),
             logLevel: 'warn',
           }
-        }
-        // 2) 参数校验错误：Elysia VALIDATION
-        else if (errorCode === 'VALIDATION') {
+        } else if (errorCode === 'VALIDATION') {
           const errors = formatValidationErrors(error)
           result = {
             status: 422,
@@ -528,9 +524,7 @@ export function errorPlugin(app: Elysia) {
             }),
             logLevel: 'warn',
           }
-        }
-        // 3) 请求体解析错误：比如 JSON 不合法等
-        else if (errorCode === 'PARSE') {
+        } else if (errorCode === 'PARSE') {
           result = {
             status: 400,
             response: buildErrorResponse(400, '请求体解析失败', {
@@ -539,9 +533,7 @@ export function errorPlugin(app: Elysia) {
             }),
             logLevel: 'warn',
           }
-        }
-        // 4) 自定义 HttpError：业务可控的 HTTP 语义
-        else if (error instanceof HttpError) {
+        } else if (error instanceof HttpError) {
           const status = error.statusCode
           result = {
             status,
@@ -550,10 +542,8 @@ export function errorPlugin(app: Elysia) {
             }),
             logLevel: status >= 500 ? 'error' : 'warn',
           }
-        }
-        // 5) Prisma：数据库错误做映射（优先于系统兜底）
-        else {
-          const prismaResult = handlePrismaError(error)
+        } else {
+          const prismaResult = handlePrismaError(error, isDev)
           if (prismaResult) {
             result = prismaResult
           } else {
@@ -586,5 +576,7 @@ export function errorPlugin(app: Elysia) {
         logWithLevel(errorLogger, result.logLevel, logPayload, 'request error')
         return result.response
       })
-  )
+  }
 }
+
+export const errorPlugin = createErrorPlugin()

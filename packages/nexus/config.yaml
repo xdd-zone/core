@@ -1,5 +1,36 @@
-port: 7788
-prefix: api
+app:
+  name: XDD SPACE API
+  port: 7788
+  apiPrefix: /api
+  publicBaseUrl: http://localhost:7788
+
+http:
+  cors:
+    enabled: true
+    origins:
+      - http://localhost:2333
+      - http://localhost:2233
+      - http://localhost:7788
+    allowCredentials: true
+    allowedHeaders:
+      - Content-Type
+      - Authorization
+      - X-Requested-With
+    exposedHeaders:
+      - Content-Length
+      - X-Requested-With
+    methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    maxAge: 86400
+  requestLogger:
+    enabled: true
+    logBody: false
+    logHeaders: false
 
 openapi:
   enabled: true
@@ -10,9 +41,18 @@ openapi:
 
 logger:
   level: info
-  filePath: # logs/app.log 留空则不启用文件日志
+  pretty: true
+  filePath:
+  serviceName: xdd-server-elysia
 
 auth:
+  trustedOrigins:
+    - http://localhost:2333
+    - http://localhost:2233
+    - http://localhost:7788
+    - http://localhost:7789
+    - http://elysia.xdd.ink
+    - https://elysia.xdd.ink
   methods:
     emailPassword:
       enabled: false
@@ -27,11 +67,9 @@ auth:
       enabled: false
       allowSignUp: false
 
-# Better Auth 信任的请求来源
-trustedOrigins:
-  - http://localhost:2333
-  - http://localhost:2233
-  - http://localhost:7788
-  - http://localhost:7789
-  - http://elysia.xdd.ink
-  - https://elysia.xdd.ink
+database:
+  log:
+    query: false
+    info: false
+    warn: true
+    error: true

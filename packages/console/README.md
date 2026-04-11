@@ -1,148 +1,28 @@
-# XDD Zone Console
+# @xdd-zone/console
 
-`@xdd-zone/console` 是 XDD Zone Core monorepo 中的后台管理前端，负责承载管理后台页面、交互、路由、主题与联调入口。
+`@xdd-zone/console` 是 XDD Zone Core 的后台管理前端。
 
-它与 `@xdd-zone/nexus` 的关系可以概括为：
+## 这个包负责什么
 
-```text
-packages/nexus
-  -> 提供 API / OpenAPI / 认证能力
-packages/console
-  -> 调用接口并提供后台界面
-```
+- 后台页面、布局、导航
+- 登录页和登录态恢复
+- 页面访问控制
+- 调用 Nexus 接口并展示结果
+- 主题切换和示例页
 
-## 包定位
+## 开发前先看
 
-`@xdd-zone/console` 负责：
+只要任务涉及页面、布局、导航或展示型组件，先看：
 
-- 管理后台页面与布局
-- 前端路由、导航与标签页组织
-- 认证请求、会话缓存与登录态处理
-- 状态管理、主题切换、国际化
-- 与后端 API 的联调与展示
-- 基于 `nexus` session 的登录、登出与会话恢复流程
-
-不负责：
-
-- 维护服务端接口定义
-- 维护独立于 monorepo 的工程配置体系
-- 解释或复制服务端已有的认证、权限与接口规则
-
-## 技术栈
-
-- Bun 1.3.5
-- React 19
-- TypeScript 5.9
-- Vite 7
-- TanStack Router 1.x
-- TanStack Query 5.x
-- Zustand
-- Ant Design 6
-- Tailwind CSS 4
-- i18next
-
-## 仓库关系
-
-当前仓库的主要包包括：
-
-- `@xdd-zone/nexus`
-  - 后端 API、认证、权限与 OpenAPI
-- `@xdd-zone/console`
-  - 后台管理前端
-- `@xdd-zone/eslint-config`
-  - 共享 ESLint / Prettier 配置
-
-`console` 已接入当前 monorepo：
-
-- 使用 Bun workspace 管理依赖
-- 复用 `@xdd-zone/eslint-config`
-- TypeScript 继承根目录 `tsconfig.base.json`
-- 可通过根目录脚本与后端一起联调
-
-前端架构采用：
-
-- 集中式 `routeTree`
-- 路由 `beforeLoad` 处理登录态校验与重定向
-- `staticData` 统一维护页面标题、TabBar、面包屑元信息
-- TanStack Query 管理 `/api/auth/get-session`、邮箱登录与登出
-- query / mutation 直接调用 Eden Treaty 客户端
-- HTTP 类型统一从 `@xdd-zone/nexus/auth-types`、`@xdd-zone/nexus/user-types`、`@xdd-zone/nexus/rbac-types`、`@xdd-zone/nexus/post-types`、`@xdd-zone/nexus/media-types`、`@xdd-zone/nexus/comment-types`、`@xdd-zone/nexus/site-config-types` 引入
-- 权限常量和匹配辅助函数统一从 `@xdd-zone/nexus/permissions` 引入
-- GitHub 登录地址统一通过 auth 模块构造，并复用当前 API 基址配置
-- 独立导航配置
-- 细粒度权限以后端 `401 / 403` 语义为准
-
-当前页面入口：
-
-- 仪表盘：`/dashboard`
-  - 登录后的默认落点，按当前权限展示首页指标和常用入口
-- 内容管理：`/articles`、`/categories`、`/tags`、`/comments`、`/article-settings`
-  - 当前保留内容管理页面入口
-- 系统管理：`/users`、`/roles`
-  - 用于查看用户列表和角色列表
-- 用户详情与权限操作：`/users/:id`、`/users/:id/edit`、`/users/:id/access`
-  - 由用户列表和用户详情页的操作按钮进入
-- 当前用户：`/profile`、`/my-access`
-  - 用于维护当前登录用户资料，以及查看当前用户角色和权限
-- 功能示例：`/ui-showcase`、`/markdown-example`、`/tiptap-example`、`/image-crop`
-  - 用于验证主题、Markdown、Tiptap 编辑和图片裁剪相关界面
-  - Tiptap 示例页左侧使用 `packages/console/src/components/content/editor/TiptapMarkdownEditor.tsx` 编辑内容
-  - 右侧继续复用 `packages/console/src/components/ui/markdown/Markdown.tsx` 做 Markdown 预览
-
-## 快速开始
-
-### 1. 安装依赖
-
-```bash
-bun install
-```
-
-### 2. 启动开发环境
-
-在根目录同时启动前后端：
-
-```bash
-bun run dev
-```
-
-如果只想启动前端：
-
-```bash
-bun run dev:console
-```
-
-默认地址：
-
-- Console: `http://localhost:2333`
-- Nexus: `http://localhost:7788`
-- OpenAPI 页面: `http://localhost:7788/openapi`
+1. `packages/console/design-context.md`
+2. `docs/console.md`
+3. `docs/theme.md`
 
 ## 常用命令
 
-根目录常用命令：
-
-```bash
-# dev
-bun run dev
-bun run dev:console
-bun run dev:nexus
-
-# build
-bun run build
-bun run build:console
-
-# quality
-bun run lint
-bun run lint:fix
-bun run format
-bun run format:check
-bun run type-check
-```
-
-在包目录内也可以执行：
-
 ```bash
 cd packages/console
+
 bun run dev
 bun run build
 bun run preview
@@ -153,158 +33,83 @@ bun run format:check
 bun run type-check
 ```
 
-## 包结构
-
-`packages/console/` 结构大致如下：
-
-```text
-packages/console/
-├── public/
-├── src/
-├── AGENTS.md
-├── eslint.config.js
-├── prettier.config.js
-├── tsconfig.app.json
-├── tsconfig.json
-├── tsconfig.node.json
-├── vite.config.ts
-└── package.json
-```
-
-核心源码目录：
+## 目录结构
 
 ```text
 src/
-├── assets/
 ├── app/
 ├── components/
-├── config/
-├── hooks/
-├── i18n/
 ├── layout/
 ├── modules/
 ├── pages/
 ├── stores/
-├── types/
 └── utils/
 ```
 
-其中当前重点目录为：
+最常改的目录：
 
-- `src/app/router`
-  - TanStack Router 路由树、重定向与路由元信息
-- `src/app/query-client.ts`
-  - QueryClient 初始化
-- `src/app/navigation`
-  - 独立导航配置
-- `src/modules/auth`
-  - GitHub 登录地址 helper、auth query 与 auth store
-- `src/modules/user`
-  - 用户列表、用户详情、当前用户资料与更新 query / mutation
-- `src/modules/rbac`
-  - 角色列表、用户角色、用户权限与分配角色 query / mutation
-- `src/pages/user`
-  - 用户列表、详情、编辑、当前用户资料和指定用户权限页面
-- `src/pages/role`
-  - 角色列表页
-- `src/pages/access`
-  - 当前登录用户权限页
-- `src/pages/example`
-  - 示例页入口，包含组件主题展示、Markdown 演示与图片裁剪
-- `src/assets/styles/theme`
-  - Catppuccin 主题变量、暗色变体与语义色定义
-- `src/components/ui/markdown`
-  - Markdown 渲染器、目录、高亮与主题能力
+- `app/router`
+  路由树、登录守卫、重定向。
+- `app/navigation`
+  菜单配置。
+- `app/access/access-control.ts`
+  页面访问控制。
+- `modules/auth`
+  登录、登出、session 查询。
+- `modules/user`
+  用户相关请求。
+- `modules/rbac`
+  角色和权限相关请求。
+- `pages/*`
+  页面入口。
 
-## 开发约定
+## 当前页面路径
 
-### 设计上下文与技能顺序
+- `/login`
+- `/dashboard`
+- `/users`
+- `/users/$id`
+- `/users/$id/edit`
+- `/users/$id/access`
+- `/roles`
+- `/profile`
+- `/my-access`
+- `/articles`
+- `/articles/new`
+- `/articles/$id`
+- `/articles/$id/edit`
+- `/categories`
+- `/tags`
+- `/comments`
+- `/article-settings`
+- `/ui-showcase`
+- `/markdown-example`
+- `/tiptap-example`
+- `/image-crop`
+- `/error-example`
+- `/forbidden-example`
+- `/not-found-example`
 
-`packages/console` 的界面设计上下文统一放在：
+## 前后端怎么协作
 
-- `packages/console/design-context.md`
+- 前端统一通过 `packages/console/src/shared/api/eden.ts` 调接口
+- 需要明确 HTTP 类型时，从 `@xdd-zone/nexus/*-types` 引入
+- 权限常量和匹配函数从 `@xdd-zone/nexus/permissions` 引入
+- 页面访问控制看 `packages/console/src/app/access/access-control.ts`
+- GitHub 登录走浏览器重定向，不走普通 JSON 请求
 
-只要任务涉及 React 组件、页面、布局、导航、展示型业务组件或其他界面调整，开始开发前按下面顺序执行：
+## 新增页面时通常要改哪几处
 
-1. 先读取 `packages/console/design-context.md`
-2. 先调用 `frontend-design` 技能
-3. 再继续页面、组件和样式实现
+1. `packages/console/src/app/router/routes.tsx`
+2. `packages/console/src/app/navigation/navigation.ts`
+3. `packages/console/src/app/access/access-control.ts`
+4. `packages/console/src/modules/<feature>/`
+5. `packages/console/src/pages/<feature>/`
 
-如果后续还需要继续调整布局、说明文案、排版或界面收尾，再继续调用对应设计技能。
+## 相关文档
 
-不要跳过 `packages/console/design-context.md` 直接开始写界面，也不要临时另起一套和当前后台不一致的风格。
-
-### 共享工程配置
-
-本包不单独维护一套工程规范，默认遵循仓库统一配置：
-
-- ESLint / Prettier 来自 `@xdd-zone/eslint-config`
-- TypeScript 基础配置来自根目录 `tsconfig.base.json`
-- 根目录 `eslint.config.js` 统一处理全局忽略项
-
-### 前后端协作方式
-
-前端开发时，默认以前后端同仓协作为前提：
-
-- 接口结构优先参考 `packages/nexus` 的接口定义 / OpenAPI
-- HTTP 类型优先从 `@xdd-zone/nexus/*-types` 引入
-- 认证与权限行为以后端实现为准
-- 页面联调优先通过根目录 `bun run dev` 完成
-- 本地开发默认通过 `/api` 代理到 `nexus`
-- GitHub 登录入口和 Eden 请求共用同一套 API 基址配置
-- 用户、角色、文章、媒体、评论和站点配置相关请求统一通过 `src/shared/api/eden.ts` 中的 Treaty 客户端处理
-- 生产环境可继续使用同域 `/api` 或反向代理
-- 如果使用独立 API 域名，这条地址需要和当前会话策略匹配，并同步检查 cookie 与来源配置
-- Better Auth 需要信任前端来源，例如 `http://localhost:2333`
-- 用户与权限相关请求统一放在 `src/modules/user` 和 `src/modules/rbac`
-
-### 主题与构建约定
-
-当前主题与构建策略遵循以下原则：
-
-- `data-theme` 始终写入实际 Catppuccin 主题 ID
-  - `latte`
-  - `frappe`
-  - `macchiato`
-  - `mocha`
-- Ant Design 主题统一通过 `getAntdThemeConfig(...)` 注入，避免页面各自拼装 token
-- Tailwind 与 CSS 组件样式优先使用 `--color-*`、`--ctp-*` 语义变量
-- Markdown 高亮只对白名单语言做动态加载，未支持语言回退到 `text`
-- Vite 手动分包优先拆分 React、Ant Design、TanStack、i18n、Zustand 等基础依赖
-
-### 验证建议
-
-改动完成后，至少执行：
-
-```bash
-bun run lint
-bun run type-check
-bun run build
-```
-
-只改前端时也可以执行：
-
-```bash
-bun run lint:console
-bun run --filter @xdd-zone/console type-check
-bun run build:console
-```
-
-如果改动涉及联调，还应确认：
-
-- 页面能正常访问后端接口
-- 登录与路由 `beforeLoad` 行为正确
-- 侧边栏和头像菜单能进入 `/users`、`/roles`、`/profile`、`/my-access`
-- 用户详情、编辑和权限管理页面能正常加载并提交操作
-- 菜单、主题、标签页状态没有回退
-- 刷新页面后能通过 `/api/auth/get-session` 恢复登录态
-- `/ui-showcase`、`/markdown-example` 与 `/image-crop` 能正常访问
-- 切换 Catppuccin 主题后，菜单、抽屉、认证页与示例页样式一致
-
-## 文档入口
-
-- [仓库根 README](../../README.md)
+- [仓库 README](../../README.md)
 - [Console 前端指南](../../docs/console.md)
-- [架构说明](../../docs/architecture.md)
+- [主题系统](../../docs/theme.md)
 - [开发指南](../../docs/development.md)
-- [API 指南](../../docs/api.md)
+- [Eden 指南](../../docs/eden.md)

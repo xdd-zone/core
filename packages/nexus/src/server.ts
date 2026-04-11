@@ -1,4 +1,5 @@
-import { APP_CONFIG, OPENAPI_CONFIG } from '@nexus/core/config'
+import type { ResolvedConfig } from '@nexus/core/config'
+import { CONFIG } from '@nexus/core/config'
 import { prisma } from '@nexus/infra/database'
 import { logger } from '@nexus/infra/logger'
 
@@ -39,17 +40,17 @@ function registerLifecycle() {
 /**
  * 启动 HTTP 服务。
  */
-export function startServer<const TApp extends StartableApp>(application: TApp) {
+export function startServer<const TApp extends StartableApp>(application: TApp, config: ResolvedConfig = CONFIG) {
   registerLifecycle()
 
-  application.listen(APP_CONFIG.port)
+  application.listen(config.app.port)
 
   const host = application.server?.hostname
   const port = application.server?.port
   const baseUrl = `http://${host}:${port}`
 
   logger.info(`Elysia is running at ${host}:${port}`)
-  logger.info(`OpenAPI documentation is available at ${baseUrl}${OPENAPI_CONFIG.path}`)
+  logger.info(`OpenAPI documentation is available at ${baseUrl}${config.openapi.path}`)
 
   return application
 }
