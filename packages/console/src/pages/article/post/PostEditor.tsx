@@ -190,7 +190,7 @@ const PostPreviewPanel = memo(({ catppuccinTheme, form, primaryColor }: PostPrev
 
   return (
     <Card
-      className="flex flex-1 flex-col rounded-3xl"
+      className="flex flex-1 flex-col rounded-2xl"
       styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
       title={t('content.preview.title')}
       extra={
@@ -353,7 +353,7 @@ export function PostEditor({ mode, postId }: PostEditorProps) {
 
   return (
     <div className={ARTICLE_PAGE_CLASSNAME}>
-      <section className="rounded-[28px] border border-border-subtle bg-surface/85 px-5 py-5 shadow-sm backdrop-blur-xs sm:px-6">
+      <section className="rounded-2xl border border-border-subtle bg-surface/85 px-5 py-5 shadow-sm backdrop-blur-xs sm:px-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 max-w-3xl">
             <Button

@@ -56,7 +56,7 @@ export function ErrorStatePage({
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">{actions}</div>
 
         {detailItems.length > 0 ? (
-          <section className="mt-6 rounded-[24px] border border-border-subtle bg-surface-muted/42 p-5 backdrop-blur-xs">
+          <section className="mt-6 rounded-2xl border border-border-subtle bg-surface-muted/42 p-5 backdrop-blur-xs">
             <div className="text-fg text-sm font-medium">错误详情</div>
             <p className="text-fg-muted mt-2 text-sm leading-6">{detailDescription}</p>
             <div className="mt-4 rounded-2xl border border-border-subtle bg-overlay-0/20 px-4 py-3">

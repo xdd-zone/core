@@ -134,7 +134,7 @@ const statusSummary = [
 function ShowcasePanel({ children, description, eyebrow, extra, icon, title }: ShowcasePanelProps) {
   return (
     <Card
-      className="rounded-[28px] border border-border-subtle shadow-sm backdrop-blur-xs"
+      className="rounded-2xl border border-border-subtle shadow-sm backdrop-blur-xs"
       styles={{ body: { padding: 24 } }}
     >
       <div className="flex flex-col gap-5">
@@ -201,7 +201,7 @@ export function UiShowcase() {
 
   if (!data) {
     return (
-      <div className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
+      <div className="rounded-2xl border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
         <Alert type="error" description="无法加载示例数据" showIcon />
       </div>
     )
@@ -216,7 +216,7 @@ export function UiShowcase() {
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="rounded-[32px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
+      <section className="rounded-2xl border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="max-w-3xl">
@@ -235,7 +235,7 @@ export function UiShowcase() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-border-subtle bg-surface-muted/60 p-4 shadow-sm backdrop-blur-xs xl:max-w-sm">
+            <div className="rounded-2xl border border-border-subtle bg-surface-muted/60 p-4 shadow-sm backdrop-blur-xs xl:max-w-sm">
               <div className="text-fg text-sm font-medium">当前状态</div>
               <p className="text-fg-muted mt-2 text-sm leading-6">{data.message}</p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -269,7 +269,7 @@ export function UiShowcase() {
           description="这一组主要检查页面最常用的输入、筛选和操作组件，看它们在轻透表面里是否还能保持足够清楚的可读性和反馈。"
         >
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-3xl border border-border-subtle bg-surface-muted/55 p-5">
+            <div className="rounded-2xl border border-border-subtle bg-surface-muted/55 p-5">
               <div className="text-fg text-sm font-medium">筛选与输入</div>
               <p className="text-fg-muted mt-2 text-sm leading-6">
                 输入框、下拉框和日期选择器应该和页面外层保持同一套轻透层级。
@@ -303,7 +303,7 @@ export function UiShowcase() {
               </form>
             </div>
 
-            <div className="rounded-3xl border border-border-subtle bg-surface-muted/55 p-5">
+            <div className="rounded-2xl border border-border-subtle bg-surface-muted/55 p-5">
               <div className="text-fg text-sm font-medium">按钮与轻反馈</div>
               <p className="text-fg-muted mt-2 text-sm leading-6">
                 示例页里也要保留后台气质，主按钮清楚，但不会把整块内容染得很重。
@@ -382,7 +382,7 @@ export function UiShowcase() {
           title="表格、卡片与标签页"
           description="这组重点看带结构的复合组件。表格根层、表头、排序态和卡片内信息块都应该比普通面板更轻一点。"
         >
-          <div className="rounded-3xl border border-border-subtle bg-surface-muted/45 p-4">
+          <div className="rounded-2xl border border-border-subtle bg-surface-muted/45 p-4">
             <div className="mb-4 rounded-2xl border border-border-subtle bg-surface/70 px-4 py-3 text-sm text-fg-muted">
               当前表格用于观察轻透背景、表头层级和 hover/selected
               的反馈是否统一，不应该再出现一整块厚重底板压住页面的问题。
@@ -398,7 +398,7 @@ export function UiShowcase() {
                   查看
                 </Button>
               }
-              className="h-full rounded-3xl border border-border-subtle shadow-none"
+              className="h-full rounded-2xl border border-border-subtle shadow-none"
             >
               <p className="text-fg-muted mb-0 text-sm leading-6">
                 卡片内容区域保持轻透表面，不需要依赖厚阴影来建立存在感。
@@ -412,7 +412,7 @@ export function UiShowcase() {
                   查看
                 </Button>
               }
-              className="h-full rounded-3xl border border-border-subtle shadow-none"
+              className="h-full rounded-2xl border border-border-subtle shadow-none"
             >
               <p className="text-fg-muted mb-0 text-sm leading-6">
                 悬停反馈应该是轻的，重点是提示可点击，不是把整个区域染成重色。
@@ -427,7 +427,7 @@ export function UiShowcase() {
                   操作
                 </Button>,
               ]}
-              className="h-full rounded-3xl border border-border-subtle shadow-none"
+              className="h-full rounded-2xl border border-border-subtle shadow-none"
             >
               <Card.Meta title="操作卡片" description="带底部动作的卡片也要保留整洁、稳定的后台气质。" />
             </Card>
@@ -474,7 +474,7 @@ export function UiShowcase() {
               ]}
             />
 
-            <div className="rounded-3xl border border-border-subtle bg-surface-muted/45 p-5">
+            <div className="rounded-2xl border border-border-subtle bg-surface-muted/45 p-5">
               <div className="text-fg text-sm font-medium">Timeline 时间轴</div>
               <p className="text-fg-muted mt-2 text-sm leading-6">时间轴用来检查线性信息在轻背景里是否依然容易扫读。</p>
               <div className="mt-4">
@@ -513,7 +513,7 @@ export function UiShowcase() {
         description="最后一组用来确认当前项目的标准色、文字层级、背景层级和边框层级在示例页里是否都能直接看懂、直接复用。"
       >
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
-          <div className="rounded-3xl border border-border-subtle bg-surface-muted/45 p-5">
+          <div className="rounded-2xl border border-border-subtle bg-surface-muted/45 p-5">
             <div className="text-fg text-sm font-medium">Catppuccin 标准颜色</div>
             <p className="text-fg-muted mt-2 text-sm leading-6">标准色板保持清楚陈列，但不需要额外装饰来制造存在感。</p>
             <div className="mt-4 space-y-3">
@@ -533,7 +533,7 @@ export function UiShowcase() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
-            <div className="rounded-3xl border border-border-subtle bg-surface/80 p-5 shadow-sm backdrop-blur-xs">
+            <div className="rounded-2xl border border-border-subtle bg-surface/80 p-5 shadow-sm backdrop-blur-xs">
               <div className="text-fg text-sm font-medium">文字层级</div>
               <div className="mt-4 space-y-2">
                 <p className="text-fg mb-0 text-base">主要文字用于标题与主要结论</p>
@@ -542,7 +542,7 @@ export function UiShowcase() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-border-subtle bg-surface/80 p-5 shadow-sm backdrop-blur-xs">
+            <div className="rounded-2xl border border-border-subtle bg-surface/80 p-5 shadow-sm backdrop-blur-xs">
               <div className="text-fg text-sm font-medium">背景层级</div>
               <div className="mt-4 space-y-2">
                 <div className="rounded-2xl bg-surface px-4 py-3 text-sm font-medium text-fg">surface</div>
@@ -552,7 +552,7 @@ export function UiShowcase() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-border-subtle bg-surface/80 p-5 shadow-sm backdrop-blur-xs">
+            <div className="rounded-2xl border border-border-subtle bg-surface/80 p-5 shadow-sm backdrop-blur-xs">
               <div className="text-fg text-sm font-medium">边框层级</div>
               <div className="mt-4 space-y-3">
                 <div className="rounded-2xl border border-border px-4 py-3 text-sm font-medium text-fg">border</div>

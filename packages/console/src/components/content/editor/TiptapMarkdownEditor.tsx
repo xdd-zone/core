@@ -202,9 +202,7 @@ export function TiptapMarkdownEditor({ className, onChange, value }: TiptapMarkd
   }, [editor, value])
 
   return (
-    <div
-      className={clsx('overflow-hidden rounded-[28px] border border-border-subtle bg-surface/85 shadow-sm', className)}
-    >
+    <div className={clsx('overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm', className)}>
       <div className="flex flex-wrap gap-2 border-b border-border-subtle bg-surface-muted/65 px-4 py-3">
         {toolbarActions.map((action) => {
           const Icon = action.icon

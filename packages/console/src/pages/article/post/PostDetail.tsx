@@ -117,7 +117,7 @@ export function PostDetail() {
 
   return (
     <div className={ARTICLE_PAGE_CLASSNAME}>
-      <section className="rounded-[28px] border border-border-subtle bg-surface/85 px-5 py-5 shadow-sm backdrop-blur-xs sm:px-6">
+      <section className="rounded-2xl border border-border-subtle bg-surface/85 px-5 py-5 shadow-sm backdrop-blur-xs sm:px-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 max-w-3xl">
             <Button
@@ -208,7 +208,7 @@ export function PostDetail() {
         </Card>
 
         <div className="flex flex-col gap-5">
-          <Card className="rounded-3xl" title={t('content.post.detail.metaTitle')}>
+          <Card className="rounded-2xl" title={t('content.post.detail.metaTitle')}>
             <Descriptions column={1} size="small">
               <Descriptions.Item label={t('content.post.fields.slug')}>{post.slug}</Descriptions.Item>
               <Descriptions.Item label={t('content.post.fields.category')}>{post.category || '-'}</Descriptions.Item>
@@ -234,14 +234,14 @@ export function PostDetail() {
             </Descriptions>
           </Card>
 
-          <Card className="rounded-3xl" title={t('content.post.detail.markdownTitle')}>
+          <Card className="rounded-2xl" title={t('content.post.detail.markdownTitle')}>
             <pre className="max-h-[420px] overflow-auto whitespace-pre-wrap break-words rounded-2xl bg-surface-subtle/20 p-3 text-xs text-fg-muted">
               {post.markdown}
             </pre>
           </Card>
 
           {post.coverImage ? (
-            <Card className="rounded-3xl" title={t('content.post.detail.coverTitle')}>
+            <Card className="rounded-2xl" title={t('content.post.detail.coverTitle')}>
               <div className="overflow-hidden rounded-2xl border border-border-subtle">
                 <img src={post.coverImage} alt={post.title} className="h-48 w-full object-cover" />
               </div>

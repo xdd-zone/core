@@ -94,7 +94,7 @@ export function UserEdit() {
         title={t('user.edit.title')}
       />
 
-      <Card className="rounded-3xl" title={t('user.edit.formTitle')}>
+      <Card className="rounded-2xl" title={t('user.edit.formTitle')}>
         <p className="mb-4 text-sm text-fg-muted">{t('user.edit.formDescription')}</p>
 
         <Form form={form} layout="vertical" onFinish={handleSubmit}>

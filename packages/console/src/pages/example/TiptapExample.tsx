@@ -52,7 +52,7 @@ export function TiptapExample() {
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="rounded-3xl border border-border-subtle bg-surface/72 px-4 py-4 shadow-sm backdrop-blur-xs">
+      <section className="rounded-2xl border border-border-subtle bg-surface/72 px-4 py-4 shadow-sm backdrop-blur-xs">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 max-w-3xl">
             <div className="text-fg-muted text-[11px] font-semibold tracking-[0.2em] uppercase">
@@ -99,7 +99,7 @@ export function TiptapExample() {
             <span>{t('tiptapExample.previewTitle')}</span>
           </div>
           <p className="text-fg-muted text-sm">{t('tiptapExample.previewDescription')}</p>
-          <div className="rounded-[28px] border border-border-subtle bg-surface/85 px-5 py-4 shadow-sm">
+          <div className="rounded-2xl border border-border-subtle bg-surface/85 px-5 py-4 shadow-sm">
             <div className="mb-4 flex items-center gap-2 text-xs font-medium text-fg-muted">
               <ArrowLeftRight className="size-3.5" />
               <span>{t('tiptapExample.previewHint')}</span>

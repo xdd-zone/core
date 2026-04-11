@@ -71,7 +71,7 @@ export function RoleList() {
 
   return (
     <div className={ARTICLE_PAGE_CLASSNAME}>
-      <section className="rounded-3xl border border-border-subtle bg-surface/72 px-4 py-4 shadow-sm backdrop-blur-xs">
+      <section className="rounded-2xl border border-border-subtle bg-surface/72 px-4 py-4 shadow-sm backdrop-blur-xs">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 max-w-2xl">
             <div>

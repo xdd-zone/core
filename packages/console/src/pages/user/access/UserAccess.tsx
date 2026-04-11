@@ -130,7 +130,7 @@ export function UserAccess() {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)]">
         <Card
-          className="rounded-3xl"
+          className="rounded-2xl"
           title={t('access.manage.rolesTitle')}
           extra={<span className="text-fg-muted text-sm">{t('access.manage.roleCount', { count: roles.length })}</span>}
         >
@@ -193,7 +193,7 @@ export function UserAccess() {
         </Card>
 
         <Card
-          className="rounded-3xl"
+          className="rounded-2xl"
           title={t('access.manage.permissionsTitle')}
           extra={
             <span className="text-fg-muted text-sm">

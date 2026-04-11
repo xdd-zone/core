@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 
 export const ARTICLE_PAGE_CLASSNAME = 'flex min-h-full flex-col gap-5'
 
-export const ARTICLE_PANEL_CLASSNAME = 'flex flex-1 flex-col overflow-hidden rounded-3xl'
+export const ARTICLE_PANEL_CLASSNAME = 'flex flex-1 flex-col overflow-hidden rounded-2xl'
 
 export const ARTICLE_PANEL_BODY_STYLE: CSSProperties = {
   display: 'flex',

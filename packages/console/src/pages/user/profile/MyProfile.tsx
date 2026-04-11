@@ -115,7 +115,7 @@ export function MyProfile() {
       />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(280px,0.84fr)_minmax(0,1.16fr)]">
-        <Card className="rounded-3xl" title={t('profile.summary.title')}>
+        <Card className="rounded-2xl" title={t('profile.summary.title')}>
           <div className="mt-3 space-y-2.5">
             {infoItems.map((item) => (
               <div
@@ -137,7 +137,7 @@ export function MyProfile() {
           </div>
         </Card>
 
-        <Card className="rounded-3xl" title={t('profile.form.title')}>
+        <Card className="rounded-2xl" title={t('profile.form.title')}>
           <p className="mb-4 text-sm text-fg-muted">{t('profile.form.description')}</p>
           <div className="rounded-2xl border border-border-subtle bg-surface-subtle/18 p-4">
             <Form form={form} layout="vertical" onFinish={handleSubmit}>

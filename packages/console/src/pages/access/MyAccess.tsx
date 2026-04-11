@@ -70,7 +70,7 @@ export function MyAccess() {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(300px,0.9fr)_minmax(0,1.1fr)]">
         <Card
-          className="rounded-3xl"
+          className="rounded-2xl"
           title={t('access.current.rolesTitle')}
           extra={
             <span className="text-fg-muted text-sm">{t('access.current.roleCount', { count: roles.length })}</span>
@@ -148,7 +148,7 @@ export function MyAccess() {
         </Card>
 
         <Card
-          className="rounded-3xl"
+          className="rounded-2xl"
           title={t('access.current.permissionsTitle')}
           extra={
             <span className="text-fg-muted text-sm">

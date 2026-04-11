@@ -25,7 +25,7 @@
 
   .ant-card {
     overflow: hidden;
-    border-radius: 1.5rem;
+    border-radius: 1rem;
     border-color: color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
     background: color-mix(in srgb, var(--color-surface) 82%, transparent);
     box-shadow: 0 16px 40px -32px color-mix(in srgb, var(--color-primary) 14%, transparent);
@@ -92,7 +92,7 @@
   .ant-table-wrapper .ant-table-container {
     overflow: hidden;
     border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
-    border-radius: 1.5rem;
+    border-radius: 1rem;
     background: color-mix(in srgb, var(--color-surface) 68%, transparent);
   }
 

@@ -21,17 +21,7 @@ export function ErrorStateExample() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <section className="rounded-[28px] border border-border-subtle bg-surface/85 p-6 shadow-sm backdrop-blur-xs">
-        <div className="max-w-3xl">
-          <div className="text-fg-muted text-[11px] font-semibold tracking-[0.18em] uppercase">Example Preview</div>
-          <h1 className="text-fg mt-3 text-2xl font-semibold tracking-tight">运行时错误示例</h1>
-          <p className="text-fg-muted mt-2 text-sm leading-7">
-            这个页面用于查看应用级错误状态在当前后台风格里的真实表现，重点看说明文案、处理动作和技术详情是不是足够清楚。
-          </p>
-        </div>
-      </section>
-
+    <div>
       <ErrorStatePage
         embedded
         eyebrow="Error State"

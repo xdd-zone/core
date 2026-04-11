@@ -89,7 +89,7 @@ export function UserDetail() {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
         <Card
-          className="rounded-3xl"
+          className="rounded-2xl"
           title={t('user.detail.title')}
           extra={
             <span className="text-fg-muted text-sm">
@@ -121,7 +121,7 @@ export function UserDetail() {
 
         <div className="flex flex-col gap-5">
           <Card
-            className="rounded-3xl"
+            className="rounded-2xl"
             title={t('user.detail.roles')}
             extra={
               <span className="text-fg-muted text-sm">{t('access.manage.roleCount', { count: roles.length })}</span>
