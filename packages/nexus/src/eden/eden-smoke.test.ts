@@ -408,9 +408,18 @@ describe('eden smoke', () => {
 
     expect(result.status).toBe(200)
     expect(result.error).toBeNull()
-    expect(result.data).toEqual({
+    expect(result.data).toMatchObject({
       status: 'ok',
+      service: appContext.config.app.name,
+      version: appContext.config.openapi.version,
+      database: {
+        status: 'up',
+      },
     })
+    expect(typeof result.data?.timestamp).toBe('string')
+    expect(Number.isNaN(Date.parse(result.data?.timestamp ?? ''))).toBe(false)
+    expect(typeof result.data?.uptime).toBe('number')
+    expect((result.data?.uptime ?? -1) >= 0).toBe(true)
   })
 
   it('应可访问匿名会话接口', async () => {

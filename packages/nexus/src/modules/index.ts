@@ -2,7 +2,7 @@ import type { AppBootstrapContext } from '../bootstrap'
 import { Elysia } from 'elysia'
 import { createAuthModule } from './auth'
 import { createCommentModule } from './comment'
-import { createHealthModule } from './health'
+import { createHealthModule, HealthService } from './health'
 import { createMediaModule } from './media'
 import { createPostModule } from './post'
 import { createPreviewModule } from './preview'
@@ -18,7 +18,11 @@ export function createModules(context: AppBootstrapContext) {
     name: 'api-modules',
     prefix: context.config.app.apiPrefix,
   })
-    .use(createHealthModule())
+    .use(
+      createHealthModule({
+        healthService: new HealthService(context.config),
+      }),
+    )
     .use(
       createAuthModule({
         authApiService: context.security.authApiService,
