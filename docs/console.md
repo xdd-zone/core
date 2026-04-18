@@ -126,7 +126,8 @@ packages/console/src/
 
 - `packages/console/src/shared/api/eden.ts`
 
-页面和模块默认直接用这个客户端，不再额外写一层一一对应的接口包装。
+普通接口默认直接用这个客户端。
+只有 GitHub 登录这种浏览器跳转动作，才放在 `packages/console/src/modules/auth/auth.api.ts` 里单独处理，不再额外给每个接口写一层一一对应的包装。
 
 需要明确 HTTP 类型时，从 `@xdd-zone/nexus/*-types` 引入。
 

@@ -109,6 +109,7 @@ bun run dev
 ### 前端
 
 - `packages/console/src/modules/auth/auth.api.ts`
+  生成 GitHub 登录跳转地址。
 - `packages/console/src/modules/auth/auth.query.ts`
 - `packages/console/src/pages/auth/Login.tsx`
 - `packages/console/src/shared/api/eden.ts`

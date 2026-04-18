@@ -172,7 +172,8 @@ bun run seed
 - `packages/console/src/pages/*`
 - `packages/console/src/app/access/access-control.ts`
 
-当前前端直接用 `packages/console/src/shared/api/eden.ts` 里的 Treaty 客户端调接口，不再单独维护一层 1:1 的 `*.api.ts` 包装。
+当前前端普通接口直接用 `packages/console/src/shared/api/eden.ts` 里的 Treaty 客户端调接口。
+像 GitHub 登录这种浏览器跳转动作，单独放在 `packages/console/src/modules/auth/auth.api.ts` 里拼地址，不再给每个接口都补一层 1:1 的 `*.api.ts` 包装。
 
 ### 改认证、权限、GitHub 登录
 

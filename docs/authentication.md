@@ -64,10 +64,15 @@ auth:
 ### 前端
 
 - `packages/console/src/modules/auth/auth.query.ts`
+  读取 `/api/auth/get-session`。
 - `packages/console/src/modules/auth/auth.api.ts`
+  只处理 GitHub 登录地址这类浏览器跳转动作，不负责普通接口请求。
 - `packages/console/src/modules/auth/auth.store.ts`
+  保存登录弹窗和登录方式列表这类前端状态。
 - `packages/console/src/pages/auth/Login.tsx`
+  登录页。
 - `packages/console/src/app/router/guards.tsx`
+  路由进入前检查 session。
 
 ## `authPlugin` 和 `accessPlugin` 怎么选
 

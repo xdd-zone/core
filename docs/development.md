@@ -141,6 +141,16 @@ bun run prisma:push
 
 ### 只改文档
 
+当前仓库没有单独检查 `README.md` 和 `docs/` 的命令。
+
+只改 Markdown 时，先手动检查这几件事：
+
+1. 文档里的路径在仓库里能找到
+2. 文档里的命令在当前 `package.json` 里存在
+3. 文档里的接口、环境变量和页面路径没有写旧
+
+如果同时改了 `packages/` 里的内容，再补：
+
 ```bash
 bun run format:check
 ```

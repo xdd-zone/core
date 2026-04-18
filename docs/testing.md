@@ -63,6 +63,16 @@ bun run db prepare
 
 ### 只改文档
 
+当前根目录的 `bun run format:check` 只检查 `packages/`，不会检查 `README.md` 和 `docs/`。
+
+只改 Markdown 时，先手动核对：
+
+1. 路径和文件名是否存在
+2. 命令名是否和 `package.json` 一致
+3. 接口地址、环境变量和页面路径是否还是当前实现
+
+如果这次改动同时碰了 `packages/` 里的文件，再补：
+
 ```bash
 bun run format:check
 ```

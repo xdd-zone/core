@@ -21,7 +21,7 @@
 
 先用：
 
-- `write-xdd-docs`
+- `write-docs`
 
 ### 改 `packages/nexus`
 
@@ -41,7 +41,7 @@
 
 ## 常用顺序
 
-- 文档任务：`write-xdd-docs` -> `xdd-zone-codegen`
+- 文档任务：`write-docs` -> `xdd-zone-codegen`
 - Nexus 任务：`elysiajs` -> `xdd-zone-codegen`
 - Console UI 任务：`frontend-design` -> `xdd-zone-codegen`
-- Console UI + 文案任务：`frontend-design` -> `write-xdd-docs` -> `xdd-zone-codegen`
+- Console UI + 文案任务：`frontend-design` -> `write-docs` -> `xdd-zone-codegen`
