@@ -74,7 +74,7 @@ const LATTE_TOKENS = {
 
   // Seed Token - 基础色基准
   colorTextBase: '#4c4f69',
-  colorTextQuaternary: '#9399b2', // 最浅文字
+  colorTextQuaternary: '#7c7f93', // 最浅文字
 
   colorTextSecondary: '#8c8fa1', // Text Muted
   colorTextTertiary: '#6c6f85', // Text Subtle
@@ -136,7 +136,7 @@ const LATTE_COMPONENTS = {
     rowExpandedBg: hexToRgba('#eff1f5', LIGHT_SURFACE_ALPHA.table),
     rowSelectedBg: hexToRgba('#1e66f5', 0.1),
     rowSelectedHoverBg: hexToRgba('#1e66f5', 0.14),
-    stickyScrollBarBg: hexToRgba('#949aad', 0.28),
+    stickyScrollBarBg: hexToRgba('#7c7f93', 0.28),
   },
   Tabs: {
     colorPrimary: '#1e66f5',
@@ -176,10 +176,10 @@ const FRAPPE_TOKENS = {
   colorText: '#c6d0f5', // Text
 
   colorTextBase: '#c6d0f5',
-  colorTextQuaternary: '#6c7a9b', // 最浅文字
+  colorTextQuaternary: '#737994', // 最浅文字
 
   colorTextSecondary: '#a5adce', // Text Muted
-  colorTextTertiary: '#8389a7', // Text Subtle
+  colorTextTertiary: '#838ba7', // Text Subtle
   colorWarning: '#e5c890',
   colorWarningBg: hexToRgba('#303446', DARK_SURFACE_ALPHA.container),
 }
@@ -237,7 +237,7 @@ const FRAPPE_COMPONENTS = {
     rowExpandedBg: hexToRgba('#303446', DARK_SURFACE_ALPHA.table),
     rowSelectedBg: hexToRgba('#8caaee', 0.12),
     rowSelectedHoverBg: hexToRgba('#8caaee', 0.16),
-    stickyScrollBarBg: hexToRgba('#737894', 0.32),
+    stickyScrollBarBg: hexToRgba('#737994', 0.32),
   },
   Tabs: {
     colorPrimary: '#8caaee',
@@ -277,10 +277,10 @@ const MACCHIATO_TOKENS = {
   colorText: '#cad3f5', // Text
 
   colorTextBase: '#cad3f5',
-  colorTextQuaternary: '#7b8aab', // 最浅文字
+  colorTextQuaternary: '#6e738d', // 最浅文字
 
   colorTextSecondary: '#a5adcb', // Text Muted
-  colorTextTertiary: '#8a91b4', // Text Subtle
+  colorTextTertiary: '#8087a2', // Text Subtle
   colorWarning: '#eed49f',
   colorWarningBg: hexToRgba('#24273a', DARK_SURFACE_ALPHA.container),
 }

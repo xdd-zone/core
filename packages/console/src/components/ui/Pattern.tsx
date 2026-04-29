@@ -48,6 +48,7 @@ export function Pattern({ animationDuration = 18 }: PatternProps) {
           background: color-mix(in srgb, var(--color-primary) 10%, transparent);
           opacity: 0.22;
           animation: pattern-drift ${animationDuration}s ease-in-out infinite alternate;
+          will-change: transform;
         }
 
         .pattern-glow-secondary {

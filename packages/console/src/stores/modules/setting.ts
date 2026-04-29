@@ -1,3 +1,4 @@
+import type { ThemeName } from '@console/utils/theme'
 import type { BaseStore } from '../types'
 import { catppuccinThemes, getThemeById } from '@console/config/catppuccin'
 
@@ -5,6 +6,8 @@ import {
   calculateIsDark,
   getSystemPrefersDark,
   isDarkTheme,
+  resolveTheme,
+  THEME_STORAGE_KEY,
   updatePrimaryColorAttribute,
   updateThemeAttribute,
 } from '@console/utils/theme'
@@ -15,7 +18,7 @@ import { persist } from 'zustand/middleware'
 /**
  * Catppuccin 主题定义
  */
-export type CatppuccinThemeId = 'latte' | 'frappe' | 'macchiato' | 'mocha'
+export type CatppuccinThemeId = ThemeName
 
 /**
  * 设置相关的状态接口
@@ -51,20 +54,20 @@ function getInitialThemeState() {
   // 尝试从 localStorage 获取持久化的 themeMode
   let themeMode: 'light' | 'dark' | 'system' = 'system'
   // Catppuccin 默认主题
-  let catppuccinTheme: 'latte' | 'frappe' | 'macchiato' | 'mocha' = 'latte'
+  let catppuccinTheme: CatppuccinThemeId = 'latte'
   let language = 'zh'
 
   if (typeof window !== 'undefined') {
     try {
-      const stored = localStorage.getItem('setting-store')
+      const stored = localStorage.getItem(THEME_STORAGE_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
-        themeMode = parsed.state?.themeMode || 'system'
+        themeMode = ['light', 'dark', 'system'].includes(parsed.state?.themeMode) ? parsed.state.themeMode : 'system'
         language = parsed.state?.language || 'zh'
 
         // 降级兼容：如果有旧数据中的 primaryColor，尝试转换为对应的 catppuccinTheme
         if (parsed.state?.catppuccinTheme) {
-          catppuccinTheme = parsed.state.catppuccinTheme
+          catppuccinTheme = resolveTheme(parsed.state.catppuccinTheme)
         } else if (parsed.state?.primaryColor) {
           // 查找匹配的主题（通过 Blue 颜色的值）
           const theme = catppuccinThemes.find((t) =>
@@ -172,7 +175,7 @@ export const useSettingStore = create<SettingState>()(
         setDarkMode: (isDark: boolean) => {
           set({ isDark })
           // 根据 isDark 选择对应的主题
-          const newCatppuccinTheme: 'latte' | 'frappe' | 'macchiato' | 'mocha' = isDark ? 'mocha' : 'latte'
+          const newCatppuccinTheme: CatppuccinThemeId = isDark ? 'mocha' : 'latte'
           set({ catppuccinTheme: newCatppuccinTheme })
           updateThemeAttribute(newCatppuccinTheme)
         },
@@ -249,7 +252,7 @@ export const useSettingStore = create<SettingState>()(
       }
     },
     {
-      name: 'setting-store',
+      name: THEME_STORAGE_KEY,
       partialize: (state) => ({
         catppuccinTheme: state.catppuccinTheme,
         language: state.language,

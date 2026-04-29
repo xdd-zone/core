@@ -2,6 +2,19 @@ import type { CatppuccinTheme } from '../config/catppuccin'
 
 import { getThemeById } from '../config/catppuccin'
 
+export const THEMES = ['latte', 'frappe', 'macchiato', 'mocha'] as const
+export type ThemeName = (typeof THEMES)[number]
+export const DEFAULT_THEME: ThemeName = 'latte'
+export const THEME_STORAGE_KEY = 'setting-store'
+
+export function isThemeName(value: string | null | undefined): value is ThemeName {
+  return typeof value === 'string' && THEMES.includes(value as ThemeName)
+}
+
+export function resolveTheme(value: string | null | undefined): ThemeName {
+  return isThemeName(value) ? value : DEFAULT_THEME
+}
+
 /**
  * 获取系统是否偏好暗黑模式
  */
@@ -16,7 +29,7 @@ export function getSystemPrefersDark(): boolean {
  */
 export function updateThemeAttribute(themeId: string) {
   if (typeof document !== 'undefined') {
-    document.documentElement.setAttribute('data-theme', themeId)
+    document.documentElement.dataset.theme = resolveTheme(themeId)
   }
 }
 

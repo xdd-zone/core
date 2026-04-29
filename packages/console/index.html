@@ -5,6 +5,26 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>admin</title>
+    <script>
+      ;(function () {
+        var themes = ['latte', 'frappe', 'macchiato', 'mocha']
+        var theme = 'latte'
+
+        try {
+          var stored = localStorage.getItem('setting-store')
+          var state = stored ? JSON.parse(stored).state : null
+          var storedTheme = state && state.catppuccinTheme
+          var mode = state && state.themeMode
+
+          if (themes.indexOf(storedTheme) >= 0) theme = storedTheme
+          if (mode === 'system') {
+            theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'mocha' : 'latte'
+          }
+        } catch (error) {}
+
+        document.documentElement.dataset.theme = theme
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

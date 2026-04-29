@@ -1,8 +1,7 @@
-/* 全局滚动条样式 - Catppuccin 主题 */
 @layer base {
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--ctp-overlay-1) transparent;
+    scrollbar-color: var(--theme-overlay-1) transparent;
   }
 
   *::-webkit-scrollbar {
@@ -16,7 +15,7 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background: var(--ctp-overlay-1);
+    background: var(--theme-overlay-1);
     border-radius: 4px;
     border: 2px solid transparent;
     background-clip: content-box;
@@ -24,12 +23,12 @@
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background: var(--ctp-primary);
+    background: var(--theme-primary);
     background-clip: content-box;
   }
 
   *::-webkit-scrollbar-thumb:active {
-    background: var(--ctp-primary-light);
+    background: var(--theme-sky);
     background-clip: content-box;
   }
 
@@ -37,6 +36,6 @@
     background: transparent;
   }
   *::-webkit-scrollbar-track:hover {
-    background: color-mix(in oklab, var(--ctp-mantle) 55%, transparent);
+    background: color-mix(in oklab, var(--theme-base-muted) 55%, transparent);
   }
 }

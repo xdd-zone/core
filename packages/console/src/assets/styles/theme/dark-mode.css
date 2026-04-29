@@ -1,2 +1,5 @@
-/* 配置 Tailwind CSS V4 暗黑模式 */
-@custom-variant dark (&:where([data-theme='frappe'], [data-theme='frappe'] *, [data-theme='macchiato'], [data-theme='macchiato'] *, [data-theme='mocha'], [data-theme='mocha'] *));
+@custom-variant dark (&:where(
+  [data-theme='frappe'], [data-theme='frappe'] *,
+  [data-theme='macchiato'], [data-theme='macchiato'] *,
+  [data-theme='mocha'], [data-theme='mocha'] *
+));
