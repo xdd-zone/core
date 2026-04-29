@@ -14,6 +14,7 @@ import {
   Crop,
   FileText,
   Folder,
+  Image,
   KeyRound,
   LayoutTemplate,
   List,
@@ -194,6 +195,17 @@ const articleSettingsRoute = createRoute({
   },
 })
 
+const mediaManagementRoute = createRoute({
+  component: lazyRouteComponent(() => import('@console/pages/article/media/MediaManagement'), 'MediaManagement'),
+  getParentRoute: () => appLayoutRoute,
+  path: 'media',
+  staticData: {
+    contentWidth: 'full',
+    icon: Image,
+    title: 'menu.mediaManagement',
+  },
+})
+
 const imageCropRoute = createRoute({
   component: lazyRouteComponent(() => import('@console/pages/example/ImageCropExample'), 'ImageCropExample'),
   getParentRoute: () => appLayoutRoute,
@@ -350,6 +362,7 @@ const protectedRouteTree = protectedRoute.addChildren([
     tagListRoute,
     commentListRoute,
     articleSettingsRoute,
+    mediaManagementRoute,
     uiShowcaseRoute,
     markdownExampleRoute,
     tiptapExampleRoute,

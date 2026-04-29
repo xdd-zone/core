@@ -11,6 +11,7 @@ import {
   FileText,
   FileText as FileTextIcon,
   FolderOpen,
+  Image,
   KeyRound,
   LayoutDashboard,
   LayoutTemplate,
@@ -106,6 +107,12 @@ export const navigationItems: NavigationItem[] = [
         key: 'comments',
         label: 'menu.commentManagement',
         path: '/comments',
+      },
+      {
+        icon: Image,
+        key: 'media',
+        label: 'menu.mediaManagement',
+        path: '/media',
       },
       {
         icon: Settings,

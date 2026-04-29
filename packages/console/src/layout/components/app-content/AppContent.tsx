@@ -20,7 +20,7 @@ export function AppContent() {
     <main className="guide-content h-full flex-1 overflow-auto">
       <div
         className={clsx(
-          'guide-content-inner text-fg h-full min-h-full',
+          'guide-content-inner text-fg min-h-full',
           isFullWidthContent && 'guide-content-inner--full',
         )}
       >

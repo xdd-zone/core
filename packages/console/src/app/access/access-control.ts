@@ -109,10 +109,18 @@ export const consoleRouteAccessRules: readonly ConsoleRouteAccessRule[] = [
     pathPattern: '/article-settings',
     requirement: {
       any: [
-        Permissions.MEDIA.READ_ALL,
-        Permissions.MEDIA.WRITE_ALL,
         Permissions.SITE_CONFIG.READ,
         Permissions.SITE_CONFIG.WRITE,
+      ],
+    },
+  },
+  {
+    matcher: createPathMatcher('/media'),
+    pathPattern: '/media',
+    requirement: {
+      any: [
+        Permissions.MEDIA.READ_ALL,
+        Permissions.MEDIA.WRITE_ALL,
       ],
     },
   },
