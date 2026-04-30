@@ -1,5 +1,5 @@
 import type { CommentStatus as DatabaseCommentStatus } from '@nexus/infra/database/prisma/generated'
-import type { Comment, CommentList, CommentListQuery } from './model'
+import type { Comment, CommentList, CommentListQuery, CreateCommentBody } from './model'
 import type { CommentBaseData, CommentWhereInput } from './types'
 import { BadRequestError, NotFoundError } from '@nexus/core/http'
 import { buildKeywordSearch } from '@nexus/infra/database'
@@ -52,6 +52,10 @@ export class CommentService {
 
     if (query.status) {
       where.status = toDatabaseStatus(query.status)
+    } else {
+      where.status = {
+        not: 'DELETED',
+      }
     }
 
     if (query.postId) {
@@ -104,6 +108,27 @@ export class CommentService {
    */
   static async findById(id: string): Promise<Comment> {
     return CommentSchema.parse(serializeComment(await this.requireById(id)))
+  }
+
+  /**
+   * 创建评论。
+   */
+  static async create(data: CreateCommentBody): Promise<Comment> {
+    const postExists = await CommentRepository.publishedPostExists(data.postId)
+    if (!postExists) {
+      throw new NotFoundError('文章不存在或未发布')
+    }
+
+    return CommentSchema.parse(
+      serializeComment(
+        await CommentRepository.create({
+          postId: data.postId,
+          authorName: data.authorName,
+          authorEmail: data.authorEmail ?? null,
+          content: data.content,
+        }),
+      ),
+    )
   }
 
   /**

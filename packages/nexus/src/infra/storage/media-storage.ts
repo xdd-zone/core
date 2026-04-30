@@ -6,6 +6,19 @@ import { NotFoundError } from '@nexus/core/http'
 
 const NEXUS_PACKAGE_NAME = '@xdd-zone/nexus'
 const MODULE_DIR = dirname(fileURLToPath(import.meta.url))
+const MEDIA_FILE_EXTENSIONS_BY_MIME_TYPE = {
+  'image/avif': '.avif',
+  'image/gif': '.gif',
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+} as const
+
+export const ALLOWED_MEDIA_MIME_TYPES = Object.keys(MEDIA_FILE_EXTENSIONS_BY_MIME_TYPE)
+
+export function isAllowedMediaMimeType(mimeType: string): mimeType is keyof typeof MEDIA_FILE_EXTENSIONS_BY_MIME_TYPE {
+  return Object.prototype.hasOwnProperty.call(MEDIA_FILE_EXTENSIONS_BY_MIME_TYPE, mimeType)
+}
 
 async function isNexusPackageRoot(dir: string): Promise<boolean> {
   const packageJsonPath = join(dir, 'package.json')
@@ -85,7 +98,9 @@ export class MediaStorage {
     const mediaStorageDir = await resolveMediaStorageDir()
     await mkdir(mediaStorageDir, { recursive: true })
 
-    const extension = extname(file.name)
+    const extension = isAllowedMediaMimeType(file.type)
+      ? MEDIA_FILE_EXTENSIONS_BY_MIME_TYPE[file.type]
+      : extname(file.name)
     const fileName = `${crypto.randomUUID()}${extension}`
     const resolvedPath = join(mediaStorageDir, fileName)
 

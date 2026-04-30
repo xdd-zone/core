@@ -1,4 +1,4 @@
-import type { CommentListQuery, UpdateCommentStatusBody } from './comment.types'
+import type { CommentListQuery, CreateCommentBody, UpdateCommentStatusBody } from './comment.types'
 
 import { api, unwrapEdenResponse } from '@console/shared/api'
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query'
@@ -57,6 +57,15 @@ export function useCommentDetailQuery(id: string, enabled: boolean = true) {
   return useQuery({
     ...commentDetailQueryOptions(id),
     enabled,
+  })
+}
+
+/**
+ * 创建评论 mutation。
+ */
+export function useCreateCommentMutation() {
+  return useMutation({
+    mutationFn: async (body: CreateCommentBody) => unwrapEdenResponse(await commentApiRoot.post(body)),
   })
 }
 

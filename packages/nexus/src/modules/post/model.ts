@@ -85,5 +85,17 @@ export const PostListQuerySchema = z.object({
 
 export type PostListQuery = z.infer<typeof PostListQuerySchema>
 
+export const PublicPostListQuerySchema = PostListQuerySchema.omit({
+  status: true,
+})
+
+export type PublicPostListQuery = z.infer<typeof PublicPostListQuerySchema>
+
+export const PublicPostSlugParamsSchema = z.object({
+  slug: SlugSchema,
+})
+
+export type PublicPostSlugParams = z.infer<typeof PublicPostSlugParamsSchema>
+
 export const PostListSchema = createPaginatedListSchema(PostSchema)
 export type PostList = z.infer<typeof PostListSchema>

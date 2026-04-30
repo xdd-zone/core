@@ -416,8 +416,9 @@ describe('eden smoke', () => {
         status: 'up',
       },
     })
-    expect(typeof result.data?.timestamp).toBe('string')
-    expect(Number.isNaN(Date.parse(result.data?.timestamp ?? ''))).toBe(false)
+    const timestamp = result.data?.timestamp as unknown
+    expect(timestamp instanceof Date || typeof timestamp === 'string').toBe(true)
+    expect(Number.isNaN(new Date(timestamp as string | Date).getTime())).toBe(false)
     expect(typeof result.data?.uptime).toBe('number')
     expect((result.data?.uptime ?? -1) >= 0).toBe(true)
   })
@@ -845,6 +846,64 @@ describe('eden smoke', () => {
     expect(listResult.error).toBeNull()
     expect(listResult.data?.items.some((item) => item.id === postId)).toBe(false)
   })
+
+  it('匿名用户只能读取已发布文章', async () => {
+    const publicSlug = `eden-post-public-${tempSuffix}`
+    const draftSlug = `eden-post-public-draft-${tempSuffix}`
+
+    const [publishedPost, draftPost] = await Promise.all([
+      prisma.post.create({
+        data: {
+          title: `Public Post ${tempSuffix}`,
+          slug: publicSlug,
+          markdown: `# Public Post ${tempSuffix}`,
+          excerpt: `public excerpt ${tempSuffix}`,
+          category: 'public',
+          tags: ['public'],
+          status: 'PUBLISHED',
+          publishedAt: new Date(),
+        },
+      }),
+      prisma.post.create({
+        data: {
+          title: `Draft Post ${tempSuffix}`,
+          slug: draftSlug,
+          markdown: `# Draft Post ${tempSuffix}`,
+          excerpt: `draft excerpt ${tempSuffix}`,
+          category: 'public',
+          tags: ['public'],
+          status: 'DRAFT',
+        },
+      }),
+    ])
+    createdPostIds.push(publishedPost.id, draftPost.id)
+
+    const listResult = await anonymousClient.api.post.public.get({
+      query: {
+        page: 1,
+        pageSize: 10,
+        keyword: tempSuffix,
+        category: 'public',
+        tag: 'public',
+      },
+    })
+
+    expect(listResult.status).toBe(200)
+    expect(listResult.error).toBeNull()
+    expect(listResult.data?.items.some((item) => item.id === publishedPost.id)).toBe(true)
+    expect(listResult.data?.items.some((item) => item.id === draftPost.id)).toBe(false)
+
+    const detailResult = await anonymousClient.api.post.public({ slug: publicSlug }).get()
+    expect(detailResult.status).toBe(200)
+    expect(detailResult.error).toBeNull()
+    expect(detailResult.data?.id).toBe(publishedPost.id)
+    expect(detailResult.data?.status).toBe('published')
+
+    const draftDetailResult = await anonymousClient.api.post.public({ slug: draftSlug }).get()
+    expect(draftDetailResult.status).toBe(404)
+    expect(draftDetailResult.error).toBeTruthy()
+  })
+
   it('slug 重复时应返回 409', async () => {
     const slug = `eden-post-duplicate-${tempSuffix}`
 
@@ -909,7 +968,7 @@ describe('eden smoke', () => {
     expect(invalidTagResult.error).toBeTruthy()
   })
 
-  it('应支持查看评论列表、详情、切换状态和删除', async () => {
+  it('应支持创建评论、查看列表、详情、切换状态和删除', async () => {
     const createdPost = await prisma.post.create({
       data: {
         title: `Comment Target ${tempSuffix}`,
@@ -921,16 +980,42 @@ describe('eden smoke', () => {
     })
     createdPostIds.push(createdPost.id)
 
-    const createdComment = await prisma.comment.create({
+    const draftPost = await prisma.post.create({
       data: {
-        postId: createdPost.id,
-        authorName: 'Alice',
-        authorEmail: 'alice@example.com',
-        content: `First ${tempSuffix}`,
-        status: 'PENDING',
+        title: `Comment Draft Target ${tempSuffix}`,
+        slug: `comment-draft-target-${tempSuffix}`,
+        markdown: '# Draft Target',
+        tags: [],
+        status: 'DRAFT',
       },
     })
-    createdCommentIds.push(createdComment.id)
+    createdPostIds.push(draftPost.id)
+
+    const createResult = await anonymousClient.api.comment.post({
+      postId: createdPost.id,
+      authorName: 'Alice',
+      authorEmail: 'alice@example.com',
+      content: `First ${tempSuffix}`,
+    })
+    expect(createResult.status).toBe(200)
+    expect(createResult.error).toBeNull()
+    expect(createResult.data?.postId).toBe(createdPost.id)
+    expect(createResult.data?.status).toBe('pending')
+
+    const createdCommentId = createResult.data?.id
+    expect(createdCommentId).toBeTruthy()
+    if (!createdCommentId) {
+      throw new Error('评论创建失败')
+    }
+    createdCommentIds.push(createdCommentId)
+
+    const draftCreateResult = await anonymousClient.api.comment.post({
+      postId: draftPost.id,
+      authorName: 'Alice',
+      content: `Draft ${tempSuffix}`,
+    })
+    expect(draftCreateResult.status).toBe(404)
+    expect(draftCreateResult.error).toBeTruthy()
 
     const anonymousListResult = await anonymousClient.api.comment.get()
     expect(anonymousListResult.status).toBe(401)
@@ -945,47 +1030,66 @@ describe('eden smoke', () => {
     })
     expect(listResult.status).toBe(200)
     expect(listResult.error).toBeNull()
-    expect(listResult.data?.items.some((item) => item.id === createdComment.id)).toBe(true)
+    expect(listResult.data?.items.some((item) => item.id === createdCommentId)).toBe(true)
 
-    const detailResult = await getCommentClient(createdComment.id).get()
+    const detailResult = await getCommentClient(createdCommentId).get()
     expect(detailResult.status).toBe(200)
     expect(detailResult.error).toBeNull()
-    expect(detailResult.data?.id).toBe(createdComment.id)
+    expect(detailResult.data?.id).toBe(createdCommentId)
     expect(detailResult.data?.status).toBe('pending')
 
     const forbiddenListResult = await subjectClient.api.comment.get()
     expect(forbiddenListResult.status).toBe(403)
     expect(forbiddenListResult.error).toBeTruthy()
 
-    const forbiddenStatusResult = await subjectClient.api.comment({ id: createdComment.id }).status.patch({
+    const forbiddenStatusResult = await subjectClient.api.comment({ id: createdCommentId }).status.patch({
       status: 'approved',
     })
     expect(forbiddenStatusResult.status).toBe(403)
     expect(forbiddenStatusResult.error).toBeTruthy()
 
-    const statusResult = await getCommentClient(createdComment.id).status.patch({
+    const statusResult = await getCommentClient(createdCommentId).status.patch({
       status: 'approved',
     })
     expect(statusResult.status).toBe(200)
     expect(statusResult.error).toBeNull()
     expect(statusResult.data?.status).toBe('approved')
 
-    const deleteResult = await getCommentClient(createdComment.id).delete()
+    const deleteResult = await getCommentClient(createdCommentId).delete()
     expect(deleteResult.status).toBe(204)
     expect(deleteResult.error).toBeNull()
 
     const deletedComment = await prisma.comment.findUnique({
-      where: { id: createdComment.id },
+      where: { id: createdCommentId },
     })
     expect(deletedComment?.status).toBe('DELETED')
 
-    const deletedIndex = createdCommentIds.indexOf(createdComment.id)
+    const defaultListAfterDeleteResult = await authenticatedClient.api.comment.get({
+      query: {
+        postId: createdPost.id,
+        keyword: tempSuffix,
+      },
+    })
+    expect(defaultListAfterDeleteResult.status).toBe(200)
+    expect(defaultListAfterDeleteResult.data?.items.some((item) => item.id === createdCommentId)).toBe(false)
+
+    const deletedListResult = await authenticatedClient.api.comment.get({
+      query: {
+        postId: createdPost.id,
+        status: 'deleted',
+        keyword: tempSuffix,
+      },
+    })
+    expect(deletedListResult.status).toBe(200)
+    expect(deletedListResult.data?.items.some((item) => item.id === createdCommentId)).toBe(true)
+
+    const deletedIndex = createdCommentIds.indexOf(createdCommentId)
     if (deletedIndex >= 0) {
       createdCommentIds.splice(deletedIndex, 1)
     }
     await prisma.comment.deleteMany({
       where: {
-        id: createdComment.id,
+        id: createdCommentId,
       },
     })
 
@@ -1005,14 +1109,14 @@ describe('eden smoke', () => {
     expect(anonymousListResult.error).toBeTruthy()
 
     const uploadResult = await authenticatedClient.api.media.upload.post({
-      file: new File([`media-smoke-${tempSuffix}`], `eden-media-${tempSuffix}.txt`, {
-        type: 'text/plain',
+      file: new File([`media-smoke-${tempSuffix}`], `eden-media-${tempSuffix}.png`, {
+        type: 'image/png',
       }),
     })
     expect(uploadResult.status).toBe(200)
     expect(uploadResult.error).toBeNull()
-    expect(uploadResult.data?.originalName).toBe(`eden-media-${tempSuffix}.txt`)
-    expect(uploadResult.data?.mimeType).toContain('text/plain')
+    expect(uploadResult.data?.originalName).toBe(`eden-media-${tempSuffix}.png`)
+    expect(uploadResult.data?.mimeType).toContain('image/png')
     expect(uploadResult.data?.size).toBeGreaterThan(0)
 
     const mediaId = uploadResult.data?.id
@@ -1035,7 +1139,7 @@ describe('eden smoke', () => {
     const fileResponse = await authenticatedCookieSession.fetcher(`${baseUrl}/api/media/${mediaId}/file`)
     expect(fileResponse.status).toBe(200)
     expect(await fileResponse.text()).toBe(`media-smoke-${tempSuffix}`)
-    expect(fileResponse.headers.get('content-type')).toContain('text/plain')
+    expect(fileResponse.headers.get('content-type')).toContain('image/png')
 
     const forbiddenListResult = await subjectClient.api.media.get()
     expect(forbiddenListResult.status).toBe(403)

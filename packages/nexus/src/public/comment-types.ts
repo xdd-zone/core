@@ -3,5 +3,6 @@ export type {
   CommentIdParams,
   CommentList,
   CommentListQuery,
+  CreateCommentBody,
   UpdateCommentStatusBody,
 } from '../modules/comment/model'

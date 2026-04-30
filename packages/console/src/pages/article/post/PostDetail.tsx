@@ -6,17 +6,19 @@ import {
   PostRequestError,
   useDeletePostMutation,
   usePostDetailQuery,
+  usePublicPostDetailQuery,
   usePublishPostMutation,
   useUnpublishPostMutation,
 } from '@console/modules/post'
 import { useCurrentUserPermissionsQuery } from '@console/modules/rbac'
+import { resolveApiUrl } from '@console/shared/api'
 import { useSettingStore } from '@console/stores/modules/setting'
 import { getPrimaryColorByTheme } from '@console/utils/theme'
 
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { App as AntdApp, Button, Card, Descriptions, Empty, Popconfirm, Space, Spin, Tag } from 'antd'
-import { ArrowLeft, SquarePen, Trash2 } from 'lucide-react'
+import { ArrowLeft, Copy, ExternalLink, SquarePen, Trash2 } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -36,6 +38,7 @@ export function PostDetail() {
   const { id } = useParams({ from: '/protected/app-layout/articles/$id' })
 
   const postQuery = usePostDetailQuery(id)
+  const publicPostQuery = usePublicPostDetailQuery(postQuery.data?.slug ?? '', postQuery.data?.status === 'published')
   const currentUserPermissionsQuery = useCurrentUserPermissionsQuery()
   const deletePostMutation = useDeletePostMutation()
   const publishPostMutation = usePublishPostMutation()
@@ -47,6 +50,7 @@ export function PostDetail() {
 
   const canEdit = canAccessConsolePath(`/articles/${id}/edit`, permissionKeys)
   const canPublish = canUsePermission(permissionKeys, POST_PUBLISH_PERMISSION)
+  const publicApiUrl = postQuery.data ? resolveApiUrl(`/post/public/${postQuery.data.slug}`) : ''
 
   const refreshPostCaches = async (nextPost?: unknown) => {
     if (nextPost) {
@@ -89,6 +93,19 @@ export function PostDetail() {
     } catch (error) {
       const errorMessage = error instanceof PostRequestError ? error.message : t('common.error')
       message.error(errorMessage)
+    }
+  }
+
+  const handleCopyPublicApiUrl = async () => {
+    if (!publicApiUrl) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(publicApiUrl)
+      message.success(t('content.post.detail.publicCopySuccess'))
+    } catch {
+      message.error(t('content.post.detail.publicCopyFailed'))
     }
   }
 
@@ -150,9 +167,34 @@ export function PostDetail() {
                   <span className="font-medium text-fg">{item.value}</span>
                 </span>
               ))}
+              {post.status === 'published' ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-overlay-0/16 px-2.5 py-1 text-xs">
+                  <span className="text-fg-muted">{t('content.post.detail.publicState')}</span>
+                  <span className="font-medium text-fg">
+                    {publicPostQuery.isFetching
+                      ? t('common.loading')
+                      : publicPostQuery.data
+                        ? t('content.post.detail.publicReadable')
+                        : t('content.post.detail.publicUnreadable')}
+                  </span>
+                </span>
+              ) : null}
             </div>
 
             <Space wrap>
+              {post.status === 'published' ? (
+                <>
+                  <Button icon={<Copy className="size-4" />} onClick={() => void handleCopyPublicApiUrl()}>
+                    {t('content.post.detail.copyPublicApi')}
+                  </Button>
+                  <Button
+                    icon={<ExternalLink className="size-4" />}
+                    onClick={() => window.open(publicApiUrl, '_blank', 'noopener,noreferrer')}
+                  >
+                    {t('content.post.detail.openPublicApi')}
+                  </Button>
+                </>
+              ) : null}
               {canPublish ? (
                 <Button
                   onClick={() => void handlePublishToggle()}
@@ -219,6 +261,13 @@ export function PostDetail() {
                   </a>
                 ) : (
                   '-'
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('content.post.detail.publicApi')}>
+                {post.status === 'published' ? (
+                  <span className="break-all text-fg-muted">{publicApiUrl}</span>
+                ) : (
+                  t('content.post.detail.publicDraftHint')
                 )}
               </Descriptions.Item>
               <Descriptions.Item label={t('content.post.fields.excerpt')}>{post.excerpt || '-'}</Descriptions.Item>

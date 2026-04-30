@@ -51,14 +51,14 @@ afterEach(async () => {
 describe('MediaStorage', () => {
   it('保存文件时应使用固定的媒体目录', async () => {
     const { MediaStorage: buildStorage } = await loadStorageModuleFromBuildLikeDir()
-    const file = new File(['hello media'], 'avatar.png', {
-      type: 'image/png',
+    const file = new File(['hello media'], 'avatar.php', {
+      type: 'image/jpeg',
     })
 
     const result = await buildStorage.save(file)
     createdStoragePaths.add(result.storagePath)
 
-    expect(result.fileName).toEndWith('.png')
+    expect(result.fileName).toEndWith('.jpg')
     expect(result.storagePath).toBe(result.fileName)
     expect(await readFile(resolve(mediaDir, result.storagePath), 'utf8')).toBe('hello media')
   })

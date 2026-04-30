@@ -36,6 +36,8 @@ describe('openapi smoke', () => {
     expect(paths['/api/rbac/users/me/roles']).toBeTruthy()
     expect(paths['/api/rbac/users/me/permissions']).toBeTruthy()
     expect(paths['/api/post/']).toBeTruthy()
+    expect(paths['/api/post/public']).toBeTruthy()
+    expect(paths['/api/post/public/{slug}']).toBeTruthy()
     expect(paths['/api/post/{id}']).toBeTruthy()
     expect(paths['/api/post/{id}/publish']).toBeTruthy()
     expect(paths['/api/post/{id}/unpublish']).toBeTruthy()

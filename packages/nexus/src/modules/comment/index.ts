@@ -7,6 +7,7 @@ import {
   CommentListQuerySchema,
   CommentListSchema,
   CommentSchema,
+  CreateCommentBodySchema,
   UpdateCommentStatusBodySchema,
 } from './model'
 import { CommentRepository } from './repository'
@@ -35,6 +36,16 @@ export function createCommentModule({ accessPlugin }: CommentModuleOptions) {
         description: '支持按状态、关联文章、关键字和时间范围筛选评论。',
         response: CommentListSchema,
         errors: [400, 401, 403],
+      }),
+    })
+    .post('/', async ({ body }) => await CommentService.create(body), {
+      body: CreateCommentBodySchema,
+      response: CommentSchema,
+      detail: apiDetail({
+        summary: '创建评论',
+        description: '给已发布文章提交一条待审核评论。',
+        response: CommentSchema,
+        errors: [400, 404],
       }),
     })
     .get('/:id', async ({ params }) => await CommentService.findById(params.id), {

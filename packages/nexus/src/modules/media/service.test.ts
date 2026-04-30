@@ -24,9 +24,10 @@ describe('MediaService.remove', () => {
     spyOn(MediaRepository, 'findById').mockRestore()
     spyOn(MediaRepository, 'delete').mockRestore()
     spyOn(MediaStorage, 'remove').mockRestore()
+    spyOn(console, 'error').mockRestore()
   })
 
-  it('应先删本地文件再删数据库记录', async () => {
+  it('应先删数据库记录再删本地文件', async () => {
     const calls: string[] = []
 
     spyOn(MediaRepository, 'findById').mockResolvedValue(createMediaRecord())
@@ -40,19 +41,43 @@ describe('MediaService.remove', () => {
 
     await MediaService.remove('media-1')
 
-    expect(calls).toEqual(['remove:avatar.png', 'delete:media-1'])
+    expect(calls).toEqual(['delete:media-1', 'remove:avatar.png'])
   })
 
-  it('本地文件删除失败时应保留数据库记录', async () => {
+  it('本地文件删除失败时应保留数据库删除结果', async () => {
     spyOn(MediaRepository, 'findById').mockResolvedValue(createMediaRecord())
 
     const deleteSpy = spyOn(MediaRepository, 'delete').mockImplementation(async () => {
-      throw new Error('delete should not be called')
+      return createMediaRecord()
     })
     const storageRemoveError = new Error('remove failed')
     spyOn(MediaStorage, 'remove').mockRejectedValue(storageRemoveError)
+    const consoleErrorSpy = spyOn(console, 'error').mockImplementation(() => undefined)
 
-    await expect(MediaService.remove('media-1')).rejects.toBe(storageRemoveError)
-    expect(deleteSpy).not.toHaveBeenCalled()
+    await expect(MediaService.remove('media-1')).resolves.toBeUndefined()
+    expect(deleteSpy).toHaveBeenCalledWith('media-1')
+    expect(consoleErrorSpy).toHaveBeenCalled()
+  })
+})
+
+describe('MediaService.upload', () => {
+  afterEach(() => {
+    spyOn(MediaStorage, 'save').mockRestore()
+    spyOn(MediaRepository, 'create').mockRestore()
+  })
+
+  it('应拒绝非图片 MIME 类型', async () => {
+    const file = new File(['hello'], 'note.txt', {
+      type: 'text/plain',
+    })
+    const saveSpy = spyOn(MediaStorage, 'save').mockResolvedValue({
+      fileName: 'note.txt',
+      storagePath: 'note.txt',
+    })
+    const createSpy = spyOn(MediaRepository, 'create').mockResolvedValue(createMediaRecord())
+
+    await expect(MediaService.upload('user-1', file)).rejects.toThrow('不支持的文件类型')
+    expect(saveSpy).not.toHaveBeenCalled()
+    expect(createSpy).not.toHaveBeenCalled()
   })
 })

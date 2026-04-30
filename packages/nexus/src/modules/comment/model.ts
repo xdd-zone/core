@@ -14,6 +14,15 @@ export const CommentSchema = z.object({
 
 export type Comment = z.infer<typeof CommentSchema>
 
+export const CreateCommentBodySchema = z.object({
+  postId: z.string().min(1, '文章 ID 不能为空'),
+  authorName: z.string().trim().min(1, '评论人名称不能为空').max(80, '评论人名称最多 80 个字符'),
+  authorEmail: z.string().trim().email('请输入有效的邮箱地址').nullable().optional(),
+  content: z.string().trim().min(1, '评论内容不能为空').max(2000, '评论内容最多 2000 个字符'),
+})
+
+export type CreateCommentBody = z.infer<typeof CreateCommentBodySchema>
+
 export const UpdateCommentStatusBodySchema = z.object({
   status: CommentStatusSchema.exclude(['deleted']),
 })

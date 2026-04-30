@@ -25,6 +25,7 @@ import { ARTICLE_PAGE_CLASSNAME } from '../shared/page-layout'
 
 const MEDIA_PAGE_SIZE = 12
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024
+const ALLOWED_MEDIA_MIME_TYPES = new Set(['image/avif', 'image/gif', 'image/jpeg', 'image/png', 'image/webp'])
 
 function formatBytes(size: number) {
   if (size < 1024) {
@@ -41,6 +42,10 @@ function formatBytes(size: number) {
 
 function isImageMimeType(mimeType: string) {
   return mimeType.startsWith('image/')
+}
+
+function isAllowedUploadFile(file: File) {
+  return ALLOWED_MEDIA_MIME_TYPES.has(file.type)
 }
 
 function mediaUrl(media: Media) {
@@ -194,6 +199,12 @@ export function MediaManagement() {
     let skippedCount = 0
 
     for (const file of files) {
+      if (!isAllowedUploadFile(file)) {
+        skippedCount += 1
+        message.error(t('content.media.unsupportedType'))
+        continue
+      }
+
       if (file.size > MAX_UPLOAD_SIZE) {
         skippedCount += 1
         message.error(t('content.media.tooLarge'))
@@ -232,7 +243,9 @@ export function MediaManagement() {
           <div className="flex flex-wrap gap-2 xl:max-w-[44%] xl:justify-end">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-overlay-0/16 px-2.5 py-1 text-xs">
               <span className="text-fg-muted">{t('content.media.summary.total')}</span>
-              <span className="font-medium text-fg">{canReadMedia ? String(mediaListQuery.data?.total ?? 0) : '-'}</span>
+              <span className="font-medium text-fg">
+                {canReadMedia ? String(mediaListQuery.data?.total ?? 0) : '-'}
+              </span>
             </span>
           </div>
         </div>
@@ -270,6 +283,7 @@ export function MediaManagement() {
                 </Space>
                 <input
                   ref={fileInputRef}
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
                   className="hidden"
                   multiple
                   type="file"
@@ -287,9 +301,7 @@ export function MediaManagement() {
               dataSource={mediaListQuery.data?.items}
               loading={canReadMedia && mediaListQuery.isLoading}
               locale={{
-                emptyText: (
-                  <Empty description={t('content.media.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                ),
+                emptyText: <Empty description={t('content.media.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE} />,
               }}
               pagination={{
                 current: page,

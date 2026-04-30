@@ -1,4 +1,4 @@
-import type { Comment, CommentListQuery } from '@console/modules/comment'
+import type { Comment, CommentListQuery, CreateCommentBody } from '@console/modules/comment'
 import type { TableProps } from 'antd'
 import type { Dayjs } from 'dayjs'
 
@@ -8,10 +8,11 @@ import {
   CommentRequestError,
   useCommentDetailQuery,
   useCommentListQuery,
+  useCreateCommentMutation,
   useDeleteCommentMutation,
   useUpdateCommentStatusMutation,
 } from '@console/modules/comment'
-import { usePostListQuery } from '@console/modules/post'
+import { usePostListQuery, usePublicPostListQuery } from '@console/modules/post'
 
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -22,6 +23,7 @@ import {
   Descriptions,
   Drawer,
   Empty,
+  Form,
   Input,
   Popconfirm,
   Select,
@@ -63,19 +65,26 @@ export function CommentList() {
   const { t } = useTranslation()
   const { message } = AntdApp.useApp()
   const queryClient = useQueryClient()
+  const [createForm] = Form.useForm<CreateCommentBody>()
 
   const [keyword, setKeyword] = useState('')
   const [status, setStatus] = useState<CommentListQuery['status']>()
   const [postId, setPostId] = useState<string>()
   const [createdRange, setCreatedRange] = useState<[Dayjs | null, Dayjs | null] | null>(null)
+  const [createPostKeyword, setCreatePostKeyword] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [selectedCommentId, setSelectedCommentId] = useState<string>()
   const [selectedComment, setSelectedComment] = useState<Comment | undefined>()
   const [editableStatus, setEditableStatus] = useState<EditableCommentStatus | undefined>()
 
   const postListQuery = usePostListQuery({ page: 1, pageSize: 100 })
+  const publishedPostListQuery = usePublicPostListQuery(
+    { keyword: trimOptional(createPostKeyword), page: 1, pageSize: 100 },
+    createDrawerOpen,
+  )
   const commentListQuery = useCommentListQuery({
     createdFrom: createdRange?.[0]?.toISOString(),
     createdTo: createdRange?.[1]?.toISOString(),
@@ -86,6 +95,7 @@ export function CommentList() {
     status,
   })
   const commentDetailQuery = useCommentDetailQuery(selectedCommentId ?? '', drawerOpen && Boolean(selectedCommentId))
+  const createCommentMutation = useCreateCommentMutation()
   const updateCommentStatusMutation = useUpdateCommentStatusMutation()
   const deleteCommentMutation = useDeleteCommentMutation()
 
@@ -96,6 +106,14 @@ export function CommentList() {
         value: post.id,
       })),
     [postListQuery.data?.items],
+  )
+  const publishedPostOptions = useMemo(
+    () =>
+      (publishedPostListQuery.data?.items ?? []).map((post) => ({
+        label: `${post.title} · ${post.slug}`,
+        value: post.id,
+      })),
+    [publishedPostListQuery.data?.items],
   )
 
   const postTitleMap = useMemo(
@@ -132,6 +150,27 @@ export function CommentList() {
   const refreshComments = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: COMMENT_LIST_QUERY_KEY })
   }, [queryClient])
+
+  const handleCreateComment = useCallback(
+    async (values: CreateCommentBody) => {
+      try {
+        await createCommentMutation.mutateAsync({
+          authorEmail: values.authorEmail?.trim() || null,
+          authorName: values.authorName.trim(),
+          content: values.content.trim(),
+          postId: values.postId,
+        })
+        await refreshComments()
+        createForm.resetFields()
+        setCreateDrawerOpen(false)
+        message.success(t('content.comment.messages.created'))
+      } catch (error) {
+        const errorMessage = error instanceof CommentRequestError ? error.message : t('common.error')
+        message.error(errorMessage)
+      }
+    },
+    [createCommentMutation, createForm, message, refreshComments, t],
+  )
 
   const handleUpdateStatus = useCallback(async () => {
     if (!selectedCommentId || !editableStatus) {
@@ -285,9 +324,14 @@ export function CommentList() {
         styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
         title={t('content.comment.title')}
         extra={
-          <span className="text-fg-muted text-sm">
-            {t('common.total', { count: commentListQuery.data?.total ?? 0 })}
-          </span>
+          <Space wrap>
+            <Button type="primary" onClick={() => setCreateDrawerOpen(true)}>
+              {t('content.comment.create.action')}
+            </Button>
+            <span className="text-fg-muted text-sm">
+              {t('common.total', { count: commentListQuery.data?.total ?? 0 })}
+            </span>
+          </Space>
         }
       >
         <div className="flex flex-1 flex-col">
@@ -472,6 +516,79 @@ export function CommentList() {
         ) : (
           <Empty description={t('content.comment.detailEmpty')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
+      </Drawer>
+
+      <Drawer
+        open={createDrawerOpen}
+        title={t('content.comment.create.title')}
+        width={560}
+        onClose={() => {
+          setCreateDrawerOpen(false)
+          setCreatePostKeyword('')
+          createForm.resetFields()
+        }}
+      >
+        <Form form={createForm} layout="vertical" onFinish={handleCreateComment}>
+          <Form.Item
+            label={t('content.comment.columns.post')}
+            name="postId"
+            rules={[{ required: true, message: t('content.comment.create.validation.postRequired') }]}
+          >
+            <Select
+              filterOption={false}
+              loading={publishedPostListQuery.isFetching}
+              onSearch={setCreatePostKeyword}
+              options={publishedPostOptions}
+              optionFilterProp="label"
+              placeholder={t('content.comment.create.placeholders.post')}
+              showSearch
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={t('content.comment.columns.author')}
+            name="authorName"
+            rules={[{ required: true, message: t('content.comment.create.validation.authorRequired') }]}
+          >
+            <Input placeholder={t('content.comment.create.placeholders.author')} />
+          </Form.Item>
+
+          <Form.Item
+            label={t('content.comment.columns.email')}
+            name="authorEmail"
+            rules={[{ type: 'email', message: t('content.comment.create.validation.emailInvalid') }]}
+          >
+            <Input placeholder={t('content.comment.create.placeholders.email')} />
+          </Form.Item>
+
+          <Form.Item
+            label={t('content.comment.columns.content')}
+            name="content"
+            rules={[{ required: true, message: t('content.comment.create.validation.contentRequired') }]}
+          >
+            <Input.TextArea
+              rows={6}
+              maxLength={2000}
+              showCount
+              placeholder={t('content.comment.create.placeholders.content')}
+            />
+          </Form.Item>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              onClick={() => {
+                setCreateDrawerOpen(false)
+                setCreatePostKeyword('')
+                createForm.resetFields()
+              }}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button type="primary" htmlType="submit" loading={createCommentMutation.isPending}>
+              {t('common.submit')}
+            </Button>
+          </div>
+        </Form>
       </Drawer>
     </div>
   )

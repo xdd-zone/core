@@ -30,6 +30,19 @@ export class PostRepository {
   }
 
   /**
+   * 根据 slug 查询已发布文章。
+   */
+  static async findPublishedBySlug(slug: string): Promise<PostBaseData | null> {
+    return prisma.post.findFirst({
+      where: {
+        slug,
+        status: 'PUBLISHED',
+      },
+      select: POST_BASE_SELECT,
+    })
+  }
+
+  /**
    * 创建文章。
    */
   static async create(data: {

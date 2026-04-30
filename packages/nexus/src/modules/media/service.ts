@@ -1,8 +1,8 @@
 import type { Media, MediaList, MediaListQuery } from './model'
 import type { MediaRecord } from './repository'
 
-import { NotFoundError } from '@nexus/core/http'
-import { MediaStorage } from '@nexus/infra/storage/media-storage'
+import { BadRequestError, NotFoundError } from '@nexus/core/http'
+import { ALLOWED_MEDIA_MIME_TYPES, isAllowedMediaMimeType, MediaStorage } from '@nexus/infra/storage/media-storage'
 
 import { MediaListSchema, MediaSchema } from './model'
 import { MediaRepository } from './repository'
@@ -19,6 +19,15 @@ function serializeMedia(record: MediaRecord): Media {
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   })
+}
+
+function assertAllowedMediaFile(file: File): void {
+  if (!isAllowedMediaMimeType(file.type)) {
+    throw new BadRequestError(
+      `不支持的文件类型。只允许上传 ${ALLOWED_MEDIA_MIME_TYPES.join('、')} 图片`,
+      'MEDIA_UNSUPPORTED_MIME_TYPE',
+    )
+  }
 }
 
 /**
@@ -60,6 +69,8 @@ export class MediaService {
    * 上传媒体文件并写入元信息。
    */
   static async upload(userId: string, file: File): Promise<Media> {
+    assertAllowedMediaFile(file)
+
     const mediaId = crypto.randomUUID()
     const { fileName, storagePath } = await MediaStorage.save(file)
 
@@ -69,7 +80,7 @@ export class MediaService {
           id: mediaId,
           fileName,
           originalName: file.name || fileName,
-          mimeType: file.type || 'application/octet-stream',
+          mimeType: file.type,
           size: file.size,
           storagePath,
           url: `/api/media/${mediaId}/file`,
@@ -106,7 +117,9 @@ export class MediaService {
   static async remove(id: string): Promise<void> {
     const media = await this.requireById(id)
 
-    await MediaStorage.remove(media.storagePath)
     await MediaRepository.delete(id)
+    await MediaStorage.remove(media.storagePath).catch((error: unknown) => {
+      console.error(`媒体文件删除失败: ${media.storagePath}`, error)
+    })
   }
 }
