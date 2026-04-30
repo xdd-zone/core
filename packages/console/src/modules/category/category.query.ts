@@ -1,9 +1,4 @@
-import type {
-  CategoryListQuery,
-  CreateCategoryBody,
-  PublicCategoryListQuery,
-  UpdateCategoryBody,
-} from './category.types'
+import type { CategoryListQuery, CreateCategoryBody, UpdateCategoryBody } from './category.types'
 
 import { api, unwrapEdenResponse } from '@console/shared/api'
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query'
@@ -17,7 +12,6 @@ function categoryDetailApi(id: string): CategoryDetailApi {
 
 export const CATEGORY_LIST_QUERY_KEY = ['categories'] as const
 export const CATEGORY_DETAIL_QUERY_KEY = (id: string) => ['categories', id] as const
-export const PUBLIC_CATEGORY_LIST_QUERY_KEY = ['categories', 'public'] as const
 
 export function categoryListQueryOptions(query: CategoryListQuery = {}) {
   return queryOptions({
@@ -37,20 +31,8 @@ export function categoryListQueryOptions(query: CategoryListQuery = {}) {
   })
 }
 
-export function publicCategoryListQueryOptions(query: PublicCategoryListQuery = {}) {
-  return queryOptions({
-    queryFn: async () => unwrapEdenResponse(await categoryApiRoot.public.get({ query })),
-    queryKey: [...PUBLIC_CATEGORY_LIST_QUERY_KEY, query],
-    staleTime: 60_000,
-  })
-}
-
 export function useCategoryListQuery(query: CategoryListQuery = {}) {
   return useQuery(categoryListQueryOptions(query))
-}
-
-export function usePublicCategoryListQuery(query: PublicCategoryListQuery = {}) {
-  return useQuery(publicCategoryListQueryOptions(query))
 }
 
 export function useCreateCategoryMutation() {

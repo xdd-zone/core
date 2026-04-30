@@ -235,10 +235,7 @@ export function ArticleSettings() {
                 </Form.Item>
 
                 <Form.Item label={t('content.settings.form.fields.favicon')} name="favicon">
-                  <Input
-                    disabled={!canWriteSiteConfig}
-                    placeholder={t('content.settings.form.placeholders.favicon')}
-                  />
+                  <Input disabled={!canWriteSiteConfig} placeholder={t('content.settings.form.placeholders.favicon')} />
                 </Form.Item>
 
                 <Form.Item
@@ -259,10 +256,7 @@ export function ArticleSettings() {
                   />
                 </Form.Item>
 
-                <Form.Item
-                  label={t('content.settings.form.fields.defaultSeoDescription')}
-                  name="defaultSeoDescription"
-                >
+                <Form.Item label={t('content.settings.form.fields.defaultSeoDescription')} name="defaultSeoDescription">
                   <Input
                     disabled={!canWriteSiteConfig}
                     placeholder={t('content.settings.form.placeholders.defaultSeoDescription')}
@@ -309,12 +303,7 @@ export function ArticleSettings() {
                               placeholder={t('content.settings.form.placeholders.socialUrl')}
                             />
                           </Form.Item>
-                          <Button
-                            danger
-                            disabled={!canWriteSiteConfig}
-                            type="text"
-                            onClick={() => remove(field.name)}
-                          >
+                          <Button danger disabled={!canWriteSiteConfig} type="text" onClick={() => remove(field.name)}>
                             {t('common.delete')}
                           </Button>
                         </div>

@@ -204,6 +204,7 @@ packages/console/src/
 - `@xdd-zone/nexus/comment-types`
 - `@xdd-zone/nexus/media-types`
 - `@xdd-zone/nexus/site-config-types`
+- `@xdd-zone/nexus/public-site-types`
 
 权限常量统一从 `@xdd-zone/nexus/permissions` 引入。
 

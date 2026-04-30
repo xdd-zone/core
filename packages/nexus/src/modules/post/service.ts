@@ -1,5 +1,5 @@
 import type { ContentStatus } from '@nexus/infra/database/prisma/generated'
-import type { CreatePostBody, Post, PostList, PostListQuery, PublicPostListQuery, UpdatePostBody } from './model'
+import type { CreatePostBody, Post, PostList, PostListQuery, UpdatePostBody } from './model'
 import type { PostBaseData, PostWhereInput } from './types'
 import { BadRequestError, NotFoundError } from '@nexus/core/http'
 import { buildKeywordSearch } from '@nexus/infra/database'
@@ -110,40 +110,10 @@ export class PostService {
   }
 
   /**
-   * 获取已发布文章列表。
-   */
-  static async listPublished(query: PublicPostListQuery): Promise<PostList> {
-    const result = await PostRepository.paginate(
-      this.buildWhereConditions({
-        ...query,
-        status: 'published',
-      }),
-      query,
-    )
-
-    return PostListSchema.parse({
-      ...result,
-      items: result.items.map(serializePost),
-    })
-  }
-
-  /**
    * 获取文章详情。
    */
   static async findById(id: string): Promise<Post> {
     return PostSchema.parse(serializePost(await this.requireById(id)))
-  }
-
-  /**
-   * 根据 slug 获取已发布文章详情。
-   */
-  static async findPublishedBySlug(slug: string): Promise<Post> {
-    const post = await PostRepository.findPublishedBySlug(slug)
-    if (!post) {
-      throw new NotFoundError('文章不存在')
-    }
-
-    return PostSchema.parse(serializePost(post))
   }
 
   /**

@@ -97,6 +97,7 @@ bun run seed
 - `@xdd-zone/nexus/comment-types`
 - `@xdd-zone/nexus/media-types`
 - `@xdd-zone/nexus/site-config-types`
+- `@xdd-zone/nexus/public-site-types`
 
 ### 其他导出
 
@@ -112,6 +113,7 @@ bun run seed
 - `/api/auth/*`
 - `/api/user/*`
 - `/api/rbac/*`
+- `/api/public-site/*`
 - `/api/post/*`
 - `/api/preview/markdown`
 - `/api/site-config`

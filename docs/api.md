@@ -110,6 +110,16 @@ GitHub 登录和回调返回 `302`。
 | POST | `/api/post/:id/publish` | 发布文章 |
 | POST | `/api/post/:id/unpublish` | 取消发布文章 |
 
+### Public Site
+
+| 方法 | 路径 | 说明 |
+| ---- | ---- | ---- |
+| GET | `/api/public-site/config` | 获取个人站点配置 |
+| GET | `/api/public-site/categories` | 获取个人站点分类列表 |
+| GET | `/api/public-site/categories/:slug/posts` | 获取指定分类下的个人站点文章列表 |
+| GET | `/api/public-site/posts` | 获取个人站点文章列表 |
+| GET | `/api/public-site/posts/:slug` | 获取个人站点文章详情 |
+
 ### Preview
 
 | 方法 | 路径 | 说明 |

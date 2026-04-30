@@ -1,10 +1,1 @@
-export type {
-  CreatePostBody,
-  Post,
-  PostIdParams,
-  PostList,
-  PostListQuery,
-  PublicPostListQuery,
-  PublicPostSlugParams,
-  UpdatePostBody,
-} from '../modules/post/model'
+export type { CreatePostBody, Post, PostIdParams, PostList, PostListQuery, UpdatePostBody } from '../modules/post/model'

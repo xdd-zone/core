@@ -8,8 +8,5 @@ export type {
   CategoryList,
   CategoryListQuery,
   CreateCategoryBody,
-  PublicCategory,
-  PublicCategoryList,
-  PublicCategoryListQuery,
   UpdateCategoryBody,
 } from '../modules/category/model'

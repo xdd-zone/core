@@ -8,8 +8,6 @@ import {
   PostListQuerySchema,
   PostListSchema,
   PostSchema,
-  PublicPostListQuerySchema,
-  PublicPostSlugParamsSchema,
   UpdatePostBodySchema,
 } from './model'
 import { PostRepository } from './repository'
@@ -29,26 +27,6 @@ export function createPostModule({ accessPlugin }: PostModuleOptions) {
     tags: ['Post'],
   })
     .use(accessPlugin)
-    .get('/public', async ({ query }) => await PostService.listPublished(query), {
-      query: PublicPostListQuerySchema,
-      response: PostListSchema,
-      detail: apiDetail({
-        summary: '获取公开文章列表',
-        description: '匿名读取已发布文章，支持分页、关键字、分类和标签过滤。',
-        response: PostListSchema,
-        errors: [400],
-      }),
-    })
-    .get('/public/:slug', async ({ params }) => await PostService.findPublishedBySlug(params.slug), {
-      params: PublicPostSlugParamsSchema,
-      response: PostSchema,
-      detail: apiDetail({
-        summary: '获取公开文章详情',
-        description: '按 slug 匿名读取已发布文章。',
-        response: PostSchema,
-        errors: [400, 404],
-      }),
-    })
     .get('/', async ({ query }) => await PostService.list(query), {
       permission: Permissions.POST.READ_ALL,
       query: PostListQuerySchema,

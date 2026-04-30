@@ -11,18 +11,14 @@ export function createHealthModule(options: { healthService: HealthService }) {
     name: 'health-module',
     prefix: '/health',
     tags: ['Health'],
-  }).get(
-    '/',
-    () => options.healthService.getHealth(),
-    {
+  }).get('/', () => options.healthService.getHealth(), {
+    response: HealthSchema,
+    detail: apiDetail({
+      summary: '健康检查',
+      description: '返回服务当前可用状态与数据库依赖状态。',
       response: HealthSchema,
-      detail: apiDetail({
-        summary: '健康检查',
-        description: '返回服务当前可用状态与数据库依赖状态。',
-        response: HealthSchema,
-      }),
-    },
-  )
+    }),
+  })
 }
 
 export * from './model'

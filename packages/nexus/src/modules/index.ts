@@ -7,6 +7,7 @@ import { createHealthModule, HealthService } from './health'
 import { createMediaModule } from './media'
 import { createPostModule } from './post'
 import { createPreviewModule } from './preview'
+import { createPublicSiteModule } from './public-site'
 import { createRbacModule } from './rbac'
 import { createSiteConfigModule } from './site-config'
 import { createUserModule } from './user'
@@ -33,6 +34,7 @@ export function createModules(context: AppBootstrapContext) {
     )
     .use(createUserModule({ accessPlugin: context.security.accessPlugin }))
     .use(createRbacModule({ accessPlugin: context.security.accessPlugin }))
+    .use(createPublicSiteModule())
     .use(createPostModule({ accessPlugin: context.security.accessPlugin }))
     .use(createCategoryModule({ accessPlugin: context.security.accessPlugin }))
     .use(createPreviewModule({ accessPlugin: context.security.accessPlugin }))
@@ -48,6 +50,7 @@ export * from './health'
 export * from './media'
 export * from './post'
 export * from './preview'
+export * from './public-site'
 export * from './rbac'
 export * from './site-config'
 export * from './user'

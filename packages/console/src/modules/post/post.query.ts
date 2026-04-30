@@ -1,9 +1,10 @@
-import type { CreatePostBody, PostListQuery, PublicPostListQuery, UpdatePostBody } from './post.types'
+import type { CreatePostBody, PostListQuery, UpdatePostBody } from './post.types'
 
 import { api, unwrapEdenResponse } from '@console/shared/api'
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query'
 
 const postApiRoot = api.post
+const publicSiteApiRoot = api['public-site']
 type PostDetailApi = ReturnType<typeof postApiRoot>
 
 function postDetailApi(id: string): PostDetailApi {
@@ -12,8 +13,7 @@ function postDetailApi(id: string): PostDetailApi {
 
 export const POST_LIST_QUERY_KEY = ['posts'] as const
 export const POST_DETAIL_QUERY_KEY = (id: string) => ['posts', id] as const
-export const PUBLIC_POST_LIST_QUERY_KEY = ['posts', 'public'] as const
-export const PUBLIC_POST_DETAIL_QUERY_KEY = (slug: string) => ['posts', 'public', slug] as const
+export const PUBLIC_SITE_POST_DETAIL_QUERY_KEY = (slug: string) => ['public-site', 'posts', slug] as const
 
 /**
  * 文章列表查询配置。
@@ -40,29 +40,6 @@ export function postListQueryOptions(query: PostListQuery = {}) {
 }
 
 /**
- * 公开文章列表查询配置。
- */
-export function publicPostListQueryOptions(query: PublicPostListQuery = {}) {
-  return queryOptions({
-    queryFn: async () =>
-      unwrapEdenResponse(
-        await postApiRoot.public.get({
-          query: {
-            categoryId: query.categoryId,
-            categorySlug: query.categorySlug,
-            keyword: query.keyword,
-            page: query.page,
-            pageSize: query.pageSize,
-            tag: query.tag,
-          },
-        }),
-      ),
-    queryKey: [...PUBLIC_POST_LIST_QUERY_KEY, query],
-    staleTime: 30_000,
-  })
-}
-
-/**
  * 文章详情查询配置。
  */
 export function postDetailQueryOptions(id: string) {
@@ -74,12 +51,12 @@ export function postDetailQueryOptions(id: string) {
 }
 
 /**
- * 公开文章详情查询配置。
+ * 个人站点文章详情查询配置。
  */
-export function publicPostDetailQueryOptions(slug: string) {
+export function publicSitePostDetailQueryOptions(slug: string) {
   return queryOptions({
-    queryFn: async () => unwrapEdenResponse(await postApiRoot.public({ slug }).get()),
-    queryKey: PUBLIC_POST_DETAIL_QUERY_KEY(slug),
+    queryFn: async () => unwrapEdenResponse(await publicSiteApiRoot.posts({ slug }).get()),
+    queryKey: PUBLIC_SITE_POST_DETAIL_QUERY_KEY(slug),
     staleTime: 30_000,
   })
 }
@@ -95,16 +72,6 @@ export function usePostListQuery(query: PostListQuery = {}, enabled: boolean = t
 }
 
 /**
- * 公开文章列表查询 Hook。
- */
-export function usePublicPostListQuery(query: PublicPostListQuery = {}, enabled: boolean = true) {
-  return useQuery({
-    ...publicPostListQueryOptions(query),
-    enabled,
-  })
-}
-
-/**
  * 文章详情查询 Hook。
  */
 export function usePostDetailQuery(id: string, enabled: boolean = true) {
@@ -115,11 +82,11 @@ export function usePostDetailQuery(id: string, enabled: boolean = true) {
 }
 
 /**
- * 公开文章详情查询 Hook。
+ * 个人站点文章详情查询 Hook。
  */
-export function usePublicPostDetailQuery(slug: string, enabled: boolean = true) {
+export function usePublicSitePostDetailQuery(slug: string, enabled: boolean = true) {
   return useQuery({
-    ...publicPostDetailQueryOptions(slug),
+    ...publicSitePostDetailQueryOptions(slug),
     enabled,
     retry: false,
   })

@@ -9,8 +9,6 @@ import {
   CategoryListSchema,
   CategorySchema,
   CreateCategoryBodySchema,
-  PublicCategoryListQuerySchema,
-  PublicCategoryListSchema,
   UpdateCategoryBodySchema,
 } from './model'
 import { CategoryRepository } from './repository'
@@ -27,16 +25,6 @@ export function createCategoryModule({ accessPlugin }: CategoryModuleOptions) {
     tags: ['Category'],
   })
     .use(accessPlugin)
-    .get('/public', async ({ query }) => await CategoryService.listPublic(query), {
-      query: PublicCategoryListQuerySchema,
-      response: PublicCategoryListSchema,
-      detail: apiDetail({
-        summary: '获取公开分类列表',
-        description: '匿名读取可见分类，按排序值和创建时间返回。',
-        response: PublicCategoryListSchema,
-        errors: [400],
-      }),
-    })
     .get('/', async ({ query }) => await CategoryService.list(query), {
       permission: { any: CATEGORY_MANAGE_PERMISSIONS },
       query: CategoryListQuerySchema,

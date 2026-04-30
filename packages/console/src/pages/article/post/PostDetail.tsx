@@ -6,7 +6,7 @@ import {
   PostRequestError,
   useDeletePostMutation,
   usePostDetailQuery,
-  usePublicPostDetailQuery,
+  usePublicSitePostDetailQuery,
   usePublishPostMutation,
   useUnpublishPostMutation,
 } from '@console/modules/post'
@@ -38,7 +38,10 @@ export function PostDetail() {
   const { id } = useParams({ from: '/protected/app-layout/articles/$id' })
 
   const postQuery = usePostDetailQuery(id)
-  const publicPostQuery = usePublicPostDetailQuery(postQuery.data?.slug ?? '', postQuery.data?.status === 'published')
+  const publicPostQuery = usePublicSitePostDetailQuery(
+    postQuery.data?.slug ?? '',
+    postQuery.data?.status === 'published',
+  )
   const currentUserPermissionsQuery = useCurrentUserPermissionsQuery()
   const deletePostMutation = useDeletePostMutation()
   const publishPostMutation = usePublishPostMutation()
@@ -50,7 +53,7 @@ export function PostDetail() {
 
   const canEdit = canAccessConsolePath(`/articles/${id}/edit`, permissionKeys)
   const canPublish = canUsePermission(permissionKeys, POST_PUBLISH_PERMISSION)
-  const publicApiUrl = postQuery.data ? resolveApiUrl(`/post/public/${postQuery.data.slug}`) : ''
+  const publicApiUrl = postQuery.data ? resolveApiUrl(`/public-site/posts/${postQuery.data.slug}`) : ''
 
   const refreshPostCaches = async (nextPost?: unknown) => {
     if (nextPost) {

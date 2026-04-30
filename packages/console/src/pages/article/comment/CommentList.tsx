@@ -12,7 +12,7 @@ import {
   useDeleteCommentMutation,
   useUpdateCommentStatusMutation,
 } from '@console/modules/comment'
-import { usePostListQuery, usePublicPostListQuery } from '@console/modules/post'
+import { usePostListQuery } from '@console/modules/post'
 
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -81,8 +81,8 @@ export function CommentList() {
   const [editableStatus, setEditableStatus] = useState<EditableCommentStatus | undefined>()
 
   const postListQuery = usePostListQuery({ page: 1, pageSize: 100 })
-  const publishedPostListQuery = usePublicPostListQuery(
-    { keyword: trimOptional(createPostKeyword), page: 1, pageSize: 100 },
+  const publishedPostListQuery = usePostListQuery(
+    { keyword: trimOptional(createPostKeyword), page: 1, pageSize: 100, status: 'published' },
     createDrawerOpen,
   )
   const commentListQuery = useCommentListQuery({

@@ -19,10 +19,7 @@ export function AppContent() {
   return (
     <main className="guide-content h-full flex-1 overflow-auto">
       <div
-        className={clsx(
-          'guide-content-inner text-fg min-h-full',
-          isFullWidthContent && 'guide-content-inner--full',
-        )}
+        className={clsx('guide-content-inner text-fg min-h-full', isFullWidthContent && 'guide-content-inner--full')}
       >
         {isNavigating ? <Loading /> : <Outlet />}
       </div>

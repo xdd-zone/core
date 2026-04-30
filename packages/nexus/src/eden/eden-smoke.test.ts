@@ -161,6 +161,8 @@ function getMediaClient(mediaId: string): ReturnType<typeof authenticatedClient.
   ]
 }
 
+const publicSiteClient = anonymousClient.api['public-site']
+
 function expectValidDateTime(value: unknown) {
   expect(value instanceof Date || typeof value === 'string').toBe(true)
   expect(Number.isNaN(new Date(value as string | Date).getTime())).toBe(false)
@@ -765,6 +767,49 @@ describe('eden smoke', () => {
     expect(result.error).toBeTruthy()
   })
 
+  it('匿名用户应可读取个人站点配置', async () => {
+    await SiteConfigRepository.deleteDefault()
+
+    const defaultResult = await publicSiteClient.config.get()
+    expect(defaultResult.status).toBe(200)
+    expect(defaultResult.error).toBeNull()
+    expect(defaultResult.data?.title).toBe('XDD Zone')
+    expect(defaultResult.data?.socialLinks).toEqual({})
+
+    const updateResult = await authenticatedClient.api['site-config'].put({
+      title: `Public Site ${tempSuffix}`,
+      subtitle: `Public Subtitle ${tempSuffix}`,
+      description: `Public Description ${tempSuffix}`,
+      logo: 'https://example.com/logo.png',
+      favicon: 'https://example.com/favicon.ico',
+      footerText: `Footer ${tempSuffix}`,
+      socialLinks: {
+        github: 'https://github.com/xdd-zone',
+      },
+      defaultSeoTitle: `SEO ${tempSuffix}`,
+      defaultSeoDescription: `SEO Description ${tempSuffix}`,
+    })
+    expect(updateResult.status).toBe(200)
+    expect(updateResult.error).toBeNull()
+
+    const publicResult = await publicSiteClient.config.get()
+    expect(publicResult.status).toBe(200)
+    expect(publicResult.error).toBeNull()
+    expect(publicResult.data).toEqual({
+      title: `Public Site ${tempSuffix}`,
+      subtitle: `Public Subtitle ${tempSuffix}`,
+      description: `Public Description ${tempSuffix}`,
+      logo: 'https://example.com/logo.png',
+      favicon: 'https://example.com/favicon.ico',
+      footerText: `Footer ${tempSuffix}`,
+      socialLinks: {
+        github: 'https://github.com/xdd-zone',
+      },
+      defaultSeoTitle: `SEO ${tempSuffix}`,
+      defaultSeoDescription: `SEO Description ${tempSuffix}`,
+    })
+  })
+
   it('已登录但没有 SITE_CONFIG 权限时应返回 403', async () => {
     const getResult = await subjectClient.api['site-config'].get()
     expect(getResult.status).toBe(403)
@@ -901,7 +946,7 @@ describe('eden smoke', () => {
     expect(getResult.data).toEqual(updateResult.data)
   })
 
-  it('应支持分类创建、列表、公开列表、更新和删除', async () => {
+  it('应支持分类创建、列表、更新和删除', async () => {
     const slug = `eden-category-${tempSuffix}`
     const createResult = await authenticatedClient.api.category.post({
       name: `  Engineering ${tempSuffix}  `,
@@ -928,15 +973,6 @@ describe('eden smoke', () => {
     }
     createdCategoryIds.push(categoryId)
 
-    const hiddenPublicListResult = await anonymousClient.api.category.public.get({
-      query: {
-        keyword: tempSuffix,
-      },
-    })
-    expect(hiddenPublicListResult.status).toBe(200)
-    expect(hiddenPublicListResult.error).toBeNull()
-    expect(hiddenPublicListResult.data?.some((item) => item.id === categoryId)).toBe(false)
-
     const listResult = await authenticatedClient.api.category.get({
       query: {
         keyword: tempSuffix,
@@ -959,15 +995,6 @@ describe('eden smoke', () => {
     expect(updateResult.data?.description).toBeNull()
     expect(updateResult.data?.sortOrder).toBe(1)
     expect(updateResult.data?.isVisible).toBe(true)
-
-    const publicListResult = await anonymousClient.api.category.public.get({
-      query: {
-        keyword: tempSuffix,
-      },
-    })
-    expect(publicListResult.status).toBe(200)
-    expect(publicListResult.error).toBeNull()
-    expect(publicListResult.data?.some((item) => item.id === categoryId)).toBe(true)
 
     const writeOnlyRole = await createRoleWithPermissions(`category-write-${tempSuffix}`, [Permissions.POST.WRITE_ALL])
     await prisma.userRole.create({
@@ -1091,7 +1118,7 @@ describe('eden smoke', () => {
     expect(publishResult.data?.status).toBe('published')
     expectValidDateTime(publishResult.data?.publishedAt)
 
-    const publicDetailResult = await anonymousClient.api.post.public({ slug: updatedSlug }).get()
+    const publicDetailResult = await publicSiteClient.posts({ slug: updatedSlug }).get()
     expect(publicDetailResult.status).toBe(200)
     expect(publicDetailResult.error).toBeNull()
     expect(publicDetailResult.data?.id).toBe(postId)
@@ -1142,19 +1169,29 @@ describe('eden smoke', () => {
     expect(listResult.data?.items.some((item) => item.id === postId)).toBe(false)
   })
 
-  it('匿名用户只能读取已发布文章', async () => {
+  it('匿名用户通过个人站点接口只能读取可展示内容', async () => {
     const publicSlug = `eden-post-public-${tempSuffix}`
     const draftSlug = `eden-post-public-draft-${tempSuffix}`
-    const category = await prisma.category.create({
-      data: {
-        name: `Public Category ${tempSuffix}`,
-        slug: `public-category-${tempSuffix}`,
-        isVisible: true,
-      },
-    })
-    createdCategoryIds.push(category.id)
+    const hiddenCategorySlug = `hidden-category-${tempSuffix}`
+    const [category, hiddenCategory] = await Promise.all([
+      prisma.category.create({
+        data: {
+          name: `Public Category ${tempSuffix}`,
+          slug: `public-category-${tempSuffix}`,
+          isVisible: true,
+        },
+      }),
+      prisma.category.create({
+        data: {
+          name: `Hidden Category ${tempSuffix}`,
+          slug: hiddenCategorySlug,
+          isVisible: false,
+        },
+      }),
+    ])
+    createdCategoryIds.push(category.id, hiddenCategory.id)
 
-    const [publishedPost, draftPost] = await Promise.all([
+    const [publishedPost, draftPost, hiddenCategoryPost] = await Promise.all([
       prisma.post.create({
         data: {
           title: `Public Post ${tempSuffix}`,
@@ -1178,10 +1215,32 @@ describe('eden smoke', () => {
           status: 'DRAFT',
         },
       }),
+      prisma.post.create({
+        data: {
+          title: `Hidden Category Post ${tempSuffix}`,
+          slug: `hidden-category-post-${tempSuffix}`,
+          markdown: `# Hidden Category Post ${tempSuffix}`,
+          excerpt: `hidden category excerpt ${tempSuffix}`,
+          categoryId: hiddenCategory.id,
+          tags: ['public'],
+          status: 'PUBLISHED',
+          publishedAt: new Date(),
+        },
+      }),
     ])
-    createdPostIds.push(publishedPost.id, draftPost.id)
+    createdPostIds.push(publishedPost.id, draftPost.id, hiddenCategoryPost.id)
 
-    const listResult = await anonymousClient.api.post.public.get({
+    const categoryListResult = await publicSiteClient.categories.get({
+      query: {
+        keyword: tempSuffix,
+      },
+    })
+    expect(categoryListResult.status).toBe(200)
+    expect(categoryListResult.error).toBeNull()
+    expect(categoryListResult.data?.some((item) => item.id === category.id && item.postCount === 1)).toBe(true)
+    expect(categoryListResult.data?.some((item) => item.id === hiddenCategory.id)).toBe(false)
+
+    const listResult = await publicSiteClient.posts.get({
       query: {
         page: 1,
         pageSize: 10,
@@ -1195,21 +1254,44 @@ describe('eden smoke', () => {
     expect(listResult.error).toBeNull()
     expect(listResult.data?.items.some((item) => item.id === publishedPost.id)).toBe(true)
     expect(listResult.data?.items.some((item) => item.id === draftPost.id)).toBe(false)
+    expect(listResult.data?.items.some((item) => item.id === hiddenCategoryPost.id)).toBe(false)
+    expect(listResult.data?.items[0]).not.toHaveProperty('markdown')
 
-    const detailResult = await anonymousClient.api.post.public({ slug: publicSlug }).get()
+    const categoryPostsResult = await publicSiteClient.categories({ slug: category.slug }).posts.get({
+      query: {
+        page: 1,
+        pageSize: 10,
+        tag: 'public',
+      },
+    })
+    expect(categoryPostsResult.status).toBe(200)
+    expect(categoryPostsResult.error).toBeNull()
+    expect(categoryPostsResult.data?.items.some((item) => item.id === publishedPost.id)).toBe(true)
+
+    const hiddenCategoryPostsResult = await publicSiteClient.categories({ slug: hiddenCategorySlug }).posts.get()
+    expect(hiddenCategoryPostsResult.status).toBe(404)
+    expect(hiddenCategoryPostsResult.error).toBeTruthy()
+
+    const detailResult = await publicSiteClient.posts({ slug: publicSlug }).get()
     expect(detailResult.status).toBe(200)
     expect(detailResult.error).toBeNull()
     expect(detailResult.data?.id).toBe(publishedPost.id)
-    expect(detailResult.data?.status).toBe('published')
+    expect(detailResult.data?.markdown).toBe(`# Public Post ${tempSuffix}`)
     expect(detailResult.data?.category).toEqual({
       id: category.id,
       name: `Public Category ${tempSuffix}`,
       slug: `public-category-${tempSuffix}`,
     })
 
-    const draftDetailResult = await anonymousClient.api.post.public({ slug: draftSlug }).get()
+    const draftDetailResult = await publicSiteClient.posts({ slug: draftSlug }).get()
     expect(draftDetailResult.status).toBe(404)
     expect(draftDetailResult.error).toBeTruthy()
+
+    const hiddenCategoryDetailResult = await publicSiteClient
+      .posts({ slug: `hidden-category-post-${tempSuffix}` })
+      .get()
+    expect(hiddenCategoryDetailResult.status).toBe(404)
+    expect(hiddenCategoryDetailResult.error).toBeTruthy()
   })
 
   it('slug 重复时应返回 409', async () => {
@@ -1303,6 +1385,16 @@ describe('eden smoke', () => {
     const unpublishResult = await subjectPostClient.unpublish.post()
     expect(unpublishResult.status).toBe(403)
     expect(unpublishResult.error).toBeTruthy()
+  })
+
+  it('匿名用户不可访问后台文章和分类接口', async () => {
+    const postListResult = await anonymousClient.api.post.get()
+    expect(postListResult.status).toBe(401)
+    expect(postListResult.error).toBeTruthy()
+
+    const categoryListResult = await anonymousClient.api.category.get()
+    expect(categoryListResult.status).toBe(401)
+    expect(categoryListResult.error).toBeTruthy()
   })
 
   it('匿名用户可给已发布文章创建 pending 评论', async () => {

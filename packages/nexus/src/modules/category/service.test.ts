@@ -1,5 +1,6 @@
 import type { CategoryBaseData } from './types'
 import { afterEach, describe, expect, it, spyOn } from 'bun:test'
+import { PublicSiteRepository, PublicSiteService } from '../public-site'
 import { CategoryRepository } from './repository'
 import { CategoryService } from './service'
 
@@ -26,9 +27,9 @@ describe('CategoryService', () => {
     spyOn(CategoryRepository, 'create').mockRestore()
     spyOn(CategoryRepository, 'delete').mockRestore()
     spyOn(CategoryRepository, 'findById').mockRestore()
-    spyOn(CategoryRepository, 'findMany').mockRestore()
     spyOn(CategoryRepository, 'paginate').mockRestore()
     spyOn(CategoryRepository, 'update').mockRestore()
+    spyOn(PublicSiteRepository, 'findCategories').mockRestore()
   })
 
   it('创建分类未传 slug 时应生成合法 slug', async () => {
@@ -97,14 +98,19 @@ describe('CategoryService', () => {
   })
 
   it('公开列表只查询可见分类，并且文章数只返回已发布数量', async () => {
-    const findManySpy = spyOn(CategoryRepository, 'findMany').mockResolvedValue([createCategory()])
-    spyOn(CategoryRepository, 'countPublishedPosts').mockResolvedValue(new Map([['category-1', 2]]))
+    const findCategoriesSpy = spyOn(PublicSiteRepository, 'findCategories').mockResolvedValue([
+      createCategory({
+        _count: {
+          posts: 2,
+        },
+      }),
+    ])
 
-    const result = await CategoryService.listPublic({
+    const result = await PublicSiteService.listCategories({
       keyword: '测试',
     })
 
-    expect(findManySpy).toHaveBeenCalledWith({
+    expect(findCategoriesSpy).toHaveBeenCalledWith({
       OR: [
         {
           name: {

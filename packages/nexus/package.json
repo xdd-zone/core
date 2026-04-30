@@ -62,6 +62,11 @@
       "import": "./src/public/site-config-types.ts",
       "default": "./src/public/site-config-types.ts"
     },
+    "./public-site-types": {
+      "types": "./src/public/public-site-types.ts",
+      "import": "./src/public/public-site-types.ts",
+      "default": "./src/public/public-site-types.ts"
+    },
     "./permissions": {
       "types": "./src/public/permissions.ts",
       "import": "./src/public/permissions.ts",

@@ -193,6 +193,7 @@ bun run seed
 - 认证：`/api/auth/*`
 - 用户：`/api/user/*`
 - RBAC：`/api/rbac/*`
+- 个人站点：`/api/public-site/*`
 - 文章：`/api/post/*`
 - Markdown 预览：`/api/preview/markdown`
 - 站点配置：`/api/site-config`

@@ -19,17 +19,6 @@ export const CategorySchema = z.object({
 
 export type Category = z.infer<typeof CategorySchema>
 
-export const PublicCategorySchema = CategorySchema.pick({
-  id: true,
-  name: true,
-  slug: true,
-  description: true,
-  sortOrder: true,
-  postCount: true,
-})
-
-export type PublicCategory = z.infer<typeof PublicCategorySchema>
-
 export const CreateCategoryBodySchema = z.object({
   name: CategoryNameSchema,
   slug: SlugSchema.optional(),
@@ -71,14 +60,5 @@ export const CategoryListQuerySchema = z.object({
 
 export type CategoryListQuery = z.infer<typeof CategoryListQuerySchema>
 
-export const PublicCategoryListQuerySchema = z.object({
-  keyword: z.string().optional(),
-})
-
-export type PublicCategoryListQuery = z.infer<typeof PublicCategoryListQuerySchema>
-
 export const CategoryListSchema = createPaginatedListSchema(CategorySchema)
 export type CategoryList = z.infer<typeof CategoryListSchema>
-
-export const PublicCategoryListSchema = z.array(PublicCategorySchema)
-export type PublicCategoryList = z.infer<typeof PublicCategoryListSchema>

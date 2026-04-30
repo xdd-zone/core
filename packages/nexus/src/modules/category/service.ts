@@ -1,18 +1,10 @@
-import type {
-  Category,
-  CategoryList,
-  CategoryListQuery,
-  CreateCategoryBody,
-  PublicCategoryList,
-  PublicCategoryListQuery,
-  UpdateCategoryBody,
-} from './model'
+import type { Category, CategoryList, CategoryListQuery, CreateCategoryBody, UpdateCategoryBody } from './model'
 import type { CategoryBaseData, CategoryWhereInput, CategoryWithPublishedCount } from './types'
 import { NotFoundError } from '@nexus/core/http'
 import { buildKeywordSearch } from '@nexus/infra/database'
 import { createSlug, isSlug } from '@nexus/shared/schema'
 import { CATEGORY_SEARCH_FIELDS } from './constants'
-import { CategoryListSchema, CategorySchema, PublicCategoryListSchema } from './model'
+import { CategoryListSchema, CategorySchema } from './model'
 import { CategoryRepository } from './repository'
 
 function normalizeNullableValue(value: string | null | undefined) {
@@ -33,13 +25,6 @@ function serializeCategory(category: CategoryWithPublishedCount) {
   }
 }
 
-function serializePublicCategory(category: CategoryWithPublishedCount) {
-  return {
-    ...serializeCategory(category),
-    postCount: category.publishedPostCount,
-  }
-}
-
 async function withPublishedPostCount<T extends CategoryBaseData>(items: T[]): Promise<CategoryWithPublishedCount[]> {
   const publishedCountMap = await CategoryRepository.countPublishedPosts(items.map((item) => item.id))
 
@@ -50,7 +35,7 @@ async function withPublishedPostCount<T extends CategoryBaseData>(items: T[]): P
 }
 
 export class CategoryService {
-  private static buildWhereConditions(query: CategoryListQuery | PublicCategoryListQuery): CategoryWhereInput {
+  private static buildWhereConditions(query: CategoryListQuery): CategoryWhereInput {
     const where: CategoryWhereInput = {}
 
     if ('isVisible' in query && query.isVisible !== undefined) {
@@ -84,16 +69,6 @@ export class CategoryService {
       ...result,
       items: items.map(serializeCategory),
     })
-  }
-
-  static async listPublic(query: PublicCategoryListQuery): Promise<PublicCategoryList> {
-    const items = await CategoryRepository.findMany({
-      ...this.buildWhereConditions(query),
-      isVisible: true,
-    })
-    const itemsWithCount = await withPublishedPostCount(items)
-
-    return PublicCategoryListSchema.parse(itemsWithCount.map(serializePublicCategory))
   }
 
   static async findById(id: string): Promise<Category> {
