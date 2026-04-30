@@ -11,7 +11,14 @@ export const POST_BASE_SELECT = {
   excerpt: true,
   coverImage: true,
   status: true,
-  category: true,
+  categoryId: true,
+  category: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  },
   tags: true,
   publishedAt: true,
   createdAt: true,

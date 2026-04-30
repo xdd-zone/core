@@ -3,6 +3,7 @@ import type { FormInstance } from 'antd'
 import { TiptapMarkdownEditor } from '@console/components/content/editor'
 import { Markdown } from '@console/components/ui'
 import { slugify } from '@console/components/ui/markdown/utils/slugify'
+import { useCategoryListQuery } from '@console/modules/category'
 import {
   POST_DETAIL_QUERY_KEY,
   POST_LIST_QUERY_KEY,
@@ -31,7 +32,7 @@ interface PostEditorProps {
 }
 
 interface PostFormValues {
-  category?: string
+  categoryId?: string | null
   coverImage?: string | null
   excerpt?: string | null
   markdown: string
@@ -41,7 +42,7 @@ interface PostFormValues {
 }
 
 interface PostFormValueSource {
-  category?: string | null
+  categoryId?: string | null
   coverImage?: string | null
   excerpt?: string | null
   markdown?: string | null
@@ -51,7 +52,7 @@ interface PostFormValueSource {
 }
 
 const EMPTY_POST_FORM_VALUES: PostFormValues = {
-  category: '',
+  categoryId: null,
   coverImage: '',
   excerpt: '',
   markdown: '',
@@ -62,7 +63,7 @@ const EMPTY_POST_FORM_VALUES: PostFormValues = {
 
 function normalizePostFormValues(values?: PostFormValueSource | null) {
   return {
-    category: values?.category || '',
+    categoryId: values?.categoryId || null,
     coverImage: values?.coverImage || '',
     excerpt: values?.excerpt || '',
     markdown: values?.markdown || '',
@@ -248,6 +249,11 @@ export function PostEditor({ mode, postId }: PostEditorProps) {
   const postQuery = usePostDetailQuery(postId ?? '', isEdit)
   const createPostMutation = useCreatePostMutation()
   const updatePostMutation = useUpdatePostMutation()
+  const categoryListQuery = useCategoryListQuery({
+    page: 1,
+    pageSize: 100,
+    isVisible: true,
+  })
   const hydratedPostSnapshotRef = useRef<string | null>(null)
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(isEdit)
   const [isDirty, setIsDirty] = useState(false)
@@ -310,7 +316,7 @@ export function PostEditor({ mode, postId }: PostEditorProps) {
 
     try {
       const payload = {
-        category: nextValues.category || null,
+        categoryId: nextValues.categoryId || null,
         coverImage: nextValues.coverImage || null,
         excerpt: nextValues.excerpt || null,
         markdown: nextValues.markdown,
@@ -406,8 +412,16 @@ export function PostEditor({ mode, postId }: PostEditorProps) {
               />
 
               <div className="grid gap-x-5 md:grid-cols-2">
-                <Form.Item label={t('content.post.fields.category')} name="category">
-                  <Input placeholder={t('content.post.placeholders.category')} />
+                <Form.Item label={t('content.post.fields.category')} name="categoryId">
+                  <Select
+                    allowClear
+                    loading={categoryListQuery.isLoading}
+                    options={(categoryListQuery.data?.items ?? []).map((item) => ({
+                      label: item.name,
+                      value: item.id,
+                    }))}
+                    placeholder={t('content.post.placeholders.category')}
+                  />
                 </Form.Item>
 
                 <Form.Item label={t('content.post.fields.tags')} name="tags">

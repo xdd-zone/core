@@ -1,4 +1,5 @@
 export * from './auth-types'
+export * from './category-types'
 export * from './comment-types'
 export * from './eden'
 export * from './media-types'

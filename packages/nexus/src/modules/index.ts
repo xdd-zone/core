@@ -1,6 +1,7 @@
 import type { AppBootstrapContext } from '../bootstrap'
 import { Elysia } from 'elysia'
 import { createAuthModule } from './auth'
+import { createCategoryModule } from './category'
 import { createCommentModule } from './comment'
 import { createHealthModule, HealthService } from './health'
 import { createMediaModule } from './media'
@@ -33,6 +34,7 @@ export function createModules(context: AppBootstrapContext) {
     .use(createUserModule({ accessPlugin: context.security.accessPlugin }))
     .use(createRbacModule({ accessPlugin: context.security.accessPlugin }))
     .use(createPostModule({ accessPlugin: context.security.accessPlugin }))
+    .use(createCategoryModule({ accessPlugin: context.security.accessPlugin }))
     .use(createPreviewModule({ accessPlugin: context.security.accessPlugin }))
     .use(createSiteConfigModule({ accessPlugin: context.security.accessPlugin }))
     .use(createMediaModule({ accessPlugin: context.security.accessPlugin }))
@@ -40,6 +42,7 @@ export function createModules(context: AppBootstrapContext) {
 }
 
 export * from './auth'
+export * from './category'
 export * from './comment'
 export * from './health'
 export * from './media'

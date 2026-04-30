@@ -9,10 +9,18 @@ export function slugify(input: string): string {
   if (base.length === 0) return ''
   const cleaned = base
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')
-    .replace(/\s+/g, '-')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036F]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-')
   if (cleaned.length > 0) return cleaned
-  return encodeURIComponent(base.replace(/\s+/g, '-'))
+  const fallback = Array.from(base)
+    .map((char) => char.codePointAt(0)?.toString(36) ?? '')
+    .join('-')
+    .replace(/^-+|-+$/g, '')
+
+  return `item-${fallback || 'untitled'}`
 }
 
 /**

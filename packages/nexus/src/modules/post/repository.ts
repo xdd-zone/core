@@ -51,7 +51,7 @@ export class PostRepository {
     markdown: string
     excerpt?: string | null
     coverImage?: string | null
-    category?: string | null
+    categoryId?: string | null
     tags: string[]
   }): Promise<PostBaseData> {
     return prisma.post.create({
@@ -71,7 +71,7 @@ export class PostRepository {
       markdown?: string
       excerpt?: string | null
       coverImage?: string | null
-      category?: string | null
+      categoryId?: string | null
       tags?: string[]
       status?: ContentStatus
       publishedAt?: Date | null

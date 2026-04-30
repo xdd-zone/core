@@ -2,6 +2,7 @@ import type { Post } from '@console/modules/post'
 import type { TableProps } from 'antd'
 
 import { canAccessConsolePath, createPermissionKeySet } from '@console/app/access/access-control'
+import { useCategoryListQuery } from '@console/modules/category'
 import {
   POST_DETAIL_QUERY_KEY,
   POST_LIST_QUERY_KEY,
@@ -46,10 +47,14 @@ export function ArticleList() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [status, setStatus] = useState<'' | 'draft' | 'published'>('')
-  const [category, setCategory] = useState('')
+  const [categoryId, setCategoryId] = useState('')
   const [tag, setTag] = useState('')
 
   const currentUserPermissionsQuery = useCurrentUserPermissionsQuery()
+  const categoryListQuery = useCategoryListQuery({
+    page: 1,
+    pageSize: 100,
+  })
   const publishPostMutation = usePublishPostMutation()
   const unpublishPostMutation = useUnpublishPostMutation()
   const deletePostMutation = useDeletePostMutation()
@@ -59,7 +64,7 @@ export function ArticleList() {
   )
 
   const postListQuery = usePostListQuery({
-    category: category || undefined,
+    categoryId: categoryId || undefined,
     keyword: keyword || undefined,
     page,
     pageSize,
@@ -154,7 +159,7 @@ export function ArticleList() {
         dataIndex: 'category',
         key: 'category',
         title: t('content.post.fields.category'),
-        render: (value: string | null) => value || '-',
+        render: (value: Post['category']) => value?.name || '-',
       },
       {
         dataIndex: 'tags',
@@ -292,13 +297,18 @@ export function ArticleList() {
                   setPage(1)
                 }}
               />
-              <Input
+              <Select
                 allowClear
                 className="w-full lg:w-44"
+                loading={categoryListQuery.isLoading}
+                options={(categoryListQuery.data?.items ?? []).map((item) => ({
+                  label: item.name,
+                  value: item.id,
+                }))}
                 placeholder={t('content.post.list.categoryPlaceholder')}
-                value={category}
-                onChange={(event) => {
-                  setCategory(event.target.value)
+                value={categoryId || undefined}
+                onChange={(value) => {
+                  setCategoryId(value ?? '')
                   setPage(1)
                 }}
               />
@@ -319,7 +329,7 @@ export function ArticleList() {
               onClick={() => {
                 setKeyword('')
                 setStatus('')
-                setCategory('')
+                setCategoryId('')
                 setTag('')
                 setPage(1)
                 setPageSize(20)

@@ -11,3 +11,13 @@ export async function ensurePermission(userId: string, permission: PermissionStr
     throw new ForbiddenError('权限不足')
   }
 }
+
+/**
+ * 检查是否拥有任一指定权限。
+ */
+export async function ensureAnyPermission(userId: string, permissions: (PermissionString | string)[]): Promise<void> {
+  const hasPermission = await PermissionService.hasAnyPermission(userId, permissions)
+  if (!hasPermission) {
+    throw new ForbiddenError('权限不足')
+  }
+}

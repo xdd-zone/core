@@ -24,7 +24,8 @@ export function postListQueryOptions(query: PostListQuery = {}) {
       unwrapEdenResponse(
         await postApiRoot.get({
           query: {
-            category: query.category,
+            categoryId: query.categoryId,
+            categorySlug: query.categorySlug,
             keyword: query.keyword,
             page: query.page,
             pageSize: query.pageSize,
@@ -47,7 +48,8 @@ export function publicPostListQueryOptions(query: PublicPostListQuery = {}) {
       unwrapEdenResponse(
         await postApiRoot.public.get({
           query: {
-            category: query.category,
+            categoryId: query.categoryId,
+            categorySlug: query.categorySlug,
             keyword: query.keyword,
             page: query.page,
             pageSize: query.pageSize,

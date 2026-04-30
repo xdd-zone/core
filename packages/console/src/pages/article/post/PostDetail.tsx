@@ -17,7 +17,7 @@ import { getPrimaryColorByTheme } from '@console/utils/theme'
 
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { App as AntdApp, Button, Card, Descriptions, Empty, Popconfirm, Space, Spin, Tag } from 'antd'
+import { App as AntdApp, Button, Card, Descriptions, Empty, Popconfirm, Spin, Tag } from 'antd'
 import { ArrowLeft, Copy, ExternalLink, SquarePen, Trash2 } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -126,6 +126,9 @@ export function PostDetail() {
   }
 
   const post = postQuery.data
+  const hasPublicActions = post.status === 'published'
+  const hasPrimaryActions = canEdit || canPublish
+  const hasSecondaryActions = hasPublicActions || canEdit
   const summaryItems = [
     { label: t('content.post.summary.slug'), value: post.slug },
     { label: t('content.post.fields.updatedAt'), value: formatDateTime(post.updatedAt) },
@@ -149,14 +152,14 @@ export function PostDetail() {
             <p className="text-fg-muted mt-2 max-w-2xl text-sm">{t('content.post.detail.description')}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {renderPostStatus(post.status, t)}
-              {post.category ? <Tag>{post.category}</Tag> : null}
+              {post.category ? <Tag>{post.category.name}</Tag> : null}
               {post.tags.map((tag) => (
                 <Tag key={tag}>{tag}</Tag>
               ))}
             </div>
           </div>
 
-          <div className="flex flex-col items-start gap-3 xl:max-w-[44%] xl:items-end">
+          <div className="flex w-full flex-col items-start gap-3 xl:max-w-[46%] xl:items-end">
             <div className="flex flex-wrap gap-2 xl:justify-end">
               {summaryItems.map((item) => (
                 <span
@@ -181,51 +184,74 @@ export function PostDetail() {
               ) : null}
             </div>
 
-            <Space wrap>
-              {post.status === 'published' ? (
-                <>
-                  <Button icon={<Copy className="size-4" />} onClick={() => void handleCopyPublicApiUrl()}>
-                    {t('content.post.detail.copyPublicApi')}
-                  </Button>
-                  <Button
-                    icon={<ExternalLink className="size-4" />}
-                    onClick={() => window.open(publicApiUrl, '_blank', 'noopener,noreferrer')}
-                  >
-                    {t('content.post.detail.openPublicApi')}
-                  </Button>
-                </>
+            <div className="flex w-full flex-col gap-2 sm:w-auto xl:items-end">
+              {hasPrimaryActions ? (
+                <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                  {canEdit ? (
+                    <Button
+                      type="primary"
+                      icon={<SquarePen className="size-4" />}
+                      onClick={() => void navigate({ to: '/articles/$id/edit', params: { id } })}
+                    >
+                      {t('common.edit')}
+                    </Button>
+                  ) : null}
+                  {canPublish ? (
+                    <Button
+                      onClick={() => void handlePublishToggle()}
+                      loading={publishPostMutation.isPending || unpublishPostMutation.isPending}
+                    >
+                      {post.status === 'published' ? t('common.unpublish') : t('common.publish')}
+                    </Button>
+                  ) : null}
+                </div>
               ) : null}
-              {canPublish ? (
-                <Button
-                  onClick={() => void handlePublishToggle()}
-                  loading={publishPostMutation.isPending || unpublishPostMutation.isPending}
-                >
-                  {post.status === 'published' ? t('common.unpublish') : t('common.publish')}
-                </Button>
+
+              {hasSecondaryActions ? (
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 xl:justify-end">
+                  {hasPublicActions ? (
+                    <>
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<Copy className="size-4" />}
+                        onClick={() => void handleCopyPublicApiUrl()}
+                      >
+                        {t('content.post.detail.copyPublicApi')}
+                      </Button>
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<ExternalLink className="size-4" />}
+                        onClick={() => window.open(publicApiUrl, '_blank', 'noopener,noreferrer')}
+                      >
+                        {t('content.post.detail.openPublicApi')}
+                      </Button>
+                    </>
+                  ) : null}
+                  {canEdit && hasPublicActions ? <span className="h-3.5 w-px bg-border-subtle" /> : null}
+                  {canEdit ? (
+                    <Popconfirm
+                      title={t('content.post.confirmDeleteTitle')}
+                      description={t('content.post.confirmDeleteDescription')}
+                      okText={t('common.confirm')}
+                      cancelText={t('common.cancel')}
+                      onConfirm={() => void handleDelete()}
+                    >
+                      <Button
+                        danger
+                        type="link"
+                        size="small"
+                        icon={<Trash2 className="size-4" />}
+                        loading={deletePostMutation.isPending}
+                      >
+                        {t('common.delete')}
+                      </Button>
+                    </Popconfirm>
+                  ) : null}
+                </div>
               ) : null}
-              {canEdit ? (
-                <Button
-                  type="primary"
-                  icon={<SquarePen className="size-4" />}
-                  onClick={() => void navigate({ to: '/articles/$id/edit', params: { id } })}
-                >
-                  {t('common.edit')}
-                </Button>
-              ) : null}
-              {canEdit ? (
-                <Popconfirm
-                  title={t('content.post.confirmDeleteTitle')}
-                  description={t('content.post.confirmDeleteDescription')}
-                  okText={t('common.confirm')}
-                  cancelText={t('common.cancel')}
-                  onConfirm={() => void handleDelete()}
-                >
-                  <Button danger icon={<Trash2 className="size-4" />} loading={deletePostMutation.isPending}>
-                    {t('common.delete')}
-                  </Button>
-                </Popconfirm>
-              ) : null}
-            </Space>
+            </div>
           </div>
         </div>
       </section>
@@ -253,7 +279,9 @@ export function PostDetail() {
           <Card className="rounded-2xl" title={t('content.post.detail.metaTitle')}>
             <Descriptions column={1} size="small">
               <Descriptions.Item label={t('content.post.fields.slug')}>{post.slug}</Descriptions.Item>
-              <Descriptions.Item label={t('content.post.fields.category')}>{post.category || '-'}</Descriptions.Item>
+              <Descriptions.Item label={t('content.post.fields.category')}>
+                {post.category?.name || '-'}
+              </Descriptions.Item>
               <Descriptions.Item label={t('content.post.fields.coverImage')}>
                 {post.coverImage ? (
                   <a href={post.coverImage} target="_blank" rel="noreferrer" className="text-primary">

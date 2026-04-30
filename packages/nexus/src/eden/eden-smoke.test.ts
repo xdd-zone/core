@@ -139,6 +139,12 @@ function getPostClient(postId: string): ReturnType<typeof authenticatedClient.ap
   ]
 }
 
+function getCategoryClient(categoryId: string): ReturnType<typeof authenticatedClient.api.category> {
+  return (
+    authenticatedClient.api.category as unknown as Record<string, ReturnType<typeof authenticatedClient.api.category>>
+  )[categoryId]
+}
+
 function getSubjectPostClient(postId: string): ReturnType<typeof subjectClient.api.post> {
   return (subjectClient.api.post as unknown as Record<string, ReturnType<typeof subjectClient.api.post>>)[postId]
 }
@@ -183,6 +189,7 @@ interface RoleAssignmentSummary {
 
 const createdUserIds: string[] = []
 const createdPostIds: string[] = []
+const createdCategoryIds: string[] = []
 const createdCommentIds: string[] = []
 const createdMediaIds: string[] = []
 const createdRoleIds: string[] = []
@@ -397,6 +404,16 @@ afterAll(async () => {
       where: {
         id: {
           in: createdPostIds,
+        },
+      },
+    })
+  }
+
+  if (createdCategoryIds.length > 0) {
+    await prisma.category.deleteMany({
+      where: {
+        id: {
+          in: createdCategoryIds,
         },
       },
     })
@@ -884,17 +901,127 @@ describe('eden smoke', () => {
     expect(getResult.data).toEqual(updateResult.data)
   })
 
+  it('应支持分类创建、列表、公开列表、更新和删除', async () => {
+    const slug = `eden-category-${tempSuffix}`
+    const createResult = await authenticatedClient.api.category.post({
+      name: `  Engineering ${tempSuffix}  `,
+      slug,
+      description: `  Category description ${tempSuffix}  `,
+      sortOrder: 10,
+      isVisible: false,
+    })
+
+    expect(createResult.status).toBe(200)
+    expect(createResult.error).toBeNull()
+    expect(createResult.data?.name).toBe(`Engineering ${tempSuffix}`)
+    expect(createResult.data?.slug).toBe(slug)
+    expect(createResult.data?.description).toBe(`Category description ${tempSuffix}`)
+    expect(createResult.data?.sortOrder).toBe(10)
+    expect(createResult.data?.isVisible).toBe(false)
+    expect(createResult.data?.postCount).toBe(0)
+    expect(createResult.data?.publishedPostCount).toBe(0)
+
+    const categoryId = createResult.data?.id
+    expect(categoryId).toBeTruthy()
+    if (!categoryId) {
+      throw new Error('缺少分类 ID')
+    }
+    createdCategoryIds.push(categoryId)
+
+    const hiddenPublicListResult = await anonymousClient.api.category.public.get({
+      query: {
+        keyword: tempSuffix,
+      },
+    })
+    expect(hiddenPublicListResult.status).toBe(200)
+    expect(hiddenPublicListResult.error).toBeNull()
+    expect(hiddenPublicListResult.data?.some((item) => item.id === categoryId)).toBe(false)
+
+    const listResult = await authenticatedClient.api.category.get({
+      query: {
+        keyword: tempSuffix,
+        isVisible: false,
+      },
+    })
+    expect(listResult.status).toBe(200)
+    expect(listResult.error).toBeNull()
+    expect(listResult.data?.items.some((item) => item.id === categoryId)).toBe(true)
+
+    const updateResult = await getCategoryClient(categoryId).patch({
+      name: `Updated Engineering ${tempSuffix}`,
+      description: null,
+      sortOrder: 1,
+      isVisible: true,
+    })
+    expect(updateResult.status).toBe(200)
+    expect(updateResult.error).toBeNull()
+    expect(updateResult.data?.id).toBe(categoryId)
+    expect(updateResult.data?.description).toBeNull()
+    expect(updateResult.data?.sortOrder).toBe(1)
+    expect(updateResult.data?.isVisible).toBe(true)
+
+    const publicListResult = await anonymousClient.api.category.public.get({
+      query: {
+        keyword: tempSuffix,
+      },
+    })
+    expect(publicListResult.status).toBe(200)
+    expect(publicListResult.error).toBeNull()
+    expect(publicListResult.data?.some((item) => item.id === categoryId)).toBe(true)
+
+    const writeOnlyRole = await createRoleWithPermissions(`category-write-${tempSuffix}`, [Permissions.POST.WRITE_ALL])
+    await prisma.userRole.create({
+      data: {
+        userId: subjectUserId,
+        roleId: writeOnlyRole.id,
+        assignedBy: actorUserId,
+      },
+    })
+    PermissionService.clearCache(subjectUserId)
+
+    const writeOnlyListResult = await subjectClient.api.category.get({
+      query: {
+        keyword: tempSuffix,
+      },
+    })
+    expect(writeOnlyListResult.status).toBe(200)
+    expect(writeOnlyListResult.error).toBeNull()
+    expect(writeOnlyListResult.data?.items.some((item) => item.id === categoryId)).toBe(true)
+
+    const deleteResult = await getCategoryClient(categoryId).delete()
+    expect(deleteResult.status).toBe(204)
+    expect(deleteResult.error).toBeNull()
+
+    const deletedDetailResult = await getCategoryClient(categoryId).get()
+    expect(deletedDetailResult.status).toBe(404)
+    expect(deletedDetailResult.error).toBeTruthy()
+
+    const categoryIndex = createdCategoryIds.indexOf(categoryId)
+    if (categoryIndex >= 0) {
+      createdCategoryIds.splice(categoryIndex, 1)
+    }
+  })
+
   it('应支持文章创建、更新、发布、取消发布和删除', async () => {
     const slug = `eden-post-${tempSuffix}`
     const createdTitle = `Eden Post ${tempSuffix}`
     const markdown = `# Eden Post\n\ncontent ${tempSuffix}`
+    const category = await prisma.category.create({
+      data: {
+        name: `Post Category ${tempSuffix}`,
+        slug: `post-category-${tempSuffix}`,
+        isVisible: true,
+      },
+    })
+    createdCategoryIds.push(category.id)
+
     const createResult = await authenticatedClient.api.post.post({
       title: createdTitle,
       slug,
       markdown,
       excerpt: `  excerpt ${tempSuffix}  `,
       coverImage: 'https://example.com/cover.jpg',
-      category: '  engineering  ',
+      categoryId: category.id,
       tags: ['  bun  ', ' elysia '],
     })
 
@@ -903,7 +1030,12 @@ describe('eden smoke', () => {
     expect(createResult.data?.title).toBe(createdTitle)
     expect(createResult.data?.slug).toBe(slug)
     expect(createResult.data?.excerpt).toBe(`excerpt ${tempSuffix}`)
-    expect(createResult.data?.category).toBe('engineering')
+    expect(createResult.data?.categoryId).toBe(category.id)
+    expect(createResult.data?.category).toEqual({
+      id: category.id,
+      name: `Post Category ${tempSuffix}`,
+      slug: `post-category-${tempSuffix}`,
+    })
     expect(createResult.data?.tags).toEqual(['bun', 'elysia'])
     expect(createResult.data?.status).toBe('draft')
     expect(createResult.data?.publishedAt).toBeNull()
@@ -919,7 +1051,7 @@ describe('eden smoke', () => {
       query: {
         keyword: tempSuffix,
         status: 'draft',
-        category: 'engineering',
+        categoryId: category.id,
         tag: 'bun',
       },
     })
@@ -939,7 +1071,7 @@ describe('eden smoke', () => {
       slug: updatedSlug,
       excerpt: null,
       coverImage: null,
-      category: null,
+      categoryId: null,
       tags: ['updated'],
     })
     expect(updateResult.status).toBe(200)
@@ -949,6 +1081,7 @@ describe('eden smoke', () => {
     expect(updateResult.data?.slug).toBe(updatedSlug)
     expect(updateResult.data?.excerpt).toBeNull()
     expect(updateResult.data?.coverImage).toBeNull()
+    expect(updateResult.data?.categoryId).toBeNull()
     expect(updateResult.data?.category).toBeNull()
     expect(updateResult.data?.tags).toEqual(['updated'])
 
@@ -1012,6 +1145,14 @@ describe('eden smoke', () => {
   it('匿名用户只能读取已发布文章', async () => {
     const publicSlug = `eden-post-public-${tempSuffix}`
     const draftSlug = `eden-post-public-draft-${tempSuffix}`
+    const category = await prisma.category.create({
+      data: {
+        name: `Public Category ${tempSuffix}`,
+        slug: `public-category-${tempSuffix}`,
+        isVisible: true,
+      },
+    })
+    createdCategoryIds.push(category.id)
 
     const [publishedPost, draftPost] = await Promise.all([
       prisma.post.create({
@@ -1020,7 +1161,7 @@ describe('eden smoke', () => {
           slug: publicSlug,
           markdown: `# Public Post ${tempSuffix}`,
           excerpt: `public excerpt ${tempSuffix}`,
-          category: 'public',
+          categoryId: category.id,
           tags: ['public'],
           status: 'PUBLISHED',
           publishedAt: new Date(),
@@ -1032,7 +1173,7 @@ describe('eden smoke', () => {
           slug: draftSlug,
           markdown: `# Draft Post ${tempSuffix}`,
           excerpt: `draft excerpt ${tempSuffix}`,
-          category: 'public',
+          categoryId: category.id,
           tags: ['public'],
           status: 'DRAFT',
         },
@@ -1045,7 +1186,7 @@ describe('eden smoke', () => {
         page: 1,
         pageSize: 10,
         keyword: tempSuffix,
-        category: 'public',
+        categorySlug: category.slug,
         tag: 'public',
       },
     })
@@ -1060,6 +1201,11 @@ describe('eden smoke', () => {
     expect(detailResult.error).toBeNull()
     expect(detailResult.data?.id).toBe(publishedPost.id)
     expect(detailResult.data?.status).toBe('published')
+    expect(detailResult.data?.category).toEqual({
+      id: category.id,
+      name: `Public Category ${tempSuffix}`,
+      slug: `public-category-${tempSuffix}`,
+    })
 
     const draftDetailResult = await anonymousClient.api.post.public({ slug: draftSlug }).get()
     expect(draftDetailResult.status).toBe(404)

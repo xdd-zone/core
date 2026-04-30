@@ -4,11 +4,16 @@ import type { OwnPermissionConfig } from '../guards'
 import type { PermissionString } from '../permissions'
 import type { AuthRequirement } from './auth.plugin'
 import { Elysia } from 'elysia'
-import { ensureOwnPermission, ensurePermission } from '../guards'
+import { ensureAnyPermission, ensureOwnPermission, ensurePermission } from '../guards'
 import { Permissions } from '../permissions/permissions'
 import { assertAuthenticated } from './auth.plugin'
 
 type RoutePermission = PermissionString | string
+type RoutePermissionRequirement =
+  | RoutePermission
+  | {
+      any?: readonly RoutePermission[]
+    }
 
 export interface AccessContext {
   params?: Record<string, string | undefined>
@@ -56,13 +61,21 @@ export function createAccessPlugin(sessionService: SessionService) {
         resolve: resolveProtectedContext,
       }
     },
-    permission(permission: RoutePermission | undefined) {
+    permission(permission: RoutePermissionRequirement | undefined) {
       if (!permission) {
         return
       }
 
       const beforeHandle = async (context: AccessContext) => {
         const auth = await requireAuthenticatedSession(context.request)
+
+        if (typeof permission === 'object') {
+          if (permission.any?.length) {
+            await ensureAnyPermission(auth.user.id, [...permission.any])
+          }
+          return
+        }
+
         await ensurePermission(auth.user.id, permission)
       }
 

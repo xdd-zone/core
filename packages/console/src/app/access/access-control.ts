@@ -3,6 +3,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import type { PermissionString, SystemPermissionKey } from '@xdd-zone/nexus/permissions'
 import { currentUserPermissionsQueryOptions } from '@console/modules/rbac'
 import { redirect } from '@tanstack/react-router'
+import { CATEGORY_MANAGE_PERMISSIONS } from '@xdd-zone/nexus/category-types'
 import { matchPermission, Permissions } from '@xdd-zone/nexus/permissions'
 
 interface ConsoleAccessRequirement {
@@ -87,7 +88,7 @@ export const consoleRouteAccessRules: readonly ConsoleRouteAccessRule[] = [
     matcher: createPathMatcher('/categories'),
     pathPattern: '/categories',
     requirement: {
-      all: [Permissions.POST.READ_ALL],
+      any: CATEGORY_MANAGE_PERMISSIONS,
     },
   },
   {
@@ -108,20 +109,14 @@ export const consoleRouteAccessRules: readonly ConsoleRouteAccessRule[] = [
     matcher: createPathMatcher('/article-settings'),
     pathPattern: '/article-settings',
     requirement: {
-      any: [
-        Permissions.SITE_CONFIG.READ,
-        Permissions.SITE_CONFIG.WRITE,
-      ],
+      any: [Permissions.SITE_CONFIG.READ, Permissions.SITE_CONFIG.WRITE],
     },
   },
   {
     matcher: createPathMatcher('/media'),
     pathPattern: '/media',
     requirement: {
-      any: [
-        Permissions.MEDIA.READ_ALL,
-        Permissions.MEDIA.WRITE_ALL,
-      ],
+      any: [Permissions.MEDIA.READ_ALL, Permissions.MEDIA.WRITE_ALL],
     },
   },
   {

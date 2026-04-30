@@ -3,6 +3,7 @@ import type { CreatePostBody, Post, PostList, PostListQuery, PublicPostListQuery
 import type { PostBaseData, PostWhereInput } from './types'
 import { BadRequestError, NotFoundError } from '@nexus/core/http'
 import { buildKeywordSearch } from '@nexus/infra/database'
+import { CategoryRepository } from '../category'
 import { POST_SEARCH_FIELDS } from './constants'
 import { PostListSchema, PostSchema } from './model'
 import { PostRepository } from './repository'
@@ -40,8 +41,14 @@ export class PostService {
       where.status = toDatabaseStatus(query.status)
     }
 
-    if (query.category) {
-      where.category = query.category
+    if (query.categoryId) {
+      where.categoryId = query.categoryId
+    }
+
+    if (query.categorySlug) {
+      where.category = {
+        slug: query.categorySlug,
+      }
     }
 
     if (query.tag) {
@@ -68,6 +75,17 @@ export class PostService {
     }
 
     return post
+  }
+
+  private static async assertCategoryExists(categoryId: string | null | undefined) {
+    if (!categoryId) {
+      return
+    }
+
+    const category = await CategoryRepository.findById(categoryId)
+    if (!category) {
+      throw new NotFoundError('分类不存在')
+    }
   }
 
   /**
@@ -132,6 +150,8 @@ export class PostService {
    * 创建文章。
    */
   static async create(data: CreatePostBody): Promise<Post> {
+    await this.assertCategoryExists(data.categoryId)
+
     return PostSchema.parse(
       serializePost(
         await PostRepository.create({
@@ -140,7 +160,7 @@ export class PostService {
           markdown: data.markdown,
           excerpt: data.excerpt ?? null,
           coverImage: data.coverImage ?? null,
-          category: data.category ?? null,
+          categoryId: data.categoryId ?? null,
           tags: data.tags,
         }),
       ),
@@ -152,6 +172,7 @@ export class PostService {
    */
   static async update(id: string, data: UpdatePostBody): Promise<Post> {
     await this.requireById(id)
+    await this.assertCategoryExists(data.categoryId)
 
     return PostSchema.parse(
       serializePost(
@@ -161,7 +182,7 @@ export class PostService {
           markdown: data.markdown,
           excerpt: normalizeNullableValue(data.excerpt),
           coverImage: normalizeNullableValue(data.coverImage),
-          category: normalizeNullableValue(data.category),
+          categoryId: normalizeNullableValue(data.categoryId),
           tags: data.tags,
         }),
       ),

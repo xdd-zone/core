@@ -19,7 +19,14 @@ function TrimmedOptionalNullableStringSchema<T extends z.ZodString>(schema: T) {
 const TrimmedMarkdownSchema = MarkdownSchema.trim().min(1, 'Markdown 内容不能为空')
 const TagSchema = z.string().trim().min(1, '标签不能为空').max(30, '标签最多 30 个字符')
 const PostExcerptSchema = z.string().trim().max(300, '摘要最多 300 个字符')
-const PostCategorySchema = z.string().trim().max(50, '分类最多 50 个字符')
+
+export const PostCategorySchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    slug: SlugSchema,
+  })
+  .nullable()
 
 export const PostSchema = z.object({
   id: z.string(),
@@ -29,7 +36,8 @@ export const PostSchema = z.object({
   excerpt: z.string().nullable(),
   coverImage: z.string().url('请输入有效的封面 URL').nullable(),
   status: ContentStatusSchema,
-  category: z.string().nullable(),
+  categoryId: z.string().nullable(),
+  category: PostCategorySchema,
   tags: z.array(z.string()),
   publishedAt: DateTimeSchema.nullable(),
   createdAt: DateTimeSchema,
@@ -44,7 +52,7 @@ export const CreatePostBodySchema = z.object({
   markdown: TrimmedMarkdownSchema,
   excerpt: TrimmedOptionalNullableStringSchema(PostExcerptSchema),
   coverImage: z.string().url('请输入有效的封面 URL').nullable().optional(),
-  category: TrimmedOptionalNullableStringSchema(PostCategorySchema),
+  categoryId: z.string().min(1, '分类 ID 不能为空').nullable().optional(),
   tags: z.array(TagSchema).max(20, '标签最多 20 个').default([]),
 })
 
@@ -57,7 +65,7 @@ export const UpdatePostBodySchema = z
     markdown: TrimmedMarkdownSchema.optional(),
     excerpt: TrimmedOptionalNullableStringSchema(PostExcerptSchema),
     coverImage: z.string().url('请输入有效的封面 URL').nullable().optional(),
-    category: TrimmedOptionalNullableStringSchema(PostCategorySchema),
+    categoryId: z.string().min(1, '分类 ID 不能为空').nullable().optional(),
     tags: z.array(TagSchema).max(20, '标签最多 20 个').optional(),
   })
   .refine((value) => Object.values(value).some((item) => item !== undefined), {
@@ -79,7 +87,8 @@ export const PostListQuerySchema = z.object({
   ),
   keyword: z.string().optional(),
   status: ContentStatusSchema.optional(),
-  category: z.string().optional(),
+  categoryId: z.string().optional(),
+  categorySlug: SlugSchema.optional(),
   tag: z.string().optional(),
 })
 

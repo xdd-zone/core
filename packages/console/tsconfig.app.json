@@ -12,7 +12,12 @@
       "@nexus/*": ["../nexus/src/*"],
       "@xdd-zone/nexus/eden": ["../nexus/src/public/eden.ts"],
       "@xdd-zone/nexus/auth-types": ["../nexus/src/public/auth-types.ts"],
+      "@xdd-zone/nexus/category-types": ["../nexus/src/public/category-types.ts"],
+      "@xdd-zone/nexus/comment-types": ["../nexus/src/public/comment-types.ts"],
+      "@xdd-zone/nexus/media-types": ["../nexus/src/public/media-types.ts"],
+      "@xdd-zone/nexus/post-types": ["../nexus/src/public/post-types.ts"],
       "@xdd-zone/nexus/user-types": ["../nexus/src/public/user-types.ts"],
+      "@xdd-zone/nexus/site-config-types": ["../nexus/src/public/site-config-types.ts"],
       "@xdd-zone/nexus/permissions": ["../nexus/src/public/permissions.ts"],
       "@xdd-zone/nexus/rbac-types": ["../nexus/src/public/rbac-types.ts"]
     },
