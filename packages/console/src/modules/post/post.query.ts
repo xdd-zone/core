@@ -87,8 +87,11 @@ export function publicPostDetailQueryOptions(slug: string) {
 /**
  * 文章列表查询 Hook。
  */
-export function usePostListQuery(query: PostListQuery = {}) {
-  return useQuery(postListQueryOptions(query))
+export function usePostListQuery(query: PostListQuery = {}, enabled: boolean = true) {
+  return useQuery({
+    ...postListQueryOptions(query),
+    enabled,
+  })
 }
 
 /**

@@ -1,5 +1,6 @@
 import { canAccessConsolePath, createPermissionKeySet } from '@console/app/access/access-control'
 import { useAuthStore } from '@console/modules/auth'
+import { usePostListQuery } from '@console/modules/post'
 import { useCurrentUserPermissionsQuery, useCurrentUserRolesQuery } from '@console/modules/rbac'
 import {
   ARTICLE_PAGE_CLASSNAME,
@@ -9,21 +10,11 @@ import {
 
 import { useNavigate } from '@tanstack/react-router'
 import { Permissions } from '@xdd-zone/nexus/permissions'
-import { Card, Skeleton } from 'antd'
+import { Card, Empty, Skeleton } from 'antd'
 import dayjs from 'dayjs'
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-
-type DashboardActionTarget = '/my-access' | '/profile' | '/roles' | '/users'
-
-interface DashboardAction {
-  available: boolean
-  description: string
-  key: string
-  title: string
-  to: DashboardActionTarget
-  value: string
-}
+import { formatDateTime, renderPostStatus } from '../article/shared/content-utils'
 
 interface DashboardInfoItem {
   label: string
@@ -57,8 +48,17 @@ export function Dashboard() {
   const permissionKeys = createPermissionKeySet(permissions)
   const canReadAllUsers = permissionsReady && canAccessConsolePath('/users', permissionKeys)
   const canReadAllRoles = permissionsReady && canAccessConsolePath('/roles', permissionKeys)
+  const canReadArticles = permissionsReady && canAccessConsolePath('/articles', permissionKeys)
   const canManageSystem = permissionsReady && permissionKeys.has(Permissions.SYSTEM.MANAGE)
   const coveredModulesCount = new Set(permissions.map((permission) => permission.resource)).size
+  const recentPostListQuery = usePostListQuery(
+    {
+      page: 1,
+      pageSize: 5,
+    },
+    canReadArticles,
+  )
+  const recentPosts = recentPostListQuery.data?.items ?? []
 
   const resolveStatusLabel = (status: string | null | undefined) => {
     if (!status) {
@@ -124,56 +124,6 @@ export function Dashboard() {
     },
   ]
 
-  const actionItems: DashboardAction[] = [
-    {
-      available: true,
-      description: t('dashboard.actions.access.description'),
-      key: 'my-access',
-      title: t('dashboard.actions.access.title'),
-      to: '/my-access',
-      value: permissionsReady
-        ? t('dashboard.actions.access.value', {
-            count: permissions.length,
-          })
-        : '...',
-    },
-    {
-      available: true,
-      description: t('dashboard.actions.profile.description'),
-      key: 'profile',
-      title: t('dashboard.actions.profile.title'),
-      to: '/profile',
-      value: resolveStatusLabel(user?.status),
-    },
-    {
-      available: canReadAllUsers,
-      description: canReadAllUsers
-        ? t('dashboard.actions.users.description')
-        : t('dashboard.actions.users.unavailableDescription'),
-      key: 'users',
-      title: t('dashboard.actions.users.title'),
-      to: '/users',
-      value: canReadAllUsers ? t('dashboard.visibility.available') : t('dashboard.visibility.unavailable'),
-    },
-    {
-      available: canReadAllRoles,
-      description: canReadAllRoles
-        ? t('dashboard.actions.roles.description')
-        : t('dashboard.actions.roles.unavailableDescription'),
-      key: 'roles',
-      title: t('dashboard.actions.roles.title'),
-      to: '/roles',
-      value: canReadAllRoles ? t('dashboard.visibility.available') : t('dashboard.visibility.unavailable'),
-    },
-  ]
-
-  const primaryAction = canReadAllUsers ? '/users' : canReadAllRoles ? '/roles' : '/my-access'
-  const primaryActionLabel = canReadAllUsers
-    ? t('dashboard.primaryAction.users')
-    : canReadAllRoles
-      ? t('dashboard.primaryAction.roles')
-      : t('dashboard.primaryAction.access')
-
   if (currentUserRolesQuery.isLoading || currentUserPermissionsQuery.isLoading) {
     return (
       <div className={ARTICLE_PAGE_CLASSNAME}>
@@ -211,58 +161,7 @@ export function Dashboard() {
         </div>
       </section>
 
-      <div className="grid flex-1 gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.92fr)]">
-        <Card
-          className={ARTICLE_PANEL_CLASSNAME}
-          styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
-          title={t('dashboard.actions.title')}
-          extra={
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 text-sm font-medium text-primary"
-              onClick={() => {
-                void navigate({ to: primaryAction })
-              }}
-            >
-              <span>{primaryActionLabel}</span>
-              <ArrowRight className="size-4" />
-            </button>
-          }
-        >
-          <div className="grid gap-2.5 md:grid-cols-2">
-            {actionItems.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                disabled={!item.available}
-                className={[
-                  'rounded-2xl border px-4 py-3 text-left transition-colors',
-                  item.available
-                    ? 'border-border-subtle bg-surface-subtle/18 hover:border-primary/35 hover:bg-surface-subtle/28'
-                    : 'border-border-subtle bg-surface-subtle/12 opacity-70',
-                ].join(' ')}
-                onClick={() => {
-                  if (!item.available) {
-                    return
-                  }
-
-                  void navigate({ to: item.to })
-                }}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-fg">{item.title}</div>
-                    <p className="text-fg-muted mt-1 text-xs leading-6">{item.description}</p>
-                  </div>
-                  <span className="shrink-0 rounded-full border border-border-subtle bg-overlay-0/16 px-2 py-0.5 text-xs text-fg-muted">
-                    {item.value}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </Card>
-
+      <div className="grid flex-1 gap-5 xl:grid-cols-[minmax(280px,0.92fr)_minmax(0,1.08fr)]">
         <Card
           className={ARTICLE_PANEL_CLASSNAME}
           styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
@@ -279,6 +178,65 @@ export function Dashboard() {
               </div>
             ))}
           </div>
+        </Card>
+
+        <Card
+          className={ARTICLE_PANEL_CLASSNAME}
+          styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
+          title={t('dashboard.recentPosts.title')}
+          extra={
+            canReadArticles ? (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 text-sm font-medium text-primary"
+                onClick={() => {
+                  void navigate({ to: '/articles' })
+                }}
+              >
+                <span>{t('dashboard.recentPosts.viewAll')}</span>
+                <ArrowRight className="size-4" />
+              </button>
+            ) : null
+          }
+        >
+          {!canReadArticles ? (
+            <div className="flex flex-1 items-center justify-center py-8">
+              <Empty description={t('dashboard.recentPosts.unavailable')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            </div>
+          ) : recentPostListQuery.isLoading ? (
+            <Skeleton active paragraph={{ rows: 4 }} title={false} />
+          ) : recentPosts.length > 0 ? (
+            <div>
+              {recentPosts.map((post) => (
+                <button
+                  key={post.id}
+                  type="button"
+                  className="grid w-full gap-3 border-b border-border-subtle py-3 text-left transition-colors last:border-b-0 hover:bg-surface-subtle/12 md:grid-cols-[minmax(0,1fr)_auto]"
+                  onClick={() => {
+                    void navigate({ to: '/articles/$id', params: { id: post.id } })
+                  }}
+                >
+                  <div className="min-w-0 px-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate text-sm font-medium text-fg">{post.title}</span>
+                      {renderPostStatus(post.status, t)}
+                    </div>
+                    <div className="text-fg-muted mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                      <span>{post.category?.name ?? t('dashboard.recentPosts.noCategory')}</span>
+                      <span>{post.slug}</span>
+                    </div>
+                  </div>
+                  <div className="text-fg-muted flex items-center px-3 text-xs md:justify-end">
+                    {formatDateTime(post.updatedAt)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-1 items-center justify-center py-8">
+              <Empty description={t('dashboard.recentPosts.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            </div>
+          )}
         </Card>
       </div>
     </div>

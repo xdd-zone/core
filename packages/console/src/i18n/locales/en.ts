@@ -279,33 +279,6 @@ export default {
       },
       title: 'Current account',
     },
-    actions: {
-      access: {
-        description: 'View current access.',
-        title: 'Review my access',
-        value: '{{count}} permissions',
-      },
-      description:
-        'This section keeps the most common pages together. Even when a management page is not available, it still stays in place and explains why.',
-      profile: {
-        description: 'View and update profile.',
-        title: 'Maintain my profile',
-      },
-      roles: {
-        description: 'View role list.',
-        title: 'Open role management',
-        unavailableDescription: 'This account cannot view the role list right now.',
-        value: '{{count}} roles',
-      },
-      title: 'Common entry points',
-      unavailable: 'Not available now',
-      users: {
-        description: 'View account list.',
-        title: 'Open user management',
-        unavailableDescription: 'This account cannot view all users right now.',
-        value: '{{count}} accounts',
-      },
-    },
     coverage: {
       description: 'This section groups the effective permission actions for the current account by module.',
       empty: 'No permission coverage is available',
@@ -313,7 +286,7 @@ export default {
       title: 'Permission coverage',
     },
     defaultName: 'Current User',
-    description: 'Overview of the current account and available entry points.',
+    description: 'Overview of the current account and recent posts.',
     eyebrow: 'Workspace',
     focus: {
       description:
@@ -330,10 +303,12 @@ export default {
       permissionTotal: 'Effective Permissions',
       permissionTotalDescription: 'The total number of actions currently available in the console.',
     },
-    primaryAction: {
-      access: 'Review my access',
-      roles: 'Open role management',
-      users: 'Open user management',
+    recentPosts: {
+      empty: 'No posts are available',
+      noCategory: 'Uncategorized',
+      title: 'Recent Posts',
+      unavailable: 'This account cannot view posts right now',
+      viewAll: 'View post list',
     },
     roles: {
       description:

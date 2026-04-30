@@ -269,32 +269,6 @@ export default {
       },
       title: '当前账号',
     },
-    actions: {
-      access: {
-        description: '查看当前账号权限。',
-        title: '核对我的权限',
-        value: '{{count}} 项权限',
-      },
-      description: '这里保留当前账号最常用的页面入口。即使暂时没有管理权限，也会保留稳定位置说明现在能不能进入。',
-      profile: {
-        description: '查看并更新资料。',
-        title: '维护我的资料',
-      },
-      roles: {
-        description: '查看角色列表。',
-        title: '查看角色管理',
-        unavailableDescription: '当前没有查看角色列表的权限。',
-        value: '{{count}} 个角色',
-      },
-      title: '常用入口',
-      unavailable: '当前不可进入',
-      users: {
-        description: '查看账号列表。',
-        title: '进入用户管理',
-        unavailableDescription: '当前没有查看全部用户的权限。',
-        value: '{{count}} 个账号',
-      },
-    },
     coverage: {
       description: '这里按模块归纳当前账号已经生效的权限动作。',
       empty: '当前没有可展示的权限覆盖',
@@ -302,7 +276,7 @@ export default {
       title: '权限覆盖范围',
     },
     defaultName: '当前用户',
-    description: '这里汇总当前账号和可用入口。',
+    description: '这里汇总当前账号和近期文章。',
     eyebrow: '工作台',
     focus: {
       description: '这里先给出当前账号能影响到的范围，方便决定下一步是看平台数据，还是先核对自己的资料和权限。',
@@ -318,10 +292,12 @@ export default {
       permissionTotal: '有效权限',
       permissionTotalDescription: '当前最终可以执行的后台动作总数。',
     },
-    primaryAction: {
-      access: '查看我的权限',
-      roles: '进入角色管理',
-      users: '进入用户管理',
+    recentPosts: {
+      empty: '当前没有文章',
+      noCategory: '未分类',
+      title: '近期文章',
+      unavailable: '当前没有查看文章的权限',
+      viewAll: '查看文章列表',
     },
     roles: {
       description: '这里展示当前账号为什么会拿到这些能力，以及这些能力来自哪些角色。',
