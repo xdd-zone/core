@@ -119,6 +119,7 @@ const anonymousClient = treaty<App>(baseUrl, {
 
 const authenticatedCookieSession = createCookieFetcher()
 const subjectCookieSession = createCookieFetcher()
+const signOutCookieSession = createCookieFetcher()
 
 const authenticatedClient = treaty<App>(baseUrl, {
   fetcher: authenticatedCookieSession.fetcher,
@@ -128,10 +129,18 @@ const subjectClient = treaty<App>(baseUrl, {
   fetcher: subjectCookieSession.fetcher,
 })
 
+const signOutClient = treaty<App>(baseUrl, {
+  fetcher: signOutCookieSession.fetcher,
+})
+
 function getPostClient(postId: string): ReturnType<typeof authenticatedClient.api.post> {
   return (authenticatedClient.api.post as unknown as Record<string, ReturnType<typeof authenticatedClient.api.post>>)[
     postId
   ]
+}
+
+function getSubjectPostClient(postId: string): ReturnType<typeof subjectClient.api.post> {
+  return (subjectClient.api.post as unknown as Record<string, ReturnType<typeof subjectClient.api.post>>)[postId]
 }
 
 function getCommentClient(commentId: string): ReturnType<typeof authenticatedClient.api.comment> {
@@ -144,6 +153,11 @@ function getMediaClient(mediaId: string): ReturnType<typeof authenticatedClient.
   return (authenticatedClient.api.media as unknown as Record<string, ReturnType<typeof authenticatedClient.api.media>>)[
     mediaId
   ]
+}
+
+function expectValidDateTime(value: unknown) {
+  expect(value instanceof Date || typeof value === 'string').toBe(true)
+  expect(Number.isNaN(new Date(value as string | Date).getTime())).toBe(false)
 }
 
 const tempSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -231,6 +245,47 @@ async function createRoleWithPermissions(name: string, permissionKeys: readonly 
   })
 
   return role
+}
+
+async function createCommentTargetPost(status: 'PUBLISHED' | 'DRAFT', slugPrefix: string) {
+  const post = await prisma.post.create({
+    data: {
+      title: `${slugPrefix} ${tempSuffix}`,
+      slug: `${slugPrefix}-${tempSuffix}`,
+      markdown: `# ${slugPrefix}`,
+      tags: [],
+      status,
+    },
+  })
+
+  createdPostIds.push(post.id)
+
+  return post
+}
+
+async function createPendingComment(postId: string, contentPrefix: string) {
+  const result = await anonymousClient.api.comment.post({
+    postId,
+    authorName: 'Alice',
+    authorEmail: 'alice@example.com',
+    content: `${contentPrefix} ${tempSuffix}`,
+  })
+
+  expect(result.status).toBe(200)
+  expect(result.error).toBeNull()
+
+  const commentId = result.data?.id
+  expect(commentId).toBeTruthy()
+  if (!commentId) {
+    throw new Error('评论创建失败')
+  }
+
+  createdCommentIds.push(commentId)
+
+  return {
+    result,
+    commentId,
+  }
 }
 let originalSiteConfigRecord: SiteConfigRecord | null = null
 let actorUserId = ''
@@ -417,8 +472,7 @@ describe('eden smoke', () => {
       },
     })
     const timestamp = result.data?.timestamp as unknown
-    expect(timestamp instanceof Date || typeof timestamp === 'string').toBe(true)
-    expect(Number.isNaN(new Date(timestamp as string | Date).getTime())).toBe(false)
+    expectValidDateTime(timestamp)
     expect(typeof result.data?.uptime).toBe('number')
     expect((result.data?.uptime ?? -1) >= 0).toBe(true)
   })
@@ -526,6 +580,23 @@ describe('eden smoke', () => {
     expect(result.data?.user?.id).toBe(actorUserId)
   })
 
+  it('登出后应清除当前会话', async () => {
+    const signInResult = await signOutClient.api.auth['sign-in'].email.post({
+      email: subjectUser.email,
+      password: subjectUser.password,
+    })
+    expect(signInResult.status).toBe(200)
+    expect(signInResult.error).toBeNull()
+
+    const signOutResult = await signOutClient.api.auth['sign-out'].post()
+    expect(signOutResult.status).toBe(204)
+    expect(signOutResult.error).toBeNull()
+
+    const meResult = await signOutClient.api.auth.me.get()
+    expect(meResult.status).toBe(401)
+    expect(meResult.error).toBeTruthy()
+  })
+
   it('应支持当前用户资料查询与更新', async () => {
     const userResult = await authenticatedClient.api.user.me.get()
 
@@ -547,6 +618,53 @@ describe('eden smoke', () => {
     expect(refreshedResult.status).toBe(200)
     expect(refreshedResult.error).toBeNull()
     expect(refreshedResult.data?.name).toBe(updatedName)
+  })
+
+  it('无权限用户访问用户管理接口应返回 403', async () => {
+    const listResult = await subjectClient.api.user.get()
+    expect(listResult.status).toBe(403)
+    expect(listResult.error).toBeTruthy()
+
+    const detailResult = await subjectClient.api.user({ id: actorUserId }).get()
+    expect(detailResult.status).toBe(403)
+    expect(detailResult.error).toBeTruthy()
+
+    const statusResult = await subjectClient.api.user({ id: actorUserId }).status.patch({
+      status: 'INACTIVE',
+    })
+    expect(statusResult.status).toBe(403)
+    expect(statusResult.error).toBeTruthy()
+  })
+
+  it('管理员可读取用户列表、详情并更新用户状态', async () => {
+    const listResult = await authenticatedClient.api.user.get({
+      query: {
+        keyword: subjectUser.email,
+        status: 'ACTIVE',
+      },
+    })
+    expect(listResult.status).toBe(200)
+    expect(listResult.error).toBeNull()
+    expect(listResult.data?.items.some((item) => item.id === subjectUserId)).toBe(true)
+
+    const detailResult = await authenticatedClient.api.user({ id: subjectUserId }).get()
+    expect(detailResult.status).toBe(200)
+    expect(detailResult.error).toBeNull()
+    expect(detailResult.data?.id).toBe(subjectUserId)
+
+    const inactiveResult = await authenticatedClient.api.user({ id: subjectUserId }).status.patch({
+      status: 'INACTIVE',
+    })
+    expect(inactiveResult.status).toBe(200)
+    expect(inactiveResult.error).toBeNull()
+    expect(inactiveResult.data?.status).toBe('INACTIVE')
+
+    const activeResult = await authenticatedClient.api.user({ id: subjectUserId }).status.patch({
+      status: 'ACTIVE',
+    })
+    expect(activeResult.status).toBe(200)
+    expect(activeResult.error).toBeNull()
+    expect(activeResult.data?.status).toBe('ACTIVE')
   })
 
   it('应支持固定角色列表、用户角色分配与移除', async () => {
@@ -814,6 +932,50 @@ describe('eden smoke', () => {
     expect(detailResult.status).toBe(200)
     expect(detailResult.error).toBeNull()
     expect(detailResult.data?.id).toBe(postId)
+
+    const updatedSlug = `eden-post-updated-${tempSuffix}`
+    const updateResult = await getPostClient(postId).patch({
+      title: `Updated Eden Post ${tempSuffix}`,
+      slug: updatedSlug,
+      excerpt: null,
+      coverImage: null,
+      category: null,
+      tags: ['updated'],
+    })
+    expect(updateResult.status).toBe(200)
+    expect(updateResult.error).toBeNull()
+    expect(updateResult.data?.id).toBe(postId)
+    expect(updateResult.data?.title).toBe(`Updated Eden Post ${tempSuffix}`)
+    expect(updateResult.data?.slug).toBe(updatedSlug)
+    expect(updateResult.data?.excerpt).toBeNull()
+    expect(updateResult.data?.coverImage).toBeNull()
+    expect(updateResult.data?.category).toBeNull()
+    expect(updateResult.data?.tags).toEqual(['updated'])
+
+    const publishResult = await getPostClient(postId).publish.post()
+    expect(publishResult.status).toBe(200)
+    expect(publishResult.error).toBeNull()
+    expect(publishResult.data?.status).toBe('published')
+    expectValidDateTime(publishResult.data?.publishedAt)
+
+    const publicDetailResult = await anonymousClient.api.post.public({ slug: updatedSlug }).get()
+    expect(publicDetailResult.status).toBe(200)
+    expect(publicDetailResult.error).toBeNull()
+    expect(publicDetailResult.data?.id).toBe(postId)
+
+    const unpublishResult = await getPostClient(postId).unpublish.post()
+    expect(unpublishResult.status).toBe(200)
+    expect(unpublishResult.error).toBeNull()
+    expect(unpublishResult.data?.status).toBe('draft')
+    expect(unpublishResult.data?.publishedAt).toBeNull()
+
+    const deleteResult = await getPostClient(postId).delete()
+    expect(deleteResult.status).toBe(204)
+    expect(deleteResult.error).toBeNull()
+
+    const deletedDetailResult = await getPostClient(postId).get()
+    expect(deletedDetailResult.status).toBe(404)
+    expect(deletedDetailResult.error).toBeTruthy()
   })
 
   it('文章列表关键字搜索不应匹配 markdown 内容', async () => {
@@ -968,46 +1130,47 @@ describe('eden smoke', () => {
     expect(invalidTagResult.error).toBeTruthy()
   })
 
-  it('应支持创建评论、查看列表、详情、切换状态和删除', async () => {
-    const createdPost = await prisma.post.create({
-      data: {
-        title: `Comment Target ${tempSuffix}`,
-        slug: `comment-target-${tempSuffix}`,
-        markdown: '# Target',
-        tags: [],
-        status: 'PUBLISHED',
-      },
+  it('无发布权限用户发布或取消发布文章应返回 403', async () => {
+    const createResult = await authenticatedClient.api.post.post({
+      title: `Publish Forbidden ${tempSuffix}`,
+      slug: `eden-post-publish-forbidden-${tempSuffix}`,
+      markdown: `# Publish Forbidden ${tempSuffix}`,
+      tags: [],
     })
-    createdPostIds.push(createdPost.id)
 
-    const draftPost = await prisma.post.create({
-      data: {
-        title: `Comment Draft Target ${tempSuffix}`,
-        slug: `comment-draft-target-${tempSuffix}`,
-        markdown: '# Draft Target',
-        tags: [],
-        status: 'DRAFT',
-      },
-    })
-    createdPostIds.push(draftPost.id)
-
-    const createResult = await anonymousClient.api.comment.post({
-      postId: createdPost.id,
-      authorName: 'Alice',
-      authorEmail: 'alice@example.com',
-      content: `First ${tempSuffix}`,
-    })
     expect(createResult.status).toBe(200)
     expect(createResult.error).toBeNull()
-    expect(createResult.data?.postId).toBe(createdPost.id)
-    expect(createResult.data?.status).toBe('pending')
 
-    const createdCommentId = createResult.data?.id
-    expect(createdCommentId).toBeTruthy()
-    if (!createdCommentId) {
-      throw new Error('评论创建失败')
+    const postId = createResult.data?.id
+    expect(postId).toBeTruthy()
+    if (!postId) {
+      throw new Error('缺少发布权限测试文章 ID')
     }
-    createdCommentIds.push(createdCommentId)
+    createdPostIds.push(postId)
+
+    const subjectPostClient = getSubjectPostClient(postId)
+
+    const publishResult = await subjectPostClient.publish.post()
+    expect(publishResult.status).toBe(403)
+    expect(publishResult.error).toBeTruthy()
+
+    const unpublishResult = await subjectPostClient.unpublish.post()
+    expect(unpublishResult.status).toBe(403)
+    expect(unpublishResult.error).toBeTruthy()
+  })
+
+  it('匿名用户可给已发布文章创建 pending 评论', async () => {
+    const publishedPost = await createCommentTargetPost('PUBLISHED', 'comment-target')
+    const { result: createResult } = await createPendingComment(publishedPost.id, 'First')
+
+    expect(createResult.status).toBe(200)
+    expect(createResult.error).toBeNull()
+    expect(createResult.data?.postId).toBe(publishedPost.id)
+    expect(createResult.data?.status).toBe('pending')
+  })
+
+  it('草稿文章不可创建评论', async () => {
+    const draftPost = await createCommentTargetPost('DRAFT', 'comment-draft-target')
 
     const draftCreateResult = await anonymousClient.api.comment.post({
       postId: draftPost.id,
@@ -1016,93 +1179,184 @@ describe('eden smoke', () => {
     })
     expect(draftCreateResult.status).toBe(404)
     expect(draftCreateResult.error).toBeTruthy()
+  })
 
+  it('评论创建参数非法时应返回 422', async () => {
+    const publishedPost = await createCommentTargetPost('PUBLISHED', 'comment-validation-target')
+
+    const invalidEmailResult = await anonymousClient.api.comment.post({
+      postId: publishedPost.id,
+      authorName: 'Alice',
+      authorEmail: 'invalid-email',
+      content: `Invalid Email ${tempSuffix}`,
+    })
+    expect(invalidEmailResult.status).toBe(422)
+    expect(invalidEmailResult.error).toBeTruthy()
+
+    const emptyContentResult = await anonymousClient.api.comment.post({
+      postId: publishedPost.id,
+      authorName: 'Alice',
+      content: '   ',
+    })
+    expect(emptyContentResult.status).toBe(422)
+    expect(emptyContentResult.error).toBeTruthy()
+  })
+
+  it('匿名用户不可读评论列表', async () => {
     const anonymousListResult = await anonymousClient.api.comment.get()
     expect(anonymousListResult.status).toBe(401)
     expect(anonymousListResult.error).toBeTruthy()
+  })
+
+  it('管理员可读取评论列表和详情', async () => {
+    const publishedPost = await createCommentTargetPost('PUBLISHED', 'comment-list-target')
+    const { commentId } = await createPendingComment(publishedPost.id, 'List')
 
     const listResult = await authenticatedClient.api.comment.get({
       query: {
-        postId: createdPost.id,
+        postId: publishedPost.id,
         status: 'pending',
         keyword: tempSuffix,
       },
     })
     expect(listResult.status).toBe(200)
     expect(listResult.error).toBeNull()
-    expect(listResult.data?.items.some((item) => item.id === createdCommentId)).toBe(true)
+    expect(listResult.data?.items.some((item) => item.id === commentId)).toBe(true)
 
-    const detailResult = await getCommentClient(createdCommentId).get()
+    const detailResult = await getCommentClient(commentId).get()
     expect(detailResult.status).toBe(200)
     expect(detailResult.error).toBeNull()
-    expect(detailResult.data?.id).toBe(createdCommentId)
+    expect(detailResult.data?.id).toBe(commentId)
     expect(detailResult.data?.status).toBe('pending')
+  })
+
+  it('评论列表应支持创建时间范围过滤并校验时间顺序', async () => {
+    const publishedPost = await createCommentTargetPost('PUBLISHED', 'comment-date-target')
+    const createdFrom = new Date(Date.now() - 1000).toISOString()
+    const { commentId } = await createPendingComment(publishedPost.id, 'Date Range')
+    const createdTo = new Date(Date.now() + 1000).toISOString()
+
+    const matchedResult = await authenticatedClient.api.comment.get({
+      query: {
+        postId: publishedPost.id,
+        keyword: tempSuffix,
+        createdFrom,
+        createdTo,
+      },
+    })
+    expect(matchedResult.status).toBe(200)
+    expect(matchedResult.error).toBeNull()
+    expect(matchedResult.data?.items.some((item) => item.id === commentId)).toBe(true)
+
+    const futureResult = await authenticatedClient.api.comment.get({
+      query: {
+        postId: publishedPost.id,
+        keyword: tempSuffix,
+        createdFrom: new Date(Date.now() + 60_000).toISOString(),
+      },
+    })
+    expect(futureResult.status).toBe(200)
+    expect(futureResult.error).toBeNull()
+    expect(futureResult.data?.items.some((item) => item.id === commentId)).toBe(false)
+
+    const invalidRangeResult = await authenticatedClient.api.comment.get({
+      query: {
+        createdFrom: new Date(Date.now() + 60_000).toISOString(),
+        createdTo: new Date(Date.now() - 60_000).toISOString(),
+      },
+    })
+    expect(invalidRangeResult.status).toBe(422)
+    expect(invalidRangeResult.error).toBeTruthy()
+  })
+
+  it('无权限用户访问评论管理接口返回 403', async () => {
+    const publishedPost = await createCommentTargetPost('PUBLISHED', 'comment-forbidden-target')
+    const { commentId } = await createPendingComment(publishedPost.id, 'Forbidden')
 
     const forbiddenListResult = await subjectClient.api.comment.get()
     expect(forbiddenListResult.status).toBe(403)
     expect(forbiddenListResult.error).toBeTruthy()
 
-    const forbiddenStatusResult = await subjectClient.api.comment({ id: createdCommentId }).status.patch({
+    const forbiddenStatusResult = await subjectClient.api.comment({ id: commentId }).status.patch({
       status: 'approved',
     })
     expect(forbiddenStatusResult.status).toBe(403)
     expect(forbiddenStatusResult.error).toBeTruthy()
+  })
 
-    const statusResult = await getCommentClient(createdCommentId).status.patch({
+  it('管理员可更新评论状态并删除评论', async () => {
+    const publishedPost = await createCommentTargetPost('PUBLISHED', 'comment-delete-target')
+    const { commentId } = await createPendingComment(publishedPost.id, 'Delete')
+
+    const statusResult = await getCommentClient(commentId).status.patch({
       status: 'approved',
     })
     expect(statusResult.status).toBe(200)
     expect(statusResult.error).toBeNull()
     expect(statusResult.data?.status).toBe('approved')
 
-    const deleteResult = await getCommentClient(createdCommentId).delete()
+    const deleteResult = await getCommentClient(commentId).delete()
     expect(deleteResult.status).toBe(204)
     expect(deleteResult.error).toBeNull()
 
     const deletedComment = await prisma.comment.findUnique({
-      where: { id: createdCommentId },
+      where: { id: commentId },
     })
     expect(deletedComment?.status).toBe('DELETED')
+  })
+
+  it('已删除评论不能再修改状态', async () => {
+    const publishedPost = await createCommentTargetPost('PUBLISHED', 'comment-deleted-status-target')
+    const { commentId } = await createPendingComment(publishedPost.id, 'Deleted Status')
+
+    const deleteResult = await getCommentClient(commentId).delete()
+    expect(deleteResult.status).toBe(204)
+    expect(deleteResult.error).toBeNull()
+
+    const statusResult = await getCommentClient(commentId).status.patch({
+      status: 'approved',
+    })
+    expect(statusResult.status).toBe(400)
+    expect(statusResult.error).toBeTruthy()
+  })
+
+  it('默认评论列表不返回 deleted', async () => {
+    const publishedPost = await createCommentTargetPost('PUBLISHED', 'comment-default-list-target')
+    const { commentId } = await createPendingComment(publishedPost.id, 'Default List')
+
+    const deleteResult = await getCommentClient(commentId).delete()
+    expect(deleteResult.status).toBe(204)
+    expect(deleteResult.error).toBeNull()
 
     const defaultListAfterDeleteResult = await authenticatedClient.api.comment.get({
       query: {
-        postId: createdPost.id,
+        postId: publishedPost.id,
         keyword: tempSuffix,
       },
     })
     expect(defaultListAfterDeleteResult.status).toBe(200)
-    expect(defaultListAfterDeleteResult.data?.items.some((item) => item.id === createdCommentId)).toBe(false)
+    expect(defaultListAfterDeleteResult.data?.items.some((item) => item.id === commentId)).toBe(false)
+  })
+
+  it('显式传 status=deleted 能查到 deleted 评论', async () => {
+    const publishedPost = await createCommentTargetPost('PUBLISHED', 'comment-deleted-list-target')
+    const { commentId } = await createPendingComment(publishedPost.id, 'Deleted List')
+
+    const deleteResult = await getCommentClient(commentId).delete()
+    expect(deleteResult.status).toBe(204)
+    expect(deleteResult.error).toBeNull()
 
     const deletedListResult = await authenticatedClient.api.comment.get({
       query: {
-        postId: createdPost.id,
+        postId: publishedPost.id,
         status: 'deleted',
         keyword: tempSuffix,
       },
     })
     expect(deletedListResult.status).toBe(200)
-    expect(deletedListResult.data?.items.some((item) => item.id === createdCommentId)).toBe(true)
-
-    const deletedIndex = createdCommentIds.indexOf(createdCommentId)
-    if (deletedIndex >= 0) {
-      createdCommentIds.splice(deletedIndex, 1)
-    }
-    await prisma.comment.deleteMany({
-      where: {
-        id: createdCommentId,
-      },
-    })
-
-    const postIndex = createdPostIds.indexOf(createdPost.id)
-    if (postIndex >= 0) {
-      createdPostIds.splice(postIndex, 1)
-    }
-    await prisma.post.deleteMany({
-      where: {
-        id: createdPost.id,
-      },
-    })
+    expect(deletedListResult.data?.items.some((item) => item.id === commentId)).toBe(true)
   })
+
   it('应支持 media 上传、列表、文件访问和删除', async () => {
     const anonymousListResult = await anonymousClient.api.media.get()
     expect(anonymousListResult.status).toBe(401)
@@ -1162,6 +1416,17 @@ describe('eden smoke', () => {
     if (mediaIndex >= 0) {
       createdMediaIds.splice(mediaIndex, 1)
     }
+  })
+
+  it('媒体上传非图片文件应返回 400', async () => {
+    const uploadResult = await authenticatedClient.api.media.upload.post({
+      file: new File([`not-image-${tempSuffix}`], `eden-media-${tempSuffix}.txt`, {
+        type: 'text/plain',
+      }),
+    })
+
+    expect(uploadResult.status).toBe(400)
+    expect(uploadResult.error).toBeTruthy()
   })
 
   it('应支持 Markdown 预览', async () => {
