@@ -823,6 +823,24 @@ export default {
     messages: {
       updateSuccess: 'Profile updated successfully',
     },
+    password: {
+      confirmPassword: 'Confirm new password',
+      confirmPasswordPlaceholder: 'Enter new password again',
+      confirmPasswordRequired: 'Please confirm the new password',
+      currentPassword: 'Current password',
+      currentPasswordPlaceholder: 'Fill this if a password already exists',
+      description: 'GitHub accounts can set a password for the first time without entering a current password.',
+      messages: {
+        updateSuccess: 'Password updated',
+      },
+      newPassword: 'New password',
+      newPasswordMinLength: 'New password must be at least 8 characters',
+      newPasswordPlaceholder: 'Enter new password',
+      newPasswordRequired: 'Please enter a new password',
+      passwordMismatch: 'The two new passwords do not match',
+      submit: 'Save Password',
+      title: 'Account Password',
+    },
     summary: {
       contactDescription: 'This section shows the current contact details for the account.',
       contactTitle: 'Contact',

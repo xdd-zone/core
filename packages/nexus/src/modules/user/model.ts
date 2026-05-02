@@ -36,6 +36,19 @@ export const UpdateMyProfileBodySchema = z.object({
 
 export type UpdateMyProfileBody = z.infer<typeof UpdateMyProfileBodySchema>
 
+export const UpdateMyPasswordBodySchema = z.object({
+  currentPassword: z.string().min(1, '当前密码不能为空').optional(),
+  newPassword: z.string().min(8, '新密码至少 8 个字符').max(100, '新密码最多 100 个字符'),
+})
+
+export type UpdateMyPasswordBody = z.infer<typeof UpdateMyPasswordBodySchema>
+
+export const UpdateMyPasswordResponseSchema = z.object({
+  hasPassword: z.boolean(),
+})
+
+export type UpdateMyPasswordResponse = z.infer<typeof UpdateMyPasswordResponseSchema>
+
 export const UpdateUserBodySchema = UpdateMyProfileBodySchema
 export type UpdateUserBody = z.infer<typeof UpdateUserBodySchema>
 

@@ -639,6 +639,90 @@ describe('eden smoke', () => {
     expect(refreshedResult.data?.name).toBe(updatedName)
   })
 
+  it('应支持当前用户设置和修改密码', async () => {
+    const passwordOnlyCookieSession = createCookieFetcher()
+    const passwordOnlyClient = treaty<App>(baseUrl, {
+      fetcher: passwordOnlyCookieSession.fetcher,
+    })
+    const passwordOnlyUser = {
+      email: `eden-password-only-${tempSuffix}@example.com`,
+      name: `Eden Password Only ${tempSuffix}`,
+      password: 'eden-smoke-pass-123',
+    }
+
+    const signUpResult = await passwordOnlyClient.api.auth['sign-up'].email.post(passwordOnlyUser)
+    expect(signUpResult.status).toBe(200)
+    expect(signUpResult.error).toBeNull()
+    const passwordOnlyUserId = signUpResult.data?.user?.id
+    expect(passwordOnlyUserId).toBeTruthy()
+    if (!passwordOnlyUserId) {
+      throw new Error('缺少 password-only 用户 ID')
+    }
+    createdUserIds.push(passwordOnlyUserId)
+
+    await prisma.account.deleteMany({
+      where: {
+        providerId: 'credential',
+        userId: passwordOnlyUserId,
+      },
+    })
+
+    const otherSessionClient = treaty<App>(baseUrl, {
+      fetcher: createCookieFetcher().fetcher,
+    })
+
+    const setPasswordResult = await passwordOnlyClient.api.user.me.password.patch({
+      newPassword: 'new-password-123',
+    })
+    expect(setPasswordResult.status).toBe(200)
+    expect(setPasswordResult.error).toBeNull()
+    expect(setPasswordResult.data?.hasPassword).toBe(true)
+
+    const invalidPasswordResult = await passwordOnlyClient.api.user.me.password.patch({
+      currentPassword: 'wrong-password',
+      newPassword: 'new-password-456',
+    })
+    expect(invalidPasswordResult.status).toBe(400)
+    expect(invalidPasswordResult.error).toBeTruthy()
+
+    const changePasswordResult = await passwordOnlyClient.api.user.me.password.patch({
+      currentPassword: 'new-password-123',
+      newPassword: 'new-password-456',
+    })
+    expect(changePasswordResult.status).toBe(200)
+    expect(changePasswordResult.error).toBeNull()
+    expect(changePasswordResult.data?.hasPassword).toBe(true)
+
+    const otherSessionSignInResult = await otherSessionClient.api.auth['sign-in'].email.post({
+      email: passwordOnlyUser.email,
+      password: 'new-password-456',
+    })
+    expect(otherSessionSignInResult.status).toBe(200)
+    expect(otherSessionSignInResult.error).toBeNull()
+
+    const changePasswordWithOtherSessionResult = await passwordOnlyClient.api.user.me.password.patch({
+      currentPassword: 'new-password-456',
+      newPassword: 'new-password-789',
+    })
+    expect(changePasswordWithOtherSessionResult.status).toBe(200)
+    expect(changePasswordWithOtherSessionResult.error).toBeNull()
+
+    const revokedSessionResult = await otherSessionClient.api.auth.me.get()
+    expect(revokedSessionResult.status).toBe(401)
+    expect(revokedSessionResult.error).toBeTruthy()
+
+    const signInWithNewPasswordClient = treaty<App>(baseUrl, {
+      fetcher: createCookieFetcher().fetcher,
+    })
+    const signInWithNewPasswordResult = await signInWithNewPasswordClient.api.auth['sign-in'].email.post({
+      email: passwordOnlyUser.email,
+      password: 'new-password-789',
+    })
+    expect(signInWithNewPasswordResult.status).toBe(200)
+    expect(signInWithNewPasswordResult.error).toBeNull()
+    expect(signInWithNewPasswordResult.data?.user?.id).toBe(passwordOnlyUserId)
+  })
+
   it('无权限用户访问用户管理接口应返回 403', async () => {
     const listResult = await subjectClient.api.user.get()
     expect(listResult.status).toBe(403)

@@ -3,6 +3,8 @@ import { assertAuthenticated, Permissions } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
 import {
+  UpdateMyPasswordBodySchema,
+  UpdateMyPasswordResponseSchema,
   UpdateMyProfileBodySchema,
   UpdateUserBodySchema,
   UpdateUserStatusBodySchema,
@@ -64,6 +66,26 @@ export function createUserModule({ accessPlugin }: UserModuleOptions) {
           description: '更新当前登录用户的基础资料，不包含角色和状态。',
           response: UserSchema,
           errors: [400, 401, 403, 404, 409],
+        }),
+      },
+    )
+    .patch(
+      '/me/password',
+      async ({ auth, body }) => {
+        assertAuthenticated(auth)
+
+        return await UserService.updatePassword(auth.user.id, auth.session.id, body)
+      },
+      {
+        auth: 'required',
+        me: Permissions.USER.UPDATE_OWN,
+        body: UpdateMyPasswordBodySchema,
+        response: UpdateMyPasswordResponseSchema,
+        detail: apiDetail({
+          summary: '更新当前用户密码',
+          description: '当前用户设置或更新自己的邮箱密码。已有密码时必须传当前密码。',
+          response: UpdateMyPasswordResponseSchema,
+          errors: [400, 401, 403, 404],
         }),
       },
     )

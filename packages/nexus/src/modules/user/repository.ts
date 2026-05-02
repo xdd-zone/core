@@ -58,6 +58,64 @@ export class UserRepository {
   }
 
   /**
+   * 查询当前用户的邮箱密码账号。
+   */
+  static async findCredentialAccount(userId: string) {
+    return prisma.account.findFirst({
+      where: {
+        providerId: 'credential',
+        userId,
+      },
+      select: {
+        id: true,
+        password: true,
+      },
+    })
+  }
+
+  /**
+   * 创建或更新当前用户的邮箱密码账号。
+   */
+  static async upsertCredentialPassword(userId: string, password: string) {
+    const account = await this.findCredentialAccount(userId)
+
+    if (account) {
+      return prisma.account.update({
+        where: {
+          id: account.id,
+        },
+        data: {
+          password,
+        },
+      })
+    }
+
+    return prisma.account.create({
+      data: {
+        accountId: userId,
+        id: crypto.randomUUID(),
+        password,
+        providerId: 'credential',
+        userId,
+      },
+    })
+  }
+
+  /**
+   * 删除当前用户的其他会话。
+   */
+  static async deleteOtherSessions(userId: string, currentSessionId: string) {
+    await prisma.session.deleteMany({
+      where: {
+        userId,
+        id: {
+          not: currentSessionId,
+        },
+      },
+    })
+  }
+
+  /**
    * 更新用户状态。
    */
   static async updateStatus(id: string, status: UserStatus): Promise<UserBaseData> {

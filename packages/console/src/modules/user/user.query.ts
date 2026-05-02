@@ -1,4 +1,10 @@
-import type { UpdateMyProfileBody, UpdateUserBody, UpdateUserStatusBody, UserListQuery } from './user.types'
+import type {
+  UpdateMyPasswordBody,
+  UpdateMyProfileBody,
+  UpdateUserBody,
+  UpdateUserStatusBody,
+  UserListQuery,
+} from './user.types'
 
 import { api, unwrapEdenResponse } from '@console/shared/api'
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query'
@@ -79,6 +85,15 @@ export function useMyProfileQuery() {
 export function useUpdateMeMutation() {
   return useMutation({
     mutationFn: async (body: UpdateMyProfileBody) => unwrapEdenResponse(await userApiRoot.me.patch(body)),
+  })
+}
+
+/**
+ * 更新当前用户密码 mutation。
+ */
+export function useUpdateMyPasswordMutation() {
+  return useMutation({
+    mutationFn: async (body: UpdateMyPasswordBody) => unwrapEdenResponse(await userApiRoot.me.password.patch(body)),
   })
 }
 

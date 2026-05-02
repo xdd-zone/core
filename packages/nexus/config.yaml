@@ -55,7 +55,7 @@ auth:
     - https://elysia.xdd.ink
   methods:
     emailPassword:
-      enabled: false
+      enabled: true
       allowSignUp: false
     github:
       enabled: true

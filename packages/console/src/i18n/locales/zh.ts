@@ -803,6 +803,24 @@ export default {
     messages: {
       updateSuccess: '资料更新成功',
     },
+    password: {
+      confirmPassword: '确认新密码',
+      confirmPasswordPlaceholder: '再次输入新密码',
+      confirmPasswordRequired: '请确认新密码',
+      currentPassword: '当前密码',
+      currentPasswordPlaceholder: '已有密码时填写',
+      description: 'GitHub 登录的账号第一次设置密码时，不需要填写当前密码。',
+      messages: {
+        updateSuccess: '密码已更新',
+      },
+      newPassword: '新密码',
+      newPasswordMinLength: '新密码至少 8 个字符',
+      newPasswordPlaceholder: '输入新密码',
+      newPasswordRequired: '请输入新密码',
+      passwordMismatch: '两次输入的新密码不一致',
+      submit: '保存密码',
+      title: '账号密码',
+    },
     summary: {
       contactDescription: '这里显示当前账号的联系方式。',
       contactTitle: '联系方式',

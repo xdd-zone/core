@@ -1,4 +1,6 @@
 export type {
+  UpdateMyPasswordBody,
+  UpdateMyPasswordResponse,
   UpdateMyProfileBody,
   UpdateUserBody,
   UpdateUserStatusBody,

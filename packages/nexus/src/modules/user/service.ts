@@ -1,9 +1,19 @@
-import type { UpdateMyProfileBody, UpdateUserBody, User, UserList, UserListQuery, UserStatus } from './model'
+import type {
+  UpdateMyPasswordBody,
+  UpdateMyPasswordResponse,
+  UpdateMyProfileBody,
+  UpdateUserBody,
+  User,
+  UserList,
+  UserListQuery,
+  UserStatus,
+} from './model'
 import type { UserWhereInput } from './types'
-import { NotFoundError } from '@nexus/core/http'
+import { BadRequestError, NotFoundError } from '@nexus/core/http'
 import { buildKeywordSearch } from '@nexus/infra/database'
+import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { USER_SEARCH_FIELDS } from './constants'
-import { UserListSchema, UserSchema } from './model'
+import { UpdateMyPasswordResponseSchema, UserListSchema, UserSchema } from './model'
 import { UserRepository } from './repository'
 
 /**
@@ -70,6 +80,41 @@ export class UserService {
         image: data.image ?? undefined,
       }),
     )
+  }
+
+  /**
+   * 设置或更新当前用户密码。
+   */
+  static async updatePassword(
+    userId: string,
+    currentSessionId: string,
+    data: UpdateMyPasswordBody,
+  ): Promise<UpdateMyPasswordResponse> {
+    await this.findById(userId)
+
+    const credentialAccount = await UserRepository.findCredentialAccount(userId)
+    if (credentialAccount?.password) {
+      if (!data.currentPassword) {
+        throw new BadRequestError('请输入当前密码', 'CURRENT_PASSWORD_REQUIRED')
+      }
+
+      const isCurrentPasswordValid = await verifyPassword({
+        hash: credentialAccount.password,
+        password: data.currentPassword,
+      })
+
+      if (!isCurrentPasswordValid) {
+        throw new BadRequestError('当前密码不正确', 'INVALID_CURRENT_PASSWORD')
+      }
+    }
+
+    const password = await hashPassword(data.newPassword)
+    await UserRepository.upsertCredentialPassword(userId, password)
+    await UserRepository.deleteOtherSessions(userId, currentSessionId)
+
+    return UpdateMyPasswordResponseSchema.parse({
+      hasPassword: true,
+    })
   }
 
   /**

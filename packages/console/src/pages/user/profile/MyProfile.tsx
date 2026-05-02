@@ -1,14 +1,15 @@
 import type { SessionPayload } from '@console/modules/auth'
+import type { UpdateMyPasswordBody } from '@console/modules/user'
 
 import { ConsolePageHeader } from '@console/components/common/ConsolePageHeader'
 import { useAuthStore } from '@console/modules/auth'
-import { useMyProfileQuery, useUpdateMeMutation } from '@console/modules/user'
+import { useMyProfileQuery, useUpdateMeMutation, useUpdateMyPasswordMutation } from '@console/modules/user'
 import { ARTICLE_PAGE_CLASSNAME } from '@console/pages/article/shared/page-layout'
 
 import { useQueryClient } from '@tanstack/react-query'
 import { App as AntdApp, Button, Card, Form, Input, Spin, Tag } from 'antd'
 import dayjs from 'dayjs'
-import { Save } from 'lucide-react'
+import { KeyRound, Save } from 'lucide-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -20,9 +21,11 @@ export function MyProfile() {
   const { message } = AntdApp.useApp()
   const queryClient = useQueryClient()
   const [form] = Form.useForm()
+  const [passwordForm] = Form.useForm<UpdateMyPasswordBody & { confirmPassword: string }>()
 
   const profileQuery = useMyProfileQuery()
   const updateMeMutation = useUpdateMeMutation()
+  const updatePasswordMutation = useUpdateMyPasswordMutation()
 
   useEffect(() => {
     if (!profileQuery.data) {
@@ -64,6 +67,20 @@ export function MyProfile() {
       }
 
       message.success(t('profile.messages.updateSuccess'))
+    } catch (error) {
+      const errorMessage = error instanceof Error && error.message ? error.message : t('common.error')
+      message.error(errorMessage)
+    }
+  }
+
+  const handlePasswordSubmit = async (values: UpdateMyPasswordBody & { confirmPassword: string }) => {
+    try {
+      await updatePasswordMutation.mutateAsync({
+        currentPassword: values.currentPassword || undefined,
+        newPassword: values.newPassword,
+      })
+      passwordForm.resetFields()
+      message.success(t('profile.password.messages.updateSuccess'))
     } catch (error) {
       const errorMessage = error instanceof Error && error.message ? error.message : t('common.error')
       message.error(errorMessage)
@@ -137,58 +154,124 @@ export function MyProfile() {
           </div>
         </Card>
 
-        <Card className="rounded-2xl" title={t('profile.form.title')}>
-          <p className="mb-4 text-sm text-fg-muted">{t('profile.form.description')}</p>
-          <div className="rounded-2xl border border-border-subtle bg-surface-subtle/18 p-4">
-            <Form form={form} layout="vertical" onFinish={handleSubmit}>
-              <div className="grid gap-x-5 md:grid-cols-2">
-                <Form.Item label={t('user.columns.username')} name="username">
-                  <Input placeholder={t('profile.form.usernamePlaceholder')} />
+        <div className="space-y-5">
+          <Card className="rounded-2xl" title={t('profile.form.title')}>
+            <p className="mb-4 text-sm text-fg-muted">{t('profile.form.description')}</p>
+            <div className="rounded-2xl border border-border-subtle bg-surface-subtle/18 p-4">
+              <Form form={form} layout="vertical" onFinish={handleSubmit}>
+                <div className="grid gap-x-5 md:grid-cols-2">
+                  <Form.Item label={t('user.columns.username')} name="username">
+                    <Input placeholder={t('profile.form.usernamePlaceholder')} />
+                  </Form.Item>
+
+                  <Form.Item
+                    label={t('user.columns.name')}
+                    name="name"
+                    rules={[{ required: true, message: t('user.nameRequired') }]}
+                  >
+                    <Input placeholder={t('profile.form.namePlaceholder')} />
+                  </Form.Item>
+
+                  <Form.Item
+                    label={t('user.columns.email')}
+                    name="email"
+                    rules={[{ type: 'email', message: t('user.emailInvalid') }]}
+                  >
+                    <Input placeholder={t('profile.form.emailPlaceholder')} />
+                  </Form.Item>
+
+                  <Form.Item label={t('user.columns.phone')} name="phone">
+                    <Input placeholder={t('profile.form.phonePlaceholder')} />
+                  </Form.Item>
+                </div>
+
+                <Form.Item label={t('user.columns.introduce')} name="introduce">
+                  <Input.TextArea
+                    rows={4}
+                    maxLength={500}
+                    placeholder={t('profile.form.introducePlaceholder')}
+                    showCount
+                  />
                 </Form.Item>
 
-                <Form.Item
-                  label={t('user.columns.name')}
-                  name="name"
-                  rules={[{ required: true, message: t('user.nameRequired') }]}
-                >
-                  <Input placeholder={t('profile.form.namePlaceholder')} />
+                <Form.Item className="mb-0">
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    icon={<Save className="size-4" />}
+                    loading={updateMeMutation.isPending}
+                  >
+                    {t('profile.form.submit')}
+                  </Button>
                 </Form.Item>
+              </Form>
+            </div>
+          </Card>
 
-                <Form.Item
-                  label={t('user.columns.email')}
-                  name="email"
-                  rules={[{ type: 'email', message: t('user.emailInvalid') }]}
-                >
-                  <Input placeholder={t('profile.form.emailPlaceholder')} />
+          <Card className="rounded-2xl" title={t('profile.password.title')}>
+            <p className="mb-4 text-sm text-fg-muted">{t('profile.password.description')}</p>
+            <div className="rounded-2xl border border-border-subtle bg-surface-subtle/18 p-4">
+              <Form form={passwordForm} layout="vertical" onFinish={handlePasswordSubmit}>
+                <div className="grid gap-x-5 md:grid-cols-2">
+                  <Form.Item label={t('profile.password.currentPassword')} name="currentPassword">
+                    <Input.Password
+                      autoComplete="current-password"
+                      placeholder={t('profile.password.currentPasswordPlaceholder')}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label={t('profile.password.newPassword')}
+                    name="newPassword"
+                    rules={[
+                      { message: t('profile.password.newPasswordRequired'), required: true },
+                      { message: t('profile.password.newPasswordMinLength'), min: 8 },
+                    ]}
+                  >
+                    <Input.Password
+                      autoComplete="new-password"
+                      placeholder={t('profile.password.newPasswordPlaceholder')}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    dependencies={['newPassword']}
+                    label={t('profile.password.confirmPassword')}
+                    name="confirmPassword"
+                    rules={[
+                      { message: t('profile.password.confirmPasswordRequired'), required: true },
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          if (!value || getFieldValue('newPassword') === value) {
+                            return Promise.resolve()
+                          }
+
+                          return Promise.reject(new Error(t('profile.password.passwordMismatch')))
+                        },
+                      }),
+                    ]}
+                  >
+                    <Input.Password
+                      autoComplete="new-password"
+                      placeholder={t('profile.password.confirmPasswordPlaceholder')}
+                    />
+                  </Form.Item>
+                </div>
+
+                <Form.Item className="mb-0">
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    icon={<KeyRound className="size-4" />}
+                    loading={updatePasswordMutation.isPending}
+                  >
+                    {t('profile.password.submit')}
+                  </Button>
                 </Form.Item>
-
-                <Form.Item label={t('user.columns.phone')} name="phone">
-                  <Input placeholder={t('profile.form.phonePlaceholder')} />
-                </Form.Item>
-              </div>
-
-              <Form.Item label={t('user.columns.introduce')} name="introduce">
-                <Input.TextArea
-                  rows={4}
-                  maxLength={500}
-                  placeholder={t('profile.form.introducePlaceholder')}
-                  showCount
-                />
-              </Form.Item>
-
-              <Form.Item className="mb-0">
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  icon={<Save className="size-4" />}
-                  loading={updateMeMutation.isPending}
-                >
-                  {t('profile.form.submit')}
-                </Button>
-              </Form.Item>
-            </Form>
-          </div>
-        </Card>
+              </Form>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   )
