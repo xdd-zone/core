@@ -6,27 +6,31 @@
 
   .guide-header {
     padding: clamp(0.85rem, 1.2vw, 1.15rem) clamp(1rem, 1.8vw, 1.5rem);
-    background: color-mix(in srgb, var(--color-surface) 68%, transparent);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border-subtle) 40%, transparent);
-  }
-
-  .guide-sidebar,
-  .guide-tab-bar {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-surface) 74%, transparent),
-      color-mix(in srgb, var(--color-surface-muted) 66%, transparent)
-    );
-    backdrop-filter: blur(8px);
+    background: var(--color-surface);
   }
 
   .guide-sidebar {
-    border-inline-end: 1px solid color-mix(in srgb, var(--color-border-subtle) 40%, transparent);
+    background: var(--color-surface);
+    border-inline-end: none;
+    position: relative;
+  }
+
+  /* 实现内凹圆角 (Inverted Border Radius) */
+  .guide-sidebar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -0.5rem; /* 向右侧内容区延伸 */
+    width: 0.5rem;
+    height: 0.5rem;
+    background: radial-gradient(circle at bottom right, transparent 0.5rem, var(--color-surface) 0.5rem);
+    pointer-events: none;
+    z-index: 10;
   }
 
   .guide-tab-bar {
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border-subtle) 40%, transparent);
+    background: transparent;
+    border-bottom: none;
   }
 
   .guide-content {
