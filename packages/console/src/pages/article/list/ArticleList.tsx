@@ -168,10 +168,10 @@ export function ArticleList() {
         render: (value: string[]) =>
           value.length > 0 ? (
             <div className="flex flex-wrap gap-1">
-              {value.slice(0, 3).map((item) => (
-                <Tag key={item}>{item}</Tag>
+              {value.slice(0, 3).map((item, i) => (
+                <Tag key={`${item}-${i}`}>{item}</Tag>
               ))}
-              {value.length > 3 ? <Tag>+{value.length - 3}</Tag> : null}
+              {value.length > 3 ? <Tag key="overflow">+{value.length - 3}</Tag> : null}
             </div>
           ) : (
             '-'

@@ -92,8 +92,8 @@ export function TagList() {
         render: (value: string[]) =>
           value.length > 0 ? (
             <div className="flex flex-wrap gap-1">
-              {value.map((item) => (
-                <Tag key={item}>{item}</Tag>
+              {value.map((item, i) => (
+                <Tag key={`${item}-${i}`}>{item}</Tag>
               ))}
             </div>
           ) : (

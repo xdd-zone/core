@@ -139,16 +139,16 @@ export function CategoryList() {
   const openCreateModal = useCallback(() => {
     setEditingCategory(null)
     setIsSlugManuallyEdited(false)
-    form.setFieldsValue(EMPTY_CATEGORY_FORM_VALUES)
     setIsModalOpen(true)
+    form.setFieldsValue(EMPTY_CATEGORY_FORM_VALUES)
   }, [form])
 
   const openEditModal = useCallback(
     (category: Category) => {
       setEditingCategory(category)
       setIsSlugManuallyEdited(true)
-      form.setFieldsValue(toCategoryFormValues(category))
       setIsModalOpen(true)
+      form.setFieldsValue(toCategoryFormValues(category))
     },
     [form],
   )
@@ -400,7 +400,7 @@ export function CategoryList() {
       </Card>
 
       <Modal
-        destroyOnHidden
+        forceRender
         title={editingCategory ? t('content.category.form.editTitle') : t('content.category.form.createTitle')}
         open={isModalOpen}
         okText={t('common.save')}

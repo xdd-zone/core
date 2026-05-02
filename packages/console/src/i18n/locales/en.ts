@@ -617,6 +617,7 @@ export default {
         statusRequired: 'Please choose a comment status first',
         statusUpdated: 'Comment status updated',
       },
+      resultsTitle: 'Comment List',
       status: {
         approved: 'Approved',
         deleted: 'Deleted',

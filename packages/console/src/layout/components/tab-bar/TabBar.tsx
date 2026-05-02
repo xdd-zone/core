@@ -213,9 +213,7 @@ export function TabBar() {
                 onClick={() => handleTabClick(tab.id, tab.path)}
                 className={clsx(
                   'group relative flex cursor-pointer items-center gap-x-2 px-3 py-1.5 text-sm whitespace-nowrap transition-colors select-none',
-                  activeTabId === tab.id
-                    ? 'text-primary'
-                    : 'text-fg-muted hover:text-fg',
+                  activeTabId === tab.id ? 'text-primary' : 'text-fg-muted hover:text-fg',
                 )}
               >
                 <span>{t(tab.label)}</span>
@@ -239,9 +237,7 @@ export function TabBar() {
                 <span
                   className={clsx(
                     'absolute bottom-0 left-1/2 h-[2px] -translate-x-1/2 rounded-full transition-all duration-300 ease-out',
-                    activeTabId === tab.id
-                      ? 'w-full bg-primary'
-                      : 'w-0 bg-border group-hover:w-full',
+                    activeTabId === tab.id ? 'w-full bg-primary' : 'w-0 bg-border group-hover:w-full',
                   )}
                 />
               </div>

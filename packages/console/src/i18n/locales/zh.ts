@@ -601,6 +601,7 @@ export default {
         statusRequired: '请先选择评论状态',
         statusUpdated: '评论状态已更新',
       },
+      resultsTitle: '评论列表',
       status: {
         approved: '已通过',
         deleted: '已删除',

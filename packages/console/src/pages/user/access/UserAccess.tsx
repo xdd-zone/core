@@ -105,6 +105,7 @@ export function UserAccess() {
   const permissions = userPermissionsQuery.data?.permissions ?? []
   const summaryItems = [
     { label: t('user.columns.status'), value: t(`user.status.${user.status.toLowerCase()}`) },
+    { label: t('user.columns.email'), value: user.email || '-' },
     { label: t('access.manage.roleCount', { count: roles.length }), value: roles.length },
     { label: t('access.manage.permissionCount', { count: permissions.length }), value: permissions.length },
     {
@@ -117,7 +118,7 @@ export function UserAccess() {
     <div className={ARTICLE_PAGE_CLASSNAME}>
       <ConsolePageHeader
         backLabel={t('common.back')}
-        description={t('access.manage.description')}
+        description={user.email || t('access.manage.description')}
         onBack={() => {
           void navigate({ to: '/users/$id', params: { id } })
         }}
@@ -158,7 +159,7 @@ export function UserAccess() {
           {roles.length > 0 ? (
             <div className="flex flex-col divide-y divide-border-subtle">
               {roles.map((role) => (
-                <div key={role.id} className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0">
+                <div key={role.roleId} className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0">
                   <div className="min-w-0 flex-1">
                     <div className="font-medium">{role.roleDisplayName || role.roleName}</div>
                     <div className="mt-1 flex flex-col gap-1 text-sm text-fg-muted">

@@ -65,7 +65,7 @@ export function UserDetail() {
     <div className={ARTICLE_PAGE_CLASSNAME}>
       <ConsolePageHeader
         backLabel={t('common.back')}
-        description={t('user.detail.description')}
+        description={user.email || t('user.detail.description')}
         onBack={() => {
           void navigate({ to: '/users' })
         }}

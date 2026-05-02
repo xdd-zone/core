@@ -161,7 +161,6 @@ export function CommentList() {
           postId: values.postId,
         })
         await refreshComments()
-        createForm.resetFields()
         setCreateDrawerOpen(false)
         message.success(t('content.comment.messages.created'))
       } catch (error) {
@@ -169,7 +168,7 @@ export function CommentList() {
         message.error(errorMessage)
       }
     },
-    [createCommentMutation, createForm, message, refreshComments, t],
+    [createCommentMutation, message, refreshComments, t],
   )
 
   const handleUpdateStatus = useCallback(async () => {
@@ -322,10 +321,17 @@ export function CommentList() {
       <Card
         className={ARTICLE_PANEL_CLASSNAME}
         styles={{ body: ARTICLE_PANEL_BODY_STYLE }}
-        title={t('content.comment.title')}
+        title={t('content.comment.resultsTitle')}
         extra={
           <Space wrap>
-            <Button type="primary" onClick={() => setCreateDrawerOpen(true)}>
+            <Button
+              type="primary"
+              onClick={() => {
+                createForm.resetFields()
+                setCreatePostKeyword('')
+                setCreateDrawerOpen(true)
+              }}
+            >
               {t('content.comment.create.action')}
             </Button>
             <span className="text-fg-muted text-sm">
@@ -393,32 +399,34 @@ export function CommentList() {
             </Space>
           </div>
 
-          <Table
-            className={ARTICLE_TABLE_CLASSNAME}
-            columns={columns}
-            dataSource={currentItems}
-            loading={commentListQuery.isLoading || postListQuery.isLoading}
-            rowKey="id"
-            pagination={{
-              current: page,
-              onChange: (nextPage, nextPageSize) => {
-                setPage(nextPage)
-                setPageSize(nextPageSize)
-              },
-              pageSize,
-              showQuickJumper: true,
-              showSizeChanger: true,
-              showTotal: (total) => t('common.total', { count: total }),
-              total: commentListQuery.data?.total,
-            }}
-          />
+          <section aria-label={t('content.comment.resultsTitle')} data-testid="comment-list-results">
+            <Table
+              className={ARTICLE_TABLE_CLASSNAME}
+              columns={columns}
+              dataSource={currentItems}
+              loading={commentListQuery.isLoading || postListQuery.isLoading}
+              rowKey="id"
+              pagination={{
+                current: page,
+                onChange: (nextPage, nextPageSize) => {
+                  setPage(nextPage)
+                  setPageSize(nextPageSize)
+                },
+                pageSize,
+                showQuickJumper: true,
+                showSizeChanger: true,
+                showTotal: (total) => t('common.total', { count: total }),
+                total: commentListQuery.data?.total,
+              }}
+            />
+          </section>
         </div>
       </Card>
 
       <Drawer
         open={drawerOpen}
         title={t('content.comment.detailTitle')}
-        width={720}
+        size="large"
         onClose={() => {
           setDrawerOpen(false)
           setSelectedCommentId(undefined)
@@ -519,9 +527,10 @@ export function CommentList() {
       </Drawer>
 
       <Drawer
+        forceRender
         open={createDrawerOpen}
         title={t('content.comment.create.title')}
-        width={560}
+        size="large"
         onClose={() => {
           setCreateDrawerOpen(false)
           setCreatePostKeyword('')
@@ -530,12 +539,17 @@ export function CommentList() {
       >
         <Form form={createForm} layout="vertical" onFinish={handleCreateComment}>
           <Form.Item
+            htmlFor="comment-create-post"
+            id="comment-create-post-label"
             label={t('content.comment.columns.post')}
             name="postId"
             rules={[{ required: true, message: t('content.comment.create.validation.postRequired') }]}
           >
             <Select
+              aria-label={t('content.comment.columns.post')}
+              aria-labelledby="comment-create-post-label"
               filterOption={false}
+              id="comment-create-post"
               loading={publishedPostListQuery.isFetching}
               onSearch={setCreatePostKeyword}
               options={publishedPostOptions}
