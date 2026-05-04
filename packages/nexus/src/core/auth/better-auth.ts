@@ -2,7 +2,7 @@ import type { ResolvedConfig } from '@nexus/core/config'
 import { prisma } from '@nexus/infra/database/client'
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
-import { assignDefaultRoleToUser } from './hooks/assign-default-role.hook'
+import { assignDefaultRoleToUser, updateUserLastLogin } from './hooks'
 
 export function createBetterAuthInstance(config: Pick<ResolvedConfig, 'auth' | 'betterAuth'>) {
   const socialProviders =
@@ -27,6 +27,11 @@ export function createBetterAuthInstance(config: Pick<ResolvedConfig, 'auth' | '
     socialProviders,
     trustedOrigins: config.auth.trustedOrigins,
     databaseHooks: {
+      session: {
+        create: {
+          after: updateUserLastLogin,
+        },
+      },
       user: {
         create: {
           after: assignDefaultRoleToUser,
