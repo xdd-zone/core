@@ -403,12 +403,15 @@ function handlePrismaError(error: unknown, isDev: boolean): ErrorHandlingResult 
  * HTTP 错误类
  */
 export class HttpError extends Error {
+  readonly status: number
+
   constructor(
     public statusCode: number,
     message: string,
     public code?: string,
   ) {
     super(message)
+    this.status = statusCode
     this.name = 'HttpError'
   }
 }
@@ -473,7 +476,7 @@ export class InternalServerError extends HttpError {
  *
  * 使用方式：
  * ```ts
- * // 在路由中抛出自定义错误
+ * // 在 Service 中抛出业务错误
  * throw new NotFoundError('用户不存在')
  *
  * // 或者使用标准 HTTP 错误

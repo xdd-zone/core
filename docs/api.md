@@ -13,7 +13,7 @@
 
 后端接口主要分布在这些位置：
 
-- `packages/nexus/src/modules/*/index.ts`
+- `packages/nexus/src/modules/*/routes.ts`
   路由、鉴权声明、OpenAPI 说明。
 - `packages/nexus/src/modules/*/model.ts`
   body / query / params / response schema。
@@ -44,6 +44,8 @@ GitHub 登录和回调返回 `302`。
 ### 错误响应
 
 错误响应统一由后端错误插件处理。
+
+业务错误在 `packages/nexus/src/modules/*/service.ts` 里抛出 `HttpError` 子类。`service.ts` 和 `repository.ts` 不直接使用 Elysia 的 `status()`。这样所有错误都会走 `packages/nexus/src/core/http/error.plugin.ts`，前端收到的错误结构保持一致。
 
 常见状态码：
 
@@ -169,7 +171,7 @@ GitHub 登录和回调返回 `302`。
 
 1. 改 `model.ts`
 2. 改 `service.ts / repository.ts`
-3. 改 `index.ts`
+3. 改 `routes.ts`
 4. 打开 `/openapi` 看说明有没有同步
 5. 跑 `bun run --filter @xdd-zone/nexus test`
 

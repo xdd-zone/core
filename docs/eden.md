@@ -81,7 +81,7 @@ await api.rbac.users({ userId }).roles.post(body)
 
 1. 改 `packages/nexus/src/modules/<name>/model.ts`
 2. 改 `service.ts / repository.ts`
-3. 改 `index.ts`
+3. 改 `routes.ts`
 4. 确认模块已经挂到 `packages/nexus/src/modules/index.ts`
 
 正常情况下，不需要手动改 `packages/nexus/src/public/eden.ts`。

@@ -72,7 +72,7 @@ packages/nexus/src/modules/site-config/permissions.ts
 
 1. 在 `packages/nexus/src/modules/<feature>/permissions.ts` 写权限常量和权限说明
 2. 在 `packages/nexus/src/modules/permissions.ts` 加入该模块的权限说明
-3. 在 `packages/nexus/src/modules/<feature>/index.ts` 使用自己的权限常量
+3. 在 `packages/nexus/src/modules/<feature>/routes.ts` 使用自己的权限常量
 4. 如果 Console 页面也要判断权限，从 `@xdd-zone/nexus/permissions` 引入对应业务权限常量
 
 示例：

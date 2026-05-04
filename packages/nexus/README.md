@@ -64,6 +64,14 @@ modules/<feature>/
 - `repository.ts` 写 Prisma 查询和写入
 - `permissions.ts` 写该模块自己的权限常量和权限说明
 
+错误写法：
+
+- `service.ts` 里抛出 `HttpError` 子类，比如 `NotFoundError`、`BadRequestError`、`ConflictError`。
+- `service.ts` 和 `repository.ts` 不导入 Elysia，不调用 `status()`，不设置 `set.status`。
+- `routes.ts` 只在删除成功 `204`、跳转 `302`、文件响应这类纯 HTTP 行为里设置状态码。
+- 错误响应由 `src/core/http/error.plugin.ts` 返回统一结构。
+- OpenAPI 错误码写在模块自己的 `openapi.ts` 里。
+
 系统基础权限只放在：
 
 ```text
@@ -160,7 +168,7 @@ bun run seed
 ```text
 先改 model.ts
 -> 再改 service.ts / repository.ts
--> 最后改 index.ts
+-> 最后改 routes.ts
 -> 再看 OpenAPI 和测试
 ```
 

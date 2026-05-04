@@ -50,7 +50,7 @@ auth:
 
 ### 后端
 
-- `packages/nexus/src/modules/auth/index.ts`
+- `packages/nexus/src/modules/auth/routes.ts`
   认证接口入口。
 - `packages/nexus/src/core/auth/auth-api.service.ts`
   邮箱注册、邮箱登录、GitHub 登录、登出。

@@ -66,7 +66,7 @@ bun run prisma:push
 
 1. 先改 `model.ts`
 2. 再改 `service.ts / repository.ts`
-3. 最后改 `index.ts`
+3. 最后改 `routes.ts`
 4. 跑检查
 
 至少会碰到这些文件：
@@ -74,7 +74,7 @@ bun run prisma:push
 - `packages/nexus/src/modules/<feature>/model.ts`
 - `packages/nexus/src/modules/<feature>/service.ts`
 - `packages/nexus/src/modules/<feature>/repository.ts`
-- `packages/nexus/src/modules/<feature>/index.ts`
+- `packages/nexus/src/modules/<feature>/routes.ts`
 
 如果接口还要给前端复用明确的 HTTP 类型，再补：
 
@@ -102,7 +102,7 @@ bun run prisma:push
 
 ### 后端
 
-- 路由、schema 绑定、鉴权声明：`modules/*/index.ts`
+- 路由、schema 绑定、鉴权声明：`modules/*/routes.ts`
 - HTTP schema：`modules/*/model.ts`
 - 业务逻辑：`modules/*/service.ts`
 - Prisma 查询：`modules/*/repository.ts`
@@ -111,6 +111,14 @@ bun run prisma:push
 - 认证插件、权限插件和守卫：`core/access/*`
 - HTTP 公共插件：`core/http/*`
 - 最终配置：`core/config/*`
+
+### 后端错误写法
+
+- `service.ts` 里遇到业务错误时，抛出 `HttpError` 子类，比如 `NotFoundError`、`BadRequestError`、`ConflictError`。
+- `service.ts` 和 `repository.ts` 不导入 Elysia，不调用 `status()`，不设置 `set.status`。
+- `routes.ts` 只在纯 HTTP 行为里设置状态码，比如删除成功返回 `204`、GitHub 登录返回 `302`、文件响应返回 `Response`。
+- 错误响应由 `packages/nexus/src/core/http/error.plugin.ts` 返回统一结构。
+- 接口可能返回哪些错误码，写在模块自己的 `openapi.ts` 的 `apiDetail({ errors })` 里。
 
 ### 前端
 
@@ -147,7 +155,7 @@ bun run prisma:push
 
 1. 在 `packages/nexus/src/modules/<feature>/permissions.ts` 写权限常量和权限说明
 2. 在 `packages/nexus/src/modules/permissions.ts` 加入权限说明
-3. 在 `packages/nexus/src/modules/<feature>/index.ts` 使用该模块自己的权限常量
+3. 在 `packages/nexus/src/modules/<feature>/routes.ts` 使用该模块自己的权限常量
 4. 在 `packages/console/src/app/access/access-control.ts` 补页面访问规则
 5. 如果页面内部还要判断按钮权限，从 `@xdd-zone/nexus/permissions` 引入业务权限常量
 

@@ -63,13 +63,15 @@ packages/nexus/src/
 
 ### `modules/`
 
-每个业务模块一个目录，`index.ts` 直接写路由。
+每个业务模块一个目录，`routes.ts` 写路由，`index.ts` 做模块导出。
 
 推荐结构：
 
 ```text
 modules/<feature>/
 ├── index.ts
+├── routes.ts
+├── openapi.ts
 ├── model.ts
 ├── service.ts
 ├── repository.ts
@@ -80,13 +82,19 @@ modules/<feature>/
 各文件怎么分：
 
 - `index.ts`
+  做模块导出。
+- `routes.ts`
   写 prefix、tags、schema 绑定、鉴权声明、`apiDetail(...)`、service 调用。
+- `openapi.ts`
+  写 `apiDetail(...)` 的接口说明和错误码。
 - `model.ts`
   写 body / query / params / response schema。
 - `service.ts`
   写业务判断和流程。
 - `repository.ts`
   写 Prisma 查询和写入。
+
+业务错误在 `service.ts` 里抛出 `HttpError` 子类。`service.ts` 和 `repository.ts` 不导入 Elysia，不调用 `status()`，不设置 `set.status`。
 
 ### `core/`
 
