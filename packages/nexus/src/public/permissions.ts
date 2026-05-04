@@ -1,7 +1,7 @@
-import type { SystemPermissionKey } from '../core/security/permissions/permissions'
-import type { Permission, PermissionScope, PermissionString } from '../core/security/permissions/permissions.types'
-import type { SystemRoleName } from '../core/security/permissions/role.constants'
-import { matchPermission, normalizePermission, parsePermission } from '../core/security/permissions/helpers'
+import type { SystemPermissionKey } from '../core/permissions/permissions'
+import type { Permission, PermissionScope, PermissionString } from '../core/permissions/permissions.types'
+import type { SystemRoleName } from '../core/permissions/role.constants'
+import { matchPermission, normalizePermission, parsePermission } from '../core/permissions/helpers'
 import {
   Permissions,
   RolePermissions,
@@ -11,11 +11,11 @@ import {
   UserPermissionQueryPermissions,
   UserPermissions,
   UserRolePermissions,
-} from '../core/security/permissions/permissions'
-import { DEFAULT_ROLE_NAME, FIRST_USER_ROLE_NAME, SYSTEM_ROLE_NAMES } from '../core/security/permissions/role.constants'
+} from '../core/permissions/permissions'
+import { DEFAULT_ROLE_NAME, FIRST_USER_ROLE_NAME, SYSTEM_ROLE_NAMES } from '../core/permissions/role.constants'
 import { CommentPermissions } from '../modules/comment/permissions'
 import { MediaPermissions } from '../modules/media/permissions'
-import { BUSINESS_PERMISSION_DEFINITIONS } from '../modules/permission-definitions'
+import { BUSINESS_PERMISSION_DEFINITIONS } from '../modules/permissions'
 import { PostPermissions } from '../modules/post/permissions'
 import { SYSTEM_ROLE_PERMISSION_KEYS } from '../modules/rbac/constants'
 import { SiteConfigPermissions } from '../modules/site-config/permissions'

@@ -29,7 +29,9 @@
 代码入口：
 
 - `packages/nexus/src/modules`
-- `packages/nexus/src/core/security`
+- `packages/nexus/src/core/auth`
+- `packages/nexus/src/core/access`
+- `packages/nexus/src/core/permissions`
 - `packages/nexus/src/public`
 
 ## 要改 Console 前端
@@ -61,7 +63,7 @@
 
 代码入口：
 
-- `packages/nexus/src/core/security/auth`
+- `packages/nexus/src/core/auth`
 - `packages/nexus/src/modules/auth`
 - `packages/console/src/modules/auth`
 - `packages/console/src/pages/auth/Login.tsx`
@@ -76,11 +78,11 @@
 
 代码入口：
 
-- `packages/nexus/src/core/security/permissions`
-- `packages/nexus/src/core/security/plugins/access.plugin.ts`
-- `packages/nexus/src/core/security/guards`
+- `packages/nexus/src/core/permissions`
+- `packages/nexus/src/core/access/access.plugin.ts`
+- `packages/nexus/src/core/access`
 - `packages/nexus/src/modules/*/permissions.ts`
-- `packages/nexus/src/modules/permission-definitions.ts`
+- `packages/nexus/src/modules/permissions.ts`
 - `packages/console/src/app/access/access-control.ts`
 
 ## 要排查联调问题

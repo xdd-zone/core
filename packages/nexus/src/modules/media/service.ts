@@ -4,22 +4,8 @@ import type { MediaRecord } from './repository'
 import { BadRequestError, NotFoundError } from '@nexus/core/http'
 import { ALLOWED_MEDIA_MIME_TYPES, isAllowedMediaMimeType, MediaStorage } from '@nexus/infra/storage/media-storage'
 
-import { MediaListSchema, MediaSchema } from './model'
+import { serializeMedia } from './mapper'
 import { MediaRepository } from './repository'
-
-function serializeMedia(record: MediaRecord): Media {
-  return MediaSchema.parse({
-    id: record.id,
-    fileName: record.fileName,
-    originalName: record.originalName,
-    mimeType: record.mimeType,
-    size: record.size,
-    url: record.url,
-    uploadedBy: record.uploadedBy,
-    createdAt: record.createdAt,
-    updatedAt: record.updatedAt,
-  })
-}
 
 function assertAllowedMediaFile(file: File): void {
   if (!isAllowedMediaMimeType(file.type)) {
@@ -52,10 +38,10 @@ export class MediaService {
   static async list(query: MediaListQuery): Promise<MediaList> {
     const result = await MediaRepository.paginate(query)
 
-    return MediaListSchema.parse({
+    return {
       ...result,
       items: result.items.map(serializeMedia),
-    })
+    }
   }
 
   /**

@@ -1,4 +1,4 @@
-import type { Session as PrismaSession } from '@nexus/infra/database/prisma/generated'
+import type { Session as PrismaSession } from '@nexus-prisma/generated/client'
 import type { BetterAuthOptions } from 'better-auth'
 import type { BetterAuthInstance } from './better-auth'
 import type { SessionService } from './session.service'

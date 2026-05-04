@@ -1,5 +1,5 @@
+import type { ContentStatus } from '@nexus-prisma/generated/client'
 import type { PaginatedList, PaginationQuery } from '@nexus/infra/database'
-import type { ContentStatus } from '@nexus/infra/database/prisma/generated'
 import type { PostBaseData, PostWhereInput } from './types'
 import { prisma } from '@nexus/infra/database'
 import { PrismaService } from '@nexus/infra/database/prisma.service'

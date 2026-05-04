@@ -101,9 +101,9 @@ bun run dev
 
 ### 后端
 
-- `packages/nexus/src/core/security/auth/better-auth.ts`
-- `packages/nexus/src/core/security/auth/auth-api.service.ts`
-- `packages/nexus/src/core/security/auth/auth-methods.service.ts`
+- `packages/nexus/src/core/auth/better-auth.ts`
+- `packages/nexus/src/core/auth/auth-api.service.ts`
+- `packages/nexus/src/core/auth/auth-methods.service.ts`
 - `packages/nexus/src/modules/auth/index.ts`
 
 ### 前端

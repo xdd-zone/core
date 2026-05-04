@@ -106,7 +106,9 @@ bun run prisma:push
 - HTTP schema：`modules/*/model.ts`
 - 业务逻辑：`modules/*/service.ts`
 - Prisma 查询：`modules/*/repository.ts`
-- 认证和权限：`core/security/*`
+- 认证：`core/auth/*`
+- 权限常量和权限判断：`core/permissions/*`
+- 认证插件、权限插件和守卫：`core/access/*`
 - HTTP 公共插件：`core/http/*`
 - 最终配置：`core/config/*`
 
@@ -124,32 +126,32 @@ bun run prisma:push
 
 ### 认证
 
-- `packages/nexus/src/core/security/auth/*`
-- `packages/nexus/src/core/security/plugins/auth.plugin.ts`
+- `packages/nexus/src/core/auth/*`
+- `packages/nexus/src/core/access/auth.plugin.ts`
 - `packages/nexus/src/modules/auth/*`
 - `packages/console/src/modules/auth/*`
 - `packages/console/src/pages/auth/Login.tsx`
 
 ### 权限
 
-- `packages/nexus/src/core/security/plugins/access.plugin.ts`
-- `packages/nexus/src/core/security/guards/*`
-- `packages/nexus/src/core/security/permissions/*`
+- `packages/nexus/src/core/access/access.plugin.ts`
+- `packages/nexus/src/core/access/*`
+- `packages/nexus/src/core/permissions/*`
 - `packages/nexus/src/modules/*/permissions.ts`
-- `packages/nexus/src/modules/permission-definitions.ts`
+- `packages/nexus/src/modules/permissions.ts`
 - `packages/console/src/app/access/access-control.ts`
 
-系统基础权限放在 `core/security/permissions/permissions.ts`。业务权限放在对应业务模块的 `permissions.ts`。
+系统基础权限放在 `core/permissions/permissions.ts`。业务权限放在对应业务模块的 `permissions.ts`。
 
 新增业务权限时：
 
 1. 在 `packages/nexus/src/modules/<feature>/permissions.ts` 写权限常量和权限说明
-2. 在 `packages/nexus/src/modules/permission-definitions.ts` 加入权限说明
+2. 在 `packages/nexus/src/modules/permissions.ts` 加入权限说明
 3. 在 `packages/nexus/src/modules/<feature>/index.ts` 使用该模块自己的权限常量
 4. 在 `packages/console/src/app/access/access-control.ts` 补页面访问规则
 5. 如果页面内部还要判断按钮权限，从 `@xdd-zone/nexus/permissions` 引入业务权限常量
 
-不要把业务权限写进 `packages/nexus/src/core/security/permissions/permissions.ts`。
+不要把业务权限写进 `packages/nexus/src/core/permissions/permissions.ts`。
 
 ## 回归检查
 

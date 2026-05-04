@@ -1,4 +1,4 @@
-import type { PermissionDefinition, PermissionString } from '@nexus/core/security/permissions'
+import type { PermissionDefinition, PermissionString } from '@nexus/core/permissions'
 
 export const MediaPermissions = {
   READ_ALL: 'media:read:all' as PermissionString,

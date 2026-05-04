@@ -1,5 +1,5 @@
+import type { CommentStatus } from '@nexus-prisma/generated/client'
 import type { PaginatedList, PaginationQuery } from '@nexus/infra/database'
-import type { CommentStatus } from '@nexus/infra/database/prisma/generated'
 import type { CommentBaseData, CommentWhereInput } from './types'
 import { prisma } from '@nexus/infra/database'
 import { PrismaService } from '@nexus/infra/database/prisma.service'

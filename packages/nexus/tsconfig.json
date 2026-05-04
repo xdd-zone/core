@@ -2,13 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": "./src",
+    "rootDir": ".",
     "paths": {
-      "@nexus/*": ["./src/*"]
+      "@nexus/*": ["./src/*"],
+      "@nexus-prisma/*": ["./prisma/*"]
     },
     "types": ["bun-types"],
     "outDir": "./dist"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "prisma/seed/**/*"],
   "exclude": ["node_modules", "dist", "*.generated.ts"]
 }

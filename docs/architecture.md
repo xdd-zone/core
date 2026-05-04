@@ -94,8 +94,12 @@ modules/<feature>/
 
 - `core/http`
   CORS、OpenAPI、统一错误处理、请求日志。
-- `core/security`
-  Better Auth、session、插件、守卫、系统基础权限、权限判断和权限注册表。
+- `core/auth`
+  Better Auth、session 和认证接口服务。
+- `core/access`
+  认证插件、权限插件和守卫。
+- `core/permissions`
+  系统基础权限、权限判断和权限注册表。
 - `core/config`
   读取 `config.yaml`、合并环境变量、返回最终配置。
 
@@ -211,9 +215,9 @@ packages/console/src/
 ## 当前认证和权限模型
 
 - 固定角色只有 `superAdmin / user`
-- 系统基础权限放在 `packages/nexus/src/core/security/permissions/permissions.ts`
+- 系统基础权限放在 `packages/nexus/src/core/permissions/permissions.ts`
 - 业务权限放在 `packages/nexus/src/modules/*/permissions.ts`
-- 权限说明由 `packages/nexus/src/core/security/permissions/registry.ts` 读取
+- 权限说明由 `packages/nexus/src/core/permissions/registry.ts` 读取
 - `own` 只用于当前用户资料相关场景
 - 前端页面访问控制走 `packages/console/src/app/access/access-control.ts`
 - 后端接口权限校验走 `authPlugin` 或 `accessPlugin`
@@ -233,7 +237,7 @@ SYSTEM
 位置：
 
 ```text
-packages/nexus/src/core/security/permissions/permissions.ts
+packages/nexus/src/core/permissions/permissions.ts
 ```
 
 业务模块自己放业务权限。当前位置：
@@ -248,10 +252,10 @@ packages/nexus/src/modules/site-config/permissions.ts
 业务权限汇总在：
 
 ```text
-packages/nexus/src/modules/permission-definitions.ts
+packages/nexus/src/modules/permissions.ts
 ```
 
-`core/security` 不导入 `modules/post`、`modules/media`、`modules/comment`、`modules/site-config`。
+`core/permissions` 不导入 `modules/post`、`modules/media`、`modules/comment`、`modules/site-config`。
 
 ## 改动时的默认落点
 
@@ -277,9 +281,11 @@ packages/nexus/src/modules/permission-definitions.ts
 
 同时检查：
 
-- `packages/nexus/src/core/security/*`
+- `packages/nexus/src/core/auth/*`
+- `packages/nexus/src/core/access/*`
+- `packages/nexus/src/core/permissions/*`
 - `packages/nexus/src/modules/*/permissions.ts`
-- `packages/nexus/src/modules/permission-definitions.ts`
+- `packages/nexus/src/modules/permissions.ts`
 - `packages/nexus/src/modules/auth`
 - `packages/console/src/modules/auth`
 - `packages/console/src/app/access/access-control.ts`

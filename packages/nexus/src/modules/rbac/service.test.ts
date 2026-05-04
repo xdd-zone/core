@@ -1,5 +1,5 @@
 import type { UserRoleAssignment } from './model'
-import { PermissionService } from '@nexus/core/security/permissions'
+import { PermissionService } from '@nexus/core/permissions'
 import { afterEach, describe, expect, it, spyOn } from 'bun:test'
 import { UserRepository } from '../user/repository'
 import { RoleRepository } from './role.repository'

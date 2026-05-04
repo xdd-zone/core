@@ -1,22 +1,16 @@
+import type { AccessPluginInstance, AuthPluginInstance } from '@nexus/core/access'
+import type { BetterAuthAdapter, BetterAuthInstance, SessionService } from '@nexus/core/auth'
 import type { DeepPartial, ResolvedConfig } from '@nexus/core/config'
-import type {
-  AccessPluginInstance,
-  AuthPluginInstance,
-  BetterAuthAdapter,
-  BetterAuthInstance,
-  SessionService,
-} from '@nexus/core/security'
 import type { Logger } from '@nexus/infra/logger'
-import { CONFIG, createConfig } from '@nexus/core/config'
+import { createAccessPlugin, createAuthPlugin } from '@nexus/core/access'
 import {
-  createAccessPlugin,
   createAuthApiService,
   createAuthMethodsService,
-  createAuthPlugin,
   createBetterAuthAdapter,
   createBetterAuthInstance,
   createSessionService,
-} from '@nexus/core/security'
+} from '@nexus/core/auth'
+import { CONFIG, createConfig } from '@nexus/core/config'
 import { createLogger } from '@nexus/infra/logger'
 
 export interface AppSecurityContext {

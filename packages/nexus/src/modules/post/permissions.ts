@@ -1,4 +1,4 @@
-import type { PermissionDefinition, PermissionString } from '@nexus/core/security/permissions'
+import type { PermissionDefinition, PermissionString } from '@nexus/core/permissions'
 
 export const PostPermissions = {
   READ_ALL: 'post:read:all' as PermissionString,

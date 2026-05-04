@@ -1,11 +1,12 @@
 import type { AuthenticatedSecuritySession } from '../auth'
 import type { SessionService } from '../auth/session.service'
-import type { OwnPermissionConfig } from '../guards'
 import type { PermissionString } from '../permissions'
 import type { AuthRequirement } from './auth.plugin'
+import type { OwnPermissionConfig } from './ownership.guard'
 import { Elysia } from 'elysia'
-import { ensureAnyPermission, ensureOwnPermission, ensurePermission } from '../guards'
-import { assertAuthenticated } from './auth.plugin'
+import { assertAuthenticated } from './auth.guard'
+import { ensureOwnPermission } from './ownership.guard'
+import { ensureAnyPermission, ensurePermission } from './permission.guard'
 
 type RoutePermission = PermissionString | string
 type RoutePermissionRequirement =

@@ -10,7 +10,9 @@
     "paths": {
       "@console/*": ["src/*"],
       "@nexus/*": ["../nexus/src/*"],
+      "@nexus-prisma/*": ["../nexus/prisma/*"],
       "@xdd-zone/nexus/eden": ["../nexus/src/public/eden.ts"],
+      "@xdd-zone/nexus/types": ["../nexus/src/public/types.ts"],
       "@xdd-zone/nexus/auth-types": ["../nexus/src/public/auth-types.ts"],
       "@xdd-zone/nexus/category-types": ["../nexus/src/public/category-types.ts"],
       "@xdd-zone/nexus/comment-types": ["../nexus/src/public/comment-types.ts"],

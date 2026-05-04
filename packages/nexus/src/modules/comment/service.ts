@@ -1,44 +1,10 @@
-import type { CommentStatus as DatabaseCommentStatus } from '@nexus/infra/database/prisma/generated'
 import type { Comment, CommentList, CommentListQuery, CreateCommentBody } from './model'
-import type { CommentBaseData, CommentWhereInput } from './types'
+import type { CommentWhereInput } from './types'
 import { BadRequestError, NotFoundError } from '@nexus/core/http'
 import { buildKeywordSearch } from '@nexus/infra/database'
 import { COMMENT_SEARCH_FIELDS } from './constants'
-import { CommentListSchema, CommentSchema } from './model'
+import { serializeComment, toDatabaseCommentStatus, toHttpCommentStatus } from './mapper'
 import { CommentRepository } from './repository'
-
-function toDatabaseStatus(status: 'pending' | 'approved' | 'hidden' | 'deleted'): DatabaseCommentStatus {
-  switch (status) {
-    case 'approved':
-      return 'APPROVED'
-    case 'hidden':
-      return 'HIDDEN'
-    case 'deleted':
-      return 'DELETED'
-    default:
-      return 'PENDING'
-  }
-}
-
-function toHttpStatus(status: DatabaseCommentStatus): 'pending' | 'approved' | 'hidden' | 'deleted' {
-  switch (status) {
-    case 'APPROVED':
-      return 'approved'
-    case 'HIDDEN':
-      return 'hidden'
-    case 'DELETED':
-      return 'deleted'
-    default:
-      return 'pending'
-  }
-}
-
-function serializeComment(comment: CommentBaseData) {
-  return {
-    ...comment,
-    status: toHttpStatus(comment.status),
-  }
-}
 
 /**
  * 评论服务类。
@@ -51,7 +17,7 @@ export class CommentService {
     const where: CommentWhereInput = {}
 
     if (query.status) {
-      where.status = toDatabaseStatus(query.status)
+      where.status = toDatabaseCommentStatus(query.status)
     } else {
       where.status = {
         not: 'DELETED',
@@ -97,17 +63,17 @@ export class CommentService {
   static async list(query: CommentListQuery): Promise<CommentList> {
     const result = await CommentRepository.paginate(this.buildWhereConditions(query), query)
 
-    return CommentListSchema.parse({
+    return {
       ...result,
       items: result.items.map(serializeComment),
-    })
+    }
   }
 
   /**
    * 获取评论详情。
    */
   static async findById(id: string): Promise<Comment> {
-    return CommentSchema.parse(serializeComment(await this.requireById(id)))
+    return serializeComment(await this.requireById(id))
   }
 
   /**
@@ -119,15 +85,13 @@ export class CommentService {
       throw new NotFoundError('文章不存在或未发布')
     }
 
-    return CommentSchema.parse(
-      serializeComment(
-        await CommentRepository.create({
-          postId: data.postId,
-          authorName: data.authorName,
-          authorEmail: data.authorEmail ?? null,
-          content: data.content,
-        }),
-      ),
+    return serializeComment(
+      await CommentRepository.create({
+        postId: data.postId,
+        authorName: data.authorName,
+        authorEmail: data.authorEmail ?? null,
+        content: data.content,
+      }),
     )
   }
 
@@ -141,11 +105,11 @@ export class CommentService {
       throw new BadRequestError('已删除评论不能再修改状态')
     }
 
-    if (toHttpStatus(comment.status) === status) {
-      return CommentSchema.parse(serializeComment(comment))
+    if (toHttpCommentStatus(comment.status) === status) {
+      return serializeComment(comment)
     }
 
-    return CommentSchema.parse(serializeComment(await CommentRepository.updateStatus(id, toDatabaseStatus(status))))
+    return serializeComment(await CommentRepository.updateStatus(id, toDatabaseCommentStatus(status)))
   }
 
   /**

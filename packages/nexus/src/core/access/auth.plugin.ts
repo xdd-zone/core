@@ -1,7 +1,7 @@
 import type { AuthenticatedSecuritySession, SecuritySession } from '../auth'
 import type { SessionService } from '../auth/session.service'
 import { Elysia } from 'elysia'
-import { assertAuthenticated } from '../guards'
+import { assertAuthenticated } from './auth.guard'
 
 /**
  * 路由鉴权模式。

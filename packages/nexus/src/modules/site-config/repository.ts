@@ -1,6 +1,6 @@
 import type { SiteConfig, UpdateSiteConfigBody } from './model'
+import { Prisma } from '@nexus-prisma/generated/client'
 import { prisma } from '@nexus/infra/database'
-import { Prisma } from '@nexus/infra/database/prisma/generated/client'
 
 const SITE_CONFIG_SELECT = {
   id: true,

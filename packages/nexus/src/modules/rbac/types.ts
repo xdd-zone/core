@@ -1,4 +1,4 @@
-import type { PermissionSummary } from '@nexus/core/security/permissions'
+import type { PermissionSummary } from '@nexus/core/permissions'
 
 /**
  * 角色与权限的聚合类型。

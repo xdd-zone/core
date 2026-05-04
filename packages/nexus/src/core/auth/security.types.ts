@@ -1,4 +1,4 @@
-import type { Session as PrismaSession, User } from '@nexus/infra/database/prisma/generated'
+import type { Session as PrismaSession, User } from '@nexus-prisma/generated/client'
 
 /**
  * 当前请求的登录态。

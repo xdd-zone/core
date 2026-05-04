@@ -8,24 +8,24 @@
 - 角色可以拥有多个权限
 - 固定角色只有 `superAdmin / user`
 - 权限字符串格式是 `resource:action[:scope]`
-- 用户、角色、用户权限、系统管理这些基础权限放在 `core/security`
+- 用户、角色、用户权限、系统管理这些基础权限放在 `core/permissions`
 - 文章、媒体、评论、站点配置这些业务权限放在各自业务模块
 
 ## 相关代码位置
 
-- `packages/nexus/src/core/security/permissions/permissions.ts`
+- `packages/nexus/src/core/permissions/permissions.ts`
   系统基础权限常量，只放用户、角色、用户角色、用户权限和系统管理。
-- `packages/nexus/src/core/security/permissions/registry.ts`
+- `packages/nexus/src/core/permissions/registry.ts`
   权限注册表。`PermissionService` 从这里读取权限展示信息和排序。
-- `packages/nexus/src/core/security/permissions/role.constants.ts`
+- `packages/nexus/src/core/permissions/role.constants.ts`
   固定角色常量。
-- `packages/nexus/src/core/security/plugins/access.plugin.ts`
+- `packages/nexus/src/core/access/access.plugin.ts`
   权限插件。
-- `packages/nexus/src/core/security/guards/*`
+- `packages/nexus/src/core/access/*`
   认证守卫、权限守卫、所有权守卫。
 - `packages/nexus/src/modules/*/permissions.ts`
   业务模块自己的权限常量和权限说明。
-- `packages/nexus/src/modules/permission-definitions.ts`
+- `packages/nexus/src/modules/permissions.ts`
   汇总当前业务模块权限，供 seed 和公开导出读取。
 - `packages/nexus/src/public/permissions.ts`
   给前端导出系统权限、业务权限、角色常量和权限匹配函数。
@@ -39,7 +39,7 @@
 系统基础权限只写在：
 
 ```text
-packages/nexus/src/core/security/permissions/permissions.ts
+packages/nexus/src/core/permissions/permissions.ts
 ```
 
 当前包含这些分组：
@@ -71,14 +71,14 @@ packages/nexus/src/modules/site-config/permissions.ts
 新增业务模块权限时，按这个顺序改：
 
 1. 在 `packages/nexus/src/modules/<feature>/permissions.ts` 写权限常量和权限说明
-2. 在 `packages/nexus/src/modules/permission-definitions.ts` 加入该模块的权限说明
+2. 在 `packages/nexus/src/modules/permissions.ts` 加入该模块的权限说明
 3. 在 `packages/nexus/src/modules/<feature>/index.ts` 使用自己的权限常量
 4. 如果 Console 页面也要判断权限，从 `@xdd-zone/nexus/permissions` 引入对应业务权限常量
 
 示例：
 
 ```ts
-import type { PermissionDefinition, PermissionString } from '@nexus/core/security/permissions'
+import type { PermissionDefinition, PermissionString } from '@nexus/core/permissions'
 
 export const PostPermissions = {
   READ_ALL: 'post:read:all' as PermissionString,
@@ -98,7 +98,7 @@ export const POST_PERMISSION_DEFINITIONS: readonly PermissionDefinition[] = [
 `PermissionService` 不直接读取业务模块。它只读：
 
 ```text
-packages/nexus/src/core/security/permissions/registry.ts
+packages/nexus/src/core/permissions/registry.ts
 ```
 
 当前在 `packages/nexus/src/modules/index.ts` 注册权限：
@@ -111,10 +111,10 @@ registerPermissionDefinitions(BUSINESS_PERMISSION_DEFINITIONS)
 seed 权限时也读取系统权限和业务权限：
 
 ```text
-packages/nexus/src/infra/database/prisma/seed/seeds/seed-permissions.ts
+packages/nexus/prisma/seed/seeds/seed-permissions.ts
 ```
 
-这保证数据库里的 `permissions` 表能拿到完整权限列表，同时 `core/security` 不需要导入任何业务模块。
+这保证数据库里的 `permissions` 表能拿到完整权限列表，同时 `core/permissions` 不需要导入任何业务模块。
 
 ## route 上常用的字段
 
@@ -175,7 +175,7 @@ packages/nexus/src/infra/database/prisma/seed/seeds/seed-permissions.ts
 
 ## 当前规则
 
-- 系统基础权限只在 `core/security/permissions/permissions.ts` 维护
+- 系统基础权限只在 `core/permissions/permissions.ts` 维护
 - 业务权限只在对应的 `modules/*/permissions.ts` 维护
 - 前端需要权限常量时，从 `@xdd-zone/nexus/permissions` 引入
 - 页面访问控制和接口访问控制要保持同一套权限语义
@@ -204,4 +204,4 @@ bun run --filter @xdd-zone/nexus test
 - 普通用户访问超管接口是不是返回 `403`
 - `/me` 接口是否还能正常访问
 - 当前用户权限接口和角色接口是否还能返回数据
-- `packages/nexus/src/core/security` 里有没有误加业务权限字符串
+- `packages/nexus/src/core/permissions` 里有没有误加业务权限字符串

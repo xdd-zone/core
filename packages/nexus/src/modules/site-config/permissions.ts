@@ -1,4 +1,4 @@
-import type { PermissionDefinition, PermissionString } from '@nexus/core/security/permissions'
+import type { PermissionDefinition, PermissionString } from '@nexus/core/permissions'
 
 export const SiteConfigPermissions = {
   READ: 'site_config:read' as PermissionString,

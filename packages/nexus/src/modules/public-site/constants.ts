@@ -1,4 +1,4 @@
-import type { Prisma } from '@nexus/infra/database/prisma/generated/client'
+import type { Prisma } from '@nexus-prisma/generated/client'
 
 export const PUBLIC_SITE_CONFIG_SELECT = {
   title: true,

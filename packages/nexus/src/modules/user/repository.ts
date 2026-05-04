@@ -1,5 +1,5 @@
+import type { UserStatus } from '@nexus-prisma/generated/client'
 import type { PaginatedList, PaginationQuery } from '@nexus/infra/database'
-import type { UserStatus } from '@nexus/infra/database/prisma/generated'
 import type { UserBaseData, UserWhereInput } from './types'
 import { prisma } from '@nexus/infra/database'
 import { PrismaService } from '@nexus/infra/database/prisma.service'

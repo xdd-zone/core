@@ -1,4 +1,4 @@
-import type { Prisma } from '@nexus/infra/database/prisma/generated/client'
+import type { Prisma } from '@nexus-prisma/generated/client'
 import type { USER_BASE_SELECT } from './constants'
 
 /**

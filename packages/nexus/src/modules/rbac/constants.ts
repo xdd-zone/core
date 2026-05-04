@@ -1,14 +1,10 @@
 /**
  * 固定系统角色名称。
  */
-import type { SystemRoleName } from '@nexus/core/security/permissions/role.constants'
-import { Permissions } from '@nexus/core/security/permissions/permissions'
+import type { SystemRoleName } from '@nexus/core/permissions/role.constants'
+import { Permissions } from '@nexus/core/permissions/permissions'
 
-export {
-  DEFAULT_ROLE_NAME,
-  FIRST_USER_ROLE_NAME,
-  SYSTEM_ROLE_NAMES,
-} from '@nexus/core/security/permissions/role.constants'
+export { DEFAULT_ROLE_NAME, FIRST_USER_ROLE_NAME, SYSTEM_ROLE_NAMES } from '@nexus/core/permissions/role.constants'
 export type { SystemRoleName }
 
 /**

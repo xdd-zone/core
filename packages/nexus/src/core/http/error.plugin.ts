@@ -1,14 +1,14 @@
 import type { ResolvedConfig } from '@nexus/core/config'
 import type { Logger } from '@nexus/infra/logger'
 import type { Elysia } from 'elysia'
-import { CONFIG } from '@nexus/core/config'
 import {
   PrismaClientInitializationError,
   PrismaClientKnownRequestError,
   PrismaClientRustPanicError,
   PrismaClientUnknownRequestError,
   PrismaClientValidationError,
-} from '@nexus/infra/database/prisma/generated/runtime/client'
+} from '@nexus-prisma/generated/runtime/client'
+import { CONFIG } from '@nexus/core/config'
 import { createModuleLogger, logger as defaultLogger } from '@nexus/infra/logger'
 
 /**

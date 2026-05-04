@@ -7,7 +7,7 @@ export default defineConfig({
     url: env('DATABASE_URL'),
   },
   migrations: {
-    path: path.join('src', 'infra', 'database', 'prisma', 'migrations'),
+    path: path.join('prisma', 'migrations'),
   },
-  schema: path.join('src', 'infra', 'database', 'prisma', 'schema'),
+  schema: path.join('prisma', 'schema'),
 })

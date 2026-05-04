@@ -22,8 +22,12 @@ src/
 
 - `modules/`
   业务模块和接口。
-- `core/security/`
-  认证、权限、守卫、插件。
+- `core/auth/`
+  认证实例、session 和认证接口服务。
+- `core/access/`
+  认证插件、权限插件和守卫。
+- `core/permissions/`
+  系统基础权限、权限判断和权限注册表。
 - `core/http/`
   CORS、OpenAPI、错误处理、请求日志。
 - `core/config/`
@@ -38,7 +42,10 @@ src/
 ```text
 modules/<feature>/
 ├── index.ts
+├── routes.ts
 ├── model.ts
+├── openapi.ts
+├── mapper.ts
 ├── service.ts
 ├── repository.ts
 ├── permissions.ts
@@ -48,8 +55,11 @@ modules/<feature>/
 
 当前约定：
 
-- `index.ts` 写路由、schema 绑定、鉴权声明、`apiDetail(...)`
+- `index.ts` 只做该模块的普通导出
+- `routes.ts` 写路由、schema 绑定、鉴权声明和 service 调用
 - `model.ts` 写 body / query / params / response schema
+- `openapi.ts` 写 `apiDetail(...)`
+- `mapper.ts` 写数据库数据到 HTTP 返回结构的转换；没有转换逻辑的模块不用建
 - `service.ts` 写业务逻辑
 - `repository.ts` 写 Prisma 查询和写入
 - `permissions.ts` 写该模块自己的权限常量和权限说明
@@ -57,7 +67,7 @@ modules/<feature>/
 系统基础权限只放在：
 
 ```text
-src/core/security/permissions/permissions.ts
+src/core/permissions/permissions.ts
 ```
 
 业务权限放在各自模块，比如：
@@ -72,10 +82,10 @@ src/modules/site-config/permissions.ts
 业务权限说明汇总在：
 
 ```text
-src/modules/permission-definitions.ts
+src/modules/permissions.ts
 ```
 
-不要把业务权限写进 `src/core/security/permissions/permissions.ts`。
+不要把业务权限写进 `src/core/permissions/permissions.ts`。
 
 ## 运行前要配什么
 

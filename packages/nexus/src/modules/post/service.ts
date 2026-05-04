@@ -1,30 +1,14 @@
-import type { ContentStatus } from '@nexus/infra/database/prisma/generated'
 import type { CreatePostBody, Post, PostList, PostListQuery, UpdatePostBody } from './model'
-import type { PostBaseData, PostWhereInput } from './types'
+import type { PostWhereInput } from './types'
 import { BadRequestError, NotFoundError } from '@nexus/core/http'
 import { buildKeywordSearch } from '@nexus/infra/database'
 import { CategoryRepository } from '../category'
 import { POST_SEARCH_FIELDS } from './constants'
-import { PostListSchema, PostSchema } from './model'
+import { serializePost, toDatabasePostStatus } from './mapper'
 import { PostRepository } from './repository'
-
-function toDatabaseStatus(status: 'draft' | 'published'): ContentStatus {
-  return status === 'published' ? 'PUBLISHED' : 'DRAFT'
-}
-
-function toHttpStatus(status: ContentStatus): 'draft' | 'published' {
-  return status === 'PUBLISHED' ? 'published' : 'draft'
-}
 
 function normalizeNullableValue(value: string | null | undefined) {
   return value === undefined ? undefined : value
-}
-
-function serializePost(post: PostBaseData) {
-  return {
-    ...post,
-    status: toHttpStatus(post.status),
-  }
 }
 
 /**
@@ -38,7 +22,7 @@ export class PostService {
     const where: PostWhereInput = {}
 
     if (query.status) {
-      where.status = toDatabaseStatus(query.status)
+      where.status = toDatabasePostStatus(query.status)
     }
 
     if (query.categoryId) {
@@ -103,17 +87,17 @@ export class PostService {
   static async list(query: PostListQuery): Promise<PostList> {
     const result = await PostRepository.paginate(this.buildWhereConditions(query), query)
 
-    return PostListSchema.parse({
+    return {
       ...result,
       items: result.items.map(serializePost),
-    })
+    }
   }
 
   /**
    * 获取文章详情。
    */
   static async findById(id: string): Promise<Post> {
-    return PostSchema.parse(serializePost(await this.requireById(id)))
+    return serializePost(await this.requireById(id))
   }
 
   /**
@@ -122,18 +106,16 @@ export class PostService {
   static async create(data: CreatePostBody): Promise<Post> {
     await this.assertCategoryExists(data.categoryId)
 
-    return PostSchema.parse(
-      serializePost(
-        await PostRepository.create({
-          title: data.title,
-          slug: data.slug,
-          markdown: data.markdown,
-          excerpt: data.excerpt ?? null,
-          coverImage: data.coverImage ?? null,
-          categoryId: data.categoryId ?? null,
-          tags: data.tags,
-        }),
-      ),
+    return serializePost(
+      await PostRepository.create({
+        title: data.title,
+        slug: data.slug,
+        markdown: data.markdown,
+        excerpt: data.excerpt ?? null,
+        coverImage: data.coverImage ?? null,
+        categoryId: data.categoryId ?? null,
+        tags: data.tags,
+      }),
     )
   }
 
@@ -144,18 +126,16 @@ export class PostService {
     await this.requireById(id)
     await this.assertCategoryExists(data.categoryId)
 
-    return PostSchema.parse(
-      serializePost(
-        await PostRepository.update(id, {
-          title: data.title,
-          slug: data.slug,
-          markdown: data.markdown,
-          excerpt: normalizeNullableValue(data.excerpt),
-          coverImage: normalizeNullableValue(data.coverImage),
-          categoryId: normalizeNullableValue(data.categoryId),
-          tags: data.tags,
-        }),
-      ),
+    return serializePost(
+      await PostRepository.update(id, {
+        title: data.title,
+        slug: data.slug,
+        markdown: data.markdown,
+        excerpt: normalizeNullableValue(data.excerpt),
+        coverImage: normalizeNullableValue(data.coverImage),
+        categoryId: normalizeNullableValue(data.categoryId),
+        tags: data.tags,
+      }),
     )
   }
 
@@ -175,16 +155,14 @@ export class PostService {
     this.assertCanPublish(post)
 
     if (post.status === 'PUBLISHED') {
-      return PostSchema.parse(serializePost(post))
+      return serializePost(post)
     }
 
-    return PostSchema.parse(
-      serializePost(
-        await PostRepository.update(id, {
-          status: 'PUBLISHED',
-          publishedAt: new Date(),
-        }),
-      ),
+    return serializePost(
+      await PostRepository.update(id, {
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
+      }),
     )
   }
 
@@ -194,13 +172,11 @@ export class PostService {
   static async unpublish(id: string): Promise<Post> {
     await this.requireById(id)
 
-    return PostSchema.parse(
-      serializePost(
-        await PostRepository.update(id, {
-          status: 'DRAFT',
-          publishedAt: null,
-        }),
-      ),
+    return serializePost(
+      await PostRepository.update(id, {
+        status: 'DRAFT',
+        publishedAt: null,
+      }),
     )
   }
 }

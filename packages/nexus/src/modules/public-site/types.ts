@@ -1,4 +1,4 @@
-import type { Prisma } from '@nexus/infra/database/prisma/generated/client'
+import type { Prisma } from '@nexus-prisma/generated/client'
 import type {
   PUBLIC_SITE_CATEGORY_SELECT,
   PUBLIC_SITE_CONFIG_SELECT,

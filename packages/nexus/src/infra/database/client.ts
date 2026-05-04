@@ -1,7 +1,7 @@
 import type { ResolvedConfig } from '@nexus/core/config'
 import type { Logger } from '@nexus/infra/logger'
+import { PrismaClient } from '@nexus-prisma/generated/client'
 import { CONFIG } from '@nexus/core/config'
-import { PrismaClient } from '@nexus/infra/database/prisma/generated/client'
 import { createModuleLogger, logger as defaultLogger } from '@nexus/infra/logger'
 /**
  * Prisma 客户端实例

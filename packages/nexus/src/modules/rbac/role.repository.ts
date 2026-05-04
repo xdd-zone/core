@@ -1,4 +1,4 @@
-import type { Prisma } from '@nexus/infra/database/prisma/generated'
+import type { Prisma } from '@nexus-prisma/generated/client'
 import { prisma } from '@nexus/infra/database/client'
 
 /**

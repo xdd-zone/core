@@ -13,7 +13,7 @@ import { BadRequestError, NotFoundError } from '@nexus/core/http'
 import { buildKeywordSearch } from '@nexus/infra/database'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { USER_SEARCH_FIELDS } from './constants'
-import { UpdateMyPasswordResponseSchema, UserListSchema, UserSchema } from './model'
+import { createUpdateMyPasswordResponse, serializeUser, serializeUserList } from './mapper'
 import { UserRepository } from './repository'
 
 /**
@@ -42,7 +42,12 @@ export class UserService {
    * 获取后台用户列表。
    */
   static async list(query: UserListQuery): Promise<UserList> {
-    return UserListSchema.parse(await UserRepository.paginate(this.buildWhereConditions(query), query))
+    const result = await UserRepository.paginate(this.buildWhereConditions(query), query)
+
+    return {
+      ...result,
+      items: serializeUserList(result.items),
+    }
   }
 
   /**
@@ -54,7 +59,7 @@ export class UserService {
       throw new NotFoundError('用户不存在')
     }
 
-    return UserSchema.parse(user)
+    return serializeUser(user)
   }
 
   /**
@@ -70,7 +75,7 @@ export class UserService {
   static async updateProfile(userId: string, data: UpdateMyProfileBody): Promise<User> {
     await this.findById(userId)
 
-    return UserSchema.parse(
+    return serializeUser(
       await UserRepository.updateProfile(userId, {
         username: data.username ?? undefined,
         name: data.name,
@@ -112,9 +117,7 @@ export class UserService {
     await UserRepository.upsertCredentialPassword(userId, password)
     await UserRepository.deleteOtherSessions(userId, currentSessionId)
 
-    return UpdateMyPasswordResponseSchema.parse({
-      hasPassword: true,
-    })
+    return createUpdateMyPasswordResponse()
   }
 
   /**
@@ -123,7 +126,7 @@ export class UserService {
   static async updateByAdmin(userId: string, data: UpdateUserBody): Promise<User> {
     await this.findById(userId)
 
-    return UserSchema.parse(
+    return serializeUser(
       await UserRepository.updateProfile(userId, {
         username: data.username ?? undefined,
         name: data.name,
@@ -141,6 +144,6 @@ export class UserService {
   static async updateStatus(userId: string, status: UserStatus): Promise<User> {
     await this.findById(userId)
 
-    return UserSchema.parse(await UserRepository.updateStatus(userId, status))
+    return serializeUser(await UserRepository.updateStatus(userId, status))
   }
 }

@@ -1,4 +1,4 @@
-import { DEFAULT_ROLE_NAME, FIRST_USER_ROLE_NAME } from '@nexus/core/security/permissions'
+import { DEFAULT_ROLE_NAME, FIRST_USER_ROLE_NAME } from '@nexus/core/permissions'
 import { prisma } from '@nexus/infra/database/client'
 import { createModuleLogger } from '@nexus/infra/logger'
 

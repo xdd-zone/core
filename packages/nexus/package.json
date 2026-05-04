@@ -27,6 +27,11 @@
       "import": "./src/public/index.ts",
       "default": "./src/public/index.ts"
     },
+    "./types": {
+      "types": "./src/public/types.ts",
+      "import": "./src/public/types.ts",
+      "default": "./src/public/types.ts"
+    },
     "./auth-types": {
       "types": "./src/public/auth-types.ts",
       "import": "./src/public/auth-types.ts",
@@ -85,7 +90,7 @@
     "dev": "NODE_ENV=development bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
     "test": "bun test src/shared/schema/slug.test.ts src/modules/category/service.test.ts src/modules/post/service.test.ts src/modules/media/service.test.ts src/modules/comment/service.test.ts src/modules/rbac/service.test.ts src/eden/eden-smoke.test.ts src/eden/openapi-smoke.test.ts",
-    "seed": "bun run src/infra/database/prisma/seed/seed.ts",
+    "seed": "bun run prisma/seed/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:push:reset": "prisma db push --force-reset",

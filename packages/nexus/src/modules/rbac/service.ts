@@ -1,17 +1,16 @@
-import type { Prisma } from '@nexus/infra/database/prisma/generated'
+import type { Prisma } from '@nexus-prisma/generated/client'
 import type { RoleListQuery } from './model'
 import { NotFoundError } from '@nexus/core/http'
-import { normalizePermission, PermissionService } from '@nexus/core/security/permissions'
-import { createPaginatedResponse } from '@nexus/infra/database'
+import { PermissionService } from '@nexus/core/permissions'
 import { UserRepository } from '../user/repository'
 import {
-  CurrentUserPermissionsSchema,
-  CurrentUserRolesSchema,
-  RoleListSchema,
-  UserPermissionsSchema,
-  UserRoleAssignmentSchema,
-  UserRolesSchema,
-} from './model'
+  createCurrentUserPermissions,
+  createCurrentUserRoles,
+  createRoleList,
+  createUserPermissions,
+  serializeUserRoleAssignment,
+  serializeUserRoles,
+} from './mapper'
 import { RoleRepository } from './role.repository'
 import { UserRoleRepository } from './user-role.repository'
 
@@ -47,7 +46,7 @@ export class RbacService {
 
     const { roles, total } = await RoleRepository.findMany(where, skip, pageSize)
 
-    return RoleListSchema.parse(createPaginatedResponse(roles, total, page, pageSize))
+    return createRoleList(roles, total, page, pageSize)
   }
 
   /**
@@ -58,16 +57,7 @@ export class RbacService {
 
     const userRoles = await UserRoleRepository.findByUser(userId)
 
-    return UserRolesSchema.parse(
-      userRoles.map((userRole) => ({
-        id: userRole.id,
-        roleId: userRole.roleId,
-        roleName: userRole.role.name,
-        roleDisplayName: userRole.role.displayName,
-        assignedBy: userRole.assignedBy,
-        assignedAt: userRole.assignedAt,
-      })),
-    )
+    return serializeUserRoles(userRoles)
   }
 
   /**
@@ -84,7 +74,7 @@ export class RbacService {
     const userRole = await UserRoleRepository.assignRole(userId, roleId, assignedBy)
     PermissionService.clearCache(userId)
 
-    return UserRoleAssignmentSchema.parse(userRole)
+    return serializeUserRoleAssignment(userRole)
   }
 
   /**
@@ -109,9 +99,7 @@ export class RbacService {
 
     const permissions = await PermissionService.getUserPermissionSummaries(userId)
 
-    return UserPermissionsSchema.parse({
-      permissions,
-    })
+    return createUserPermissions(permissions)
   }
 
   /**
@@ -125,14 +113,7 @@ export class RbacService {
 
     const permissions = await PermissionService.getUserPermissionSummaries(userId)
 
-    return CurrentUserPermissionsSchema.parse({
-      permissions,
-      roles: userWithRoles.roles.map((userRole) => ({
-        id: userRole.role.id,
-        name: userRole.role.name,
-        displayName: userRole.role.displayName,
-      })),
-    })
+    return createCurrentUserPermissions(userWithRoles, permissions)
   }
 
   /**
@@ -144,29 +125,6 @@ export class RbacService {
       throw new NotFoundError('用户不存在')
     }
 
-    return CurrentUserRolesSchema.parse({
-      roles: userWithRoles.roles.map((userRole) => ({
-        id: userRole.role.id,
-        name: userRole.role.name,
-        displayName: userRole.role.displayName,
-        description: userRole.role.description,
-        isSystem: userRole.role.isSystem,
-        source: userRole.assignedBy ? 'manual' : 'system',
-        assignedBy: userRole.assignedBy,
-        assignedAt: userRole.assignedAt,
-        permissions: PermissionService.summarizePermissions(
-          userRole.role.permissions.map((rolePermission) =>
-            normalizePermission({
-              resource: rolePermission.permission.resource,
-              action: rolePermission.permission.action,
-              scope:
-                rolePermission.permission.scope === 'own' || rolePermission.permission.scope === 'all'
-                  ? rolePermission.permission.scope
-                  : undefined,
-            }),
-          ),
-        ),
-      })),
-    })
+    return createCurrentUserRoles(userWithRoles)
   }
 }

@@ -1,23 +1,10 @@
-import type { Prisma } from '@nexus/infra/database/prisma/generated'
-import type { SiteConfig, SiteSocialLinks, UpdateSiteConfigBody } from './model'
-import type { SiteConfigRecord } from './repository'
-import { SiteConfigSchema, SiteSocialLinksSchema } from './model'
+import type { SiteConfig, UpdateSiteConfigBody } from './model'
+import { serializeSiteConfig } from './mapper'
 import { SiteConfigRepository } from './repository'
 
 const DEFAULT_SITE_CONFIG = {
   title: 'XDD Zone',
 } as const
-
-function normalizeSocialLinks(value: Prisma.JsonValue | null | undefined): SiteSocialLinks {
-  return SiteSocialLinksSchema.parse(value ?? {})
-}
-
-function serializeSiteConfig(config: SiteConfigRecord): SiteConfig {
-  return SiteConfigSchema.parse({
-    ...config,
-    socialLinks: normalizeSocialLinks(config.socialLinks),
-  })
-}
 
 /**
  * 站点配置服务类。

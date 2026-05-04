@@ -1,5 +1,5 @@
+import type { Prisma } from '@nexus-prisma/generated/client'
 import type { PaginatedList, PaginationQuery } from '@nexus/infra/database'
-import type { Prisma } from '@nexus/infra/database/prisma/generated/client'
 
 import { prisma } from '@nexus/infra/database'
 import { PrismaService } from '@nexus/infra/database/prisma.service'

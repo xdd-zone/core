@@ -1,7 +1,7 @@
 import type pino from 'pino'
 import type { PrismaClient } from '../../generated'
-import { parsePermission, SYSTEM_PERMISSION_DEFINITIONS } from '@nexus/core/security/permissions'
-import { BUSINESS_PERMISSION_DEFINITIONS } from '@nexus/modules/permission-definitions'
+import { parsePermission, SYSTEM_PERMISSION_DEFINITIONS } from '@nexus/core/permissions'
+import { BUSINESS_PERMISSION_DEFINITIONS } from '@nexus/modules/permissions'
 
 const PERMISSION_DEFINITIONS = [...SYSTEM_PERMISSION_DEFINITIONS, ...BUSINESS_PERMISSION_DEFINITIONS] as const
 

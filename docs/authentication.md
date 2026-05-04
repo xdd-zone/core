@@ -52,13 +52,13 @@ auth:
 
 - `packages/nexus/src/modules/auth/index.ts`
   认证接口入口。
-- `packages/nexus/src/core/security/auth/auth-api.service.ts`
+- `packages/nexus/src/core/auth/auth-api.service.ts`
   邮箱注册、邮箱登录、GitHub 登录、登出。
-- `packages/nexus/src/core/security/auth/auth-methods.service.ts`
+- `packages/nexus/src/core/auth/auth-methods.service.ts`
   登录方式列表和是否开放的判断。
-- `packages/nexus/src/core/security/auth/better-auth.ts`
+- `packages/nexus/src/core/auth/better-auth.ts`
   Better Auth 实例和 provider 注册。
-- `packages/nexus/src/core/security/auth/session.service.ts`
+- `packages/nexus/src/core/auth/session.service.ts`
   session 解析。
 
 ### 前端
