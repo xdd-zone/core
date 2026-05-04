@@ -766,7 +766,6 @@ export default {
     forbiddenExample: '403 Forbidden',
     imageCrop: 'Image Crop',
     markdownExample: 'Markdown',
-    myAccess: 'My Access',
     myProfile: 'My Profile',
     notFoundExample: '404 Not Found',
     roleManagement: 'Role Management',
@@ -852,6 +851,10 @@ export default {
       infoDescription: 'This section shows the saved profile for the current account.',
       sideTitle: 'Profile Info',
       title: 'Current Profile',
+    },
+    tabs: {
+      access: 'My Access',
+      profile: 'Edit Profile',
     },
   },
   setting: {

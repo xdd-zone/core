@@ -23,7 +23,6 @@ import {
   Search,
   Settings,
   Shield,
-  ShieldCheck,
   SquarePen,
   Tag,
   UserCog,
@@ -329,16 +328,7 @@ const myProfileRoute = createRoute({
   },
 })
 
-const myAccessRoute = createRoute({
-  component: lazyRouteComponent(() => import('@console/pages/access/MyAccess'), 'MyAccess'),
-  getParentRoute: () => appLayoutRoute,
-  path: 'my-access',
-  staticData: {
-    contentWidth: 'full',
-    icon: ShieldCheck,
-    title: 'menu.myAccess',
-  },
-})
+
 
 const userAccessRoute = createRoute({
   component: lazyRouteComponent(() => import('@console/pages/user/access/UserAccess'), 'UserAccess'),
@@ -376,7 +366,6 @@ const protectedRouteTree = protectedRoute.addChildren([
     userAccessRoute,
     roleListRoute,
     myProfileRoute,
-    myAccessRoute,
   ]),
 ])
 

@@ -167,13 +167,7 @@ export const consoleRouteAccessRules: readonly ConsoleRouteAccessRule[] = [
       all: [Permissions.ROLE.READ_ALL],
     },
   },
-  {
-    matcher: createPathMatcher('/my-access'),
-    pathPattern: '/my-access',
-    requirement: {
-      all: [Permissions.USER_PERMISSION.READ_OWN],
-    },
-  },
+
   {
     matcher: createPathMatcher('/profile'),
     pathPattern: '/profile',

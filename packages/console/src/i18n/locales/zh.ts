@@ -749,7 +749,6 @@ export default {
     forbiddenExample: '403 权限错误',
     imageCrop: '图片裁剪',
     markdownExample: 'Markdown 演示',
-    myAccess: '我的权限',
     myProfile: '我的资料',
     notFoundExample: '404 页面不存在',
     roleManagement: '角色管理',
@@ -832,6 +831,10 @@ export default {
       infoDescription: '这里显示当前账号已保存的资料。',
       sideTitle: '资料信息',
       title: '当前资料',
+    },
+    tabs: {
+      access: '我的权限',
+      profile: '资料编辑',
     },
   },
   setting: {

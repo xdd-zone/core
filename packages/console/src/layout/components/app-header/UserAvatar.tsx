@@ -7,7 +7,7 @@ import { useTabBarStore } from '@console/stores'
 import { useNavigate } from '@tanstack/react-router'
 import { Avatar, Dropdown } from 'antd'
 
-import { KeyRound, LogOut, User, UserCog } from 'lucide-react'
+import { LogOut, User, UserCog } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -45,16 +45,7 @@ export function UserAvatar() {
     })
   }
 
-  if (canAccessConsolePath('/my-access', permissionKeys)) {
-    shortcutItems.push({
-      icon: <KeyRound size={20} />,
-      key: 'my-access',
-      label: t('menu.myAccess'),
-      onClick: () => {
-        void navigate({ to: '/my-access' })
-      },
-    })
-  }
+
 
   const menuItems: MenuProps['items'] = [
     {

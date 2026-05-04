@@ -21,7 +21,7 @@ import {
   Search,
   Settings,
   Shield,
-  ShieldCheck,
+
   SquarePen,
   Tags,
   User,
@@ -64,12 +64,6 @@ export const navigationItems: NavigationItem[] = [
         key: 'roles',
         label: 'menu.roleManagement',
         path: '/roles',
-      },
-      {
-        icon: ShieldCheck,
-        key: 'my-access',
-        label: 'menu.myAccess',
-        path: '/my-access',
       },
       {
         icon: KeyRound,
