@@ -1,8 +1,8 @@
 import type { AccessPluginInstance } from '@nexus/core/security'
-import { Permissions } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
 import { SiteConfigSchema, UpdateSiteConfigBodySchema } from './model'
+import { SiteConfigPermissions } from './permissions'
 import { SiteConfigRepository } from './repository'
 import { SiteConfigService } from './service'
 
@@ -21,7 +21,7 @@ export function createSiteConfigModule({ accessPlugin }: SiteConfigModuleOptions
   })
     .use(accessPlugin)
     .get('', async () => await SiteConfigService.get(), {
-      permission: Permissions.SITE_CONFIG.READ,
+      permission: SiteConfigPermissions.READ,
       response: SiteConfigSchema,
       detail: apiDetail({
         summary: '获取站点配置',
@@ -31,7 +31,7 @@ export function createSiteConfigModule({ accessPlugin }: SiteConfigModuleOptions
       }),
     })
     .put('', async ({ body }) => await SiteConfigService.update(body), {
-      permission: Permissions.SITE_CONFIG.WRITE,
+      permission: SiteConfigPermissions.WRITE,
       body: UpdateSiteConfigBodySchema,
       response: SiteConfigSchema,
       detail: apiDetail({
@@ -44,5 +44,6 @@ export function createSiteConfigModule({ accessPlugin }: SiteConfigModuleOptions
 }
 
 export * from './model'
+export * from './permissions'
 export { SiteConfigRepository }
 export { SiteConfigService }

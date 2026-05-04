@@ -1,6 +1,9 @@
 import type pino from 'pino'
 import type { PrismaClient } from '../../generated'
 import { parsePermission, SYSTEM_PERMISSION_DEFINITIONS } from '@nexus/core/security/permissions'
+import { BUSINESS_PERMISSION_DEFINITIONS } from '@nexus/modules/permission-definitions'
+
+const PERMISSION_DEFINITIONS = [...SYSTEM_PERMISSION_DEFINITIONS, ...BUSINESS_PERMISSION_DEFINITIONS] as const
 
 /**
  * 初始化系统权限注册表。
@@ -8,7 +11,7 @@ import { parsePermission, SYSTEM_PERMISSION_DEFINITIONS } from '@nexus/core/secu
 export async function seedPermissions(prisma: PrismaClient, logger: pino.Logger) {
   logger.info('🌱 开始同步权限注册表...')
 
-  for (const definition of SYSTEM_PERMISSION_DEFINITIONS) {
+  for (const definition of PERMISSION_DEFINITIONS) {
     const parsed = parsePermission(definition.key)
 
     await prisma.permission.upsert({
@@ -35,7 +38,7 @@ export async function seedPermissions(prisma: PrismaClient, logger: pino.Logger)
 
   await prisma.permission.deleteMany({
     where: {
-      NOT: SYSTEM_PERMISSION_DEFINITIONS.map((definition) => {
+      NOT: PERMISSION_DEFINITIONS.map((definition) => {
         const parsed = parsePermission(definition.key)
 
         return {
@@ -47,5 +50,5 @@ export async function seedPermissions(prisma: PrismaClient, logger: pino.Logger)
     },
   })
 
-  logger.info(`✅ 权限同步完成，共 ${SYSTEM_PERMISSION_DEFINITIONS.length} 个权限`)
+  logger.info(`✅ 权限同步完成，共 ${PERMISSION_DEFINITIONS.length} 个权限`)
 }

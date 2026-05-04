@@ -30,6 +30,15 @@ export interface PermissionSummary {
 }
 
 /**
+ * 权限定义。
+ */
+export interface PermissionDefinition {
+  key: PermissionString
+  displayName: string
+  description: string
+}
+
+/**
  * 权限上下文。
  */
 export interface PermissionContext {

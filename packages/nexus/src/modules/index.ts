@@ -1,10 +1,12 @@
 import type { AppBootstrapContext } from '../bootstrap'
+import { registerPermissionDefinitions, SYSTEM_PERMISSION_DEFINITIONS } from '@nexus/core/security'
 import { Elysia } from 'elysia'
 import { createAuthModule } from './auth'
 import { createCategoryModule } from './category'
 import { createCommentModule } from './comment'
 import { createHealthModule, HealthService } from './health'
 import { createMediaModule } from './media'
+import { BUSINESS_PERMISSION_DEFINITIONS } from './permission-definitions'
 import { createPostModule } from './post'
 import { createPreviewModule } from './preview'
 import { createPublicSiteModule } from './public-site'
@@ -16,6 +18,9 @@ import { createUserModule } from './user'
  * API 模块聚合入口。
  */
 export function createModules(context: AppBootstrapContext) {
+  registerPermissionDefinitions(SYSTEM_PERMISSION_DEFINITIONS)
+  registerPermissionDefinitions(BUSINESS_PERMISSION_DEFINITIONS)
+
   return new Elysia({
     name: 'api-modules',
     prefix: context.config.app.apiPrefix,

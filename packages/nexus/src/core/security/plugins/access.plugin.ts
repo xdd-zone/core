@@ -5,7 +5,6 @@ import type { PermissionString } from '../permissions'
 import type { AuthRequirement } from './auth.plugin'
 import { Elysia } from 'elysia'
 import { ensureAnyPermission, ensureOwnPermission, ensurePermission } from '../guards'
-import { Permissions } from '../permissions/permissions'
 import { assertAuthenticated } from './auth.plugin'
 
 type RoutePermission = PermissionString | string
@@ -118,5 +117,3 @@ export function createAccessPlugin(sessionService: SessionService) {
 }
 
 export type AccessPluginInstance = ReturnType<typeof createAccessPlugin>
-
-export { Permissions }

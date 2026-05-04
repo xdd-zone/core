@@ -1,0 +1,11 @@
+import { COMMENT_PERMISSION_DEFINITIONS } from './comment/permissions'
+import { MEDIA_PERMISSION_DEFINITIONS } from './media/permissions'
+import { POST_PERMISSION_DEFINITIONS } from './post/permissions'
+import { SITE_CONFIG_PERMISSION_DEFINITIONS } from './site-config/permissions'
+
+export const BUSINESS_PERMISSION_DEFINITIONS = [
+  ...POST_PERMISSION_DEFINITIONS,
+  ...SITE_CONFIG_PERMISSION_DEFINITIONS,
+  ...MEDIA_PERMISSION_DEFINITIONS,
+  ...COMMENT_PERMISSION_DEFINITIONS,
+] as const

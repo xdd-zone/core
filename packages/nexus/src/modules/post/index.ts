@@ -1,5 +1,4 @@
 import type { AccessPluginInstance } from '@nexus/core/security'
-import { Permissions } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
 import {
@@ -10,6 +9,7 @@ import {
   PostSchema,
   UpdatePostBodySchema,
 } from './model'
+import { PostPermissions } from './permissions'
 import { PostRepository } from './repository'
 import { PostService } from './service'
 
@@ -28,7 +28,7 @@ export function createPostModule({ accessPlugin }: PostModuleOptions) {
   })
     .use(accessPlugin)
     .get('/', async ({ query }) => await PostService.list(query), {
-      permission: Permissions.POST.READ_ALL,
+      permission: PostPermissions.READ_ALL,
       query: PostListQuerySchema,
       response: PostListSchema,
       detail: apiDetail({
@@ -39,7 +39,7 @@ export function createPostModule({ accessPlugin }: PostModuleOptions) {
       }),
     })
     .post('/', async ({ body }) => await PostService.create(body), {
-      permission: Permissions.POST.WRITE_ALL,
+      permission: PostPermissions.WRITE_ALL,
       body: CreatePostBodySchema,
       response: PostSchema,
       detail: apiDetail({
@@ -50,7 +50,7 @@ export function createPostModule({ accessPlugin }: PostModuleOptions) {
       }),
     })
     .get('/:id', async ({ params }) => await PostService.findById(params.id), {
-      permission: Permissions.POST.READ_ALL,
+      permission: PostPermissions.READ_ALL,
       params: PostIdParamsSchema,
       response: PostSchema,
       detail: apiDetail({
@@ -61,7 +61,7 @@ export function createPostModule({ accessPlugin }: PostModuleOptions) {
       }),
     })
     .patch('/:id', async ({ body, params }) => await PostService.update(params.id, body), {
-      permission: Permissions.POST.WRITE_ALL,
+      permission: PostPermissions.WRITE_ALL,
       params: PostIdParamsSchema,
       body: UpdatePostBodySchema,
       response: PostSchema,
@@ -79,7 +79,7 @@ export function createPostModule({ accessPlugin }: PostModuleOptions) {
         set.status = 204
       },
       {
-        permission: Permissions.POST.WRITE_ALL,
+        permission: PostPermissions.WRITE_ALL,
         params: PostIdParamsSchema,
         detail: apiDetail({
           summary: '删除文章',
@@ -91,7 +91,7 @@ export function createPostModule({ accessPlugin }: PostModuleOptions) {
       },
     )
     .post('/:id/publish', async ({ params }) => await PostService.publish(params.id), {
-      permission: Permissions.POST.PUBLISH_ALL,
+      permission: PostPermissions.PUBLISH_ALL,
       params: PostIdParamsSchema,
       response: PostSchema,
       detail: apiDetail({
@@ -102,7 +102,7 @@ export function createPostModule({ accessPlugin }: PostModuleOptions) {
       }),
     })
     .post('/:id/unpublish', async ({ params }) => await PostService.unpublish(params.id), {
-      permission: Permissions.POST.PUBLISH_ALL,
+      permission: PostPermissions.PUBLISH_ALL,
       params: PostIdParamsSchema,
       response: PostSchema,
       detail: apiDetail({
@@ -116,6 +116,7 @@ export function createPostModule({ accessPlugin }: PostModuleOptions) {
 
 export * from './constants'
 export * from './model'
+export * from './permissions'
 export { PostRepository }
 export { PostService }
 export * from './types'

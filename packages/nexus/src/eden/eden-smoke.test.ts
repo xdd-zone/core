@@ -7,12 +7,13 @@ import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import pino from 'pino'
 import { createApp } from '../app'
 import { createAppContext } from '../bootstrap'
-import { parsePermission, Permissions, PermissionService, SYSTEM_PERMISSION_DEFINITIONS } from '../core/security'
+import { parsePermission, PermissionService } from '../core/security'
 import { prisma } from '../infra/database'
 import { seedPermissions } from '../infra/database/prisma/seed/seeds/seed-permissions'
 import { seedRolePermissions } from '../infra/database/prisma/seed/seeds/seed-role-permissions'
 import { seedRoles } from '../infra/database/prisma/seed/seeds/seed-roles'
 import { SiteConfigRepository } from '../modules/site-config/repository'
+import { PERMISSION_DEFINITIONS, PostPermissions } from '../public/permissions'
 
 const appContext = createAppContext({
   auth: {
@@ -217,7 +218,7 @@ async function createRoleWithPermissions(name: string, permissionKeys: readonly 
         return permission.id
       }
 
-      const definition = SYSTEM_PERMISSION_DEFINITIONS.find((item) => item.key === permissionKey)
+      const definition = PERMISSION_DEFINITIONS.find((item) => item.key === permissionKey)
       const createdPermission = await prisma.permission.create({
         data: {
           resource: parsedPermission.resource,
@@ -1080,7 +1081,7 @@ describe('eden smoke', () => {
     expect(updateResult.data?.sortOrder).toBe(1)
     expect(updateResult.data?.isVisible).toBe(true)
 
-    const writeOnlyRole = await createRoleWithPermissions(`category-write-${tempSuffix}`, [Permissions.POST.WRITE_ALL])
+    const writeOnlyRole = await createRoleWithPermissions(`category-write-${tempSuffix}`, [PostPermissions.WRITE_ALL])
     await prisma.userRole.create({
       data: {
         userId: subjectUserId,
@@ -1792,7 +1793,7 @@ describe('eden smoke', () => {
   })
 
   it('具备 POST 写权限的用户应可访问文章预览', async () => {
-    const postPreviewRole = await createRoleWithPermissions(`post-preview-${tempSuffix}`, [Permissions.POST.WRITE_ALL])
+    const postPreviewRole = await createRoleWithPermissions(`post-preview-${tempSuffix}`, [PostPermissions.WRITE_ALL])
 
     await prisma.userRole.create({
       data: {

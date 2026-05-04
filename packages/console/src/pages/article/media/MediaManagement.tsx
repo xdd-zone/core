@@ -13,7 +13,7 @@ import { useCurrentUserPermissionsQuery } from '@console/modules/rbac'
 import { resolveApiUrl } from '@console/shared/api'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { Permissions } from '@xdd-zone/nexus/permissions'
+import { MediaPermissions } from '@xdd-zone/nexus/permissions'
 import { App as AntdApp, Button, Card, Descriptions, Empty, Popconfirm, Space, Table, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { Copy, ExternalLink, RefreshCw, Trash2, Upload } from 'lucide-react'
@@ -66,8 +66,8 @@ export function MediaManagement() {
 
   const currentUserPermissionsQuery = useCurrentUserPermissionsQuery()
   const permissionKeys = createPermissionKeySet(currentUserPermissionsQuery.data?.permissions)
-  const canReadMedia = canUsePermission(permissionKeys, Permissions.MEDIA.READ_ALL)
-  const canWriteMedia = canUsePermission(permissionKeys, Permissions.MEDIA.WRITE_ALL)
+  const canReadMedia = canUsePermission(permissionKeys, MediaPermissions.READ_ALL)
+  const canWriteMedia = canUsePermission(permissionKeys, MediaPermissions.WRITE_ALL)
 
   const mediaListQuery = useMediaListQuery({ page, pageSize }, canReadMedia)
   const uploadMediaMutation = useUploadMediaMutation()

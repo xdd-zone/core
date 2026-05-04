@@ -1,5 +1,4 @@
 import type { AccessPluginInstance } from '@nexus/core/security'
-import { Permissions } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
 import {
@@ -10,6 +9,7 @@ import {
   CreateCommentBodySchema,
   UpdateCommentStatusBodySchema,
 } from './model'
+import { CommentPermissions } from './permissions'
 import { CommentRepository } from './repository'
 import { CommentService } from './service'
 
@@ -28,7 +28,7 @@ export function createCommentModule({ accessPlugin }: CommentModuleOptions) {
   })
     .use(accessPlugin)
     .get('/', async ({ query }) => await CommentService.list(query), {
-      permission: Permissions.COMMENT.READ_ALL,
+      permission: CommentPermissions.READ_ALL,
       query: CommentListQuerySchema,
       response: CommentListSchema,
       detail: apiDetail({
@@ -49,7 +49,7 @@ export function createCommentModule({ accessPlugin }: CommentModuleOptions) {
       }),
     })
     .get('/:id', async ({ params }) => await CommentService.findById(params.id), {
-      permission: Permissions.COMMENT.READ_ALL,
+      permission: CommentPermissions.READ_ALL,
       params: CommentIdParamsSchema,
       response: CommentSchema,
       detail: apiDetail({
@@ -60,7 +60,7 @@ export function createCommentModule({ accessPlugin }: CommentModuleOptions) {
       }),
     })
     .patch('/:id/status', async ({ body, params }) => await CommentService.updateStatus(params.id, body.status), {
-      permission: Permissions.COMMENT.MODERATE_ALL,
+      permission: CommentPermissions.MODERATE_ALL,
       params: CommentIdParamsSchema,
       body: UpdateCommentStatusBodySchema,
       response: CommentSchema,
@@ -78,7 +78,7 @@ export function createCommentModule({ accessPlugin }: CommentModuleOptions) {
         set.status = 204
       },
       {
-        permission: Permissions.COMMENT.MODERATE_ALL,
+        permission: CommentPermissions.MODERATE_ALL,
         params: CommentIdParamsSchema,
         detail: apiDetail({
           summary: '删除评论',
@@ -93,6 +93,7 @@ export function createCommentModule({ accessPlugin }: CommentModuleOptions) {
 
 export * from './constants'
 export * from './model'
+export * from './permissions'
 export { CommentRepository }
 export { CommentService }
 export * from './types'

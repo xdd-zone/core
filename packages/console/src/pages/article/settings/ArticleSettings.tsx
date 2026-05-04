@@ -10,7 +10,7 @@ import {
 } from '@console/modules/site-config'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { Permissions } from '@xdd-zone/nexus/permissions'
+import { SiteConfigPermissions } from '@xdd-zone/nexus/permissions'
 import { App as AntdApp, Button, Card, Empty, Form, Input, Space, Tag } from 'antd'
 import { ImagePlus, RefreshCw } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
@@ -84,8 +84,8 @@ export function ArticleSettings() {
 
   const currentUserPermissionsQuery = useCurrentUserPermissionsQuery()
   const permissionKeys = createPermissionKeySet(currentUserPermissionsQuery.data?.permissions)
-  const canReadSiteConfig = canUsePermission(permissionKeys, Permissions.SITE_CONFIG.READ)
-  const canWriteSiteConfig = canUsePermission(permissionKeys, Permissions.SITE_CONFIG.WRITE)
+  const canReadSiteConfig = canUsePermission(permissionKeys, SiteConfigPermissions.READ)
+  const canWriteSiteConfig = canUsePermission(permissionKeys, SiteConfigPermissions.WRITE)
 
   const siteConfigQuery = useSiteConfigQuery(canReadSiteConfig)
   const updateSiteConfigMutation = useUpdateSiteConfigMutation()

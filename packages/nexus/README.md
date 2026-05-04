@@ -29,7 +29,7 @@ src/
 - `core/config/`
   读取 `config.yaml` 和环境变量。
 - `public/`
-  给前端复用的类型、Eden 类型、权限常量。
+  给前端复用的类型、Eden 类型、权限导出。
 
 ## 模块怎么组织
 
@@ -41,6 +41,7 @@ modules/<feature>/
 ├── model.ts
 ├── service.ts
 ├── repository.ts
+├── permissions.ts
 ├── constants.ts
 └── types.ts
 ```
@@ -51,6 +52,30 @@ modules/<feature>/
 - `model.ts` 写 body / query / params / response schema
 - `service.ts` 写业务逻辑
 - `repository.ts` 写 Prisma 查询和写入
+- `permissions.ts` 写该模块自己的权限常量和权限说明
+
+系统基础权限只放在：
+
+```text
+src/core/security/permissions/permissions.ts
+```
+
+业务权限放在各自模块，比如：
+
+```text
+src/modules/post/permissions.ts
+src/modules/media/permissions.ts
+src/modules/comment/permissions.ts
+src/modules/site-config/permissions.ts
+```
+
+业务权限说明汇总在：
+
+```text
+src/modules/permission-definitions.ts
+```
+
+不要把业务权限写进 `src/core/security/permissions/permissions.ts`。
 
 ## 运行前要配什么
 
@@ -104,7 +129,7 @@ bun run seed
 - `@xdd-zone/nexus/eden`
   Eden 类型入口。
 - `@xdd-zone/nexus/permissions`
-  权限常量、角色常量、权限匹配函数。
+  系统权限、业务权限、角色常量、权限匹配函数。
 - `@xdd-zone/nexus/public`
   聚合 HTTP 类型和 Eden 类型。
 

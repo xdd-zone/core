@@ -1,14 +1,11 @@
 import type { PermissionContext, PermissionString, PermissionSummary } from './permissions.types'
 import { prisma } from '@nexus/infra/database/client'
 import { matchPermission, normalizePermission, parsePermission } from './helpers'
-import { Permissions, SYSTEM_PERMISSION_DEFINITIONS, SYSTEM_PERMISSION_KEYS } from './permissions'
+import { Permissions } from './permissions'
+import { permissionRegistry } from './registry'
 
 const permissionCache = new Map<string, { context: PermissionContext; expiresAt: number }>()
 const CACHE_TTL = 5 * 60 * 1000
-const systemPermissionOrderMap = new Map(SYSTEM_PERMISSION_KEYS.map((permission, index) => [permission, index]))
-const systemPermissionDefinitionMap = new Map(
-  SYSTEM_PERMISSION_DEFINITIONS.map((definition) => [definition.key, definition]),
-)
 
 /**
  * 权限服务。
@@ -18,16 +15,7 @@ export class PermissionService {
    * 按系统定义顺序整理权限列表，便于接口与前端稳定展示。
    */
   private static sortPermissions(permissions: PermissionString[]): PermissionString[] {
-    return [...permissions].sort((left, right) => {
-      const leftOrder = systemPermissionOrderMap.get(left) ?? Number.MAX_SAFE_INTEGER
-      const rightOrder = systemPermissionOrderMap.get(right) ?? Number.MAX_SAFE_INTEGER
-
-      if (leftOrder !== rightOrder) {
-        return leftOrder - rightOrder
-      }
-
-      return left.localeCompare(right)
-    })
+    return [...permissions].sort((left, right) => permissionRegistry.compare(left, right))
   }
 
   /**
@@ -35,7 +23,7 @@ export class PermissionService {
    */
   static toPermissionSummary(permission: PermissionString): PermissionSummary {
     const parsedPermission = parsePermission(permission)
-    const definition = systemPermissionDefinitionMap.get(permission)
+    const definition = permissionRegistry.getDefinition(permission)
 
     return {
       key: permission,
@@ -194,7 +182,7 @@ export class PermissionService {
   static async getUserPermissions(userId: string): Promise<PermissionString[]> {
     const context = await this.getPermissionContext(userId)
     if (context.isSuperAdmin) {
-      return this.sortPermissions([...SYSTEM_PERMISSION_KEYS])
+      return this.sortPermissions(permissionRegistry.getAllKeys())
     }
 
     return this.sortPermissions(Array.from(context.permissions))

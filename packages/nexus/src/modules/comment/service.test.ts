@@ -67,7 +67,9 @@ describe('CommentService', () => {
 
   it('删除评论', async () => {
     spyOn(CommentRepository, 'findById').mockResolvedValue(createComment())
-    const updateStatusSpy = spyOn(CommentRepository, 'updateStatus').mockResolvedValue(createComment({ status: 'DELETED' }))
+    const updateStatusSpy = spyOn(CommentRepository, 'updateStatus').mockResolvedValue(
+      createComment({ status: 'DELETED' }),
+    )
 
     await CommentService.remove('comment-1')
 
@@ -76,7 +78,9 @@ describe('CommentService', () => {
 
   it('删除不存在的评论应抛错', async () => {
     spyOn(CommentRepository, 'findById').mockResolvedValue(null)
-    const updateStatusSpy = spyOn(CommentRepository, 'updateStatus').mockResolvedValue(createComment({ status: 'DELETED' }))
+    const updateStatusSpy = spyOn(CommentRepository, 'updateStatus').mockResolvedValue(
+      createComment({ status: 'DELETED' }),
+    )
 
     await expect(CommentService.remove('missing')).rejects.toThrow('评论不存在')
     expect(updateStatusSpy).not.toHaveBeenCalled()

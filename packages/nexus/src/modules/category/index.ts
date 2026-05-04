@@ -1,8 +1,8 @@
 import type { AccessPluginInstance } from '@nexus/core/security'
-import { Permissions } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
 import { CATEGORY_MANAGE_PERMISSIONS } from '../../public/category-types'
+import { PostPermissions } from '../post/permissions'
 import {
   CategoryIdParamsSchema,
   CategoryListQuerySchema,
@@ -37,7 +37,7 @@ export function createCategoryModule({ accessPlugin }: CategoryModuleOptions) {
       }),
     })
     .post('/', async ({ body }) => await CategoryService.create(body), {
-      permission: Permissions.POST.WRITE_ALL,
+      permission: PostPermissions.WRITE_ALL,
       body: CreateCategoryBodySchema,
       response: CategorySchema,
       detail: apiDetail({
@@ -59,7 +59,7 @@ export function createCategoryModule({ accessPlugin }: CategoryModuleOptions) {
       }),
     })
     .patch('/:id', async ({ body, params }) => await CategoryService.update(params.id, body), {
-      permission: Permissions.POST.WRITE_ALL,
+      permission: PostPermissions.WRITE_ALL,
       params: CategoryIdParamsSchema,
       body: UpdateCategoryBodySchema,
       response: CategorySchema,
@@ -77,7 +77,7 @@ export function createCategoryModule({ accessPlugin }: CategoryModuleOptions) {
         set.status = 204
       },
       {
-        permission: Permissions.POST.WRITE_ALL,
+        permission: PostPermissions.WRITE_ALL,
         params: CategoryIdParamsSchema,
         detail: apiDetail({
           summary: '删除分类',

@@ -1,7 +1,7 @@
 import type { AccessPluginInstance } from '@nexus/core/security'
-import { Permissions } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
+import { PostPermissions } from '../post/permissions'
 import { PreviewMarkdownBodySchema, PreviewMarkdownResponseSchema } from './model'
 import { PreviewService } from './service'
 
@@ -20,7 +20,7 @@ export function createPreviewModule({ accessPlugin }: PreviewModuleOptions) {
   })
     .use(accessPlugin)
     .post('/markdown', async ({ body }) => PreviewService.renderMarkdown(body), {
-      permission: Permissions.POST.WRITE_ALL,
+      permission: PostPermissions.WRITE_ALL,
       body: PreviewMarkdownBodySchema,
       response: PreviewMarkdownResponseSchema,
       detail: apiDetail({

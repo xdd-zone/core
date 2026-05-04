@@ -1,8 +1,8 @@
-import type { SystemPermissionKey } from '@xdd-zone/nexus/permissions'
+import type { PermissionString } from '@xdd-zone/nexus/permissions'
 
 import type { TFunction } from 'i18next'
 import { hasConsoleAccess } from '@console/app/access/access-control'
-import { Permissions } from '@xdd-zone/nexus/permissions'
+import { PostPermissions } from '@xdd-zone/nexus/permissions'
 import { Badge, Tag } from 'antd'
 
 import dayjs from 'dayjs'
@@ -15,7 +15,7 @@ export function formatDateTime(value?: string | null) {
   return dayjs(value).format('YYYY-MM-DD HH:mm')
 }
 
-export function canUsePermission(permissionKeys: Iterable<string>, permission: SystemPermissionKey) {
+export function canUsePermission(permissionKeys: Iterable<string>, permission: PermissionString) {
   return hasConsoleAccess(permissionKeys, {
     all: [permission],
   })
@@ -81,4 +81,4 @@ export function joinTags(tags: string[]) {
   return tags.join(', ')
 }
 
-export const POST_PUBLISH_PERMISSION = Permissions.POST.PUBLISH_ALL
+export const POST_PUBLISH_PERMISSION = PostPermissions.PUBLISH_ALL

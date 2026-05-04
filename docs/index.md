@@ -79,6 +79,8 @@
 - `packages/nexus/src/core/security/permissions`
 - `packages/nexus/src/core/security/plugins/access.plugin.ts`
 - `packages/nexus/src/core/security/guards`
+- `packages/nexus/src/modules/*/permissions.ts`
+- `packages/nexus/src/modules/permission-definitions.ts`
 - `packages/console/src/app/access/access-control.ts`
 
 ## 要排查联调问题

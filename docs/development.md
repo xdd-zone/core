@@ -135,7 +135,21 @@ bun run prisma:push
 - `packages/nexus/src/core/security/plugins/access.plugin.ts`
 - `packages/nexus/src/core/security/guards/*`
 - `packages/nexus/src/core/security/permissions/*`
+- `packages/nexus/src/modules/*/permissions.ts`
+- `packages/nexus/src/modules/permission-definitions.ts`
 - `packages/console/src/app/access/access-control.ts`
+
+系统基础权限放在 `core/security/permissions/permissions.ts`。业务权限放在对应业务模块的 `permissions.ts`。
+
+新增业务权限时：
+
+1. 在 `packages/nexus/src/modules/<feature>/permissions.ts` 写权限常量和权限说明
+2. 在 `packages/nexus/src/modules/permission-definitions.ts` 加入权限说明
+3. 在 `packages/nexus/src/modules/<feature>/index.ts` 使用该模块自己的权限常量
+4. 在 `packages/console/src/app/access/access-control.ts` 补页面访问规则
+5. 如果页面内部还要判断按钮权限，从 `@xdd-zone/nexus/permissions` 引入业务权限常量
+
+不要把业务权限写进 `packages/nexus/src/core/security/permissions/permissions.ts`。
 
 ## 回归检查
 
@@ -168,6 +182,14 @@ bun run build:console
 ```bash
 bun run --filter @xdd-zone/nexus type-check
 bun run --filter @xdd-zone/nexus test
+```
+
+如果改了权限拆分或前端页面访问控制，再补：
+
+```bash
+bun run format
+bun run lint
+bun run type-check
 ```
 
 ### 提交前最小检查

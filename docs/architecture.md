@@ -11,7 +11,7 @@
 - `packages/nexus`
   后端 API 服务。
 
-前后端都在一个仓库里维护，接口类型和权限常量也一起放在仓库里。
+前后端都在一个仓库里维护，接口类型和权限导出也一起放在仓库里。
 
 ## 包职责
 
@@ -95,7 +95,7 @@ modules/<feature>/
 - `core/http`
   CORS、OpenAPI、统一错误处理、请求日志。
 - `core/security`
-  Better Auth、session、插件、守卫、权限常量和权限判断。
+  Better Auth、session、插件、守卫、系统基础权限、权限判断和权限注册表。
 - `core/config`
   读取 `config.yaml`、合并环境变量、返回最终配置。
 
@@ -127,7 +127,7 @@ createConfig()
 - `*-types.ts`
   各模块的 HTTP 类型。
 - `permissions.ts`
-  权限常量、角色常量、匹配函数。
+  系统权限、业务权限、角色常量、匹配函数。
 - `eden.ts`
   `type App = typeof app`。
 
@@ -206,15 +206,52 @@ packages/console/src/
 - `@xdd-zone/nexus/site-config-types`
 - `@xdd-zone/nexus/public-site-types`
 
-权限常量统一从 `@xdd-zone/nexus/permissions` 引入。
+权限统一从 `@xdd-zone/nexus/permissions` 引入。
 
 ## 当前认证和权限模型
 
 - 固定角色只有 `superAdmin / user`
-- 权限常量以 `packages/nexus/src/core/security/permissions/permissions.ts` 为准
+- 系统基础权限放在 `packages/nexus/src/core/security/permissions/permissions.ts`
+- 业务权限放在 `packages/nexus/src/modules/*/permissions.ts`
+- 权限说明由 `packages/nexus/src/core/security/permissions/registry.ts` 读取
 - `own` 只用于当前用户资料相关场景
 - 前端页面访问控制走 `packages/console/src/app/access/access-control.ts`
 - 后端接口权限校验走 `authPlugin` 或 `accessPlugin`
+
+### 权限文件怎么分
+
+系统基础权限只放这些内容：
+
+```text
+USER
+ROLE
+USER_ROLE
+USER_PERMISSION
+SYSTEM
+```
+
+位置：
+
+```text
+packages/nexus/src/core/security/permissions/permissions.ts
+```
+
+业务模块自己放业务权限。当前位置：
+
+```text
+packages/nexus/src/modules/post/permissions.ts
+packages/nexus/src/modules/media/permissions.ts
+packages/nexus/src/modules/comment/permissions.ts
+packages/nexus/src/modules/site-config/permissions.ts
+```
+
+业务权限汇总在：
+
+```text
+packages/nexus/src/modules/permission-definitions.ts
+```
+
+`core/security` 不导入 `modules/post`、`modules/media`、`modules/comment`、`modules/site-config`。
 
 ## 改动时的默认落点
 
@@ -241,6 +278,8 @@ packages/console/src/
 同时检查：
 
 - `packages/nexus/src/core/security/*`
+- `packages/nexus/src/modules/*/permissions.ts`
+- `packages/nexus/src/modules/permission-definitions.ts`
 - `packages/nexus/src/modules/auth`
 - `packages/console/src/modules/auth`
 - `packages/console/src/app/access/access-control.ts`

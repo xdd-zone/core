@@ -1,8 +1,9 @@
-import { SYSTEM_PERMISSION_KEYS } from '@nexus/core/security/permissions'
 import { createPaginatedListSchema, DateTimeSchema, intFromQuery } from '@nexus/shared/schema'
 import { z } from 'zod'
 
-export const PermissionStringSchema = z.enum(SYSTEM_PERMISSION_KEYS)
+export const PermissionStringSchema = z
+  .string()
+  .regex(/^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*(?::(?:own|all))?$/, '权限格式不正确')
 export type PermissionString = z.infer<typeof PermissionStringSchema>
 
 export const PermissionScopeSchema = z.enum(['own', 'all'])

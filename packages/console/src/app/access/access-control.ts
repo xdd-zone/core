@@ -1,14 +1,21 @@
 import type { PermissionSummary } from '@console/modules/rbac'
 import type { QueryClient } from '@tanstack/react-query'
-import type { PermissionString, SystemPermissionKey } from '@xdd-zone/nexus/permissions'
+import type { PermissionString } from '@xdd-zone/nexus/permissions'
 import { currentUserPermissionsQueryOptions } from '@console/modules/rbac'
 import { redirect } from '@tanstack/react-router'
 import { CATEGORY_MANAGE_PERMISSIONS } from '@xdd-zone/nexus/category-types'
-import { matchPermission, Permissions } from '@xdd-zone/nexus/permissions'
+import {
+  CommentPermissions,
+  matchPermission,
+  MediaPermissions,
+  Permissions,
+  PostPermissions,
+  SiteConfigPermissions,
+} from '@xdd-zone/nexus/permissions'
 
 interface ConsoleAccessRequirement {
-  all?: readonly SystemPermissionKey[]
-  any?: readonly SystemPermissionKey[]
+  all?: readonly PermissionString[]
+  any?: readonly PermissionString[]
 }
 
 interface ConsoleRouteAccessRule {
@@ -41,7 +48,7 @@ function normalizePathname(pathname: string) {
   return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname
 }
 
-function hasPermission(permissionKeys: ReadonlySet<string>, permission: SystemPermissionKey) {
+function hasPermission(permissionKeys: ReadonlySet<string>, permission: PermissionString) {
   if (permissionKeys.has(Permissions.SYSTEM.MANAGE)) {
     return true
   }
@@ -60,28 +67,28 @@ export const consoleRouteAccessRules: readonly ConsoleRouteAccessRule[] = [
     matcher: createPathMatcher('/articles/new'),
     pathPattern: '/articles/new',
     requirement: {
-      all: [Permissions.POST.WRITE_ALL],
+      all: [PostPermissions.WRITE_ALL],
     },
   },
   {
     matcher: createPathMatcher('/articles/$id/edit'),
     pathPattern: '/articles/$id/edit',
     requirement: {
-      all: [Permissions.POST.WRITE_ALL],
+      all: [PostPermissions.WRITE_ALL],
     },
   },
   {
     matcher: createPathMatcher('/articles/$id'),
     pathPattern: '/articles/$id',
     requirement: {
-      all: [Permissions.POST.READ_ALL],
+      all: [PostPermissions.READ_ALL],
     },
   },
   {
     matcher: createPathMatcher('/articles'),
     pathPattern: '/articles',
     requirement: {
-      all: [Permissions.POST.READ_ALL],
+      all: [PostPermissions.READ_ALL],
     },
   },
   {
@@ -95,28 +102,28 @@ export const consoleRouteAccessRules: readonly ConsoleRouteAccessRule[] = [
     matcher: createPathMatcher('/tags'),
     pathPattern: '/tags',
     requirement: {
-      all: [Permissions.POST.READ_ALL],
+      all: [PostPermissions.READ_ALL],
     },
   },
   {
     matcher: createPathMatcher('/comments'),
     pathPattern: '/comments',
     requirement: {
-      all: [Permissions.COMMENT.READ_ALL],
+      all: [CommentPermissions.READ_ALL],
     },
   },
   {
     matcher: createPathMatcher('/article-settings'),
     pathPattern: '/article-settings',
     requirement: {
-      any: [Permissions.SITE_CONFIG.READ, Permissions.SITE_CONFIG.WRITE],
+      any: [SiteConfigPermissions.READ, SiteConfigPermissions.WRITE],
     },
   },
   {
     matcher: createPathMatcher('/media'),
     pathPattern: '/media',
     requirement: {
-      any: [Permissions.MEDIA.READ_ALL, Permissions.MEDIA.WRITE_ALL],
+      any: [MediaPermissions.READ_ALL, MediaPermissions.WRITE_ALL],
     },
   },
   {

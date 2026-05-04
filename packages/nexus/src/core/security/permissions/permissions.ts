@@ -1,4 +1,4 @@
-import type { PermissionString } from './permissions.types'
+import type { PermissionDefinition, PermissionString } from './permissions.types'
 
 /**
  * 系统权限常量。
@@ -22,23 +22,6 @@ export const Permissions = {
     READ_OWN: 'user_permission:read:own' as PermissionString,
     READ_ALL: 'user_permission:read:all' as PermissionString,
   },
-  POST: {
-    READ_ALL: 'post:read:all' as PermissionString,
-    WRITE_ALL: 'post:write:all' as PermissionString,
-    PUBLISH_ALL: 'post:publish:all' as PermissionString,
-  },
-  SITE_CONFIG: {
-    READ: 'site_config:read' as PermissionString,
-    WRITE: 'site_config:write' as PermissionString,
-  },
-  MEDIA: {
-    READ_ALL: 'media:read:all' as PermissionString,
-    WRITE_ALL: 'media:write:all' as PermissionString,
-  },
-  COMMENT: {
-    READ_ALL: 'comment:read:all' as PermissionString,
-    MODERATE_ALL: 'comment:moderate:all' as PermissionString,
-  },
   SYSTEM: {
     MANAGE: 'system:manage' as PermissionString,
   },
@@ -55,25 +38,12 @@ export const SYSTEM_PERMISSION_KEYS = [
   Permissions.USER_ROLE.REVOKE_ALL,
   Permissions.USER_PERMISSION.READ_OWN,
   Permissions.USER_PERMISSION.READ_ALL,
-  Permissions.POST.READ_ALL,
-  Permissions.POST.WRITE_ALL,
-  Permissions.POST.PUBLISH_ALL,
-  Permissions.SITE_CONFIG.READ,
-  Permissions.SITE_CONFIG.WRITE,
-  Permissions.MEDIA.READ_ALL,
-  Permissions.MEDIA.WRITE_ALL,
-  Permissions.COMMENT.READ_ALL,
-  Permissions.COMMENT.MODERATE_ALL,
   Permissions.SYSTEM.MANAGE,
 ] as const
 
 export type SystemPermissionKey = (typeof SYSTEM_PERMISSION_KEYS)[number]
 
-export const SYSTEM_PERMISSION_DEFINITIONS: ReadonlyArray<{
-  key: SystemPermissionKey
-  displayName: string
-  description: string
-}> = [
+export const SYSTEM_PERMISSION_DEFINITIONS: readonly PermissionDefinition[] = [
   {
     key: Permissions.USER.READ_OWN,
     displayName: '查看自己的资料',
@@ -125,51 +95,6 @@ export const SYSTEM_PERMISSION_DEFINITIONS: ReadonlyArray<{
     description: '允许查看指定用户的有效权限。',
   },
   {
-    key: Permissions.POST.READ_ALL,
-    displayName: '查看文章',
-    description: '允许查看后台文章列表和文章详情。',
-  },
-  {
-    key: Permissions.POST.WRITE_ALL,
-    displayName: '编辑文章',
-    description: '允许创建、更新和删除文章。',
-  },
-  {
-    key: Permissions.POST.PUBLISH_ALL,
-    displayName: '发布文章',
-    description: '允许发布和取消发布文章。',
-  },
-  {
-    key: Permissions.SITE_CONFIG.READ,
-    displayName: '查看站点配置',
-    description: '允许查看站点配置。',
-  },
-  {
-    key: Permissions.SITE_CONFIG.WRITE,
-    displayName: '编辑站点配置',
-    description: '允许更新站点配置。',
-  },
-  {
-    key: Permissions.MEDIA.READ_ALL,
-    displayName: '查看媒体资源',
-    description: '允许查看媒体列表和访问媒体文件。',
-  },
-  {
-    key: Permissions.MEDIA.WRITE_ALL,
-    displayName: '管理媒体资源',
-    description: '允许上传和删除媒体资源。',
-  },
-  {
-    key: Permissions.COMMENT.READ_ALL,
-    displayName: '查看评论',
-    description: '允许查看评论列表和评论详情。',
-  },
-  {
-    key: Permissions.COMMENT.MODERATE_ALL,
-    displayName: '审核评论',
-    description: '允许审核、隐藏和删除评论。',
-  },
-  {
     key: Permissions.SYSTEM.MANAGE,
     displayName: '管理系统底座',
     description: '平台级全局管理能力，仅对超级管理员开放。',
@@ -180,8 +105,4 @@ export const UserPermissions = Permissions.USER
 export const RolePermissions = Permissions.ROLE
 export const UserRolePermissions = Permissions.USER_ROLE
 export const UserPermissionQueryPermissions = Permissions.USER_PERMISSION
-export const PostPermissions = Permissions.POST
-export const SiteConfigPermissions = Permissions.SITE_CONFIG
-export const MediaPermissions = Permissions.MEDIA
-export const CommentPermissions = Permissions.COMMENT
 export const SystemPermissions = Permissions.SYSTEM

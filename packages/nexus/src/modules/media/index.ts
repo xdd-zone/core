@@ -1,10 +1,10 @@
 import type { AccessPluginInstance } from '@nexus/core/security'
 import { UnauthorizedError } from '@nexus/core/http'
-import { Permissions } from '@nexus/core/security'
 import { apiDetail } from '@nexus/shared'
 import { Elysia } from 'elysia'
 
 import { MediaIdParamsSchema, MediaListQuerySchema, MediaListSchema, MediaSchema, UploadMediaBodySchema } from './model'
+import { MediaPermissions } from './permissions'
 import { MediaRepository } from './repository'
 import { MediaService } from './service'
 
@@ -23,7 +23,7 @@ export function createMediaModule({ accessPlugin }: MediaModuleOptions) {
   })
     .use(accessPlugin)
     .get('/', async ({ query }) => await MediaService.list(query), {
-      permission: Permissions.MEDIA.READ_ALL,
+      permission: MediaPermissions.READ_ALL,
       query: MediaListQuerySchema,
       response: MediaListSchema,
       detail: apiDetail({
@@ -43,7 +43,7 @@ export function createMediaModule({ accessPlugin }: MediaModuleOptions) {
         return await MediaService.upload(auth.user.id, body.file)
       },
       {
-        permission: Permissions.MEDIA.WRITE_ALL,
+        permission: MediaPermissions.WRITE_ALL,
         body: UploadMediaBodySchema,
         response: MediaSchema,
         detail: apiDetail({
@@ -55,7 +55,7 @@ export function createMediaModule({ accessPlugin }: MediaModuleOptions) {
       },
     )
     .get('/:id', async ({ params }) => await MediaService.findById(params.id), {
-      permission: Permissions.MEDIA.READ_ALL,
+      permission: MediaPermissions.READ_ALL,
       params: MediaIdParamsSchema,
       response: MediaSchema,
       detail: apiDetail({
@@ -66,7 +66,7 @@ export function createMediaModule({ accessPlugin }: MediaModuleOptions) {
       }),
     })
     .get('/:id/file', async ({ params }) => await MediaService.openFile(params.id), {
-      permission: Permissions.MEDIA.READ_ALL,
+      permission: MediaPermissions.READ_ALL,
       params: MediaIdParamsSchema,
       detail: apiDetail({
         summary: '读取媒体文件',
@@ -82,7 +82,7 @@ export function createMediaModule({ accessPlugin }: MediaModuleOptions) {
         set.status = 204
       },
       {
-        permission: Permissions.MEDIA.WRITE_ALL,
+        permission: MediaPermissions.WRITE_ALL,
         params: MediaIdParamsSchema,
         detail: apiDetail({
           summary: '删除媒体',
@@ -97,5 +97,6 @@ export function createMediaModule({ accessPlugin }: MediaModuleOptions) {
 
 export * from './constants'
 export * from './model'
+export * from './permissions'
 export { MediaRepository }
 export { MediaService }
