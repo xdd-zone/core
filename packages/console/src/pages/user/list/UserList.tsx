@@ -2,9 +2,9 @@ import type { UserStatus } from '@console/modules/user'
 
 import type { TableProps } from 'antd'
 
-import { canAccessConsolePath, createPermissionKeySet } from '@console/app/access/access-control'
+import { canAccessConsolePath, createPermissionKeySet, hasConsoleAccess } from '@console/app/access/access-control'
 import { useCurrentUserPermissionsQuery } from '@console/modules/rbac'
-import { useUserListQuery } from '@console/modules/user'
+import { useUpdateUserStatusMutation, useUserListQuery } from '@console/modules/user'
 import {
   ARTICLE_PAGE_CLASSNAME,
   ARTICLE_PANEL_BODY_STYLE,
@@ -12,8 +12,10 @@ import {
   ARTICLE_TABLE_CLASSNAME,
 } from '@console/pages/article/shared/page-layout'
 
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { Badge, Button, Card, Input, Select, Space, Table } from 'antd'
+import { Permissions } from '@xdd-zone/nexus/permissions'
+import { App as AntdApp, Badge, Button, Card, Input, Select, Space, Table } from 'antd'
 import dayjs from 'dayjs'
 import { RefreshCw, Search } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
@@ -32,7 +34,9 @@ const STATUS_OPTIONS = [
  */
 export function UserList() {
   const { t } = useTranslation()
+  const { message } = AntdApp.useApp()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
@@ -50,6 +54,7 @@ export function UserList() {
     pageSize,
     status: status || undefined,
   })
+  const updateUserStatusMutation = useUpdateUserStatusMutation()
 
   const currentItems = userListQuery.data?.items ?? []
   const activeCount = currentItems.filter((user) => user.status === 'ACTIVE').length
@@ -66,11 +71,32 @@ export function UserList() {
     (id: string) => canAccessConsolePath(`/users/${id}/edit`, permissionKeys),
     [permissionKeys],
   )
+  const canUpdateStatus = useMemo(
+    () =>
+      hasConsoleAccess(permissionKeys, {
+        all: [Permissions.USER.DISABLE_ALL],
+      }),
+    [permissionKeys],
+  )
   const summaryItems = [
     { label: t('user.list.stats.total'), value: userListQuery.data?.total ?? 0 },
     { label: t('user.list.stats.currentPage'), value: currentPageCount },
     { label: t('user.list.stats.active'), value: activeCount },
   ]
+
+  const handleUpdateUserStatus = useCallback(
+    async (id: string, nextStatus: UserStatus) => {
+      try {
+        await updateUserStatusMutation.mutateAsync({ id, status: nextStatus })
+        await queryClient.invalidateQueries({ queryKey: ['users'] })
+        message.success(t('user.messages.statusUpdated'))
+      } catch (error) {
+        const errorMessage = error instanceof Error && error.message ? error.message : t('common.error')
+        message.error(errorMessage)
+      }
+    },
+    [message, queryClient, t, updateUserStatusMutation],
+  )
 
   const columns = useMemo<TableProps['columns']>(
     () => [
@@ -150,11 +176,38 @@ export function UserList() {
                 {t('common.edit')}
               </Button>
             ) : null}
+            {canUpdateStatus ? (
+              <Select<UserStatus>
+                size="small"
+                aria-label={t('user.status.updateAction')}
+                value={record.status}
+                disabled={updateUserStatusMutation.isPending}
+                className="w-28"
+                options={STATUS_OPTIONS.filter((option) => option.value).map((option) => ({
+                  label: t(option.label),
+                  value: option.value,
+                }))}
+                onChange={(nextStatus) => {
+                  if (nextStatus !== record.status) {
+                    void handleUpdateUserStatus(record.id, nextStatus)
+                  }
+                }}
+              />
+            ) : null}
           </Space>
         ),
       },
     ],
-    [canAccessDetail, canAccessEdit, canAccessUserAccess, navigate, t],
+    [
+      canAccessDetail,
+      canAccessEdit,
+      canAccessUserAccess,
+      canUpdateStatus,
+      handleUpdateUserStatus,
+      navigate,
+      t,
+      updateUserStatusMutation.isPending,
+    ],
   )
 
   return (

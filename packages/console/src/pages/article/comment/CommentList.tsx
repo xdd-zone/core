@@ -268,9 +268,42 @@ export function CommentList() {
       {
         key: 'actions',
         title: t('common.actions'),
-        width: 180,
+        width: 320,
         render: (_, record) => (
-          <Space>
+          <Space wrap>
+            {record.status !== 'deleted' ? (
+              <Select<EditableCommentStatus>
+                size="small"
+                aria-label={t('content.comment.status.updateAction')}
+                className="w-28"
+                value={record.status}
+                disabled={updateCommentStatusMutation.isPending}
+                options={COMMENT_REVIEW_OPTIONS.map((item) => ({ label: t(item.label), value: item.value }))}
+                onChange={(nextStatus) => {
+                  if (nextStatus !== record.status) {
+                    setSelectedCommentId(record.id)
+                    setSelectedComment(record)
+                    setEditableStatus(nextStatus)
+                    void updateCommentStatusMutation
+                      .mutateAsync({
+                        id: record.id,
+                        status: nextStatus,
+                      })
+                      .then(async (updatedComment) => {
+                        queryClient.setQueryData(COMMENT_DETAIL_QUERY_KEY(record.id), updatedComment)
+                        await refreshComments()
+                        setSelectedComment(updatedComment)
+                        setEditableStatus(updatedComment.status === 'deleted' ? undefined : updatedComment.status)
+                        message.success(t('content.comment.messages.statusUpdated'))
+                      })
+                      .catch((error) => {
+                        const errorMessage = error instanceof CommentRequestError ? error.message : t('common.error')
+                        message.error(errorMessage)
+                      })
+                  }
+                }}
+              />
+            ) : null}
             <Button type="link" size="small" icon={<Eye className="size-4" />} onClick={() => openDetail(record)}>
               {t('common.view')}
             </Button>
@@ -289,7 +322,7 @@ export function CommentList() {
         ),
       },
     ],
-    [handleDeleteComment, openDetail, postTitleMap, t],
+    [handleDeleteComment, message, openDetail, postTitleMap, queryClient, refreshComments, t, updateCommentStatusMutation],
   )
 
   const detailComment = commentDetailQuery.data ?? selectedComment

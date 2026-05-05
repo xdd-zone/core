@@ -5,11 +5,11 @@ import { ARTICLE_PAGE_CLASSNAME } from '@console/pages/article/shared/page-layou
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 
-import { App as AntdApp, Button, Card, Form, Input, Space, Spin } from 'antd'
+import { Alert, App as AntdApp, Button, Card, Form, Input, Space, Spin } from 'antd'
 import dayjs from 'dayjs'
 
 import { Save } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -23,6 +23,7 @@ export function UserEdit() {
   const { id } = useParams({ from: '/protected/app-layout/users/$id/edit' })
 
   const [form] = Form.useForm()
+  const [conflictMessage, setConflictMessage] = useState<string | null>(null)
 
   const userQuery = useUserDetailQuery(id)
   const updateMutation = useUpdateUserMutation()
@@ -41,6 +42,7 @@ export function UserEdit() {
 
   const handleSubmit = async (values: Record<string, string>) => {
     try {
+      setConflictMessage(null)
       const updatedUser = await updateMutation.mutateAsync({
         id,
         ...values,
@@ -53,6 +55,11 @@ export function UserEdit() {
       message.success(t('common.success'))
       await navigate({ to: '/users/$id', params: { id } })
     } catch (error) {
+      if (error instanceof UserRequestError && error.status === 409) {
+        setConflictMessage(t('user.edit.conflictMessage'))
+        return
+      }
+
       const errorMessage = error instanceof UserRequestError ? error.message : t('common.error')
       message.error(errorMessage)
     }
@@ -98,6 +105,10 @@ export function UserEdit() {
         <p className="mb-4 text-sm text-fg-muted">{t('user.edit.formDescription')}</p>
 
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          {conflictMessage ? (
+            <Alert className="mb-4" message={conflictMessage} showIcon type="error" />
+          ) : null}
+
           <Form.Item label={t('user.columns.username')} name="username">
             <Input disabled />
           </Form.Item>

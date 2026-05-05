@@ -623,6 +623,7 @@ export default {
         deleted: 'Deleted',
         hidden: 'Hidden',
         pending: 'Pending',
+        updateAction: 'Review comment status',
       },
       summary: {
         filter: 'Filter State',
@@ -929,6 +930,7 @@ export default {
       title: 'User Detail',
     },
     edit: {
+      conflictMessage: 'Email, username, or phone already exists',
       description: 'Edit the basic profile for the current user here.',
       eyebrow: 'Edit User',
       formDescription: 'Changes sync back to the user detail and list.',
@@ -971,6 +973,10 @@ export default {
       all: 'All',
       banned: 'Banned',
       inactive: 'Inactive',
+      updateAction: 'Update user status',
+    },
+    messages: {
+      statusUpdated: 'User status updated',
     },
   },
   role: {

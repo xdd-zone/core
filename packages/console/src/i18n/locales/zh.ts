@@ -607,6 +607,7 @@ export default {
         deleted: '已删除',
         hidden: '已隐藏',
         pending: '待审核',
+        updateAction: '审批评论状态',
       },
       summary: {
         filter: '筛选状态',
@@ -908,6 +909,7 @@ export default {
       title: '用户详情',
     },
     edit: {
+      conflictMessage: '邮箱、用户名或手机号已存在',
       description: '这里修改当前用户的基础资料。',
       eyebrow: '编辑用户',
       formDescription: '保存后同步到用户详情和列表。',
@@ -947,6 +949,10 @@ export default {
       all: '全部',
       banned: '封禁',
       inactive: '未激活',
+      updateAction: '修改用户状态',
+    },
+    messages: {
+      statusUpdated: '用户状态已更新',
     },
   },
   role: {
