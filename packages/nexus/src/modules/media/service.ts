@@ -1,6 +1,7 @@
 import type { Media, MediaList, MediaListQuery } from './model'
 import type { MediaRecord } from './repository'
 
+import { CONFIG } from '@nexus/core/config'
 import { BadRequestError, NotFoundError } from '@nexus/core/http'
 import { ALLOWED_MEDIA_MIME_TYPES, isAllowedMediaMimeType, MediaStorage } from '@nexus/infra/storage/media-storage'
 
@@ -14,6 +15,10 @@ function assertAllowedMediaFile(file: File): void {
       'MEDIA_UNSUPPORTED_MIME_TYPE',
     )
   }
+}
+
+function createLocalMediaUrl(mediaId: string): string {
+  return new URL(`${CONFIG.app.apiPrefix}/media/${mediaId}/file`, CONFIG.app.publicBaseUrl).toString()
 }
 
 /**
@@ -69,7 +74,7 @@ export class MediaService {
           mimeType: file.type,
           size: file.size,
           storagePath,
-          url: publicUrl ?? `/api/media/${mediaId}/file`,
+          url: publicUrl ?? createLocalMediaUrl(mediaId),
           uploadedBy: userId,
         }),
       )

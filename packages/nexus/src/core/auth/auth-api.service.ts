@@ -11,6 +11,7 @@ type SocialLoginErrorCode =
   | 'auth_sign_up_disabled'
   | 'github_sign_in_failed'
   | 'invalid_callback_url'
+  | 'inactive_account'
 
 function normalizeOrigin(value: string): string | null {
   try {
@@ -158,6 +159,18 @@ function resolveSocialLoginErrorCode(error: unknown): SocialLoginErrorCode {
   return 'github_sign_in_failed'
 }
 
+function resolveTrustedRedirectOrigin(
+  request: Request,
+  configuredAuthOrigin: string,
+  trustedOrigins: string[],
+  redirectURL: string,
+): string | null {
+  return (
+    resolveTrustedCallbackOrigin(configuredAuthOrigin, trustedOrigins, redirectURL) ??
+    resolveTrustedBrowserOrigin(request, trustedOrigins)
+  )
+}
+
 async function assertActiveSignedInUser(
   userId: string,
   headers: ResponseHeaders,
@@ -266,7 +279,39 @@ export function createAuthApiService(
     },
 
     async callbackGithub(request: Request, headers: ResponseHeaders): Promise<string> {
-      return await betterAuthAdapter.forwardBetterAuthRedirect(request, headers)
+      const redirectURL = await betterAuthAdapter.forwardBetterAuthRedirect(request, headers)
+      const userId = await betterAuthAdapter.resolveBetterAuthSessionUserId(request, headers)
+
+      if (!userId) {
+        return redirectURL
+      }
+
+      try {
+        await assertActiveSignedInUser(userId, headers, betterAuthAdapter)
+        return redirectURL
+      } catch (error) {
+        if (!(error instanceof UnauthorizedError)) {
+          throw error
+        }
+
+        const trustedRedirectOrigin = resolveTrustedRedirectOrigin(
+          request,
+          configuredAuthOrigin,
+          trustedOrigins,
+          redirectURL,
+        )
+
+        if (trustedRedirectOrigin) {
+          return createLoginRedirectUrl(
+            trustedRedirectOrigin,
+            resolveRedirectPath(redirectURL, trustedRedirectOrigin),
+            'inactive_account',
+            'github',
+          )
+        }
+
+        throw error
+      }
     },
 
     async signUpEmail(request: Request, body: SignUpEmailPayload, headers: ResponseHeaders): Promise<AuthApiSession> {

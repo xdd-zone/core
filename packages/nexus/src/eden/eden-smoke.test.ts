@@ -1767,6 +1767,7 @@ describe('eden smoke', () => {
     expect(uploadResult.data?.originalName).toBe(`eden-media-${tempSuffix}.png`)
     expect(uploadResult.data?.mimeType).toContain('image/png')
     expect(uploadResult.data?.size).toBeGreaterThan(0)
+    expect(uploadResult.data?.url).toMatch(/^https?:\/\//)
 
     const mediaId = uploadResult.data?.id
     expect(mediaId).toBeTruthy()
@@ -1785,7 +1786,7 @@ describe('eden smoke', () => {
     expect(detailResult.error).toBeNull()
     expect(detailResult.data?.id).toBe(mediaId)
 
-    const fileResponse = await authenticatedCookieSession.fetcher(`${baseUrl}/api/media/${mediaId}/file`)
+    const fileResponse = await directFetcher(`${baseUrl}/api/media/${mediaId}/file`)
     expect([200, 302]).toContain(fileResponse.status)
     if (fileResponse.status === 200) {
       expect(await fileResponse.text()).toBe(`media-smoke-${tempSuffix}`)

@@ -82,10 +82,7 @@ function normalizeStorageProvider(value?: string) {
 }
 
 function normalizeKeyPrefix(value: string): string {
-  return value
-    .trim()
-    .replace(/^\/+/, '')
-    .replace(/\/+$/, '')
+  return value.trim().replace(/^\/+/, '').replace(/\/+$/, '')
 }
 
 function resolveConfigPath(): string {
@@ -232,7 +229,7 @@ function normalizeConfig(config: ResolvedConfig): ResolvedConfig {
   }
 }
 
-function validateCrossFieldRules(config: ResolvedConfig) {
+export function validateCrossFieldRules(config: ResolvedConfig) {
   if (config.logger.pretty && config.env.isProduction) {
     throw new Error('生产环境不允许启用 pretty 日志输出，请在配置中关闭 logger.pretty')
   }
@@ -241,10 +238,16 @@ function validateCrossFieldRules(config: ResolvedConfig) {
     throw new Error('当前已启用 GitHub 登录，但缺少 GITHUB_CLIENT_ID 或 GITHUB_CLIENT_SECRET')
   }
 
-  if (config.betterAuth.secret.length < RECOMMENDED_SECRET_LENGTH && config.env.isDevelopment) {
-    console.warn(
-      `[better-auth] BETTER_AUTH_SECRET 长度建议至少 ${RECOMMENDED_SECRET_LENGTH} 个字符，当前为 ${config.betterAuth.secret.length}。`,
-    )
+  if (config.betterAuth.secret.length < RECOMMENDED_SECRET_LENGTH) {
+    const message = `[better-auth] BETTER_AUTH_SECRET 长度至少需要 ${RECOMMENDED_SECRET_LENGTH} 个字符，当前为 ${config.betterAuth.secret.length}。`
+
+    if (config.env.isProduction) {
+      throw new Error(message)
+    }
+
+    if (config.env.isDevelopment) {
+      console.warn(message)
+    }
   }
 
   if (config.storage.provider === 'cos') {

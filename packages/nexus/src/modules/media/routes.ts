@@ -51,7 +51,6 @@ export function createMediaModule({ accessPlugin }: MediaModuleOptions) {
       detail: MediaOpenApi.findById,
     })
     .get('/:id/file', async ({ params }) => await MediaService.openFile(params.id), {
-      permission: MediaPermissions.READ_ALL,
       params: MediaIdParamsSchema,
       detail: MediaOpenApi.openFile,
     })

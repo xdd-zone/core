@@ -104,6 +104,27 @@ describe('MediaService.upload', () => {
       }),
     )
   })
+
+  it('本地存储未返回公开 URL 时应写入绝对文件地址', async () => {
+    const file = new File(['hello'], 'avatar.png', {
+      type: 'image/png',
+    })
+    const createSpy = spyOn(MediaRepository, 'create').mockImplementation(async (data) => createMediaRecord(data))
+
+    spyOn(MediaStorage, 'save').mockResolvedValue({
+      fileName: 'avatar.png',
+      storagePath: 'avatar.png',
+    })
+
+    const result = await MediaService.upload('user-1', file)
+
+    expect(result.url).toMatch(/^http:\/\/localhost:7788\/api\/media\/[0-9a-f-]+\/file$/)
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: result.url,
+      }),
+    )
+  })
 })
 
 describe('MediaService.openFile', () => {

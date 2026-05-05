@@ -89,7 +89,7 @@
   "scripts": {
     "dev": "NODE_ENV=development bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
-    "test": "bun test src/shared/schema/slug.test.ts src/infra/storage/media-storage.test.ts src/modules/category/service.test.ts src/modules/post/service.test.ts src/modules/media/service.test.ts src/modules/comment/service.test.ts src/modules/rbac/service.test.ts src/modules/user/service.test.ts src/eden/eden-smoke.test.ts src/eden/openapi-smoke.test.ts",
+    "test": "bun test src/core/config/load-config.test.ts src/core/auth/auth-api.service.test.ts src/shared/schema/slug.test.ts src/infra/storage/media-storage.test.ts src/modules/category/service.test.ts src/modules/post/service.test.ts src/modules/media/service.test.ts src/modules/comment/service.test.ts src/modules/rbac/service.test.ts src/modules/user/service.test.ts src/eden/eden-smoke.test.ts src/eden/openapi-smoke.test.ts",
     "seed": "bun run prisma/seed/seed.ts",
     "prisma:apply-indexes": "bun run prisma/scripts/apply-partial-unique-indexes.ts",
     "prisma:generate": "prisma generate",
