@@ -73,7 +73,6 @@ src/
 - `/users/$id/access`
 - `/roles`
 - `/profile`
-- `/my-access`
 - `/articles`
 - `/articles/new`
 - `/articles/$id`
@@ -81,6 +80,7 @@ src/
 - `/categories`
 - `/tags`
 - `/comments`
+- `/media`
 - `/article-settings`
 - `/ui-showcase`
 - `/markdown-example`

@@ -112,6 +112,16 @@ GitHub 登录和回调返回 `302`。
 | POST | `/api/post/:id/publish` | 发布文章 |
 | POST | `/api/post/:id/unpublish` | 取消发布文章 |
 
+### Category
+
+| 方法 | 路径 | 说明 |
+| ---- | ---- | ---- |
+| GET | `/api/category` | 获取分类列表 |
+| POST | `/api/category` | 创建分类 |
+| GET | `/api/category/:id` | 获取分类详情 |
+| PATCH | `/api/category/:id` | 更新分类 |
+| DELETE | `/api/category/:id` | 删除分类，返回 `204` |
+
 ### Public Site
 
 | 方法 | 路径 | 说明 |

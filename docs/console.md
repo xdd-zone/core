@@ -68,7 +68,6 @@ packages/console/src/
 - `/users/$id/access`
 - `/roles`
 - `/profile`
-- `/my-access`
 - `/articles`
 - `/articles/new`
 - `/articles/$id`
@@ -76,6 +75,7 @@ packages/console/src/
 - `/categories`
 - `/tags`
 - `/comments`
+- `/media`
 - `/article-settings`
 - `/ui-showcase`
 - `/markdown-example`
@@ -150,7 +150,6 @@ packages/console/src/
 - 指定用户权限
 - 角色列表
 - 我的资料
-- 我的权限
 
 ### 内容管理
 
@@ -161,6 +160,7 @@ packages/console/src/
 - 分类管理
 - 标签管理
 - 评论管理
+- 媒体管理
 - 文章设置
 
 ### 示例页

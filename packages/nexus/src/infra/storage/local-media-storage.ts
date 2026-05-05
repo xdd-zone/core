@@ -99,7 +99,7 @@ export class LocalMediaStorage implements MediaStorageDriver {
       throw new NotFoundError('媒体文件不存在')
     }
 
-    return new Response(Bun.file(resolvedPath), {
+    return new Response(await readFile(resolvedPath), {
       headers: {
         'content-disposition': `inline; filename="${encodeURIComponent(options.originalName)}"`,
         'content-length': String(options.size),
