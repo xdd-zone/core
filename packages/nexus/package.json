@@ -89,7 +89,7 @@
   "scripts": {
     "dev": "NODE_ENV=development bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
-    "test": "bun test src/shared/schema/slug.test.ts src/modules/category/service.test.ts src/modules/post/service.test.ts src/modules/media/service.test.ts src/modules/comment/service.test.ts src/modules/rbac/service.test.ts src/eden/eden-smoke.test.ts src/eden/openapi-smoke.test.ts",
+    "test": "bun test src/shared/schema/slug.test.ts src/infra/storage/media-storage.test.ts src/modules/category/service.test.ts src/modules/post/service.test.ts src/modules/media/service.test.ts src/modules/comment/service.test.ts src/modules/rbac/service.test.ts src/eden/eden-smoke.test.ts src/eden/openapi-smoke.test.ts",
     "seed": "bun run prisma/seed/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
@@ -103,6 +103,7 @@
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
     "better-auth": "^1.5.6",
+    "cos-nodejs-sdk-v5": "^2.15.4",
     "dotenv": "^17.4.0",
     "elysia": "^1.4.28",
     "js-yaml": "^4.1.1",

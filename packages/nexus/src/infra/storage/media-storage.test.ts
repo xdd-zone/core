@@ -1,37 +1,20 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import type { CosSdkClient } from './cos-media-storage'
+import { readFile, rm, writeFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 
 import { NotFoundError } from '@nexus/core/http'
 import { afterEach, describe, expect, it } from 'bun:test'
 
+import { CosMediaStorage } from './cos-media-storage'
+import { LocalMediaStorage } from './local-media-storage'
 import { MediaStorage } from './media-storage'
 
 const mediaDir = resolve(process.cwd(), 'storage/media')
 const outsideFilePath = resolve(import.meta.dir, '../../../storage/media-storage-test-outside.txt')
-const sourceModulePath = resolve(import.meta.dir, './media-storage.ts')
-const httpModulePath = resolve(import.meta.dir, '../../core/http/index.ts')
 const createdStoragePaths = new Set<string>()
-const tempPaths = new Set<string>()
 
 async function cleanupPath(filePath: string) {
   await rm(filePath, { force: true, recursive: true }).catch(() => undefined)
-}
-
-async function loadStorageModuleFromBuildLikeDir() {
-  const tempRoot = await mkdtemp(join(tmpdir(), 'media-storage-dist-'))
-  const tempModulePath = join(tempRoot, 'dist/infra/storage/media-storage.ts')
-  const source = await readFile(sourceModulePath, 'utf8')
-  const rewrittenSource = source.replace("from '@nexus/core/http'", `from '${pathToFileURL(httpModulePath).href}'`)
-
-  tempPaths.add(tempRoot)
-  await mkdir(dirname(tempModulePath), { recursive: true })
-  await writeFile(tempModulePath, rewrittenSource)
-
-  return (await import(`${pathToFileURL(tempModulePath).href}?t=${Date.now()}`)) as Promise<{
-    MediaStorage: typeof MediaStorage
-  }>
 }
 
 afterEach(async () => {
@@ -39,23 +22,17 @@ afterEach(async () => {
     await MediaStorage.remove(storagePath).catch(() => undefined)
   }
 
-  for (const filePath of tempPaths) {
-    await cleanupPath(filePath)
-  }
-
   createdStoragePaths.clear()
-  tempPaths.clear()
   await cleanupPath(outsideFilePath)
 })
 
 describe('MediaStorage', () => {
   it('保存文件时应使用固定的媒体目录', async () => {
-    const { MediaStorage: buildStorage } = await loadStorageModuleFromBuildLikeDir()
     const file = new File(['hello media'], 'avatar.php', {
       type: 'image/jpeg',
     })
 
-    const result = await buildStorage.save(file)
+    const result = await new LocalMediaStorage().save(file)
     createdStoragePaths.add(result.storagePath)
 
     expect(result.fileName).toEndWith('.jpg')
@@ -65,10 +42,131 @@ describe('MediaStorage', () => {
 
   it('读取和删除文件时应拒绝访问存储目录外的路径', async () => {
     await writeFile(outsideFilePath, 'outside media')
+    const storage = new LocalMediaStorage()
 
-    await expect(MediaStorage.read(outsideFilePath)).rejects.toBeInstanceOf(NotFoundError)
-    await expect(MediaStorage.remove(outsideFilePath)).rejects.toBeInstanceOf(NotFoundError)
+    await expect(
+      storage.openFile(outsideFilePath, {
+        originalName: 'outside.txt',
+        mimeType: 'text/plain',
+        size: 13,
+      }),
+    ).rejects.toBeInstanceOf(NotFoundError)
+    await expect(storage.remove(outsideFilePath)).rejects.toBeInstanceOf(NotFoundError)
 
     expect(await readFile(outsideFilePath, 'utf8')).toBe('outside media')
+  })
+})
+
+describe('CosMediaStorage', () => {
+  function createStorage(client: CosSdkClient) {
+    return new CosMediaStorage(
+      {
+        bucket: 'xdd-elysia-1307783937',
+        keyPrefix: 'media',
+        region: 'ap-shanghai',
+        secretId: 'secret-id',
+        secretKey: 'secret-key',
+        signedUrlExpires: 600,
+      },
+      client,
+    )
+  }
+
+  it('保存文件时应上传到配置的 bucket、region 和 keyPrefix', async () => {
+    const calls: unknown[] = []
+    const client: CosSdkClient = {
+      deleteObject: async () => ({}),
+      getObjectUrl: () => 'https://cos.example/media/avatar.png',
+      putObject: async (params) => {
+        calls.push(params)
+        return { ETag: '"etag"', Location: 'example' }
+      },
+    }
+
+    const storage = createStorage(client)
+    const result = await storage.save(
+      new File(['hello cos'], 'avatar.php', {
+        type: 'image/png',
+      }),
+    )
+
+    expect(result.fileName).toEndWith('.png')
+    expect(result.storagePath).toBe(`media/${result.fileName}`)
+    expect(calls).toEqual([
+      {
+        Body: Buffer.from('hello cos'),
+        Bucket: 'xdd-elysia-1307783937',
+        ContentLength: 9,
+        ContentType: 'image/png',
+        Key: result.storagePath,
+        Region: 'ap-shanghai',
+      },
+    ])
+  })
+
+  it('读取文件时应返回 COS 跳转地址', async () => {
+    const storage = createStorage({
+      deleteObject: async () => ({}),
+      getObjectUrl: () => 'https://cos.example/media/avatar.png',
+      putObject: async () => ({ ETag: '"etag"', Location: 'example' }),
+    })
+
+    const response = await storage.openFile('media/avatar.png', {
+      originalName: 'avatar.png',
+      mimeType: 'image/png',
+      size: 9,
+    })
+
+    expect(response.status).toBe(302)
+    expect(response.headers.get('location')).toBe('https://cos.example/media/avatar.png')
+  })
+
+  it('COS 返回 404 时应转成 NotFoundError', async () => {
+    const error = new Error('not found')
+    Object.assign(error, {
+      code: 'NoSuchKey',
+      error: 'not found',
+      method: 'GET',
+      statusCode: 404,
+      url: 'https://cos.example/media/avatar.png',
+    })
+
+    const storage = createStorage({
+      deleteObject: async () => ({}),
+      getObjectUrl: () => {
+        throw error
+      },
+      putObject: async () => ({ ETag: '"etag"', Location: 'example' }),
+    })
+
+    await expect(
+      storage.openFile('media/avatar.png', {
+        originalName: 'avatar.png',
+        mimeType: 'image/png',
+        size: 9,
+      }),
+    ).rejects.toBeInstanceOf(NotFoundError)
+  })
+
+  it('删除文件时应调用 deleteObject', async () => {
+    const calls: unknown[] = []
+    const storage = createStorage({
+      deleteObject: async (params) => {
+        calls.push(params)
+        return {}
+      },
+      getObjectUrl: () => 'https://cos.example/media/avatar.png',
+      putObject: async () => ({ ETag: '"etag"', Location: 'example' }),
+    })
+
+    await storage.remove('media/avatar.png')
+
+    expect(calls).toEqual([
+      {
+        Bucket: 'xdd-elysia-1307783937',
+        Key: 'media/avatar.png',
+        Region: 'ap-shanghai',
+      },
+    ])
   })
 })

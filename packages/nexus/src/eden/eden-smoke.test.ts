@@ -1714,9 +1714,13 @@ describe('eden smoke', () => {
     expect(detailResult.data?.id).toBe(mediaId)
 
     const fileResponse = await authenticatedCookieSession.fetcher(`${baseUrl}/api/media/${mediaId}/file`)
-    expect(fileResponse.status).toBe(200)
-    expect(await fileResponse.text()).toBe(`media-smoke-${tempSuffix}`)
-    expect(fileResponse.headers.get('content-type')).toContain('image/png')
+    expect([200, 302]).toContain(fileResponse.status)
+    if (fileResponse.status === 200) {
+      expect(await fileResponse.text()).toBe(`media-smoke-${tempSuffix}`)
+      expect(fileResponse.headers.get('content-type')).toContain('image/png')
+    } else {
+      expect(fileResponse.headers.get('location')).toBeTruthy()
+    }
 
     const forbiddenListResult = await subjectClient.api.media.get()
     expect(forbiddenListResult.status).toBe(403)

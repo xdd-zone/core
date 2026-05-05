@@ -6,6 +6,8 @@ export type AuthMethodId = 'emailPassword' | 'github' | 'google' | 'wechat'
 
 export type AuthMethodKind = 'credential' | 'oauth'
 
+export type StorageProvider = 'local' | 'cos'
+
 export interface AuthMethodPolicy {
   enabled: boolean
   allowSignUp: boolean
@@ -52,6 +54,18 @@ export interface ResolvedConfig {
     pretty: boolean
     filePath?: string
     serviceName: string
+  }
+  storage: {
+    provider: StorageProvider
+    cos?: {
+      secretId?: string
+      secretKey?: string
+      bucket?: string
+      region?: string
+      publicBaseUrl?: string
+      keyPrefix: string
+      signedUrlExpires: number
+    }
   }
   auth: {
     trustedOrigins: string[]

@@ -101,6 +101,16 @@
 3. 再区分是 `401` 还是 `403`
 4. 最后看 OpenAPI、Eden smoke 和前端路由守卫
 
+## 要接外部服务
+
+先看：
+
+1. [integrations/index.md](./integrations/index.md)
+
+已记录：
+
+- [腾讯云 COS 对象存储](./integrations/storage/tencent-cos.md)
+
 ## 其他文档
 
 - [console.md](./console.md)：前端结构、路由、导航、页面入口

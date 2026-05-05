@@ -84,16 +84,10 @@ export class MediaService {
    */
   static async openFile(id: string): Promise<Response> {
     const media = await this.requireById(id)
-    const file = await MediaStorage.read(media.storagePath)
-    const fileBytes = Uint8Array.from(file)
-
-    return new Response(fileBytes, {
-      headers: {
-        'content-disposition': `inline; filename="${encodeURIComponent(media.originalName)}"`,
-        'content-length': String(media.size),
-        'content-type': media.mimeType,
-      },
-      status: 200,
+    return await MediaStorage.openFile(media.storagePath, {
+      originalName: media.originalName,
+      mimeType: media.mimeType,
+      size: media.size,
     })
   }
 

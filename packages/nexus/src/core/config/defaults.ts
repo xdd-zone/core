@@ -35,6 +35,13 @@ export const DEFAULT_CONFIG: Omit<ResolvedConfig, 'env' | 'betterAuth' | 'databa
     pretty: true,
     serviceName: 'xdd-server-elysia',
   },
+  storage: {
+    provider: 'local',
+    cos: {
+      keyPrefix: 'media',
+      signedUrlExpires: 600,
+    },
+  },
   auth: {
     trustedOrigins: [
       'http://localhost:2333',

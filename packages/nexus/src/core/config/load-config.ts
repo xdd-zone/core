@@ -73,6 +73,21 @@ function normalizeOrigins(value: true | string[]): true | string[] {
   return Array.from(new Set(value.map((origin) => normalizeOrigin(origin))))
 }
 
+function normalizeStorageProvider(value?: string) {
+  if (value === 'local' || value === 'cos') {
+    return value
+  }
+
+  return undefined
+}
+
+function normalizeKeyPrefix(value: string): string {
+  return value
+    .trim()
+    .replace(/^\/+/, '')
+    .replace(/\/+$/, '')
+}
+
 function resolveConfigPath(): string {
   const configuredPath = process.env.CONFIG_PATH
   if (configuredPath) {
@@ -111,6 +126,26 @@ function createEnvConfig(): DeepPartial<ResolvedConfig> {
   const betterAuthUrl = process.env.BETTER_AUTH_URL
   const githubClientId = process.env.GITHUB_CLIENT_ID
   const githubClientSecret = process.env.GITHUB_CLIENT_SECRET
+  const cosPublicBaseUrl = process.env.COS_PUBLIC_BASE_URL
+
+  const storageConfig: DeepPartial<ResolvedConfig['storage']> | undefined =
+    process.env.STORAGE_PROVIDER ||
+    process.env.COS_SECRET_ID ||
+    process.env.COS_SECRET_KEY ||
+    process.env.COS_BUCKET ||
+    process.env.COS_REGION ||
+    cosPublicBaseUrl
+      ? {
+          provider: normalizeStorageProvider(process.env.STORAGE_PROVIDER),
+          cos: {
+            secretId: process.env.COS_SECRET_ID,
+            secretKey: process.env.COS_SECRET_KEY,
+            bucket: process.env.COS_BUCKET,
+            region: process.env.COS_REGION,
+            publicBaseUrl: cosPublicBaseUrl ? normalizeOrigin(cosPublicBaseUrl) : undefined,
+          } as any,
+        }
+      : undefined
 
   return {
     app: {
@@ -133,6 +168,7 @@ function createEnvConfig(): DeepPartial<ResolvedConfig> {
     database: {
       url: process.env.DATABASE_URL,
     },
+    storage: storageConfig,
   }
 }
 
@@ -178,6 +214,18 @@ function normalizeConfig(config: ResolvedConfig): ResolvedConfig {
       ...config.logger,
       filePath: config.logger.filePath?.trim() || undefined,
     },
+    storage: {
+      ...config.storage,
+      cos: config.storage.cos
+        ? {
+            ...config.storage.cos,
+            publicBaseUrl: config.storage.cos.publicBaseUrl
+              ? normalizeOrigin(config.storage.cos.publicBaseUrl)
+              : undefined,
+            keyPrefix: normalizeKeyPrefix(config.storage.cos.keyPrefix),
+          }
+        : undefined,
+    },
   }
 }
 
@@ -194,6 +242,14 @@ function validateCrossFieldRules(config: ResolvedConfig) {
     console.warn(
       `[better-auth] BETTER_AUTH_SECRET 长度建议至少 ${RECOMMENDED_SECRET_LENGTH} 个字符，当前为 ${config.betterAuth.secret.length}。`,
     )
+  }
+
+  if (config.storage.provider === 'cos') {
+    const cos = config.storage.cos
+
+    if (!cos?.secretId || !cos.secretKey || !cos.bucket || !cos.region) {
+      throw new Error('当前已启用 COS 存储，但缺少 COS_SECRET_ID、COS_SECRET_KEY、COS_BUCKET 或 COS_REGION')
+    }
   }
 }
 

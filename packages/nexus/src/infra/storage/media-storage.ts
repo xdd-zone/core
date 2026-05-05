@@ -1,137 +1,45 @@
-import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { dirname, extname, join, relative, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import type { MediaStorageDriver, MediaStorageSaveResult } from './media-storage.types'
+import { CONFIG } from '@nexus/core/config'
 
-import { NotFoundError } from '@nexus/core/http'
+import { CosMediaStorage } from './cos-media-storage'
+import { LocalMediaStorage, resolveMediaStorageDir } from './local-media-storage'
+import { ALLOWED_MEDIA_MIME_TYPES, isAllowedMediaMimeType } from './media-file'
 
-const NEXUS_PACKAGE_NAME = '@xdd-zone/nexus'
-const MODULE_DIR = dirname(fileURLToPath(import.meta.url))
-const MEDIA_FILE_EXTENSIONS_BY_MIME_TYPE = {
-  'image/avif': '.avif',
-  'image/gif': '.gif',
-  'image/jpeg': '.jpg',
-  'image/png': '.png',
-  'image/webp': '.webp',
-} as const
-
-export const ALLOWED_MEDIA_MIME_TYPES = Object.keys(MEDIA_FILE_EXTENSIONS_BY_MIME_TYPE)
-
-export function isAllowedMediaMimeType(mimeType: string): mimeType is keyof typeof MEDIA_FILE_EXTENSIONS_BY_MIME_TYPE {
-  return Object.prototype.hasOwnProperty.call(MEDIA_FILE_EXTENSIONS_BY_MIME_TYPE, mimeType)
-}
-
-async function isNexusPackageRoot(dir: string): Promise<boolean> {
-  const packageJsonPath = join(dir, 'package.json')
-
-  try {
-    const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8')) as { name?: string }
-    return packageJson.name === NEXUS_PACKAGE_NAME
-  } catch {
-    return false
-  }
-}
-
-async function findNexusPackageRoot(startDir: string): Promise<string | null> {
-  let currentDir = resolve(startDir)
-
-  while (true) {
-    if (await isNexusPackageRoot(currentDir)) {
-      return currentDir
-    }
-
-    const parentDir = dirname(currentDir)
-    if (parentDir === currentDir) {
-      return null
-    }
-
-    currentDir = parentDir
-  }
-}
-
-async function resolveNexusPackageRoot(fromDir: string = MODULE_DIR): Promise<string> {
-  const cwdRoot = await findNexusPackageRoot(process.cwd())
-  if (cwdRoot) {
-    return cwdRoot
+function createMediaStorageDriver(): MediaStorageDriver {
+  if (CONFIG.storage.provider === 'cos') {
+    return new CosMediaStorage(CONFIG.storage.cos)
   }
 
-  const nestedCwdRoot = resolve(process.cwd(), 'packages/nexus')
-  if (await isNexusPackageRoot(nestedCwdRoot)) {
-    return nestedCwdRoot
-  }
-
-  const moduleRoot = await findNexusPackageRoot(fromDir)
-  if (moduleRoot) {
-    return moduleRoot
-  }
-
-  throw new Error('无法定位 @xdd-zone/nexus 包目录')
+  return new LocalMediaStorage()
 }
 
-export async function resolveMediaStorageDir(fromDir: string = MODULE_DIR): Promise<string> {
-  const nexusPackageRoot = await resolveNexusPackageRoot(fromDir)
-  return join(nexusPackageRoot, 'storage/media')
-}
+export { ALLOWED_MEDIA_MIME_TYPES, isAllowedMediaMimeType, resolveMediaStorageDir }
 
-async function resolveMediaStoragePath(storagePath: string): Promise<string> {
-  const mediaStorageDir = await resolveMediaStorageDir()
-  const resolvedPath = resolve(mediaStorageDir, storagePath)
-  const relativePath = relative(mediaStorageDir, resolvedPath)
-
-  if (!relativePath || relativePath.startsWith('..')) {
-    throw new NotFoundError('媒体文件不存在')
-  }
-
-  return resolvedPath
-}
-
-/**
- * 媒体文件本地存储。
- */
 export class MediaStorage {
-  /**
-   * 保存上传文件，并返回本地存储信息。
-   */
-  static async save(file: File): Promise<{
-    fileName: string
-    storagePath: string
-  }> {
-    const mediaStorageDir = await resolveMediaStorageDir()
-    await mkdir(mediaStorageDir, { recursive: true })
+  private static driver: MediaStorageDriver | null = null
 
-    const extension = isAllowedMediaMimeType(file.type)
-      ? MEDIA_FILE_EXTENSIONS_BY_MIME_TYPE[file.type]
-      : extname(file.name)
-    const fileName = `${crypto.randomUUID()}${extension}`
-    const resolvedPath = join(mediaStorageDir, fileName)
-
-    await writeFile(resolvedPath, new Uint8Array(await file.arrayBuffer()))
-
-    return {
-      fileName,
-      storagePath: fileName,
-    }
+  private static getDriver(): MediaStorageDriver {
+    this.driver ??= createMediaStorageDriver()
+    return this.driver
   }
 
-  /**
-   * 读取本地媒体文件。
-   */
-  static async read(storagePath: string): Promise<Uint8Array> {
-    const resolvedPath = await resolveMediaStoragePath(storagePath)
-
-    try {
-      await access(resolvedPath)
-    } catch {
-      throw new NotFoundError('媒体文件不存在')
-    }
-
-    return await readFile(resolvedPath)
+  static useDriver(driver: MediaStorageDriver): void {
+    this.driver = driver
   }
 
-  /**
-   * 删除本地媒体文件。
-   */
+  static resetDriver(): void {
+    this.driver = createMediaStorageDriver()
+  }
+
+  static async save(file: File): Promise<MediaStorageSaveResult> {
+    return await this.getDriver().save(file)
+  }
+
+  static async openFile(storagePath: string, options: Parameters<MediaStorageDriver['openFile']>[1]): Promise<Response> {
+    return await this.getDriver().openFile(storagePath, options)
+  }
+
   static async remove(storagePath: string): Promise<void> {
-    const resolvedPath = await resolveMediaStoragePath(storagePath)
-    await rm(resolvedPath, { force: true })
+    return await this.getDriver().remove(storagePath)
   }
 }

@@ -45,6 +45,12 @@ logger:
   filePath:
   serviceName: xdd-server-elysia
 
+storage:
+  provider: local
+  cos:
+    keyPrefix: media
+    signedUrlExpires: 600
+
 auth:
   trustedOrigins:
     - http://localhost:2333

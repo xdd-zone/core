@@ -113,6 +113,60 @@ GITHUB_CLIENT_SECRET=your-github-client-secret
 - `packages/nexus/config.yaml` 里的 `auth.methods` 已按当前环境设置好
 - GitHub callback URL 是 `{BETTER_AUTH_URL}/api/auth/callback/github`
 
+## 媒体文件存储怎么切换
+
+配置入口有两个：
+
+- `packages/nexus/config.yaml`
+  放默认配置，默认使用本地文件。
+- `packages/nexus/.env`
+  放当前机器的实际环境变量。这里的值会覆盖 `config.yaml`。
+
+默认本地存储：
+
+```env
+STORAGE_PROVIDER=local
+```
+
+文件会写到：
+
+```text
+packages/nexus/storage/media
+```
+
+切到腾讯云 COS：
+
+```env
+STORAGE_PROVIDER=cos
+COS_SECRET_ID=your-cos-secret-id
+COS_SECRET_KEY=your-cos-secret-key
+COS_BUCKET=your-bucket-name-appid
+COS_REGION=ap-shanghai
+COS_PUBLIC_BASE_URL=https://your-bucket.cos.ap-shanghai.myqcloud.com
+COS_KEY_PREFIX=media
+COS_SIGNED_URL_EXPIRES=600
+```
+
+切换后重启 Nexus：
+
+```bash
+cd packages/nexus
+bun run dev
+```
+
+当前媒体接口不用改：
+
+- 上传仍然请求 `POST /api/media/upload`
+- 读取仍然请求 `GET /api/media/:id/file`
+- 删除仍然请求 `DELETE /api/media/:id`
+
+注意：
+
+- `COS_SECRET_ID` 和 `COS_SECRET_KEY` 只写在 `.env` 或部署平台环境变量里，不写进 `config.yaml`。
+- `COS_BUCKET` 必须带 APPID，例如 `example-1250000000`。
+- `COS_REGION` 写地域代码，例如上海是 `ap-shanghai`。
+- 旧文件不会自动搬迁。切换前用 local 上传的文件还在本地目录，切换到 COS 后新文件才会写入 COS。
+
 ## 常用命令
 
 ```bash

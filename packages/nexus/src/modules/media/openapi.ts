@@ -29,7 +29,7 @@ export const MediaOpenApi = {
   }),
   remove: apiDetail({
     summary: '删除媒体',
-    description: '删除指定媒体和对应的本地文件。',
+    description: '删除指定媒体和对应的存储文件。',
     successStatus: 204,
     responseDescription: '媒体删除成功',
     errors: [401, 403, 404],

@@ -81,3 +81,29 @@ describe('MediaService.upload', () => {
     expect(createSpy).not.toHaveBeenCalled()
   })
 })
+
+describe('MediaService.openFile', () => {
+  afterEach(() => {
+    spyOn(MediaRepository, 'findById').mockRestore()
+    spyOn(MediaStorage, 'openFile').mockRestore()
+  })
+
+  it('应将打开文件请求交给存储层', async () => {
+    const response = new Response(null, {
+      status: 302,
+      headers: {
+        location: 'https://cos.example/media/avatar.png',
+      },
+    })
+    const openFileSpy = spyOn(MediaStorage, 'openFile').mockResolvedValue(response)
+
+    spyOn(MediaRepository, 'findById').mockResolvedValue(createMediaRecord())
+
+    await expect(MediaService.openFile('media-1')).resolves.toBe(response)
+    expect(openFileSpy).toHaveBeenCalledWith('avatar.png', {
+      originalName: 'avatar.png',
+      mimeType: 'image/png',
+      size: 12,
+    })
+  })
+})

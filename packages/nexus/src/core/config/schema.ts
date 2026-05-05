@@ -7,6 +7,18 @@ export const AuthMethodPolicySchema = z.object({
   allowSignUp: z.boolean(),
 })
 
+export const StorageProviderSchema = z.enum(['local', 'cos'])
+
+export const CosStorageConfigSchema = z.object({
+  secretId: z.string().min(1).optional(),
+  secretKey: z.string().min(1).optional(),
+  bucket: z.string().min(1).optional(),
+  region: z.string().min(1).optional(),
+  publicBaseUrl: z.string().url().optional(),
+  keyPrefix: z.string().min(1).optional(),
+  signedUrlExpires: z.coerce.number().int().positive().optional(),
+})
+
 export const RawConfigSchema = z
   .object({
     app: z
@@ -59,6 +71,13 @@ export const RawConfigSchema = z
         pretty: z.boolean().optional(),
         filePath: z.string().min(1).nullable().optional(),
         serviceName: z.string().min(1).optional(),
+      })
+      .partial()
+      .optional(),
+    storage: z
+      .object({
+        provider: StorageProviderSchema.optional(),
+        cos: CosStorageConfigSchema.partial().optional(),
       })
       .partial()
       .optional(),
@@ -135,6 +154,20 @@ export const ResolvedConfigSchema = z.object({
     pretty: z.boolean(),
     filePath: z.preprocess((value) => (value === null ? undefined : value), z.string().min(1).optional()),
     serviceName: z.string().min(1),
+  }),
+  storage: z.object({
+    provider: StorageProviderSchema,
+    cos: z
+      .object({
+        secretId: z.string().min(1).optional(),
+        secretKey: z.string().min(1).optional(),
+        bucket: z.string().min(1).optional(),
+        region: z.string().min(1).optional(),
+        publicBaseUrl: z.string().url().optional(),
+        keyPrefix: z.string().min(1),
+        signedUrlExpires: z.number().int().positive(),
+      })
+      .optional(),
   }),
   auth: z.object({
     trustedOrigins: z.array(z.string().url()),
