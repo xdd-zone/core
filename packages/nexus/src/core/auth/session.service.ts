@@ -17,23 +17,31 @@ export function createSessionService(betterAuthInstance: BetterAuthInstance): Se
           headers: headers instanceof Headers ? headers : new Headers(headers),
         })
         const user = session?.user?.id
-          ? await prisma.user.findUnique({
+          ? await prisma.user.findFirst({
               where: {
+                deletedAt: null,
                 id: session.user.id,
+                status: 'ACTIVE',
               },
             })
           : null
 
+        if (!session?.session || !user) {
+          return {
+            session: null,
+            user: null,
+            isAuthenticated: false,
+          }
+        }
+
         return {
-          session: session?.session
-            ? {
-                ...session.session,
-                ipAddress: session.session.ipAddress ?? null,
-                userAgent: session.session.userAgent ?? null,
-              }
-            : null,
+          session: {
+            ...session.session,
+            ipAddress: session.session.ipAddress ?? null,
+            userAgent: session.session.userAgent ?? null,
+          },
           user,
-          isAuthenticated: !!session?.session && !!user,
+          isAuthenticated: true,
         }
       } catch {
         return {

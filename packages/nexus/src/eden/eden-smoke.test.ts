@@ -13,7 +13,7 @@ import { createAppContext } from '../bootstrap'
 import { parsePermission, PermissionService } from '../core/permissions'
 import { prisma } from '../infra/database'
 import { SiteConfigRepository } from '../modules/site-config/repository'
-import { PERMISSION_DEFINITIONS, PostPermissions } from '../public/permissions'
+import { CategoryPermissions, PERMISSION_DEFINITIONS, PostPermissions } from '../public/permissions'
 
 const appContext = createAppContext({
   auth: {
@@ -167,6 +167,14 @@ const publicSiteClient = anonymousClient.api['public-site']
 function expectValidDateTime(value: unknown) {
   expect(value instanceof Date || typeof value === 'string').toBe(true)
   expect(Number.isNaN(new Date(value as string | Date).getTime())).toBe(false)
+}
+
+function expectAnonymousSession(data: unknown) {
+  expect(data).toEqual({
+    user: null,
+    session: null,
+    isAuthenticated: false,
+  })
 }
 
 const tempSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -763,12 +771,74 @@ describe('eden smoke', () => {
     expect(inactiveResult.error).toBeNull()
     expect(inactiveResult.data?.status).toBe('INACTIVE')
 
+    const inactiveSessionResult = await subjectClient.api.auth['get-session'].get()
+    expect(inactiveSessionResult.status).toBe(200)
+    expect(inactiveSessionResult.error).toBeNull()
+    expectAnonymousSession(inactiveSessionResult.data)
+
+    const inactiveMeResult = await subjectClient.api.auth.me.get()
+    expect(inactiveMeResult.status).toBe(401)
+    expect(inactiveMeResult.error).toBeTruthy()
+
+    const inactiveSignInClient = treaty<App>(baseUrl, {
+      fetcher: createCookieFetcher().fetcher,
+    })
+    const inactiveSignInResult = await inactiveSignInClient.api.auth['sign-in'].email.post({
+      email: subjectUser.email,
+      password: subjectUser.password,
+    })
+    expect(inactiveSignInResult.status).toBe(401)
+    expect(inactiveSignInResult.error).toBeTruthy()
+
+    const inactiveSignInSessionResult = await inactiveSignInClient.api.auth['get-session'].get()
+    expect(inactiveSignInSessionResult.status).toBe(200)
+    expect(inactiveSignInSessionResult.error).toBeNull()
+    expectAnonymousSession(inactiveSignInSessionResult.data)
+
+    const bannedResult = await authenticatedClient.api.user({ id: subjectUserId }).status.patch({
+      status: 'BANNED',
+    })
+    expect(bannedResult.status).toBe(200)
+    expect(bannedResult.error).toBeNull()
+    expect(bannedResult.data?.status).toBe('BANNED')
+
+    const bannedSessionResult = await subjectClient.api.auth['get-session'].get()
+    expect(bannedSessionResult.status).toBe(200)
+    expect(bannedSessionResult.error).toBeNull()
+    expectAnonymousSession(bannedSessionResult.data)
+
+    const bannedMeResult = await subjectClient.api.user.me.get()
+    expect(bannedMeResult.status).toBe(401)
+    expect(bannedMeResult.error).toBeTruthy()
+
+    const bannedSignInClient = treaty<App>(baseUrl, {
+      fetcher: createCookieFetcher().fetcher,
+    })
+    const bannedSignInResult = await bannedSignInClient.api.auth['sign-in'].email.post({
+      email: subjectUser.email,
+      password: subjectUser.password,
+    })
+    expect(bannedSignInResult.status).toBe(401)
+    expect(bannedSignInResult.error).toBeTruthy()
+
+    const bannedSignInSessionResult = await bannedSignInClient.api.auth['get-session'].get()
+    expect(bannedSignInSessionResult.status).toBe(200)
+    expect(bannedSignInSessionResult.error).toBeNull()
+    expectAnonymousSession(bannedSignInSessionResult.data)
+
     const activeResult = await authenticatedClient.api.user({ id: subjectUserId }).status.patch({
       status: 'ACTIVE',
     })
     expect(activeResult.status).toBe(200)
     expect(activeResult.error).toBeNull()
     expect(activeResult.data?.status).toBe('ACTIVE')
+
+    const restoredSubjectSignInResult = await subjectClient.api.auth['sign-in'].email.post({
+      email: subjectUser.email,
+      password: subjectUser.password,
+    })
+    expect(restoredSubjectSignInResult.status).toBe(200)
+    expect(restoredSubjectSignInResult.error).toBeNull()
   })
 
   it('应支持固定角色列表、用户角色分配与移除', async () => {
@@ -1081,7 +1151,9 @@ describe('eden smoke', () => {
     expect(updateResult.data?.sortOrder).toBe(1)
     expect(updateResult.data?.isVisible).toBe(true)
 
-    const writeOnlyRole = await createRoleWithPermissions(`category-write-${tempSuffix}`, [PostPermissions.WRITE_ALL])
+    const writeOnlyRole = await createRoleWithPermissions(`category-write-${tempSuffix}`, [
+      CategoryPermissions.WRITE_ALL,
+    ])
     await prisma.userRole.create({
       data: {
         userId: subjectUserId,

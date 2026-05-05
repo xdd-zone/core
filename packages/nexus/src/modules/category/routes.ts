@@ -2,8 +2,6 @@ import type { AccessPluginInstance } from '@nexus/core'
 
 import { Elysia } from 'elysia'
 
-import { CATEGORY_MANAGE_PERMISSIONS } from '../../public/category-types'
-import { PostPermissions } from '../post/permissions'
 import {
   CategoryIdParamsSchema,
   CategoryListQuerySchema,
@@ -13,6 +11,7 @@ import {
   UpdateCategoryBodySchema,
 } from './model'
 import { CategoryOpenApi } from './openapi'
+import { CATEGORY_MANAGE_PERMISSIONS, CategoryPermissions } from './permissions'
 import { CategoryService } from './service'
 
 export interface CategoryModuleOptions {
@@ -33,7 +32,7 @@ export function createCategoryModule({ accessPlugin }: CategoryModuleOptions) {
       detail: CategoryOpenApi.list,
     })
     .post('/', async ({ body }) => await CategoryService.create(body), {
-      permission: PostPermissions.WRITE_ALL,
+      permission: CategoryPermissions.WRITE_ALL,
       body: CreateCategoryBodySchema,
       response: CategorySchema,
       detail: CategoryOpenApi.create,
@@ -45,7 +44,7 @@ export function createCategoryModule({ accessPlugin }: CategoryModuleOptions) {
       detail: CategoryOpenApi.findById,
     })
     .patch('/:id', async ({ body, params }) => await CategoryService.update(params.id, body), {
-      permission: PostPermissions.WRITE_ALL,
+      permission: CategoryPermissions.WRITE_ALL,
       params: CategoryIdParamsSchema,
       body: UpdateCategoryBodySchema,
       response: CategorySchema,
@@ -58,7 +57,7 @@ export function createCategoryModule({ accessPlugin }: CategoryModuleOptions) {
         set.status = 204
       },
       {
-        permission: PostPermissions.WRITE_ALL,
+        permission: CategoryPermissions.WRITE_ALL,
         params: CategoryIdParamsSchema,
         detail: CategoryOpenApi.remove,
       },

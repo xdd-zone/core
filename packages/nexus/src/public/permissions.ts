@@ -13,6 +13,7 @@ import {
   UserRolePermissions,
 } from '../core/permissions/permissions'
 import { DEFAULT_ROLE_NAME, FIRST_USER_ROLE_NAME, SYSTEM_ROLE_NAMES } from '../core/permissions/role.constants'
+import { CategoryPermissions } from '../modules/category/permissions'
 import { CommentPermissions } from '../modules/comment/permissions'
 import { MediaPermissions } from '../modules/media/permissions'
 import { BUSINESS_PERMISSION_DEFINITIONS } from '../modules/permissions'
@@ -29,6 +30,7 @@ const ALL_PERMISSION_KEYS = PERMISSION_KEYS
 export {
   ALL_PERMISSION_DEFINITIONS,
   ALL_PERMISSION_KEYS,
+  CategoryPermissions,
   CommentPermissions,
   DEFAULT_ROLE_NAME,
   FIRST_USER_ROLE_NAME,

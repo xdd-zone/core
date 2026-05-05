@@ -8,4 +8,8 @@ export function assertAuthenticated(auth: SecuritySession): asserts auth is Auth
   if (!auth.isAuthenticated || !auth.session || !auth.user) {
     throw new UnauthorizedError('请先登录')
   }
+
+  if (auth.user.status !== 'ACTIVE') {
+    throw new UnauthorizedError('请先登录')
+  }
 }

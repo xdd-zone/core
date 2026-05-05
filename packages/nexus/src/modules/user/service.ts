@@ -9,7 +9,7 @@ import type {
   UserStatus,
 } from './model'
 import type { UserWhereInput } from './types'
-import { BadRequestError, NotFoundError } from '@nexus/core/http'
+import { BadRequestError, ConflictError, NotFoundError } from '@nexus/core/http'
 import { buildKeywordSearch } from '@nexus/infra/database'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { USER_SEARCH_FIELDS } from './constants'
@@ -70,10 +70,38 @@ export class UserService {
   }
 
   /**
+   * 检查更新资料时是否和其他未归档用户重复。
+   */
+  private static async assertProfileUnique(
+    userId: string,
+    data: Pick<UpdateMyProfileBody, 'email' | 'username' | 'phone'>,
+  ): Promise<void> {
+    const duplicateUser = await UserRepository.findDuplicateProfile(userId, data)
+    if (!duplicateUser) {
+      return
+    }
+
+    if (data.email && duplicateUser.email === data.email) {
+      throw new ConflictError('邮箱已被其他用户使用')
+    }
+
+    if (data.username && duplicateUser.username === data.username) {
+      throw new ConflictError('用户名已被其他用户使用')
+    }
+
+    if (data.phone && duplicateUser.phone === data.phone) {
+      throw new ConflictError('手机号已被其他用户使用')
+    }
+
+    throw new ConflictError('用户资料已被其他用户使用')
+  }
+
+  /**
    * 更新当前用户资料。
    */
   static async updateProfile(userId: string, data: UpdateMyProfileBody): Promise<User> {
     await this.findById(userId)
+    await this.assertProfileUnique(userId, data)
 
     return serializeUser(
       await UserRepository.updateProfile(userId, {
@@ -125,6 +153,7 @@ export class UserService {
    */
   static async updateByAdmin(userId: string, data: UpdateUserBody): Promise<User> {
     await this.findById(userId)
+    await this.assertProfileUnique(userId, data)
 
     return serializeUser(
       await UserRepository.updateProfile(userId, {

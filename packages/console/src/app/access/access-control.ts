@@ -3,8 +3,8 @@ import type { QueryClient } from '@tanstack/react-query'
 import type { PermissionString } from '@xdd-zone/nexus/permissions'
 import { currentUserPermissionsQueryOptions } from '@console/modules/rbac'
 import { redirect } from '@tanstack/react-router'
-import { CATEGORY_MANAGE_PERMISSIONS } from '@xdd-zone/nexus/category-types'
 import {
+  CategoryPermissions,
   CommentPermissions,
   matchPermission,
   MediaPermissions,
@@ -12,6 +12,8 @@ import {
   PostPermissions,
   SiteConfigPermissions,
 } from '@xdd-zone/nexus/permissions'
+
+const CATEGORY_MANAGE_PERMISSIONS = [CategoryPermissions.READ_ALL, CategoryPermissions.WRITE_ALL] as const
 
 interface ConsoleAccessRequirement {
   all?: readonly PermissionString[]

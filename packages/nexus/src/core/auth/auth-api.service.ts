@@ -2,7 +2,8 @@ import type { ResolvedConfig } from '@nexus/core/config'
 import type { AuthApiSession, SignInEmailPayload, SignUpEmailPayload } from './auth-api.types'
 import type { AuthMethodsService } from './auth-methods.service'
 import type { BetterAuthAdapter } from './better-auth.adapter'
-import { BadRequestError } from '@nexus/core/http'
+import { BadRequestError, UnauthorizedError } from '@nexus/core/http'
+import { prisma } from '@nexus/infra/database/client'
 
 type ResponseHeaders = Headers | Record<string, string | number | string[]>
 type SocialLoginErrorCode =
@@ -157,6 +158,35 @@ function resolveSocialLoginErrorCode(error: unknown): SocialLoginErrorCode {
   return 'github_sign_in_failed'
 }
 
+async function assertActiveSignedInUser(
+  userId: string,
+  headers: ResponseHeaders,
+  betterAuthAdapter: BetterAuthAdapter,
+) {
+  const user = await prisma.user.findFirst({
+    where: {
+      deletedAt: null,
+      id: userId,
+      status: 'ACTIVE',
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  if (user) {
+    return
+  }
+
+  await prisma.session.deleteMany({
+    where: {
+      userId,
+    },
+  })
+  betterAuthAdapter.clearBetterAuthCookies(headers)
+  throw new UnauthorizedError('账号已被停用')
+}
+
 /**
  * 认证接口动作服务。
  */
@@ -252,10 +282,13 @@ export function createAuthApiService(
     async signInEmail(request: Request, body: SignInEmailPayload, headers: ResponseHeaders): Promise<AuthApiSession> {
       authMethodsService.assertMethodEnabled('emailPassword')
 
-      return await betterAuthAdapter.forwardBetterAuthResponse<AuthApiSession>(request, {
+      const authSession = await betterAuthAdapter.forwardBetterAuthResponse<AuthApiSession>(request, {
         body,
         headers,
       })
+      await assertActiveSignedInUser(authSession.user.id, headers, betterAuthAdapter)
+
+      return authSession
     },
 
     async signOut(request: Request, headers: ResponseHeaders): Promise<void> {

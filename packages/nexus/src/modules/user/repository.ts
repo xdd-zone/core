@@ -37,6 +37,46 @@ export class UserRepository {
   }
 
   /**
+   * 查询和指定用户资料字段重复的其他未归档用户。
+   */
+  static async findDuplicateProfile(
+    userId: string,
+    data: {
+      email?: string | null
+      username?: string | null
+      phone?: string | null
+    },
+  ): Promise<UserBaseData | null> {
+    const conditions: UserWhereInput[] = []
+
+    if (data.email) {
+      conditions.push({ email: data.email })
+    }
+
+    if (data.username) {
+      conditions.push({ username: data.username })
+    }
+
+    if (data.phone) {
+      conditions.push({ phone: data.phone })
+    }
+
+    if (conditions.length === 0) {
+      return null
+    }
+
+    return prisma.user.findFirst({
+      where: withActiveRecord({
+        id: {
+          not: userId,
+        },
+        OR: conditions,
+      }),
+      select: USER_BASE_SELECT,
+    })
+  }
+
+  /**
    * 更新用户基础资料。
    */
   static async updateProfile(
