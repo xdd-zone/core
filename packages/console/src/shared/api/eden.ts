@@ -100,6 +100,10 @@ function resolveConfiguredApiBaseUrl() {
  * 生成浏览器可直接访问的 API 地址。
  */
 export function resolveApiUrl(pathname: string) {
+  if (/^https?:\/\//i.test(pathname)) {
+    return pathname
+  }
+
   const apiPath = pathname.startsWith(API_PREFIX)
     ? pathname
     : `${API_PREFIX}${pathname.startsWith('/') ? pathname : `/${pathname}`}`

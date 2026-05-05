@@ -58,7 +58,7 @@ export class MediaService {
     assertAllowedMediaFile(file)
 
     const mediaId = crypto.randomUUID()
-    const { fileName, storagePath } = await MediaStorage.save(file)
+    const { fileName, publicUrl, storagePath } = await MediaStorage.save(file)
 
     try {
       return serializeMedia(
@@ -69,7 +69,7 @@ export class MediaService {
           mimeType: file.type,
           size: file.size,
           storagePath,
-          url: `/api/media/${mediaId}/file`,
+          url: publicUrl ?? `/api/media/${mediaId}/file`,
           uploadedBy: userId,
         }),
       )

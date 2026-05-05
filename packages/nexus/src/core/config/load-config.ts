@@ -127,6 +127,7 @@ function createEnvConfig(): DeepPartial<ResolvedConfig> {
   const githubClientId = process.env.GITHUB_CLIENT_ID
   const githubClientSecret = process.env.GITHUB_CLIENT_SECRET
   const cosPublicBaseUrl = process.env.COS_PUBLIC_BASE_URL
+  const cosSignedUrlExpires = process.env.COS_SIGNED_URL_EXPIRES
 
   const storageConfig: DeepPartial<ResolvedConfig['storage']> | undefined =
     process.env.STORAGE_PROVIDER ||
@@ -134,7 +135,8 @@ function createEnvConfig(): DeepPartial<ResolvedConfig> {
     process.env.COS_SECRET_KEY ||
     process.env.COS_BUCKET ||
     process.env.COS_REGION ||
-    cosPublicBaseUrl
+    cosPublicBaseUrl ||
+    cosSignedUrlExpires
       ? {
           provider: normalizeStorageProvider(process.env.STORAGE_PROVIDER),
           cos: {
@@ -143,6 +145,7 @@ function createEnvConfig(): DeepPartial<ResolvedConfig> {
             bucket: process.env.COS_BUCKET,
             region: process.env.COS_REGION,
             publicBaseUrl: cosPublicBaseUrl ? normalizeOrigin(cosPublicBaseUrl) : undefined,
+            signedUrlExpires: cosSignedUrlExpires ? Number(cosSignedUrlExpires) : undefined,
           } as any,
         }
       : undefined

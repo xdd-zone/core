@@ -656,6 +656,8 @@ export default {
       open: 'Open',
       pageDescription: 'Upload, browse, and delete media resources here.',
       pageTitle: 'Media Resources',
+      previewAction: 'Preview',
+      previewTitle: 'Media Preview',
       summary: {
         copy: 'Reuse',
         copyHint: 'Copy the URL and reuse it directly in post covers or content.',
@@ -813,6 +815,8 @@ export default {
     form: {
       description: 'Saving syncs the current account profile immediately.',
       emailPlaceholder: 'Enter email',
+      imageInvalid: 'Invalid avatar URL',
+      imagePlaceholder: 'Enter avatar URL',
       introducePlaceholder: 'Enter introduction',
       namePlaceholder: 'Enter name',
       phonePlaceholder: 'Enter phone number',
@@ -898,6 +902,7 @@ export default {
     columns: {
       createdAt: 'Created At',
       email: 'Email',
+      image: 'Avatar URL',
       introduce: 'Introduction',
       lastLogin: 'Last Login',
       lastLoginIp: 'Last Login IP',

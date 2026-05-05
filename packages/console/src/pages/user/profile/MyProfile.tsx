@@ -40,6 +40,7 @@ export function MyProfile() {
 
     form.setFieldsValue({
       email: profileQuery.data.email,
+      image: profileQuery.data.image,
       introduce: profileQuery.data.introduce,
       name: profileQuery.data.name,
       phone: profileQuery.data.phone,
@@ -52,6 +53,7 @@ export function MyProfile() {
       const payload = {
         ...values,
         email: values.email || null,
+        image: values.image || null,
         introduce: values.introduce || null,
         phone: values.phone || null,
         username: values.username || null,
@@ -247,6 +249,14 @@ function ProfileTab({
                 <Form.Item label={t('user.columns.phone')} name="phone">
                   <Input placeholder={t('profile.form.phonePlaceholder')} />
                 </Form.Item>
+
+                <Form.Item
+                  label={t('user.columns.image')}
+                  name="image"
+                  rules={[{ type: 'url', message: t('profile.form.imageInvalid') }]}
+                >
+                  <Input placeholder={t('profile.form.imagePlaceholder')} />
+                </Form.Item>
               </div>
 
               <Form.Item label={t('user.columns.introduce')} name="introduce">
@@ -395,10 +405,7 @@ function AccessTab({
     <>
       <div className="mb-5 flex flex-wrap gap-4">
         {summaryItems.map((item) => (
-          <div
-            key={item.label}
-            className="rounded-2xl border border-border-subtle bg-surface-subtle/18 px-4 py-2.5"
-          >
+          <div key={item.label} className="rounded-2xl border border-border-subtle bg-surface-subtle/18 px-4 py-2.5">
             <span className="text-xs text-fg-muted">{item.label}</span>
             <span className="ml-2 text-sm font-medium text-fg">{item.value}</span>
           </div>

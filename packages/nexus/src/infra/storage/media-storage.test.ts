@@ -72,6 +72,21 @@ describe('CosMediaStorage', () => {
     )
   }
 
+  function createPublicStorage(client: CosSdkClient) {
+    return new CosMediaStorage(
+      {
+        bucket: 'xdd-elysia-1307783937',
+        keyPrefix: 'media',
+        publicBaseUrl: 'https://cos.example',
+        region: 'ap-shanghai',
+        secretId: 'secret-id',
+        secretKey: 'secret-key',
+        signedUrlExpires: 600,
+      },
+      client,
+    )
+  }
+
   it('保存文件时应上传到配置的 bucket、region 和 keyPrefix', async () => {
     const calls: unknown[] = []
     const client: CosSdkClient = {
@@ -102,6 +117,22 @@ describe('CosMediaStorage', () => {
         Region: 'ap-shanghai',
       },
     ])
+  })
+
+  it('配置公开地址时保存结果应返回公开 URL', async () => {
+    const storage = createPublicStorage({
+      deleteObject: async () => ({}),
+      getObjectUrl: () => 'https://signed.example/media/avatar.png',
+      putObject: async () => ({ ETag: '"etag"', Location: 'example' }),
+    })
+
+    const result = await storage.save(
+      new File(['hello cos'], 'avatar.php', {
+        type: 'image/png',
+      }),
+    )
+
+    expect(result.publicUrl).toBe(`https://cos.example/media/${result.fileName}`)
   })
 
   it('读取文件时应返回 COS 跳转地址', async () => {

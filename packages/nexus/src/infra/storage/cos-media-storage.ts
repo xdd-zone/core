@@ -75,6 +75,7 @@ export class CosMediaStorage implements MediaStorageDriver {
 
     return {
       fileName,
+      publicUrl: this.publicBaseUrl ? `${this.publicBaseUrl.replace(/\/+$/, '')}/${storagePath}` : undefined,
       storagePath,
     }
   }

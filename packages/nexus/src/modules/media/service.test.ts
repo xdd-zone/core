@@ -1,10 +1,11 @@
+import type { MediaRecord } from './repository'
 import { MediaStorage } from '@nexus/infra/storage/media-storage'
 import { afterEach, describe, expect, it, spyOn } from 'bun:test'
 
 import { MediaRepository } from './repository'
 import { MediaService } from './service'
 
-function createMediaRecord() {
+function createMediaRecord(override: Partial<MediaRecord> = {}): MediaRecord {
   return {
     id: 'media-1',
     fileName: 'avatar.png',
@@ -16,6 +17,7 @@ function createMediaRecord() {
     uploadedBy: 'user-1',
     createdAt: new Date('2026-04-05T00:00:00.000Z'),
     updatedAt: new Date('2026-04-05T00:00:00.000Z'),
+    ...override,
   }
 }
 
@@ -79,6 +81,28 @@ describe('MediaService.upload', () => {
     await expect(MediaService.upload('user-1', file)).rejects.toThrow('不支持的文件类型')
     expect(saveSpy).not.toHaveBeenCalled()
     expect(createSpy).not.toHaveBeenCalled()
+  })
+
+  it('存储层返回公开 URL 时应写入媒体地址', async () => {
+    const file = new File(['hello'], 'avatar.png', {
+      type: 'image/png',
+    })
+    const createSpy = spyOn(MediaRepository, 'create').mockImplementation(async (data) => createMediaRecord(data))
+
+    spyOn(MediaStorage, 'save').mockResolvedValue({
+      fileName: 'avatar.png',
+      publicUrl: 'https://cos.example/media/avatar.png',
+      storagePath: 'media/avatar.png',
+    })
+
+    const result = await MediaService.upload('user-1', file)
+
+    expect(result.url).toBe('https://cos.example/media/avatar.png')
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: 'https://cos.example/media/avatar.png',
+      }),
+    )
   })
 })
 

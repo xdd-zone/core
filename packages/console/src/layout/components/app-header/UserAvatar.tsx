@@ -45,8 +45,6 @@ export function UserAvatar() {
     })
   }
 
-
-
   const menuItems: MenuProps['items'] = [
     {
       disabled: true,
@@ -76,7 +74,7 @@ export function UserAvatar() {
   return (
     <Dropdown menu={{ items: menuItems }} placement="bottomRight" arrow={{ pointAtCenter: true }} trigger={['click']}>
       <div className="guide-avatar flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-colors">
-        <Avatar icon={<User />} />
+        <Avatar icon={<User />} src={user?.image || undefined} />
       </div>
     </Dropdown>
   )

@@ -640,6 +640,8 @@ export default {
       open: '打开',
       pageDescription: '这里统一管理媒体资源的上传、查看和删除。',
       pageTitle: '媒体资源',
+      previewAction: '预览',
+      previewTitle: '媒体预览',
       summary: {
         copy: '复用方式',
         copyHint: '复制地址后可直接用于文章封面或正文引用。',
@@ -793,6 +795,8 @@ export default {
     form: {
       description: '保存后同步当前账号资料。',
       emailPlaceholder: '请输入邮箱',
+      imageInvalid: '头像地址格式不正确',
+      imagePlaceholder: '请输入头像地址',
       introducePlaceholder: '填写简介',
       namePlaceholder: '请输入姓名',
       phonePlaceholder: '请输入手机号',
@@ -878,6 +882,7 @@ export default {
     columns: {
       createdAt: '创建时间',
       email: '邮箱',
+      image: '头像地址',
       introduce: '简介',
       lastLogin: '最后登录',
       lastLoginIp: '最后登录 IP',

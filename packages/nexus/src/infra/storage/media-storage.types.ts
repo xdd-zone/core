@@ -1,5 +1,6 @@
 export interface MediaStorageSaveResult {
   fileName: string
+  publicUrl?: string
   storagePath: string
 }
 

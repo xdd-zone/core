@@ -14,9 +14,9 @@ import { resolveApiUrl } from '@console/shared/api'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { MediaPermissions } from '@xdd-zone/nexus/permissions'
-import { App as AntdApp, Button, Card, Descriptions, Empty, Popconfirm, Space, Table, Tag } from 'antd'
+import { App as AntdApp, Button, Card, Descriptions, Drawer, Empty, Popconfirm, Space, Table, Tag } from 'antd'
 import dayjs from 'dayjs'
-import { Copy, ExternalLink, RefreshCw, Trash2, Upload } from 'lucide-react'
+import { Copy, ExternalLink, Eye, RefreshCw, Trash2, Upload } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -63,6 +63,7 @@ export function MediaManagement() {
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(MEDIA_PAGE_SIZE)
+  const [previewMedia, setPreviewMedia] = useState<Media | null>(null)
 
   const currentUserPermissionsQuery = useCurrentUserPermissionsQuery()
   const permissionKeys = createPermissionKeySet(currentUserPermissionsQuery.data?.permissions)
@@ -81,6 +82,7 @@ export function MediaManagement() {
     async (id: string) => {
       try {
         await deleteMediaMutation.mutateAsync(id)
+        setPreviewMedia((current) => (current?.id === id ? null : current))
         await refreshMediaList()
         message.success(t('content.media.deleted'))
       } catch (error) {
@@ -91,24 +93,45 @@ export function MediaManagement() {
     [deleteMediaMutation, message, refreshMediaList, t],
   )
 
+  const handleCopyMediaUrl = useCallback(
+    (media: Media) => {
+      void navigator.clipboard
+        .writeText(mediaUrl(media))
+        .then(() => message.success(t('content.media.copySuccess')))
+        .catch(() => message.error(t('content.media.copyFailed')))
+    },
+    [message, t],
+  )
+
+  const handleOpenMedia = useCallback((media: Media) => {
+    window.open(mediaUrl(media), '_blank', 'noopener,noreferrer')
+  }, [])
+
   const columns = useMemo<TableProps<Media>['columns']>(
     () => [
       {
         key: 'preview',
         title: t('content.media.columns.preview'),
         width: 120,
-        render: (_, record) =>
-          isImageMimeType(record.mimeType) ? (
-            <img
-              alt={record.originalName}
-              className="h-14 w-20 rounded-xl border border-border-subtle object-cover"
-              src={mediaUrl(record)}
-            />
-          ) : (
-            <div className="flex h-14 w-20 items-center justify-center rounded-xl border border-border-subtle bg-surface-subtle/25 text-xs text-fg-muted">
-              {t('content.media.file')}
-            </div>
-          ),
+        render: (_, record) => (
+          <button
+            type="button"
+            className="group block rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            onClick={() => setPreviewMedia(record)}
+          >
+            {isImageMimeType(record.mimeType) ? (
+              <img
+                alt={record.originalName}
+                className="h-14 w-20 rounded-xl border border-border-subtle object-cover transition-opacity group-hover:opacity-85"
+                src={mediaUrl(record)}
+              />
+            ) : (
+              <div className="flex h-14 w-20 items-center justify-center rounded-xl border border-border-subtle bg-surface-subtle/25 text-xs text-fg-muted transition-colors group-hover:border-primary/40">
+                {t('content.media.file')}
+              </div>
+            )}
+          </button>
+        ),
       },
       {
         key: 'name',
@@ -149,16 +172,14 @@ export function MediaManagement() {
         width: 220,
         render: (_, record) => (
           <Space wrap>
+            <Button type="link" size="small" icon={<Eye className="size-4" />} onClick={() => setPreviewMedia(record)}>
+              {t('content.media.previewAction')}
+            </Button>
             <Button
               type="link"
               size="small"
               icon={<Copy className="size-4" />}
-              onClick={() => {
-                void navigator.clipboard
-                  .writeText(mediaUrl(record))
-                  .then(() => message.success(t('content.media.copySuccess')))
-                  .catch(() => message.error(t('content.media.copyFailed')))
-              }}
+              onClick={() => handleCopyMediaUrl(record)}
             >
               {t('content.media.copy')}
             </Button>
@@ -166,9 +187,7 @@ export function MediaManagement() {
               type="link"
               size="small"
               icon={<ExternalLink className="size-4" />}
-              onClick={() => {
-                window.open(mediaUrl(record), '_blank', 'noopener,noreferrer')
-              }}
+              onClick={() => handleOpenMedia(record)}
             >
               {t('content.media.open')}
             </Button>
@@ -187,7 +206,7 @@ export function MediaManagement() {
         ),
       },
     ],
-    [handleDeleteMedia, message, t],
+    [handleCopyMediaUrl, handleDeleteMedia, handleOpenMedia, t],
   )
 
   const handleUploadFiles = async (files: File[]) => {
@@ -337,6 +356,69 @@ export function MediaManagement() {
           <Empty description={t('content.media.unavailable')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
+
+      <Drawer
+        destroyOnHidden
+        open={previewMedia !== null}
+        title={t('content.media.previewTitle')}
+        width={520}
+        onClose={() => setPreviewMedia(null)}
+        extra={
+          previewMedia ? (
+            <Space>
+              <Button size="small" icon={<Copy className="size-4" />} onClick={() => handleCopyMediaUrl(previewMedia)}>
+                {t('content.media.copy')}
+              </Button>
+              <Button
+                size="small"
+                icon={<ExternalLink className="size-4" />}
+                onClick={() => handleOpenMedia(previewMedia)}
+              >
+                {t('content.media.open')}
+              </Button>
+            </Space>
+          ) : null
+        }
+      >
+        {previewMedia ? (
+          <div className="flex flex-col gap-4">
+            <div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface-subtle/18">
+              {isImageMimeType(previewMedia.mimeType) ? (
+                <img
+                  alt={previewMedia.originalName}
+                  className="max-h-[56vh] w-full object-contain"
+                  src={mediaUrl(previewMedia)}
+                />
+              ) : (
+                <div className="flex min-h-64 items-center justify-center text-sm text-fg-muted">
+                  {t('content.media.file')}
+                </div>
+              )}
+            </div>
+
+            <Descriptions column={1} size="small" bordered>
+              <Descriptions.Item label={t('content.media.columns.name')}>
+                <div className="min-w-0">
+                  <div className="font-medium text-fg">{previewMedia.originalName}</div>
+                  <div className="text-fg-muted mt-1 break-all text-xs">{previewMedia.fileName}</div>
+                </div>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('content.media.columns.mimeType')}>
+                <Tag>{previewMedia.mimeType}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('content.media.columns.size')}>
+                {formatBytes(previewMedia.size)}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('content.media.columns.createdAt')}>
+                {dayjs(previewMedia.createdAt).format('YYYY-MM-DD HH:mm')}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('content.media.columns.url')}>
+                <div className="break-all text-xs text-fg-muted">{mediaUrl(previewMedia)}</div>
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
+        ) : null}
+      </Drawer>
     </div>
   )
 }
