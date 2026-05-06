@@ -158,7 +158,9 @@ export function MediaManagement() {
       {
         key: 'url',
         title: t('content.media.columns.url'),
-        render: (_, record) => <div className="break-all text-xs text-fg-muted">{mediaUrl(record)}</div>,
+        width: 280,
+        ellipsis: true,
+        render: (_, record) => <span className="text-xs text-fg-muted">{mediaUrl(record)}</span>,
       },
       {
         dataIndex: 'createdAt',
@@ -335,7 +337,7 @@ export function MediaManagement() {
                 total: mediaListQuery.data?.total,
               }}
               rowKey="id"
-              scroll={{ x: 920 }}
+              scroll={{ x: 1100 }}
             />
 
             <Card size="small" className="rounded-2xl" title={t('content.media.summaryTitle')}>

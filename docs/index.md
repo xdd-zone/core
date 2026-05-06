@@ -111,6 +111,20 @@
 
 - [腾讯云 COS 对象存储](./integrations/storage/tencent-cos.md)
 
+## 要给第三方站点读取公开内容
+
+先看：
+
+1. [third-party/public-site.md](./third-party/public-site.md)
+2. [api.md](./api.md)
+
+代码入口：
+
+- `packages/nexus/src/modules/public-site`
+- `packages/nexus/src/modules/comment`
+- `packages/nexus/src/modules/media`
+- `packages/nexus/src/public/public-site-types.ts`
+
 ## 其他文档
 
 - [console.md](./console.md)：前端结构、路由、导航、页面入口
