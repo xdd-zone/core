@@ -25,11 +25,13 @@ export default {
     socialLoginErrorEmailNotFound:
       'GitHub 没有返回可用邮箱。请先到 GitHub Settings > Emails 绑定并验证邮箱，然后再重试。',
     socialLoginErrorFallback: 'GitHub 登录没有完成，请稍后重试，或先使用邮箱密码登录。',
+    socialLoginErrorInactiveAccount: '账号已被停用，无法通过 GitHub 登录。',
     socialLoginErrorInvalidCallback:
       'GitHub 登录入口地址无效。请从当前后台登录页重新发起，或检查 API 地址和 trustedOrigins 配置。',
     socialLoginErrorMethodDisabled: '{{method}} 登录当前未开启。',
     socialLoginErrorSignUpDisabled: '{{method}} 登录当前不允许首次创建用户。',
     socialLoginErrorTitle: 'GitHub 登录没有完成',
+    socialLoginInactiveAccountHint: '联系管理员恢复账号后再试。',
     socialLoginSignUpDisabledHint: '如果你是第一次使用这个方式登录，请先联系超管创建账号或开启注册。',
     socialLoginRetryHint: '如果问题持续出现，请稍后重试，或先使用邮箱密码登录。',
     loginTitle: '登录',

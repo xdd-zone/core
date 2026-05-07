@@ -35,7 +35,7 @@ export function createAppContext(overrides?: DeepPartial<ResolvedConfig>): AppBo
   const betterAuthInstance = createBetterAuthInstance(config)
   const authMethodsService = createAuthMethodsService(config)
   const sessionService = createSessionService(betterAuthInstance)
-  const betterAuthAdapter = createBetterAuthAdapter(betterAuthInstance, sessionService)
+  const betterAuthAdapter = createBetterAuthAdapter(betterAuthInstance)
   const authApiService = createAuthApiService(config, authMethodsService, betterAuthAdapter)
   const authPlugin = createAuthPlugin(sessionService)
   const accessPlugin = createAccessPlugin(sessionService)

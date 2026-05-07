@@ -16,6 +16,7 @@ function resolveSocialLoginError(
   | 'auth_sign_up_disabled'
   | 'email_not_found'
   | 'github_sign_in_failed'
+  | 'inactive_account'
   | 'invalid_callback_url'
   | 'unknown'
   | null {
@@ -33,6 +34,10 @@ function resolveSocialLoginError(
 
   if (error === 'email_not_found') {
     return 'email_not_found'
+  }
+
+  if (error === 'inactive_account') {
+    return 'inactive_account'
   }
 
   if (error === 'invalid_callback_url') {
@@ -200,9 +205,11 @@ export function Login() {
                       })
                     : socialLoginError === 'email_not_found'
                       ? t('auth.socialLoginErrorEmailNotFound')
-                      : socialLoginError === 'invalid_callback_url'
-                        ? t('auth.socialLoginErrorInvalidCallback')
-                        : t('auth.socialLoginErrorFallback')}
+                      : socialLoginError === 'inactive_account'
+                        ? t('auth.socialLoginErrorInactiveAccount')
+                        : socialLoginError === 'invalid_callback_url'
+                          ? t('auth.socialLoginErrorInvalidCallback')
+                          : t('auth.socialLoginErrorFallback')}
               </p>
               <p className="text-fg-muted text-xs leading-6">
                 {socialLoginError === 'auth_method_disabled'
@@ -211,9 +218,11 @@ export function Login() {
                     ? t('auth.socialLoginSignUpDisabledHint')
                     : socialLoginError === 'email_not_found'
                       ? t('auth.socialLoginAutoRegisterHint')
-                      : socialLoginError === 'invalid_callback_url'
-                        ? t('auth.socialLoginErrorConfigHint')
-                        : t('auth.socialLoginRetryHint')}
+                      : socialLoginError === 'inactive_account'
+                        ? t('auth.socialLoginInactiveAccountHint')
+                        : socialLoginError === 'invalid_callback_url'
+                          ? t('auth.socialLoginErrorConfigHint')
+                          : t('auth.socialLoginRetryHint')}
               </p>
             </div>
           }

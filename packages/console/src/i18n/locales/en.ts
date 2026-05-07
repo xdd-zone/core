@@ -30,11 +30,13 @@ export default {
       'GitHub did not return a usable email address. Please go to GitHub Settings > Emails, add and verify an email, then try again.',
     socialLoginErrorFallback:
       'GitHub sign-in did not complete. Please try again later, or sign in with email and password first.',
+    socialLoginErrorInactiveAccount: 'This account is inactive and cannot sign in with GitHub.',
     socialLoginErrorInvalidCallback:
       'The GitHub sign-in entry URL is invalid. Start again from the current login page, or check the API base URL and trustedOrigins configuration.',
     socialLoginErrorMethodDisabled: '{{method}} sign-in is currently disabled.',
     socialLoginErrorSignUpDisabled: '{{method}} sign-in does not allow first-time account creation right now.',
     socialLoginErrorTitle: 'GitHub sign-in did not complete',
+    socialLoginInactiveAccountHint: 'Ask an admin to reactivate the account, then try again.',
     socialLoginSignUpDisabledHint:
       'If this is your first time using this sign-in method, ask a super admin to create your account or enable sign-up first.',
     socialLoginRetryHint: 'If this keeps happening, try again later or sign in with email and password first.',

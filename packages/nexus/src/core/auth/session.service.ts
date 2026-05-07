@@ -12,43 +12,35 @@ export interface SessionService {
 export function createSessionService(betterAuthInstance: BetterAuthInstance): SessionService {
   return {
     async getSession(headers: Headers | HeadersInit): Promise<SecuritySession> {
-      try {
-        const session = await betterAuthInstance.api.getSession({
-          headers: headers instanceof Headers ? headers : new Headers(headers),
-        })
-        const user = session?.user?.id
-          ? await prisma.user.findFirst({
-              where: {
-                deletedAt: null,
-                id: session.user.id,
-                status: 'ACTIVE',
-              },
-            })
-          : null
+      const session = await betterAuthInstance.api.getSession({
+        headers: headers instanceof Headers ? headers : new Headers(headers),
+      })
+      const user = session?.user?.id
+        ? await prisma.user.findFirst({
+            where: {
+              deletedAt: null,
+              id: session.user.id,
+              status: 'ACTIVE',
+            },
+          })
+        : null
 
-        if (!session?.session || !user) {
-          return {
-            session: null,
-            user: null,
-            isAuthenticated: false,
-          }
-        }
-
-        return {
-          session: {
-            ...session.session,
-            ipAddress: session.session.ipAddress ?? null,
-            userAgent: session.session.userAgent ?? null,
-          },
-          user,
-          isAuthenticated: true,
-        }
-      } catch {
+      if (!session?.session || !user) {
         return {
           session: null,
           user: null,
           isAuthenticated: false,
         }
+      }
+
+      return {
+        session: {
+          ...session.session,
+          ipAddress: session.session.ipAddress ?? null,
+          userAgent: session.session.userAgent ?? null,
+        },
+        user,
+        isAuthenticated: true,
       }
     },
   }

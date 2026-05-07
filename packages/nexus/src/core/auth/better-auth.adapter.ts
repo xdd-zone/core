@@ -1,12 +1,11 @@
 import type { Session as PrismaSession } from '@nexus-prisma/generated/client'
 import type { BetterAuthOptions } from 'better-auth'
 import type { BetterAuthInstance } from './better-auth'
-import type { SessionService } from './session.service'
+import type { AuthMutableHeaders, BetterAuthCookieService } from './cookie.service'
 import { BadRequestError } from '@nexus/core/http'
 import { prisma } from '@nexus/infra/database/client'
-import { getCookieCache, getCookies, parseSetCookieHeader } from 'better-auth/cookies'
-
-type MutableHeaders = Headers | Record<string, string | number | string[]>
+import { getCookieCache, getCookies } from 'better-auth/cookies'
+import { createBetterAuthCookieService } from './cookie.service'
 
 interface CachedSessionPayload {
   session: PrismaSession & Record<string, unknown>
@@ -29,116 +28,6 @@ interface BetterAuthErrorPayload {
   message?: string
 }
 
-function getSetCookieValues(headers: Headers): string[] {
-  const headersWithGetSetCookie = headers as Headers & {
-    getSetCookie?: () => string[]
-  }
-
-  if (typeof headersWithGetSetCookie.getSetCookie === 'function') {
-    return headersWithGetSetCookie.getSetCookie()
-  }
-
-  const cookie = headers.get('set-cookie')
-  return cookie ? [cookie] : []
-}
-
-function appendSetCookie(headers: MutableHeaders | undefined, value: string) {
-  if (!headers) {
-    return
-  }
-
-  if (headers instanceof Headers) {
-    headers.append('Set-Cookie', value)
-    return
-  }
-
-  const currentValue = headers['Set-Cookie']
-
-  if (Array.isArray(currentValue)) {
-    headers['Set-Cookie'] = [...currentValue, value]
-    return
-  }
-
-  if (typeof currentValue === 'string') {
-    headers['Set-Cookie'] = [currentValue, value]
-    return
-  }
-
-  headers['Set-Cookie'] = value
-}
-
-function getMutableSetCookieValues(headers: MutableHeaders | undefined): string[] {
-  if (!headers) {
-    return []
-  }
-
-  if (headers instanceof Headers) {
-    return getSetCookieValues(headers)
-  }
-
-  const currentValue = headers['Set-Cookie'] ?? headers['set-cookie']
-
-  if (Array.isArray(currentValue)) {
-    return currentValue.map(String)
-  }
-
-  if (typeof currentValue === 'string') {
-    return [currentValue]
-  }
-
-  return []
-}
-
-function normalizeSessionCookieToken(value: string | undefined): string | null {
-  if (!value) {
-    return null
-  }
-
-  let decodedValue = value
-  try {
-    decodedValue = decodeURIComponent(value)
-  } catch {
-    decodedValue = value
-  }
-
-  const token = decodedValue.split('.')[0]
-  return token?.trim() ? token : null
-}
-
-function resolveSessionTokenFromSetCookie(headers: MutableHeaders | undefined, cookieName: string): string | null {
-  for (const cookie of getMutableSetCookieValues(headers)) {
-    const parsedCookie = parseSetCookieHeader(cookie)
-    const value = parsedCookie.get(cookieName)?.value
-    const token = normalizeSessionCookieToken(value)
-
-    if (token) {
-      return token
-    }
-  }
-
-  return null
-}
-
-function resolveSessionTokenFromRequestCookie(request: Request, cookieName: string): string | null {
-  const cookieHeader = request.headers.get('cookie')
-  if (!cookieHeader) {
-    return null
-  }
-
-  const cookieMap = new Map(
-    cookieHeader
-      .split(';')
-      .map((item) => item.trim())
-      .filter(Boolean)
-      .map((item) => {
-        const separatorIndex = item.indexOf('=')
-        return separatorIndex > 0 ? [item.slice(0, separatorIndex), item.slice(separatorIndex + 1)] : [item, '']
-      }),
-  )
-
-  return normalizeSessionCookieToken(cookieMap.get(cookieName))
-}
-
 function resolveBetterAuthErrorCode(payload: BetterAuthErrorPayload | null | undefined) {
   if (!payload) {
     return undefined
@@ -154,18 +43,45 @@ function resolveBetterAuthErrorCode(payload: BetterAuthErrorPayload | null | und
 async function resolveSessionIdentifiers(
   request: Request,
   betterAuthInstance: BetterAuthInstance,
-  sessionService: SessionService,
+  cookieService: BetterAuthCookieService,
 ) {
-  const currentSession = await sessionService.getSession(request.headers)
   const betterAuthOptions = betterAuthInstance.options as BetterAuthOptions
+  const sessionFromTokenCookie = await resolveSessionFromTokenCookie(request, cookieService)
 
-  if (currentSession.session) {
+  if (sessionFromTokenCookie.sessionId || sessionFromTokenCookie.sessionToken) {
+    return sessionFromTokenCookie
+  }
+
+  return await resolveSessionFromCookieCache(request, betterAuthOptions)
+}
+
+async function resolveSessionFromTokenCookie(request: Request, cookieService: BetterAuthCookieService) {
+  const requestSessionToken = cookieService.resolveSessionToken(request)
+
+  if (!requestSessionToken) {
     return {
-      sessionId: currentSession.session.id,
-      sessionToken: currentSession.session.token,
+      sessionId: null,
+      sessionToken: null,
     }
   }
 
+  const session = await prisma.session.findUnique({
+    where: {
+      token: requestSessionToken,
+    },
+    select: {
+      id: true,
+      token: true,
+    },
+  })
+
+  return {
+    sessionId: session?.id ?? null,
+    sessionToken: session?.token ?? requestSessionToken,
+  }
+}
+
+async function resolveSessionFromCookieCache(request: Request, betterAuthOptions: BetterAuthOptions) {
   const cachedSession = await getCookieCache<CachedSessionPayload>(request.headers, {
     cookiePrefix: betterAuthOptions.advanced?.cookiePrefix || 'better-auth',
     isSecure: getCookies(betterAuthOptions).sessionData.attributes.secure,
@@ -181,31 +97,29 @@ async function resolveSessionIdentifiers(
 }
 
 export interface BetterAuthAdapter {
-  clearBetterAuthCookies: (headers?: MutableHeaders) => void
-  forwardBetterAuthRedirect: (request: Request, headers?: MutableHeaders) => Promise<string>
+  clearBetterAuthCookies: (headers?: AuthMutableHeaders) => void
+  forwardBetterAuthRedirect: (request: Request, headers?: AuthMutableHeaders) => Promise<string>
   forwardBetterAuthResponse: <T>(
     request: Request,
     options?: {
       body?: unknown
-      headers?: MutableHeaders
+      headers?: AuthMutableHeaders
     },
   ) => Promise<T>
-  resolveBetterAuthSessionUserId: (request: Request, headers?: MutableHeaders) => Promise<string | null>
+  resolveBetterAuthSessionUserId: (request: Request, headers?: AuthMutableHeaders) => Promise<string | null>
   revokeBetterAuthSession: (request: Request) => Promise<void>
 }
 
-export function createBetterAuthAdapter(
-  betterAuthInstance: BetterAuthInstance,
-  sessionService: SessionService,
-): BetterAuthAdapter {
+export function createBetterAuthAdapter(betterAuthInstance: BetterAuthInstance): BetterAuthAdapter {
   const betterAuthOptions = betterAuthInstance.options as BetterAuthOptions
+  const cookieService = createBetterAuthCookieService(betterAuthOptions)
 
   return {
     async forwardBetterAuthResponse<T>(
       request: Request,
       options?: {
         body?: unknown
-        headers?: MutableHeaders
+        headers?: AuthMutableHeaders
       },
     ): Promise<T> {
       const authRequest =
@@ -220,9 +134,7 @@ export function createBetterAuthAdapter(
       const response = await betterAuthInstance.handler(authRequest)
       const data = (await response.json()) as T & BetterAuthErrorPayload
 
-      for (const cookie of getSetCookieValues(response.headers)) {
-        appendSetCookie(options?.headers, cookie)
-      }
+      cookieService.copySetCookies(response.headers, options?.headers)
 
       if (!response.ok) {
         throw new BadRequestError(data.message || '操作失败', resolveBetterAuthErrorCode(data))
@@ -231,11 +143,9 @@ export function createBetterAuthAdapter(
       return data as T
     },
 
-    async forwardBetterAuthRedirect(request: Request, headers?: MutableHeaders): Promise<string> {
+    async forwardBetterAuthRedirect(request: Request, headers?: AuthMutableHeaders): Promise<string> {
       const response = await betterAuthInstance.handler(request)
-      for (const cookie of getSetCookieValues(response.headers)) {
-        appendSetCookie(headers, cookie)
-      }
+      cookieService.copySetCookies(response.headers, headers)
 
       const location = response.headers.get('location')
       if (location) {
@@ -258,19 +168,12 @@ export function createBetterAuthAdapter(
       throw new BadRequestError(message, errorCode)
     },
 
-    clearBetterAuthCookies(headers?: MutableHeaders) {
-      const cookies = getCookies(betterAuthOptions)
-
-      appendSetCookie(headers, `${cookies.sessionToken.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
-      appendSetCookie(headers, `${cookies.sessionData.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
-      appendSetCookie(headers, `${cookies.dontRememberToken.name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
+    clearBetterAuthCookies(headers?: AuthMutableHeaders) {
+      cookieService.clearBetterAuthCookies(headers)
     },
 
-    async resolveBetterAuthSessionUserId(request: Request, headers?: MutableHeaders): Promise<string | null> {
-      const cookies = getCookies(betterAuthOptions)
-      const sessionToken =
-        resolveSessionTokenFromSetCookie(headers, cookies.sessionToken.name) ??
-        resolveSessionTokenFromRequestCookie(request, cookies.sessionToken.name)
+    async resolveBetterAuthSessionUserId(request: Request, headers?: AuthMutableHeaders): Promise<string | null> {
+      const sessionToken = cookieService.resolveSessionToken(request, headers)
 
       if (!sessionToken) {
         return null
@@ -289,7 +192,7 @@ export function createBetterAuthAdapter(
     },
 
     async revokeBetterAuthSession(request: Request) {
-      const { sessionId, sessionToken } = await resolveSessionIdentifiers(request, betterAuthInstance, sessionService)
+      const { sessionId, sessionToken } = await resolveSessionIdentifiers(request, betterAuthInstance, cookieService)
 
       if (sessionId) {
         await prisma.session.deleteMany({

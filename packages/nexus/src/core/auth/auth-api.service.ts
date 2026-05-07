@@ -2,213 +2,20 @@ import type { ResolvedConfig } from '@nexus/core/config'
 import type { AuthApiSession, SignInEmailPayload, SignUpEmailPayload } from './auth-api.types'
 import type { AuthMethodsService } from './auth-methods.service'
 import type { BetterAuthAdapter } from './better-auth.adapter'
-import { BadRequestError, UnauthorizedError } from '@nexus/core/http'
-import { prisma } from '@nexus/infra/database/client'
-
-type ResponseHeaders = Headers | Record<string, string | number | string[]>
-type SocialLoginErrorCode =
-  | 'auth_method_disabled'
-  | 'auth_sign_up_disabled'
-  | 'github_sign_in_failed'
-  | 'invalid_callback_url'
-  | 'inactive_account'
-
-function normalizeOrigin(value: string): string | null {
-  try {
-    return new URL(value).origin
-  } catch {
-    return null
-  }
-}
-
-function resolveTrustedOrigins(trustedOrigins: string[]) {
-  return trustedOrigins.map((origin) => normalizeOrigin(origin)).filter((origin): origin is string => !!origin)
-}
-
-function resolveAllowedOrigins(configuredAuthOrigin: string, trustedOrigins: string[]) {
-  return Array.from(new Set([configuredAuthOrigin, ...resolveTrustedOrigins(trustedOrigins)]))
-}
-
-function resolveTrustedBrowserOrigin(request: Request, trustedOrigins: string[]): string | null {
-  const normalizedTrustedOrigins = resolveTrustedOrigins(trustedOrigins)
-
-  const requestOrigin = request.headers.get('origin')
-  const referer = request.headers.get('referer')
-  const candidates = [requestOrigin, referer ? normalizeOrigin(referer) : null]
-
-  for (const candidate of candidates) {
-    if (candidate && normalizedTrustedOrigins.includes(candidate)) {
-      return candidate
-    }
-  }
-
-  return null
-}
-
-function resolveTrustedCallbackOrigin(
-  configuredAuthOrigin: string,
-  trustedOrigins: string[],
-  value: string | null | undefined,
-): string | null {
-  if (!value?.trim()) {
-    return null
-  }
-
-  try {
-    const origin = new URL(value, configuredAuthOrigin).origin
-    return resolveTrustedOrigins(trustedOrigins).includes(origin) ? origin : null
-  } catch {
-    return null
-  }
-}
-
-function resolveFrontendOrigin(
-  request: Request,
-  configuredAuthOrigin: string,
-  trustedOrigins: string[],
-  callbackURL: string | null | undefined,
-): string {
-  return (
-    resolveTrustedBrowserOrigin(request, trustedOrigins) ??
-    resolveTrustedCallbackOrigin(configuredAuthOrigin, trustedOrigins, callbackURL) ??
-    configuredAuthOrigin
-  )
-}
-
-function resolveBrowserUrl(
-  configuredAuthOrigin: string,
-  trustedOrigins: string[],
-  frontendOrigin: string,
-  value: string | null | undefined,
-  fallbackPath: string,
-): string {
-  const nextValue = value && value.trim() ? value : fallbackPath
-
-  try {
-    const url = new URL(nextValue, frontendOrigin)
-    if (
-      !['http:', 'https:'].includes(url.protocol) ||
-      !resolveAllowedOrigins(configuredAuthOrigin, trustedOrigins).includes(url.origin)
-    ) {
-      throw new BadRequestError('Invalid callbackURL', 'INVALID_CALLBACK_URL')
-    }
-
-    return url.toString()
-  } catch (error) {
-    if (value?.trim()) {
-      if (error instanceof BadRequestError) {
-        throw error
-      }
-
-      throw new BadRequestError('Invalid callbackURL', 'INVALID_CALLBACK_URL')
-    }
-
-    return new URL(fallbackPath, frontendOrigin).toString()
-  }
-}
-
-function resolveRedirectPath(callbackURL: string, frontendOrigin: string): string {
-  try {
-    const url = new URL(callbackURL, frontendOrigin)
-    if (url.origin !== frontendOrigin) {
-      return '/dashboard'
-    }
-
-    return `${url.pathname}${url.search}${url.hash}` || '/dashboard'
-  } catch {
-    return '/dashboard'
-  }
-}
-
-function createLoginRedirectUrl(
-  frontendOrigin: string,
-  redirectPath: string,
-  error: SocialLoginErrorCode,
-  method: 'github',
-): string {
-  const loginUrl = new URL('/login', frontendOrigin)
-  loginUrl.searchParams.set('redirect', redirectPath)
-  loginUrl.searchParams.set('error', error)
-  loginUrl.searchParams.set('method', method)
-  return loginUrl.toString()
-}
-
-function resolveSocialLoginErrorCode(error: unknown): SocialLoginErrorCode {
-  const errorCode =
-    typeof error === 'object' && error && 'code' in error && typeof (error as { code?: unknown }).code === 'string'
-      ? (error as { code: string }).code
-      : undefined
-
-  if (errorCode === 'INVALID_CALLBACK_URL') {
-    return 'invalid_callback_url'
-  }
-
-  if (errorCode === 'AUTH_METHOD_DISABLED') {
-    return 'auth_method_disabled'
-  }
-
-  if (errorCode === 'AUTH_SIGN_UP_DISABLED') {
-    return 'auth_sign_up_disabled'
-  }
-
-  const message = error instanceof Error ? error.message.toLowerCase() : ''
-  if (message.includes('invalid callbackurl') || message.includes('callbackurl is required')) {
-    return 'invalid_callback_url'
-  }
-
-  return 'github_sign_in_failed'
-}
-
-function resolveTrustedRedirectOrigin(
-  request: Request,
-  configuredAuthOrigin: string,
-  trustedOrigins: string[],
-  redirectURL: string,
-): string | null {
-  return (
-    resolveTrustedCallbackOrigin(configuredAuthOrigin, trustedOrigins, redirectURL) ??
-    resolveTrustedBrowserOrigin(request, trustedOrigins)
-  )
-}
-
-async function assertActiveSignedInUser(
-  userId: string,
-  headers: ResponseHeaders,
-  betterAuthAdapter: BetterAuthAdapter,
-) {
-  const user = await prisma.user.findFirst({
-    where: {
-      deletedAt: null,
-      id: userId,
-      status: 'ACTIVE',
-    },
-    select: {
-      id: true,
-    },
-  })
-
-  if (user) {
-    return
-  }
-
-  await prisma.session.deleteMany({
-    where: {
-      userId,
-    },
-  })
-  betterAuthAdapter.clearBetterAuthCookies(headers)
-  throw new UnauthorizedError('账号已被停用')
-}
+import type { AuthMutableHeaders } from './cookie.service'
+import { UnauthorizedError } from '@nexus/core/http'
+import { createAccountStatusService } from './account-status.service'
+import { createOAuthRedirectService } from './oauth-redirect.service'
 
 /**
  * 认证接口动作服务。
  */
 export interface AuthApiService {
-  callbackGithub: (request: Request, headers: ResponseHeaders) => Promise<string>
-  signInEmail: (request: Request, body: SignInEmailPayload, headers: ResponseHeaders) => Promise<AuthApiSession>
-  signInGithub: (request: Request, headers: ResponseHeaders) => Promise<string>
-  signOut: (request: Request, headers: ResponseHeaders) => Promise<void>
-  signUpEmail: (request: Request, body: SignUpEmailPayload, headers: ResponseHeaders) => Promise<AuthApiSession>
+  callbackGithub: (request: Request, headers: AuthMutableHeaders) => Promise<string>
+  signInEmail: (request: Request, body: SignInEmailPayload, headers: AuthMutableHeaders) => Promise<AuthApiSession>
+  signInGithub: (request: Request, headers: AuthMutableHeaders) => Promise<string>
+  signOut: (request: Request, headers: AuthMutableHeaders) => Promise<void>
+  signUpEmail: (request: Request, body: SignUpEmailPayload, headers: AuthMutableHeaders) => Promise<AuthApiSession>
 }
 
 export function createAuthApiService(
@@ -216,27 +23,24 @@ export function createAuthApiService(
   authMethodsService: AuthMethodsService,
   betterAuthAdapter: BetterAuthAdapter,
 ): AuthApiService {
-  const configuredAuthOrigin = normalizeOrigin(config.betterAuth.url) ?? 'http://localhost'
-  const trustedOrigins = config.auth.trustedOrigins
+  const accountStatusService = createAccountStatusService(betterAuthAdapter)
+  const oauthRedirectService = createOAuthRedirectService({
+    configuredAuthOrigin: config.betterAuth.url,
+    trustedOrigins: config.auth.trustedOrigins,
+  })
 
   return {
-    async signInGithub(request: Request, headers: ResponseHeaders): Promise<string> {
+    async signInGithub(request: Request, headers: AuthMutableHeaders): Promise<string> {
       const requestUrl = new URL(request.url)
       const requestedCallbackURL = requestUrl.searchParams.get('callbackURL')
-      const frontendOrigin = resolveFrontendOrigin(request, configuredAuthOrigin, trustedOrigins, requestedCallbackURL)
+      const frontendOrigin = oauthRedirectService.resolveFrontendOrigin(request, requestedCallbackURL)
       let redirectPath = '/dashboard'
 
       try {
         authMethodsService.assertMethodEnabled('github')
 
-        const callbackURL = resolveBrowserUrl(
-          configuredAuthOrigin,
-          trustedOrigins,
-          frontendOrigin,
-          requestedCallbackURL,
-          '/dashboard',
-        )
-        redirectPath = resolveRedirectPath(callbackURL, frontendOrigin)
+        const callbackURL = oauthRedirectService.resolveCallbackUrl(frontendOrigin, requestedCallbackURL)
+        redirectPath = oauthRedirectService.resolveRedirectPath(callbackURL, frontendOrigin)
         const errorCallbackURL = new URL('/login', frontendOrigin)
         errorCallbackURL.searchParams.set('redirect', redirectPath)
 
@@ -262,14 +66,12 @@ export function createAuthApiService(
 
         return await betterAuthAdapter.forwardBetterAuthRedirect(socialSignInRequest, headers)
       } catch (error) {
-        const trustedBrowserOrigin =
-          resolveTrustedBrowserOrigin(request, trustedOrigins) ??
-          resolveTrustedCallbackOrigin(configuredAuthOrigin, trustedOrigins, requestedCallbackURL)
+        const trustedBrowserOrigin = oauthRedirectService.resolveTrustedLoginOrigin(request, requestedCallbackURL)
         if (trustedBrowserOrigin) {
-          return createLoginRedirectUrl(
+          return oauthRedirectService.createLoginRedirectUrl(
             trustedBrowserOrigin,
             redirectPath,
-            resolveSocialLoginErrorCode(error),
+            oauthRedirectService.resolveSocialLoginErrorCode(error),
             'github',
           )
         }
@@ -278,7 +80,7 @@ export function createAuthApiService(
       }
     },
 
-    async callbackGithub(request: Request, headers: ResponseHeaders): Promise<string> {
+    async callbackGithub(request: Request, headers: AuthMutableHeaders): Promise<string> {
       const redirectURL = await betterAuthAdapter.forwardBetterAuthRedirect(request, headers)
       const userId = await betterAuthAdapter.resolveBetterAuthSessionUserId(request, headers)
 
@@ -287,24 +89,19 @@ export function createAuthApiService(
       }
 
       try {
-        await assertActiveSignedInUser(userId, headers, betterAuthAdapter)
+        await accountStatusService.assertActiveSignedInUser(userId, headers)
         return redirectURL
       } catch (error) {
         if (!(error instanceof UnauthorizedError)) {
           throw error
         }
 
-        const trustedRedirectOrigin = resolveTrustedRedirectOrigin(
-          request,
-          configuredAuthOrigin,
-          trustedOrigins,
-          redirectURL,
-        )
+        const trustedRedirectOrigin = oauthRedirectService.resolveTrustedRedirectOrigin(request, redirectURL)
 
         if (trustedRedirectOrigin) {
-          return createLoginRedirectUrl(
+          return oauthRedirectService.createLoginRedirectUrl(
             trustedRedirectOrigin,
-            resolveRedirectPath(redirectURL, trustedRedirectOrigin),
+            oauthRedirectService.resolveRedirectPath(redirectURL, trustedRedirectOrigin),
             'inactive_account',
             'github',
           )
@@ -314,7 +111,7 @@ export function createAuthApiService(
       }
     },
 
-    async signUpEmail(request: Request, body: SignUpEmailPayload, headers: ResponseHeaders): Promise<AuthApiSession> {
+    async signUpEmail(request: Request, body: SignUpEmailPayload, headers: AuthMutableHeaders): Promise<AuthApiSession> {
       authMethodsService.assertMethodEnabled('emailPassword')
       authMethodsService.assertMethodSignUpAllowed('emailPassword')
 
@@ -324,19 +121,19 @@ export function createAuthApiService(
       })
     },
 
-    async signInEmail(request: Request, body: SignInEmailPayload, headers: ResponseHeaders): Promise<AuthApiSession> {
+    async signInEmail(request: Request, body: SignInEmailPayload, headers: AuthMutableHeaders): Promise<AuthApiSession> {
       authMethodsService.assertMethodEnabled('emailPassword')
 
       const authSession = await betterAuthAdapter.forwardBetterAuthResponse<AuthApiSession>(request, {
         body,
         headers,
       })
-      await assertActiveSignedInUser(authSession.user.id, headers, betterAuthAdapter)
+      await accountStatusService.assertActiveSignedInUser(authSession.user.id, headers)
 
       return authSession
     },
 
-    async signOut(request: Request, headers: ResponseHeaders): Promise<void> {
+    async signOut(request: Request, headers: AuthMutableHeaders): Promise<void> {
       await betterAuthAdapter.revokeBetterAuthSession(request)
       betterAuthAdapter.clearBetterAuthCookies(headers)
     },
