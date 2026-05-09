@@ -1,5 +1,6 @@
 import type { PaginatedList, PaginationQuery } from '@nexus/infra/database'
 import type {
+  PublicSiteArchivePostDateData,
   PublicSiteCategoryData,
   PublicSiteCategoryWhereInput,
   PublicSiteConfigData,
@@ -10,6 +11,7 @@ import type {
 import { prisma } from '@nexus/infra/database'
 import { PrismaService } from '@nexus/infra/database/prisma.service'
 import {
+  PUBLIC_SITE_ARCHIVE_POST_DATE_SELECT,
   PUBLIC_SITE_CATEGORY_SELECT,
   PUBLIC_SITE_CONFIG_SELECT,
   PUBLIC_SITE_POST_DETAIL_SELECT,
@@ -43,6 +45,24 @@ export class PublicSiteRepository {
   }
 
   static async paginatePosts(
+    where: PublicSitePostWhereInput,
+    query: PaginationQuery,
+  ): Promise<PaginatedList<PublicSitePostSummaryData>> {
+    return PrismaService.paginate<PublicSitePostSummaryData>('post', where, query, {
+      select: PUBLIC_SITE_POST_SUMMARY_SELECT,
+      orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+    })
+  }
+
+  static async findArchivePostDates(where: PublicSitePostWhereInput): Promise<PublicSiteArchivePostDateData[]> {
+    return prisma.post.findMany({
+      where,
+      select: PUBLIC_SITE_ARCHIVE_POST_DATE_SELECT,
+      orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+    })
+  }
+
+  static async paginateArchivePosts(
     where: PublicSitePostWhereInput,
     query: PaginationQuery,
   ): Promise<PaginatedList<PublicSitePostSummaryData>> {

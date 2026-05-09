@@ -1,4 +1,8 @@
 export type {
+  PublicSiteArchiveList,
+  PublicSiteArchiveMonth,
+  PublicSiteArchivePostListQuery,
+  PublicSiteArchiveYear,
   PublicSiteCategory,
   PublicSiteCategoryList,
   PublicSiteCategoryListQuery,

@@ -1,5 +1,6 @@
 import type { Prisma } from '@nexus-prisma/generated/client'
 import type {
+  PUBLIC_SITE_ARCHIVE_POST_DATE_SELECT,
   PUBLIC_SITE_CATEGORY_SELECT,
   PUBLIC_SITE_CONFIG_SELECT,
   PUBLIC_SITE_POST_DETAIL_SELECT,
@@ -20,6 +21,10 @@ export type PublicSitePostSummaryData = Prisma.PostGetPayload<{
 
 export type PublicSitePostDetailData = Prisma.PostGetPayload<{
   select: typeof PUBLIC_SITE_POST_DETAIL_SELECT
+}>
+
+export type PublicSiteArchivePostDateData = Prisma.PostGetPayload<{
+  select: typeof PUBLIC_SITE_ARCHIVE_POST_DATE_SELECT
 }>
 
 export type PublicSitePostWhereInput = Prisma.PostWhereInput

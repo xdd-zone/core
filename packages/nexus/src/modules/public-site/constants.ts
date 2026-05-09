@@ -53,5 +53,11 @@ export const PUBLIC_SITE_POST_DETAIL_SELECT = {
   markdown: true,
 } satisfies Prisma.PostSelect
 
+export const PUBLIC_SITE_ARCHIVE_POST_DATE_SELECT = {
+  id: true,
+  publishedAt: true,
+  createdAt: true,
+} satisfies Prisma.PostSelect
+
 export const PUBLIC_SITE_POST_SEARCH_FIELDS = ['title', 'slug', 'excerpt'] as const
 export const PUBLIC_SITE_CATEGORY_SEARCH_FIELDS = ['name', 'slug', 'description'] as const

@@ -1,6 +1,8 @@
 import { Elysia } from 'elysia'
 
 import {
+  PublicSiteArchiveListSchema,
+  PublicSiteArchivePostListQuerySchema,
   PublicSiteCategoryListQuerySchema,
   PublicSiteCategoryListSchema,
   PublicSiteCategorySlugParamsSchema,
@@ -29,6 +31,15 @@ export function createPublicSiteModule(_options: PublicSiteModuleOptions = {}) {
       query: PublicSiteCategoryListQuerySchema,
       response: PublicSiteCategoryListSchema,
       detail: PublicSiteOpenApi.listCategories,
+    })
+    .get('/archives', async () => await PublicSiteService.listArchives(), {
+      response: PublicSiteArchiveListSchema,
+      detail: PublicSiteOpenApi.listArchives,
+    })
+    .get('/archives/posts', async ({ query }) => await PublicSiteService.listArchivePosts(query), {
+      query: PublicSiteArchivePostListQuerySchema,
+      response: PublicSitePostListSchema,
+      detail: PublicSiteOpenApi.listArchivePosts,
     })
     .get(
       '/categories/:slug/posts',

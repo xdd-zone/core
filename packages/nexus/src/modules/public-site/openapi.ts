@@ -1,6 +1,7 @@
 import { apiDetail } from '@nexus/shared'
 
 import {
+  PublicSiteArchiveListSchema,
   PublicSiteCategoryListSchema,
   PublicSiteConfigSchema,
   PublicSitePostListSchema,
@@ -17,6 +18,18 @@ export const PublicSiteOpenApi = {
     summary: '获取个人站点分类列表',
     description: '匿名读取前台可见分类，文章数只统计已发布文章。',
     response: PublicSiteCategoryListSchema,
+    errors: [400],
+  }),
+  listArchives: apiDetail({
+    summary: '获取个人站点文章归档',
+    description: '匿名读取已发布文章的年月数量，不返回文章正文。',
+    response: PublicSiteArchiveListSchema,
+    errors: [400],
+  }),
+  listArchivePosts: apiDetail({
+    summary: '获取个人站点归档文章列表',
+    description: '按年份和月份匿名读取已发布文章摘要。',
+    response: PublicSitePostListSchema,
     errors: [400],
   }),
   listPostsByCategorySlug: apiDetail({

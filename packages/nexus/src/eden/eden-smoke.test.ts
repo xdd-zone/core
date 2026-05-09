@@ -1,9 +1,9 @@
 import type { SiteConfigRecord } from '../modules/site-config/repository'
 import type { App } from '../public/eden'
 
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { treaty } from '@elysiajs/eden'
 import { Prisma } from '@nexus-prisma/generated/client'
-import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import pino from 'pino'
 import { seedPermissions } from '../../prisma/seed/seeds/seed-permissions'
 import { seedRolePermissions } from '../../prisma/seed/seeds/seed-role-permissions'
@@ -1330,6 +1330,8 @@ describe('eden smoke', () => {
     const publicSlug = `eden-post-public-${tempSuffix}`
     const draftSlug = `eden-post-public-draft-${tempSuffix}`
     const hiddenCategorySlug = `hidden-category-${tempSuffix}`
+    const archiveSlug = `eden-post-archive-${tempSuffix}`
+    const archiveLegacySlug = `eden-post-archive-legacy-${tempSuffix}`
     const [category, hiddenCategory] = await Promise.all([
       prisma.category.create({
         data: {
@@ -1348,7 +1350,7 @@ describe('eden smoke', () => {
     ])
     createdCategoryIds.push(category.id, hiddenCategory.id)
 
-    const [publishedPost, draftPost, hiddenCategoryPost] = await Promise.all([
+    const [publishedPost, draftPost, hiddenCategoryPost, archivePost, archiveLegacyPost] = await Promise.all([
       prisma.post.create({
         data: {
           title: `Public Post ${tempSuffix}`,
@@ -1381,11 +1383,35 @@ describe('eden smoke', () => {
           categoryId: hiddenCategory.id,
           tags: ['public'],
           status: 'PUBLISHED',
-          publishedAt: new Date(),
+          publishedAt: new Date('1999-05-10T00:00:00.000Z'),
+        },
+      }),
+      prisma.post.create({
+        data: {
+          title: `Archive Post ${tempSuffix}`,
+          slug: archiveSlug,
+          markdown: `# Archive Post ${tempSuffix}`,
+          excerpt: `archive excerpt ${tempSuffix}`,
+          categoryId: category.id,
+          tags: ['archive'],
+          status: 'PUBLISHED',
+          publishedAt: new Date('1999-05-10T00:00:00.000Z'),
+        },
+      }),
+      prisma.post.create({
+        data: {
+          title: `Archive Legacy Post ${tempSuffix}`,
+          slug: archiveLegacySlug,
+          markdown: `# Archive Legacy Post ${tempSuffix}`,
+          excerpt: `archive legacy excerpt ${tempSuffix}`,
+          tags: ['archive'],
+          status: 'PUBLISHED',
+          publishedAt: null,
+          createdAt: new Date('1999-06-10T00:00:00.000Z'),
         },
       }),
     ])
-    createdPostIds.push(publishedPost.id, draftPost.id, hiddenCategoryPost.id)
+    createdPostIds.push(publishedPost.id, draftPost.id, hiddenCategoryPost.id, archivePost.id, archiveLegacyPost.id)
 
     const categoryListResult = await publicSiteClient.categories.get({
       query: {
@@ -1394,7 +1420,7 @@ describe('eden smoke', () => {
     })
     expect(categoryListResult.status).toBe(200)
     expect(categoryListResult.error).toBeNull()
-    expect(categoryListResult.data?.some((item) => item.id === category.id && item.postCount === 1)).toBe(true)
+    expect(categoryListResult.data?.some((item) => item.id === category.id && item.postCount === 2)).toBe(true)
     expect(categoryListResult.data?.some((item) => item.id === hiddenCategory.id)).toBe(false)
 
     const listResult = await publicSiteClient.posts.get({
@@ -1449,6 +1475,38 @@ describe('eden smoke', () => {
       .get()
     expect(hiddenCategoryDetailResult.status).toBe(404)
     expect(hiddenCategoryDetailResult.error).toBeTruthy()
+
+    const archiveResult = await publicSiteClient.archives.get()
+    expect(archiveResult.status).toBe(200)
+    expect(archiveResult.error).toBeNull()
+    const archiveYear = archiveResult.data?.items.find((item) => item.year === 1999)
+    expect(archiveYear?.count).toBe(2)
+    expect(archiveYear?.months).toEqual([
+      {
+        year: 1999,
+        month: 6,
+        count: 1,
+      },
+      {
+        year: 1999,
+        month: 5,
+        count: 1,
+      },
+    ])
+
+    const archivePostsResult = await publicSiteClient.archives.posts.get({
+      query: {
+        year: 1999,
+        month: 5,
+        page: 1,
+        pageSize: 10,
+      },
+    })
+    expect(archivePostsResult.status).toBe(200)
+    expect(archivePostsResult.error).toBeNull()
+    expect(archivePostsResult.data?.items.some((item) => item.id === archivePost.id)).toBe(true)
+    expect(archivePostsResult.data?.items.some((item) => item.id === archiveLegacyPost.id)).toBe(false)
+    expect(archivePostsResult.data?.items[0]).not.toHaveProperty('markdown')
   })
 
   it('slug 重复时应返回 409', async () => {

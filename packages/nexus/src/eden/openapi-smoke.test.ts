@@ -47,6 +47,8 @@ describe('openapi smoke', () => {
     expectMethod('/api/rbac/users/me/permissions', 'get')
     expectMethod('/api/public-site/config', 'get')
     expectMethod('/api/public-site/categories', 'get')
+    expectMethod('/api/public-site/archives', 'get')
+    expectMethod('/api/public-site/archives/posts', 'get')
     expectMethod('/api/public-site/categories/{slug}/posts', 'get')
     expectMethod('/api/public-site/posts', 'get')
     expectMethod('/api/public-site/posts/{slug}', 'get')
