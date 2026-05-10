@@ -1,12 +1,14 @@
+import type { PermissionString } from '@nexus/core/permissions'
 import type { Post, PostList } from './model'
 
-import { beforeAll, describe, expect, it } from 'bun:test'
+import { afterEach, beforeAll, describe, expect, it } from 'bun:test'
 
 import {
   createCategoryFixture,
   createIntegrationTestContext,
   createPostFixture,
   createTestSuffix,
+  expectDateTime,
   expectErrorResponse,
   expectNoBody,
   seedBasePermissions,
@@ -37,7 +39,24 @@ const TEST_APP_OPTIONS = {
 const integration = createIntegrationTestContext(TEST_APP_OPTIONS)
 const anonymousRunner = integration.anonymous
 
-async function requestJson(path: string, method: string, body: unknown, runner = anonymousRunner) {
+async function requestJson<T>(
+  path: string,
+  method: string,
+  body: unknown,
+  runner = anonymousRunner,
+): Promise<{ response: Response; body: T }> {
+  return await integration.json<T>(
+    path,
+    {
+      method,
+      headers: integration.jsonHeaders(),
+      body: JSON.stringify(body),
+    },
+    runner,
+  )
+}
+
+async function requestJsonResponse(path: string, method: string, body: unknown, runner = anonymousRunner): Promise<Response> {
   return await runner(path, {
     method,
     headers: integration.jsonHeaders(),
@@ -45,252 +64,421 @@ async function requestJson(path: string, method: string, body: unknown, runner =
   })
 }
 
-describe('Post routes', () => {
-  const anonymousRequestCases = [
-    {
-      name: '匿名访问列表应返回 401',
-      path: '/api/post/',
-      init: undefined,
-    },
-    {
-      name: '匿名访问详情应返回 401',
-      path: '/api/post/post-id',
-      init: undefined,
-    },
-    {
-      name: '匿名创建文章应返回 401',
-      path: '/api/post/',
-      init: {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: '匿名文章',
-          slug: 'anonymous-post',
-          markdown: '# Anonymous',
-          tags: [],
-        }),
-      },
-    },
-    {
-      name: '匿名更新文章应返回 401',
-      path: '/api/post/post-id',
-      init: {
-        method: 'PATCH',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: '匿名更新',
-        }),
-      },
-    },
-    {
-      name: '匿名删除文章应返回 401',
-      path: '/api/post/post-id',
-      init: {
-        method: 'DELETE',
-      },
-    },
-    {
-      name: '匿名发布文章应返回 401',
-      path: '/api/post/post-id/publish',
-      init: {
-        method: 'POST',
-      },
-    },
-    {
-      name: '匿名取消发布应返回 401',
-      path: '/api/post/post-id/unpublish',
-      init: {
-        method: 'POST',
-      },
-    },
-  ] as const
+async function createActor(permissionKeys: readonly PermissionString[]) {
+  return await integration.actor(permissionKeys, {
+    prefix: 'post-user',
+  })
+}
 
+function expectPostContract(
+  post: Post,
+  expected: {
+    id?: string
+    title?: string
+    slug?: string
+    markdown?: string
+    excerpt?: string | null
+    coverImage?: string | null
+    status?: 'draft' | 'published'
+    categoryId?: string | null
+    category?: Post['category']
+    tags?: string[]
+    publishedAt?: string | null
+  } = {},
+) {
+  expect(typeof post.id).toBe('string')
+  expect(post.id.length).toBeGreaterThan(0)
+  expect(typeof post.title).toBe('string')
+  expect(typeof post.slug).toBe('string')
+  expect(typeof post.markdown).toBe('string')
+  expect(Array.isArray(post.tags)).toBe(true)
+  expectDateTime(post.createdAt)
+  expectDateTime(post.updatedAt)
+
+  if (expected.id !== undefined) {
+    expect(post.id).toBe(expected.id)
+  }
+  if (expected.title !== undefined) {
+    expect(post.title).toBe(expected.title)
+  }
+  if (expected.slug !== undefined) {
+    expect(post.slug).toBe(expected.slug)
+  }
+  if (expected.markdown !== undefined) {
+    expect(post.markdown).toBe(expected.markdown)
+  }
+  if (expected.excerpt !== undefined) {
+    expect(post.excerpt).toBe(expected.excerpt)
+  }
+  if (expected.coverImage !== undefined) {
+    expect(post.coverImage).toBe(expected.coverImage)
+  }
+  if (expected.status !== undefined) {
+    expect(post.status).toBe(expected.status)
+  }
+  if (expected.categoryId !== undefined) {
+    expect(post.categoryId).toBe(expected.categoryId)
+  }
+  if (expected.category !== undefined) {
+    expect(post.category).toEqual(expected.category)
+  }
+  if (expected.tags !== undefined) {
+    expect(post.tags).toEqual(expected.tags)
+  }
+  if (expected.publishedAt !== undefined) {
+    expect(post.publishedAt).toBe(expected.publishedAt)
+  } else if (expected.status === 'published') {
+    expectDateTime(post.publishedAt)
+  } else if (expected.status === 'draft') {
+    expect(post.publishedAt).toBeNull()
+  }
+}
+
+function expectPostListContract(
+  list: PostList,
+  expected: {
+    page: number
+    pageSize: number
+    total?: number
+    totalPages?: number
+  },
+) {
+  expect(Array.isArray(list.items)).toBe(true)
+  expect(list.page).toBe(expected.page)
+  expect(list.pageSize).toBe(expected.pageSize)
+  expect(list.total).toBeGreaterThanOrEqual(0)
+  expect(list.totalPages).toBeGreaterThanOrEqual(0)
+
+  if (expected.total !== undefined) {
+    expect(list.total).toBe(expected.total)
+  }
+  if (expected.totalPages !== undefined) {
+    expect(list.totalPages).toBe(expected.totalPages)
+  }
+}
+
+describe('Post routes', () => {
   beforeAll(async () => {
     await seedBasePermissions()
   })
 
-  for (const testCase of anonymousRequestCases) {
-    it(testCase.name, async () => {
-      const response = await anonymousRunner(testCase.path, testCase.init)
+  afterEach(async () => {
+    await integration.cleanup()
+  })
 
-      await expectErrorResponse(response, {
-        status: 401,
-        errorCode: 'UNAUTHORIZED',
-      })
-    })
-  }
-
-  it('CRUD 应创建、读取、更新并删除文章', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.READ_ALL, PostPermissions.WRITE_ALL], {
-        prefix: 'post-user',
-      })
-
+  describe('CRUD 主链', () => {
+    it('应创建文章后完成列表、详情、更新和删除链路', async () => {
+      const user = await createActor([PostPermissions.READ_ALL, PostPermissions.WRITE_ALL])
       const category = await createCategoryFixture()
       integration.track.categoryId(category.id)
 
       const suffix = createTestSuffix('post-crud')
-      const createResponse = await requestJson(
-        '/api/post/',
-        'POST',
-        {
-          title: `文章 ${suffix}`,
-          slug: `post-crud-${suffix}`,
-          markdown: '# 文章\n\n正文',
-          categoryId: category.id,
-          tags: ['test'],
+      const createPayload = {
+        title: `文章 ${suffix}`,
+        slug: `post-crud-${suffix}`,
+        markdown: '# 文章\n\n正文',
+        excerpt: `摘要 ${suffix}`,
+        coverImage: `https://example.com/${suffix}.png`,
+        categoryId: category.id,
+        tags: ['test', suffix],
+      }
+      const { response: createResponse, body: created } = await requestJson<Post>('/api/post/', 'POST', createPayload, user)
+
+      expect(createResponse.status).toBe(200)
+      integration.track.postId(created.id)
+      expectPostContract(created, {
+        title: createPayload.title,
+        slug: createPayload.slug,
+        markdown: createPayload.markdown,
+        excerpt: createPayload.excerpt,
+        coverImage: createPayload.coverImage,
+        status: 'draft',
+        categoryId: category.id,
+        category: {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
         },
+        tags: createPayload.tags,
+        publishedAt: null,
+      })
+
+      const { response: listResponse, body: list } = await integration.json<PostList>(
+        `/api/post/?page=1&pageSize=10&keyword=${suffix}`,
+        {},
         user,
       )
 
-      expect(createResponse.status).toBe(200)
-      const created = (await createResponse.json()) as Post
-      integration.track.postId(created.id)
-      expect(created.slug).toBe(`post-crud-${suffix}`)
-      expect(created.categoryId).toBe(category.id)
-
-      const listResponse = await user(`/api/post/?keyword=${suffix}`)
       expect(listResponse.status).toBe(200)
-      const list = (await listResponse.json()) as PostList
-      expect(list.items.some((item) => item.id === created.id)).toBe(true)
+      expectPostListContract(list, {
+        page: 1,
+        pageSize: 10,
+      })
+      const listed = list.items.find((item) => item.id === created.id)
+      expect(listed).toBeDefined()
+      expectPostContract(listed!, {
+        id: created.id,
+        slug: createPayload.slug,
+        status: 'draft',
+        categoryId: category.id,
+        tags: createPayload.tags,
+        publishedAt: null,
+      })
 
-      const detailResponse = await user(`/api/post/${created.id}`)
+      const { response: detailResponse, body: detail } = await integration.json<Post>(`/api/post/${created.id}`, {}, user)
       expect(detailResponse.status).toBe(200)
-      const detail = (await detailResponse.json()) as Post
-      expect(detail.id).toBe(created.id)
+      expectPostContract(detail, {
+        id: created.id,
+        title: createPayload.title,
+        slug: createPayload.slug,
+        markdown: createPayload.markdown,
+        excerpt: createPayload.excerpt,
+        coverImage: createPayload.coverImage,
+        status: 'draft',
+        categoryId: category.id,
+        category: {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+        },
+        tags: createPayload.tags,
+        publishedAt: null,
+      })
 
-      const updateResponse = await requestJson(
+      const updatePayload = {
+        title: `更新后的文章 ${suffix}`,
+        slug: `post-crud-updated-${suffix}`,
+        excerpt: `更新后的摘要 ${suffix}`,
+        coverImage: `https://example.com/${suffix}-updated.png`,
+        tags: ['updated'],
+      }
+      const { response: updateResponse, body: updated } = await requestJson<Post>(
         `/api/post/${created.id}`,
         'PATCH',
-        {
-          title: '更新后的文章',
-          tags: ['updated'],
-        },
+        updatePayload,
         user,
       )
       expect(updateResponse.status).toBe(200)
-      const updated = (await updateResponse.json()) as Post
-      expect(updated.title).toBe('更新后的文章')
-      expect(updated.tags).toEqual(['updated'])
+      expectPostContract(updated, {
+        id: created.id,
+        title: updatePayload.title,
+        slug: updatePayload.slug,
+        markdown: createPayload.markdown,
+        excerpt: updatePayload.excerpt,
+        coverImage: updatePayload.coverImage,
+        status: 'draft',
+        categoryId: category.id,
+        category: {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+        },
+        tags: updatePayload.tags,
+        publishedAt: null,
+      })
 
       const deleteResponse = await user(`/api/post/${created.id}`, {
         method: 'DELETE',
       })
       await expectNoBody(deleteResponse)
       integration.track.forget({ postId: created.id })
-    } finally {
-      await integration.cleanup()
-    }
+
+      const deletedDetailResponse = await user(`/api/post/${created.id}`)
+      await expectErrorResponse(deletedDetailResponse, {
+        status: 404,
+        errorCode: 'NOT_FOUND',
+      })
+    })
+
+    it('列表无匹配时应返回空结果和分页信息', async () => {
+      const user = await createActor([PostPermissions.READ_ALL])
+      const { response, body } = await integration.json<PostList>(
+        `/api/post/?page=1&pageSize=5&keyword=${createTestSuffix('no-post-match')}`,
+        {},
+        user,
+      )
+
+      expect(response.status).toBe(200)
+      expectPostListContract(body, {
+        page: 1,
+        pageSize: 5,
+        total: 0,
+        totalPages: 0,
+      })
+      expect(body.items).toEqual([])
+    })
   })
 
-  it('发布和取消发布应切换文章状态', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.PUBLISH_ALL], { prefix: 'post-user' })
+  describe('权限', () => {
+    const anonymousRequestCases = [
+      {
+        name: '匿名访问列表应返回 401',
+        path: '/api/post/',
+        init: undefined,
+      },
+      {
+        name: '匿名访问详情应返回 401',
+        path: '/api/post/post-id',
+        init: undefined,
+      },
+      {
+        name: '匿名创建文章应返回 401',
+        path: '/api/post/',
+        init: {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: '匿名文章',
+            slug: 'anonymous-post',
+            markdown: '# Anonymous',
+            tags: [],
+          }),
+        },
+      },
+      {
+        name: '匿名更新文章应返回 401',
+        path: '/api/post/post-id',
+        init: {
+          method: 'PATCH',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: '匿名更新',
+          }),
+        },
+      },
+      {
+        name: '匿名删除文章应返回 401',
+        path: '/api/post/post-id',
+        init: {
+          method: 'DELETE',
+        },
+      },
+      {
+        name: '匿名发布文章应返回 401',
+        path: '/api/post/post-id/publish',
+        init: {
+          method: 'POST',
+        },
+      },
+      {
+        name: '匿名取消发布应返回 401',
+        path: '/api/post/post-id/unpublish',
+        init: {
+          method: 'POST',
+        },
+      },
+    ] as const
 
+    for (const testCase of anonymousRequestCases) {
+      it(testCase.name, async () => {
+        const response = await anonymousRunner(testCase.path, testCase.init)
+
+        await expectErrorResponse(response, {
+          status: 401,
+          errorCode: 'UNAUTHORIZED',
+        })
+      })
+    }
+
+    it('只有 READ_ALL 时可访问列表和详情，写操作应返回 403', async () => {
+      const user = await createActor([PostPermissions.READ_ALL])
       const post = await createPostFixture()
       integration.track.postId(post.id)
 
-      const publishResponse = await user(`/api/post/${post.id}/publish`, {
-        method: 'POST',
-      })
-      expect(publishResponse.status).toBe(200)
-      const published = (await publishResponse.json()) as Post
-      expect(published.status).toBe('published')
-      expect(published.publishedAt).not.toBeNull()
-
-      const unpublishResponse = await user(`/api/post/${post.id}/unpublish`, {
-        method: 'POST',
-      })
-      expect(unpublishResponse.status).toBe(200)
-      const unpublished = (await unpublishResponse.json()) as Post
-      expect(unpublished.status).toBe('draft')
-      expect(unpublished.publishedAt).toBeNull()
-    } finally {
-      await integration.cleanup()
-    }
-  })
-
-  it('只有 READ_ALL 时可访问列表和详情，写操作应返回 403', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.READ_ALL], { prefix: 'post-user' })
-
-      const post = await createPostFixture()
-      integration.track.postId(post.id)
-
-      const listResponse = await user('/api/post/')
+      const { response: listResponse, body: list } = await integration.json<PostList>('/api/post/?page=1&pageSize=10', {}, user)
       expect(listResponse.status).toBe(200)
+      expectPostListContract(list, {
+        page: 1,
+        pageSize: 10,
+      })
 
-      const detailResponse = await user(`/api/post/${post.id}`)
+      const { response: detailResponse, body: detail } = await integration.json<Post>(`/api/post/${post.id}`, {}, user)
       expect(detailResponse.status).toBe(200)
+      expectPostContract(detail, {
+        id: post.id,
+        slug: post.slug,
+        categoryId: post.categoryId,
+        tags: post.tags,
+      })
 
-      const createResponse = await requestJson(
-        '/api/post/',
-        'POST',
+      await expectErrorResponse(
+        await requestJsonResponse(
+          '/api/post/',
+          'POST',
+          {
+            title: '受限创建',
+            slug: 'read-only-post',
+            markdown: '# Read only',
+            tags: [],
+          },
+          user,
+        ),
         {
-          title: '受限创建',
-          slug: 'read-only-post',
-          markdown: '# Read only',
-          tags: [],
+          status: 403,
+          errorCode: 'FORBIDDEN',
         },
-        user,
       )
-      await expectErrorResponse(createResponse, {
-        status: 403,
-        errorCode: 'FORBIDDEN',
-      })
 
-      const updateResponse = await requestJson(
-        `/api/post/${post.id}`,
-        'PATCH',
+      await expectErrorResponse(
+        await requestJsonResponse(
+          `/api/post/${post.id}`,
+          'PATCH',
+          {
+            title: '受限更新',
+          },
+          user,
+        ),
         {
-          title: '受限更新',
+          status: 403,
+          errorCode: 'FORBIDDEN',
         },
-        user,
       )
-      await expectErrorResponse(updateResponse, {
-        status: 403,
-        errorCode: 'FORBIDDEN',
-      })
 
-      const deleteResponse = await user(`/api/post/${post.id}`, {
-        method: 'DELETE',
-      })
-      await expectErrorResponse(deleteResponse, {
-        status: 403,
-        errorCode: 'FORBIDDEN',
-      })
-    } finally {
-      await integration.cleanup()
-    }
-  })
+      await expectErrorResponse(
+        await user(`/api/post/${post.id}`, {
+          method: 'DELETE',
+        }),
+        {
+          status: 403,
+          errorCode: 'FORBIDDEN',
+        },
+      )
+    })
 
-  it('只有 WRITE_ALL 时写操作可用，读接口和发布接口应返回 403', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.WRITE_ALL], { prefix: 'post-user' })
-
+    it('只有 WRITE_ALL 时写操作可用，读接口和发布接口应返回 403', async () => {
+      const user = await createActor([PostPermissions.WRITE_ALL])
       const post = await createPostFixture()
       integration.track.postId(post.id)
 
-      const createResponse = await requestJson(
+      const createSuffix = createTestSuffix('writable-post')
+      const { response: createResponse, body: created } = await requestJson<Post>(
         '/api/post/',
         'POST',
         {
           title: '可写文章',
-          slug: `writable-${createTestSuffix('post')}`,
+          slug: `writable-${createSuffix}`,
           markdown: '# Writable',
-          tags: [],
+          tags: ['writable'],
         },
         user,
       )
-      expect(createResponse.status).toBe(200)
-      const created = (await createResponse.json()) as Post
-      integration.track.postId(created.id)
 
-      const updateResponse = await requestJson(
+      expect(createResponse.status).toBe(200)
+      integration.track.postId(created.id)
+      expectPostContract(created, {
+        title: '可写文章',
+        slug: `writable-${createSuffix}`,
+        markdown: '# Writable',
+        status: 'draft',
+        tags: ['writable'],
+        publishedAt: null,
+      })
+
+      const { response: updateResponse, body: updated } = await requestJson<Post>(
         `/api/post/${created.id}`,
         'PATCH',
         {
@@ -299,113 +487,265 @@ describe('Post routes', () => {
         user,
       )
       expect(updateResponse.status).toBe(200)
+      expectPostContract(updated, {
+        id: created.id,
+        title: '已更新',
+        slug: created.slug,
+        status: 'draft',
+        tags: created.tags,
+        publishedAt: null,
+      })
 
-      const listResponse = await user('/api/post/')
-      await expectErrorResponse(listResponse, {
+      await expectErrorResponse(await user('/api/post/'), {
         status: 403,
         errorCode: 'FORBIDDEN',
       })
-
-      const detailResponse = await user(`/api/post/${post.id}`)
-      await expectErrorResponse(detailResponse, {
+      await expectErrorResponse(await user(`/api/post/${post.id}`), {
         status: 403,
         errorCode: 'FORBIDDEN',
       })
+      await expectErrorResponse(
+        await user(`/api/post/${post.id}/publish`, {
+          method: 'POST',
+        }),
+        {
+          status: 403,
+          errorCode: 'FORBIDDEN',
+        },
+      )
+      await expectErrorResponse(
+        await user(`/api/post/${post.id}/unpublish`, {
+          method: 'POST',
+        }),
+        {
+          status: 403,
+          errorCode: 'FORBIDDEN',
+        },
+      )
+    })
 
-      const publishResponse = await user(`/api/post/${post.id}/publish`, {
-        method: 'POST',
-      })
-      await expectErrorResponse(publishResponse, {
-        status: 403,
-        errorCode: 'FORBIDDEN',
-      })
-
-      const unpublishResponse = await user(`/api/post/${post.id}/unpublish`, {
-        method: 'POST',
-      })
-      await expectErrorResponse(unpublishResponse, {
-        status: 403,
-        errorCode: 'FORBIDDEN',
-      })
-    } finally {
-      await integration.cleanup()
-    }
-  })
-
-  it('只有 PUBLISH_ALL 时发布接口可用，其余接口应返回 403', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.PUBLISH_ALL], { prefix: 'post-user' })
-
+    it('只有 PUBLISH_ALL 时发布接口可用，其余接口应返回 403', async () => {
+      const user = await createActor([PostPermissions.PUBLISH_ALL])
       const post = await createPostFixture()
       integration.track.postId(post.id)
 
-      const publishResponse = await user(`/api/post/${post.id}/publish`, {
-        method: 'POST',
-      })
+      const { response: publishResponse, body: published } = await integration.json<Post>(
+        `/api/post/${post.id}/publish`,
+        { method: 'POST' },
+        user,
+      )
       expect(publishResponse.status).toBe(200)
-
-      const unpublishResponse = await user(`/api/post/${post.id}/unpublish`, {
-        method: 'POST',
+      expectPostContract(published, {
+        id: post.id,
+        title: post.title,
+        slug: post.slug,
+        markdown: post.markdown,
+        status: 'published',
+        categoryId: post.categoryId,
+        tags: post.tags,
       })
+
+      const { response: unpublishResponse, body: unpublished } = await integration.json<Post>(
+        `/api/post/${post.id}/unpublish`,
+        { method: 'POST' },
+        user,
+      )
       expect(unpublishResponse.status).toBe(200)
+      expectPostContract(unpublished, {
+        id: post.id,
+        status: 'draft',
+        categoryId: post.categoryId,
+        tags: post.tags,
+        publishedAt: null,
+      })
 
-      const listResponse = await user('/api/post/')
-      await expectErrorResponse(listResponse, {
+      await expectErrorResponse(await user('/api/post/'), {
         status: 403,
         errorCode: 'FORBIDDEN',
       })
-
-      const detailResponse = await user(`/api/post/${post.id}`)
-      await expectErrorResponse(detailResponse, {
+      await expectErrorResponse(await user(`/api/post/${post.id}`), {
         status: 403,
         errorCode: 'FORBIDDEN',
       })
-
-      const createResponse = await requestJson(
-        '/api/post/',
-        'POST',
+      await expectErrorResponse(
+        await requestJsonResponse(
+          '/api/post/',
+          'POST',
+          {
+            title: '不可创建文章',
+            slug: 'cannot-create-post',
+            markdown: '# Cannot create',
+            tags: [],
+          },
+          user,
+        ),
         {
-          title: '不可创建文章',
-          slug: 'cannot-create-post',
-          markdown: '# Cannot create',
-          tags: [],
+          status: 403,
+          errorCode: 'FORBIDDEN',
         },
+      )
+      await expectErrorResponse(
+        await requestJsonResponse(
+          `/api/post/${post.id}`,
+          'PATCH',
+          {
+            title: '不可更新',
+          },
+          user,
+        ),
+        {
+          status: 403,
+          errorCode: 'FORBIDDEN',
+        },
+      )
+      await expectErrorResponse(
+        await user(`/api/post/${post.id}`, {
+          method: 'DELETE',
+        }),
+        {
+          status: 403,
+          errorCode: 'FORBIDDEN',
+        },
+      )
+    })
+  })
+
+  describe('发布状态', () => {
+    it('发布和取消发布应切换文章状态', async () => {
+      const user = await createActor([PostPermissions.PUBLISH_ALL])
+      const post = await createPostFixture()
+      integration.track.postId(post.id)
+
+      const { response: publishResponse, body: published } = await integration.json<Post>(
+        `/api/post/${post.id}/publish`,
+        { method: 'POST' },
         user,
       )
-      await expectErrorResponse(createResponse, {
-        status: 403,
-        errorCode: 'FORBIDDEN',
+      expect(publishResponse.status).toBe(200)
+      expectPostContract(published, {
+        id: post.id,
+        title: post.title,
+        slug: post.slug,
+        markdown: post.markdown,
+        status: 'published',
+        categoryId: post.categoryId,
+        tags: post.tags,
       })
 
-      const updateResponse = await requestJson(
-        `/api/post/${post.id}`,
-        'PATCH',
-        {
-          title: '不可更新',
-        },
+      const { response: unpublishResponse, body: unpublished } = await integration.json<Post>(
+        `/api/post/${post.id}/unpublish`,
+        { method: 'POST' },
         user,
       )
-      await expectErrorResponse(updateResponse, {
-        status: 403,
-        errorCode: 'FORBIDDEN',
+      expect(unpublishResponse.status).toBe(200)
+      expectPostContract(unpublished, {
+        id: post.id,
+        title: post.title,
+        slug: post.slug,
+        markdown: post.markdown,
+        status: 'draft',
+        categoryId: post.categoryId,
+        tags: post.tags,
+        publishedAt: null,
+      })
+    })
+
+    it('重复发布和重复取消发布都应保持幂等', async () => {
+      const user = await createActor([PostPermissions.PUBLISH_ALL])
+      const draftPost = await createPostFixture()
+      const publishedPost = await createPostFixture({
+        data: {
+          status: 'PUBLISHED',
+          publishedAt: new Date('2026-05-01T00:00:00.000Z'),
+        },
+      })
+      integration.track.postId(draftPost.id)
+      integration.track.postId(publishedPost.id)
+
+      const firstPublishResult = await integration.json<Post>(`/api/post/${draftPost.id}/publish`, { method: 'POST' }, user)
+      expect(firstPublishResult.response.status).toBe(200)
+      expectPostContract(firstPublishResult.body, {
+        id: draftPost.id,
+        status: 'published',
       })
 
-      const deleteResponse = await user(`/api/post/${post.id}`, {
-        method: 'DELETE',
+      const secondPublishResult = await integration.json<Post>(`/api/post/${draftPost.id}/publish`, { method: 'POST' }, user)
+      expect(secondPublishResult.response.status).toBe(200)
+      expectPostContract(secondPublishResult.body, {
+        id: draftPost.id,
+        status: 'published',
+        publishedAt: firstPublishResult.body.publishedAt,
       })
-      await expectErrorResponse(deleteResponse, {
-        status: 403,
-        errorCode: 'FORBIDDEN',
+
+      const firstUnpublishResult = await integration.json<Post>(
+        `/api/post/${publishedPost.id}/unpublish`,
+        { method: 'POST' },
+        user,
+      )
+      expect(firstUnpublishResult.response.status).toBe(200)
+      expectPostContract(firstUnpublishResult.body, {
+        id: publishedPost.id,
+        status: 'draft',
+        publishedAt: null,
       })
-    } finally {
-      await integration.cleanup()
+
+      const secondUnpublishResult = await integration.json<Post>(
+        `/api/post/${publishedPost.id}/unpublish`,
+        { method: 'POST' },
+        user,
+      )
+      expect(secondUnpublishResult.response.status).toBe(200)
+      expectPostContract(secondUnpublishResult.body, {
+        id: publishedPost.id,
+        status: 'draft',
+        publishedAt: null,
+      })
+    })
+
+    const invalidPublishCases = [
+      {
+        name: '发布前缺少必要内容时应返回 400',
+        data: {
+          markdown: ' ',
+        },
+      },
+      {
+        name: '发布前缺标题应返回 400',
+        data: {
+          title: ' ',
+        },
+      },
+      {
+        name: '发布前缺 slug 应返回 400',
+        data: {
+          slug: ' ',
+        },
+      },
+    ] as const
+
+    for (const testCase of invalidPublishCases) {
+      it(testCase.name, async () => {
+        const user = await createActor([PostPermissions.PUBLISH_ALL])
+        const post = await createPostFixture({
+          data: testCase.data,
+        })
+        integration.track.postId(post.id)
+
+        const response = await user(`/api/post/${post.id}/publish`, {
+          method: 'POST',
+        })
+
+        await expectErrorResponse(response, {
+          status: 400,
+          message: '发布前必须填写标题、slug 和 Markdown 内容',
+        })
+      })
     }
   })
 
-  it('slug 冲突应返回 409', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.WRITE_ALL], { prefix: 'post-user' })
-
+  describe('校验与错误', () => {
+    it('slug 冲突应返回 409', async () => {
+      const user = await createActor([PostPermissions.WRITE_ALL])
       const suffix = createTestSuffix('post-conflict')
       const post = await createPostFixture({
         suffix,
@@ -415,7 +755,7 @@ describe('Post routes', () => {
       })
       integration.track.postId(post.id)
 
-      const response = await requestJson(
+      const response = await requestJsonResponse(
         '/api/post/',
         'POST',
         {
@@ -431,35 +771,26 @@ describe('Post routes', () => {
         status: 409,
         errorCode: 'PRISMA_P2002',
       })
-    } finally {
-      await integration.cleanup()
-    }
-  })
+    })
 
-  it('空更新请求体应返回 422', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.WRITE_ALL], { prefix: 'post-user' })
-
+    it('空更新请求体应返回 422', async () => {
+      const user = await createActor([PostPermissions.WRITE_ALL])
       const post = await createPostFixture()
       integration.track.postId(post.id)
 
-      const response = await requestJson(`/api/post/${post.id}`, 'PATCH', {}, user)
+      const response = await requestJsonResponse(`/api/post/${post.id}`, 'PATCH', {}, user)
 
       await expectErrorResponse(response, {
         status: 422,
         errorCode: 'VALIDATION',
       })
-    } finally {
-      await integration.cleanup()
-    }
-  })
+    })
 
-  it('标签过长应返回 422', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.WRITE_ALL], { prefix: 'post-user' })
-
+    it('标签过长应返回 422', async () => {
+      const user = await createActor([PostPermissions.WRITE_ALL])
       const suffix = createTestSuffix('post-tag')
-      const response = await requestJson(
+
+      const response = await requestJsonResponse(
         '/api/post/',
         'POST',
         {
@@ -475,30 +806,20 @@ describe('Post routes', () => {
         status: 422,
         errorCode: 'VALIDATION',
       })
-    } finally {
-      await integration.cleanup()
-    }
-  })
+    })
 
-  it('列表 query 非法时应返回 422', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.READ_ALL], { prefix: 'post-user' })
-
+    it('列表 query 非法时应返回 422', async () => {
+      const user = await createActor([PostPermissions.READ_ALL])
       const response = await user('/api/post/?page=abc')
 
       await expectErrorResponse(response, {
         status: 422,
         errorCode: 'VALIDATION',
       })
-    } finally {
-      await integration.cleanup()
-    }
-  })
+    })
 
-  it('非法 JSON 请求体应返回 400', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.WRITE_ALL], { prefix: 'post-user' })
-
+    it('非法 JSON 请求体应返回 400', async () => {
+      const user = await createActor([PostPermissions.WRITE_ALL])
       const response = await user('/api/post/', {
         method: 'POST',
         headers: {
@@ -511,98 +832,60 @@ describe('Post routes', () => {
         status: 400,
         errorCode: 'PARSE_ERROR',
       })
-    } finally {
-      await integration.cleanup()
-    }
-  })
+    })
 
-  it('详情、更新、删除、发布、取消发布命中不存在文章时应返回 404', async () => {
-    const missingId = createTestSuffix('missing-post')
+    it('详情、更新、删除、发布、取消发布命中不存在文章时应返回 404', async () => {
+      const missingId = createTestSuffix('missing-post')
+      const user = await createActor([
+        PostPermissions.READ_ALL,
+        PostPermissions.WRITE_ALL,
+        PostPermissions.PUBLISH_ALL,
+      ])
 
-    try {
-      const user = await integration.actor(
-        [PostPermissions.READ_ALL, PostPermissions.WRITE_ALL, PostPermissions.PUBLISH_ALL],
+      await expectErrorResponse(await user(`/api/post/${missingId}`), {
+        status: 404,
+        errorCode: 'NOT_FOUND',
+      })
+      await expectErrorResponse(
+        await requestJsonResponse(`/api/post/${missingId}`, 'PATCH', { title: 'missing' }, user),
         {
-          prefix: 'post-user',
+          status: 404,
+          errorCode: 'NOT_FOUND',
         },
       )
-
-      const detailResponse = await user(`/api/post/${missingId}`)
-      await expectErrorResponse(detailResponse, {
-        status: 404,
-        errorCode: 'NOT_FOUND',
-      })
-
-      const updateResponse = await requestJson(
-        `/api/post/${missingId}`,
-        'PATCH',
+      await expectErrorResponse(
+        await user(`/api/post/${missingId}`, {
+          method: 'DELETE',
+        }),
         {
-          title: 'missing',
+          status: 404,
+          errorCode: 'NOT_FOUND',
         },
-        user,
       )
-      await expectErrorResponse(updateResponse, {
-        status: 404,
-        errorCode: 'NOT_FOUND',
-      })
-
-      const deleteResponse = await user(`/api/post/${missingId}`, {
-        method: 'DELETE',
-      })
-      await expectErrorResponse(deleteResponse, {
-        status: 404,
-        errorCode: 'NOT_FOUND',
-      })
-
-      const publishResponse = await user(`/api/post/${missingId}/publish`, {
-        method: 'POST',
-      })
-      await expectErrorResponse(publishResponse, {
-        status: 404,
-        errorCode: 'NOT_FOUND',
-      })
-
-      const unpublishResponse = await user(`/api/post/${missingId}/unpublish`, {
-        method: 'POST',
-      })
-      await expectErrorResponse(unpublishResponse, {
-        status: 404,
-        errorCode: 'NOT_FOUND',
-      })
-    } finally {
-      await integration.cleanup()
-    }
-  })
-
-  it('发布前缺少必要内容时应返回 400', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.PUBLISH_ALL], { prefix: 'post-user' })
-
-      const post = await createPostFixture({
-        data: {
-          markdown: ' ',
+      await expectErrorResponse(
+        await user(`/api/post/${missingId}/publish`, {
+          method: 'POST',
+        }),
+        {
+          status: 404,
+          errorCode: 'NOT_FOUND',
         },
-      })
-      integration.track.postId(post.id)
+      )
+      await expectErrorResponse(
+        await user(`/api/post/${missingId}/unpublish`, {
+          method: 'POST',
+        }),
+        {
+          status: 404,
+          errorCode: 'NOT_FOUND',
+        },
+      )
+    })
 
-      const response = await user(`/api/post/${post.id}/publish`, {
-        method: 'POST',
-      })
+    it('创建时分类不存在应返回 404', async () => {
+      const user = await createActor([PostPermissions.WRITE_ALL])
 
-      const body = await expectErrorResponse(response, {
-        status: 400,
-      })
-      expect(body.message).toBe('发布前必须填写标题、slug 和 Markdown 内容')
-    } finally {
-      await integration.cleanup()
-    }
-  })
-
-  it('创建时分类不存在应返回 404', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.WRITE_ALL], { prefix: 'post-user' })
-
-      const response = await requestJson(
+      const response = await requestJsonResponse(
         '/api/post/',
         'POST',
         {
@@ -620,19 +903,14 @@ describe('Post routes', () => {
         message: '分类不存在',
         errorCode: 'NOT_FOUND',
       })
-    } finally {
-      await integration.cleanup()
-    }
-  })
+    })
 
-  it('更新时分类不存在应返回 404', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.WRITE_ALL], { prefix: 'post-user' })
-
+    it('更新时分类不存在应返回 404', async () => {
+      const user = await createActor([PostPermissions.WRITE_ALL])
       const post = await createPostFixture()
       integration.track.postId(post.id)
 
-      const response = await requestJson(
+      const response = await requestJsonResponse(
         `/api/post/${post.id}`,
         'PATCH',
         {
@@ -646,103 +924,6 @@ describe('Post routes', () => {
         message: '分类不存在',
         errorCode: 'NOT_FOUND',
       })
-    } finally {
-      await integration.cleanup()
-    }
-  })
-
-  it('发布前缺标题应返回 400', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.PUBLISH_ALL], { prefix: 'post-user' })
-
-      const post = await createPostFixture({
-        data: {
-          title: ' ',
-        },
-      })
-      integration.track.postId(post.id)
-
-      const response = await user(`/api/post/${post.id}/publish`, {
-        method: 'POST',
-      })
-
-      await expectErrorResponse(response, {
-        status: 400,
-        message: '发布前必须填写标题、slug 和 Markdown 内容',
-      })
-    } finally {
-      await integration.cleanup()
-    }
-  })
-
-  it('发布前缺 slug 应返回 400', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.PUBLISH_ALL], { prefix: 'post-user' })
-
-      const post = await createPostFixture({
-        data: {
-          slug: ' ',
-        },
-      })
-      integration.track.postId(post.id)
-
-      const response = await user(`/api/post/${post.id}/publish`, {
-        method: 'POST',
-      })
-
-      await expectErrorResponse(response, {
-        status: 400,
-        message: '发布前必须填写标题、slug 和 Markdown 内容',
-      })
-    } finally {
-      await integration.cleanup()
-    }
-  })
-
-  it('重复发布和重复取消发布都应保持幂等', async () => {
-    try {
-      const user = await integration.actor([PostPermissions.PUBLISH_ALL], { prefix: 'post-user' })
-
-      const draftPost = await createPostFixture()
-      const publishedPost = await createPostFixture({
-        data: {
-          status: 'PUBLISHED',
-          publishedAt: new Date('2026-05-01T00:00:00.000Z'),
-        },
-      })
-      integration.track.postId(draftPost.id)
-      integration.track.postId(publishedPost.id)
-
-      const firstPublishResponse = await user(`/api/post/${draftPost.id}/publish`, {
-        method: 'POST',
-      })
-      const firstPublish = (await firstPublishResponse.json()) as Post
-
-      const secondPublishResponse = await user(`/api/post/${draftPost.id}/publish`, {
-        method: 'POST',
-      })
-      expect(secondPublishResponse.status).toBe(200)
-      const secondPublish = (await secondPublishResponse.json()) as Post
-      expect(secondPublish.status).toBe('published')
-      expect(secondPublish.publishedAt).toBe(firstPublish.publishedAt)
-
-      const firstUnpublishResponse = await user(`/api/post/${publishedPost.id}/unpublish`, {
-        method: 'POST',
-      })
-      expect(firstUnpublishResponse.status).toBe(200)
-      const firstUnpublish = (await firstUnpublishResponse.json()) as Post
-      expect(firstUnpublish.status).toBe('draft')
-      expect(firstUnpublish.publishedAt).toBeNull()
-
-      const secondUnpublishResponse = await user(`/api/post/${publishedPost.id}/unpublish`, {
-        method: 'POST',
-      })
-      expect(secondUnpublishResponse.status).toBe(200)
-      const secondUnpublish = (await secondUnpublishResponse.json()) as Post
-      expect(secondUnpublish.status).toBe('draft')
-      expect(secondUnpublish.publishedAt).toBeNull()
-    } finally {
-      await integration.cleanup()
-    }
+    })
   })
 })

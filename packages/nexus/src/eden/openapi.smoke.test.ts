@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'bun:test'
 import { createApp } from '../app'
 
+type HttpMethod = 'delete' | 'get' | 'patch' | 'post' | 'put'
+
 interface OpenApiParameter {
   in: string
   name: string
@@ -10,12 +12,18 @@ interface OpenApiParameter {
   }
 }
 
+interface OpenApiSchema {
+  properties?: Record<string, unknown>
+  required?: string[]
+}
+
 interface OpenApiRequestBody {
-  content?: Record<string, { schema?: { properties?: Record<string, unknown>; required?: string[] } }>
+  content?: Record<string, { schema?: OpenApiSchema }>
   required?: boolean
 }
 
 interface OpenApiResponse {
+  content?: Record<string, { schema?: OpenApiSchema }>
   description?: string
 }
 
@@ -35,6 +43,222 @@ interface OpenApiDocument {
   paths?: Record<string, OpenApiOperation>
 }
 
+interface ModuleSpec {
+  path: string
+  tag: string
+  methods: HttpMethod[]
+}
+
+interface RouteSpec {
+  path: string
+  method: HttpMethod
+  tag: string
+  statuses?: string[]
+  requiredBodyFields?: string[]
+  bodyFields?: string[]
+  queryParams?: string[]
+  responseFields?: string[]
+  forbiddenMethods?: HttpMethod[]
+}
+
+const moduleSpecs: ModuleSpec[] = [
+  { path: '/api/health/', tag: 'Health', methods: ['get'] },
+  { path: '/api/auth/methods', tag: 'Auth', methods: ['get'] },
+  { path: '/api/auth/get-session', tag: 'Auth', methods: ['get'] },
+  { path: '/api/auth/sign-in/github', tag: 'Auth', methods: ['get'] },
+  { path: '/api/auth/sign-up/email', tag: 'Auth', methods: ['post'] },
+  { path: '/api/user/', tag: 'User', methods: ['get'] },
+  { path: '/api/rbac/roles', tag: 'RBAC', methods: ['get'] },
+  { path: '/api/public-site/posts', tag: 'PublicSite', methods: ['get'] },
+  { path: '/api/post/', tag: 'Post', methods: ['get', 'post'] },
+  { path: '/api/category/', tag: 'Category', methods: ['get', 'post'] },
+  { path: '/api/comment/', tag: 'Comment', methods: ['get', 'post'] },
+  { path: '/api/media/', tag: 'Media', methods: ['get'] },
+  { path: '/api/site-config', tag: 'SiteConfig', methods: ['get', 'put'] },
+  { path: '/api/preview/markdown', tag: 'Preview', methods: ['post'] },
+]
+
+const routeSpecs: RouteSpec[] = [
+  {
+    path: '/api/health/',
+    method: 'get',
+    tag: 'Health',
+    statuses: ['200'],
+    responseFields: ['status', 'timestamp', 'service', 'version', 'uptime', 'database'],
+  },
+  {
+    path: '/api/auth/sign-up/email',
+    method: 'post',
+    tag: 'Auth',
+    statuses: ['200', '400'],
+    requiredBodyFields: ['email', 'password', 'name'],
+    bodyFields: ['email', 'password', 'name', 'image'],
+    responseFields: ['user', 'token', 'session'],
+  },
+  {
+    path: '/api/auth/methods',
+    method: 'get',
+    tag: 'Auth',
+    statuses: ['200'],
+    responseFields: ['methods'],
+  },
+  {
+    path: '/api/auth/get-session',
+    method: 'get',
+    tag: 'Auth',
+    statuses: ['200'],
+    responseFields: ['user', 'session', 'isAuthenticated'],
+  },
+  {
+    path: '/api/auth/sign-in/github',
+    method: 'get',
+    tag: 'Auth',
+    statuses: ['302', '400'],
+    queryParams: ['callbackURL'],
+  },
+  {
+    path: '/api/auth/sign-in/email',
+    method: 'post',
+    tag: 'Auth',
+    statuses: ['200', '400'],
+    requiredBodyFields: ['email', 'password'],
+    bodyFields: ['email', 'password', 'rememberMe'],
+    responseFields: ['user', 'token', 'session'],
+  },
+  {
+    path: '/api/auth/me',
+    method: 'get',
+    tag: 'Auth',
+    statuses: ['200', '401'],
+    responseFields: ['user', 'session', 'isAuthenticated'],
+  },
+  {
+    path: '/api/auth/sign-out',
+    method: 'post',
+    tag: 'Auth',
+    statuses: ['204'],
+  },
+  {
+    path: '/api/user/',
+    method: 'get',
+    tag: 'User',
+    statuses: ['200', '400', '401', '403'],
+    queryParams: ['page', 'pageSize', 'status', 'keyword'],
+    responseFields: ['items', 'total', 'page', 'pageSize', 'totalPages'],
+    forbiddenMethods: ['post'],
+  },
+  {
+    path: '/api/user/{id}',
+    method: 'get',
+    tag: 'User',
+    statuses: ['200', '401', '403', '404'],
+  },
+  {
+    path: '/api/user/me',
+    method: 'patch',
+    tag: 'User',
+    statuses: ['200', '400', '401', '403', '404', '409'],
+    bodyFields: ['username', 'name', 'email', 'phone', 'introduce', 'image'],
+  },
+  {
+    path: '/api/user/me/password',
+    method: 'patch',
+    tag: 'User',
+    statuses: ['200', '400', '401', '403', '404'],
+  },
+  {
+    path: '/api/user/{id}',
+    method: 'patch',
+    tag: 'User',
+    statuses: ['200', '400', '401', '403', '404', '409'],
+  },
+  {
+    path: '/api/user/{id}/status',
+    method: 'patch',
+    tag: 'User',
+    statuses: ['200', '400', '401', '403', '404'],
+  },
+  {
+    path: '/api/public-site/posts',
+    method: 'get',
+    tag: 'PublicSite',
+    statuses: ['200'],
+    queryParams: ['page', 'pageSize', 'categorySlug'],
+    responseFields: ['items', 'total', 'page', 'pageSize', 'totalPages'],
+    forbiddenMethods: ['post'],
+  },
+  {
+    path: '/api/public-site/posts/{slug}',
+    method: 'get',
+    tag: 'PublicSite',
+    statuses: ['200'],
+    responseFields: ['id', 'title', 'slug', 'category', 'tags', 'markdown'],
+    forbiddenMethods: ['delete'],
+  },
+  {
+    path: '/api/public-site/categories/{slug}/posts',
+    method: 'get',
+    tag: 'PublicSite',
+    statuses: ['200'],
+  },
+  {
+    path: '/api/post/{id}',
+    method: 'delete',
+    tag: 'Post',
+    statuses: ['204', '401', '403', '404'],
+    forbiddenMethods: ['post'],
+  },
+  {
+    path: '/api/category/{id}',
+    method: 'delete',
+    tag: 'Category',
+    statuses: ['204', '401', '403', '404'],
+    forbiddenMethods: ['post'],
+  },
+  {
+    path: '/api/comment/',
+    method: 'post',
+    tag: 'Comment',
+    statuses: ['200'],
+    requiredBodyFields: ['postId', 'authorName', 'content'],
+    bodyFields: ['postId', 'authorName', 'authorEmail', 'content'],
+  },
+  {
+    path: '/api/comment/{id}',
+    method: 'delete',
+    tag: 'Comment',
+    statuses: ['204', '401', '403', '404'],
+    forbiddenMethods: ['post'],
+  },
+  {
+    path: '/api/rbac/users/{userId}/roles/{roleId}',
+    method: 'delete',
+    tag: 'RBAC',
+    statuses: ['204', '401', '403', '404'],
+    forbiddenMethods: ['patch'],
+  },
+  {
+    path: '/api/media/{id}/file',
+    method: 'get',
+    tag: 'Media',
+    statuses: ['401', '403', '404'],
+  },
+]
+
+const legacyPaths = [
+  '/api/page/',
+  '/api/page/{id}',
+  '/api/page/{id}/publish',
+  '/api/page/{id}/unpublish',
+  '/api/post/public',
+  '/api/post/public/{slug}',
+  '/api/category/public',
+  '/api/rbac/permissions',
+  '/api/rbac/permissions/{id}',
+  '/api/rbac/roles/{id}/permissions',
+  '/api/rbac/roles/{id}/permissions/{permissionId}',
+]
+
 async function getOpenApiDocument() {
   const app = createApp()
   const response = await app.handle(new Request('http://localhost/openapi/json'))
@@ -44,95 +268,133 @@ async function getOpenApiDocument() {
   return (await response.json()) as OpenApiDocument
 }
 
+function getPath(paths: Record<string, OpenApiOperation>, path: string): OpenApiOperation {
+  const item = paths[path]
+
+  expect(item).toBeDefined()
+
+  return item as OpenApiOperation
+}
+
+function getOperation(pathItem: OpenApiOperation, method: HttpMethod): OpenApiOperation {
+  const operation = pathItem[method]
+
+  expect(operation).toBeDefined()
+
+  return operation as OpenApiOperation
+}
+
+function expectTag(operation: OpenApiOperation | undefined, tag: string) {
+  expect(operation?.tags).toContain(tag)
+}
+
 function expectResponseStatuses(responses: Record<string, OpenApiResponse> | undefined, statuses: string[]) {
   expect(Object.keys(responses ?? {}).sort()).toEqual([...statuses].sort())
 }
 
+function expectBodyFields(operation: OpenApiOperation | undefined, fields: string[]) {
+  const properties = operation?.requestBody?.content?.['application/json']?.schema?.properties
+
+  for (const field of fields) {
+    expect(properties).toHaveProperty(field)
+  }
+}
+
+function expectRequiredBodyFields(operation: OpenApiOperation | undefined, fields: string[]) {
+  expect(operation?.requestBody?.required).toBe(true)
+  expect(operation?.requestBody?.content?.['application/json']?.schema?.required).toEqual(expect.arrayContaining(fields))
+}
+
+function expectQueryParams(operation: OpenApiOperation | undefined, params: string[]) {
+  expect(operation?.parameters).toEqual(
+    expect.arrayContaining(params.map((name) => expect.objectContaining({ in: 'query', name }))),
+  )
+}
+
+function expectResponseFields(operation: OpenApiOperation | undefined, fields: string[]) {
+  const properties = operation?.responses?.['200']?.content?.['application/json']?.schema?.properties
+
+  for (const field of fields) {
+    expect(properties).toHaveProperty(field)
+  }
+}
+
 describe('openapi smoke', () => {
-  it('应保留关键路径并标出模块 tags', async () => {
+  it('应保留关键模块和模块 tags', async () => {
     const document = await getOpenApiDocument()
     const paths = document.paths ?? {}
 
-    expect(paths['/api/health/']?.get?.tags).toContain('Health')
-    expect(paths['/api/auth/get-session']?.get?.tags).toContain('Auth')
-    expect(paths['/api/auth/sign-up/email']?.post?.tags).toContain('Auth')
-    expect(paths['/api/auth/sign-in/email']?.post?.tags).toContain('Auth')
-    expect(paths['/api/user/']?.get?.tags).toContain('User')
-    expect(paths['/api/public-site/posts']?.get?.tags).toContain('PublicSite')
-    expect(paths['/api/post/{id}']?.delete?.tags).toContain('Post')
-    expect(paths['/api/comment/{id}']?.delete?.tags).toContain('Comment')
+    for (const spec of moduleSpecs) {
+      const pathItem = getPath(paths, spec.path)
+
+      for (const method of spec.methods) {
+        expectTag(getOperation(pathItem, method), spec.tag)
+      }
+    }
   })
 
-  it('应导出关键 body 和 query schema', async () => {
+  it('应保留关键路由清单里的状态码和关键 schema', async () => {
     const document = await getOpenApiDocument()
     const paths = document.paths ?? {}
 
-    const signUpBody = paths['/api/auth/sign-up/email']?.post?.requestBody
-    const signUpJsonSchema = signUpBody?.content?.['application/json']?.schema
-    const publicSitePostQuery = paths['/api/public-site/posts']?.get?.parameters ?? []
-    const userListQuery = paths['/api/user/']?.get?.parameters ?? []
-    const commentCreateBody = paths['/api/comment/']?.post?.requestBody
+    for (const spec of routeSpecs) {
+      const pathItem = getPath(paths, spec.path)
+      const operation = getOperation(pathItem, spec.method)
 
-    expect(signUpBody?.required).toBe(true)
-    expect(signUpJsonSchema?.required).toEqual(expect.arrayContaining(['email', 'password', 'name']))
-    expect(signUpJsonSchema?.properties).toHaveProperty('email')
-    expect(signUpJsonSchema?.properties).toHaveProperty('password')
-    expect(signUpJsonSchema?.properties).toHaveProperty('name')
+      expectTag(operation, spec.tag)
 
-    expect(publicSitePostQuery).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ in: 'query', name: 'page' }),
-        expect.objectContaining({ in: 'query', name: 'pageSize' }),
-        expect.objectContaining({ in: 'query', name: 'categorySlug' }),
-      ]),
-    )
-    expect(userListQuery).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ in: 'query', name: 'page' }),
-        expect.objectContaining({ in: 'query', name: 'status' }),
-        expect.objectContaining({ in: 'query', name: 'keyword' }),
-      ]),
-    )
-    expect(commentCreateBody?.content?.['application/json']?.schema?.properties).toHaveProperty('postId')
-    expect(commentCreateBody?.content?.['application/json']?.schema?.properties).toHaveProperty('authorEmail')
-    expect(commentCreateBody?.content?.['application/json']?.schema?.properties).toHaveProperty('content')
+      if (spec.statuses) {
+        expectResponseStatuses(operation.responses, spec.statuses)
+      }
+
+      if (spec.requiredBodyFields) {
+        expectRequiredBodyFields(operation, spec.requiredBodyFields)
+      }
+
+      if (spec.bodyFields) {
+        expectBodyFields(operation, spec.bodyFields)
+      }
+
+      if (spec.queryParams) {
+        expectQueryParams(operation, spec.queryParams)
+      }
+
+      if (spec.responseFields) {
+        expectResponseFields(operation, spec.responseFields)
+      }
+
+      if (spec.forbiddenMethods) {
+        for (const forbiddenMethod of spec.forbiddenMethods) {
+          expect(pathItem[forbiddenMethod]).toBeUndefined()
+        }
+      }
+    }
   })
 
-  it('应保留关键鉴权错误响应和 204 空 body 契约', async () => {
+  it('应保留 204 空 body 契约描述', async () => {
     const document = await getOpenApiDocument()
     const paths = document.paths ?? {}
 
-    expectResponseStatuses(paths['/api/auth/sign-up/email']?.post?.responses, ['200', '400'])
-    expectResponseStatuses(paths['/api/auth/sign-in/email']?.post?.responses, ['200', '400'])
-    expectResponseStatuses(paths['/api/auth/me']?.get?.responses, ['200', '401'])
-    expectResponseStatuses(paths['/api/user/']?.get?.responses, ['200', '400', '401', '403'])
-    expectResponseStatuses(paths['/api/user/{id}']?.get?.responses, ['200', '401', '403', '404'])
-    expectResponseStatuses(paths['/api/user/me']?.patch?.responses, ['200', '400', '401', '403', '404', '409'])
-    expectResponseStatuses(paths['/api/user/me/password']?.patch?.responses, ['200', '400', '401', '403', '404'])
-    expectResponseStatuses(paths['/api/user/{id}/status']?.patch?.responses, ['200', '400', '401', '403', '404'])
-    expectResponseStatuses(paths['/api/user/{id}']?.patch?.responses, ['200', '400', '401', '403', '404', '409'])
+    const deletePaths = [
+      '/api/auth/sign-out',
+      '/api/post/{id}',
+      '/api/category/{id}',
+      '/api/comment/{id}',
+      '/api/rbac/users/{userId}/roles/{roleId}',
+    ] as const
 
-    expect(paths['/api/auth/sign-out']?.post?.responses).toHaveProperty('204')
-    expect(paths['/api/post/{id}']?.delete?.responses).toHaveProperty('204')
-    expect(paths['/api/category/{id}']?.delete?.responses).toHaveProperty('204')
-    expect(paths['/api/comment/{id}']?.delete?.responses).toHaveProperty('204')
-    expect(paths['/api/rbac/users/{userId}/roles/{roleId}']?.delete?.responses).toHaveProperty('204')
+    for (const path of deletePaths) {
+      const pathItem = getPath(paths, path)
+      const method: HttpMethod = path === '/api/auth/sign-out' ? 'post' : 'delete'
+      const operation = getOperation(pathItem, method)
 
-    expect(paths['/api/post/{id}']?.delete?.responses?.['204']).toEqual(
-      expect.objectContaining({
-        description: expect.any(String),
-      }),
-    )
-    expect(paths['/api/auth/sign-out']?.post?.responses?.['204']).toEqual(
-      expect.objectContaining({
-        description: expect.any(String),
-      }),
-    )
-
-    expect(paths['/api/post/{id}']?.post).toBeUndefined()
-    expect(paths['/api/category/{id}']?.post).toBeUndefined()
-    expect(paths['/api/comment/{id}']?.post).toBeUndefined()
-    expect(paths['/api/rbac/users/{userId}/roles/{roleId}']?.patch).toBeUndefined()
+      expect(operation.responses).toHaveProperty('204')
+      expect(operation.responses?.['204']).toEqual(
+        expect.objectContaining({
+          description: expect.any(String),
+        }),
+      )
+    }
   })
 
   it('应区分公开接口和后台接口边界，并清掉旧路径', async () => {
@@ -141,22 +403,10 @@ describe('openapi smoke', () => {
 
     expect(paths['/api/public-site/posts']?.get?.responses).toHaveProperty('200')
     expect(paths['/api/public-site/posts/{slug}']?.get?.responses).toHaveProperty('200')
-    expect(paths['/api/public-site/posts']?.post).toBeUndefined()
-    expect(paths['/api/public-site/posts/{slug}']?.delete).toBeUndefined()
-
     expect(paths['/api/user/']?.get?.tags).toContain('User')
-    expect(paths['/api/user/']?.post).toBeUndefined()
 
-    expect(paths['/api/page/']).toBeUndefined()
-    expect(paths['/api/page/{id}']).toBeUndefined()
-    expect(paths['/api/page/{id}/publish']).toBeUndefined()
-    expect(paths['/api/page/{id}/unpublish']).toBeUndefined()
-    expect(paths['/api/post/public']).toBeUndefined()
-    expect(paths['/api/post/public/{slug}']).toBeUndefined()
-    expect(paths['/api/category/public']).toBeUndefined()
-    expect(paths['/api/rbac/permissions']).toBeUndefined()
-    expect(paths['/api/rbac/permissions/{id}']).toBeUndefined()
-    expect(paths['/api/rbac/roles/{id}/permissions']).toBeUndefined()
-    expect(paths['/api/rbac/roles/{id}/permissions/{permissionId}']).toBeUndefined()
+    for (const legacyPath of legacyPaths) {
+      expect(paths[legacyPath]).toBeUndefined()
+    }
   })
 })

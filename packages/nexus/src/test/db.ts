@@ -28,11 +28,52 @@ export interface CleanupTestDataInput {
   mediaIds?: readonly string[]
 }
 
-export function createTestSuffix(prefix = 'test') {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+export interface CreateTestSuffixOptions {
+  seed?: string | number
+  now?: number
+  random?: () => number
 }
 
-export async function seedBasePermissions(prisma: PrismaClient = defaultPrisma) {
+export interface SeedBasePermissionsOptions {
+  clearCache?: boolean
+}
+
+function normalizeTrackedIds(ids?: readonly string[]) {
+  return [...new Set((ids ?? []).filter((id): id is string => typeof id === 'string' && id.length > 0))]
+}
+
+function createDeterministicToken(seed: string) {
+  let hash = 0
+
+  for (const char of seed) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+  }
+
+  return hash.toString(36).padStart(8, '0').slice(0, 8)
+}
+
+function clearPermissionCache(enabled: boolean) {
+  if (enabled) {
+    PermissionService.clearAllCache()
+  }
+}
+
+export function createTestSuffix(prefix = 'test', options: CreateTestSuffixOptions = {}) {
+  if (options.seed !== undefined) {
+    return `${prefix}-${String(options.seed)}-${createDeterministicToken(`${prefix}:${options.seed}`)}`
+  }
+
+  const now = options.now ?? Date.now()
+  const random = options.random ?? Math.random
+  return `${prefix}-${now}-${random().toString(36).slice(2, 8)}`
+}
+
+export async function seedBasePermissions(
+  prisma: PrismaClient = defaultPrisma,
+  options: SeedBasePermissionsOptions = {},
+) {
+  const clearCache = options.clearCache ?? true
+
   for (const roleName of SYSTEM_ROLE_NAMES) {
     const definition = ROLE_DEFINITIONS[roleName]
     await prisma.role.upsert({
@@ -127,16 +168,16 @@ export async function seedBasePermissions(prisma: PrismaClient = defaultPrisma) 
     }
   }
 
-  PermissionService.clearAllCache()
+  clearPermissionCache(clearCache)
 }
 
 export async function cleanupTestData(input: CleanupTestDataInput, prisma: PrismaClient = defaultPrisma) {
-  const userIds = [...(input.userIds ?? [])]
-  const roleIds = [...(input.roleIds ?? [])]
-  const postIds = [...(input.postIds ?? [])]
-  const categoryIds = [...(input.categoryIds ?? [])]
-  const commentIds = [...(input.commentIds ?? [])]
-  const mediaIds = [...(input.mediaIds ?? [])]
+  const userIds = normalizeTrackedIds(input.userIds)
+  const roleIds = normalizeTrackedIds(input.roleIds)
+  const postIds = normalizeTrackedIds(input.postIds)
+  const categoryIds = normalizeTrackedIds(input.categoryIds)
+  const commentIds = normalizeTrackedIds(input.commentIds)
+  const mediaIds = normalizeTrackedIds(input.mediaIds)
 
   if (commentIds.length > 0 || postIds.length > 0) {
     await prisma.comment.deleteMany({
@@ -255,5 +296,5 @@ export async function cleanupTestData(input: CleanupTestDataInput, prisma: Prism
     })
   }
 
-  PermissionService.clearAllCache()
+  clearPermissionCache(true)
 }

@@ -12,8 +12,14 @@ import { createCookieClient } from './eden'
 import { grantPermissionsToUser } from './permissions'
 
 export type IntegrationRequestRunner = (path: string, init?: RequestInit) => Promise<Response>
+export type IntegrationTrackedValue = string | { id: string | null | undefined } | null | undefined
 
-export interface IntegrationActor extends IntegrationRequestRunner {
+export interface IntegrationRequestHelpers {
+  json: <TBody>(path: string, init?: RequestInit) => Promise<IntegrationJsonResult<TBody>>
+  requestJson: <TBody>(path: string, init?: IntegrationJsonRequestInit) => Promise<IntegrationJsonResult<TBody>>
+}
+
+export interface IntegrationActor extends IntegrationRequestRunner, IntegrationRequestHelpers {
   client: TestEdenClient
   session: CookieFetcherSession
   userId: string
@@ -33,13 +39,17 @@ export interface IntegrationJsonResult<TBody> {
   body: TBody
 }
 
+export interface IntegrationJsonRequestInit extends Omit<RequestInit, 'body'> {
+  body?: unknown
+}
+
 export interface IntegrationTrackInput {
-  userId?: string | null
-  roleId?: string | null
-  postId?: string | null
-  categoryId?: string | null
-  commentId?: string | null
-  mediaId?: string | null
+  userId?: IntegrationTrackedValue
+  roleId?: IntegrationTrackedValue
+  postId?: IntegrationTrackedValue
+  categoryId?: IntegrationTrackedValue
+  commentId?: IntegrationTrackedValue
+  mediaId?: IntegrationTrackedValue
 }
 
 export interface IntegrationTestContextOptions extends TestAppOptions {
@@ -52,10 +62,117 @@ function createJsonHeaders(init?: HeadersInit): Headers {
   return headers
 }
 
-function pushTrackedId(target: string[], value?: string | null) {
-  if (value && !target.includes(value)) {
-    target.push(value)
+function createRequestJsonInit(init: IntegrationJsonRequestInit = {}): RequestInit {
+  return {
+    ...init,
+    headers: createJsonHeaders(init.headers),
+    body: init.body === undefined ? undefined : (typeof init.body === 'string' ? init.body : JSON.stringify(init.body)),
   }
+}
+
+function resolveTrackedId(value?: IntegrationTrackedValue) {
+  if (!value) {
+    return undefined
+  }
+
+  return typeof value === 'string' ? value : (value.id ?? undefined)
+}
+
+function pushTrackedId(target: string[], value?: IntegrationTrackedValue) {
+  const resolvedId = resolveTrackedId(value)
+  if (resolvedId && !target.includes(resolvedId)) {
+    target.push(resolvedId)
+  }
+}
+
+function forgetTrackedId(target: string[], value?: IntegrationTrackedValue) {
+  const resolvedId = resolveTrackedId(value)
+  if (!resolvedId) {
+    return
+  }
+
+  const nextIds = target.filter((id) => id !== resolvedId)
+  target.splice(0, target.length, ...nextIds)
+}
+
+export interface IntegrationTrackHelper {
+  (input: IntegrationTrackInput): void
+  userId: (id: string | null | undefined) => void
+  roleId: (id: string | null | undefined) => void
+  postId: (id: string | null | undefined) => void
+  categoryId: (id: string | null | undefined) => void
+  commentId: (id: string | null | undefined) => void
+  mediaId: (id: string | null | undefined) => void
+  user: (value: IntegrationTrackedValue) => void
+  role: (value: IntegrationTrackedValue) => void
+  post: (value: IntegrationTrackedValue) => void
+  category: (value: IntegrationTrackedValue) => void
+  comment: (value: IntegrationTrackedValue) => void
+  media: (value: IntegrationTrackedValue) => void
+  forget: (input: IntegrationTrackInput) => void
+  snapshot: () => {
+    userIds: string[]
+    roleIds: string[]
+    postIds: string[]
+    categoryIds: string[]
+    commentIds: string[]
+    mediaIds: string[]
+  }
+}
+
+function attachRunnerHelpers<T extends IntegrationRequestRunner>(
+  runner: T,
+  helpers: IntegrationRequestHelpers,
+): T & IntegrationRequestHelpers {
+  return Object.assign(runner, helpers)
+}
+
+function createRunnerHelpers(runner: IntegrationRequestRunner) {
+  return {
+    json: async <TBody>(path: string, init: RequestInit = {}) => await json<TBody>(path, init, runner),
+    requestJson: async <TBody>(path: string, init: IntegrationJsonRequestInit = {}) =>
+      await requestJson<TBody>(path, init, runner),
+  } satisfies IntegrationRequestHelpers
+}
+
+function createActorRunner(
+  session: CookieFetcherSession,
+  client: TestEdenClient,
+  userId: string,
+): IntegrationActor {
+  const runner = attachRunnerHelpers(
+    async (path: string, init?: RequestInit) => await session.fetcher(new URL(path, 'http://localhost').toString(), init),
+    createRunnerHelpers(async (path: string, init?: RequestInit) =>
+      await session.fetcher(new URL(path, 'http://localhost').toString(), init),
+    ),
+  )
+
+  return Object.assign(runner, {
+    client,
+    session,
+    userId,
+  })
+}
+
+async function json<TBody>(
+  path: string,
+  init: RequestInit = {},
+  runner: IntegrationRequestRunner,
+): Promise<IntegrationJsonResult<TBody>> {
+  const response = await runner(path, init)
+
+  return {
+    response,
+    body: await readJson<TBody>(response),
+  }
+}
+
+async function requestJson<TBody>(
+  path: string,
+  init: IntegrationJsonRequestInit = {},
+  runner: IntegrationRequestRunner,
+): Promise<IntegrationJsonResult<TBody>> {
+  return await json<TBody>(path, createRequestJsonInit(init), runner)
 }
 
 export function createIntegrationTestContext(options: IntegrationTestContextOptions = {}) {
@@ -70,7 +187,10 @@ export function createIntegrationTestContext(options: IntegrationTestContextOpti
     mediaIds: [] as string[],
   }
 
-  const anonymous: IntegrationRequestRunner = async (path, init) => await app.handle(createTestRequest(path, init))
+  const anonymous = attachRunnerHelpers(
+    async (path: string, init?: RequestInit) => await app.handle(createTestRequest(path, init)),
+    createRunnerHelpers(async (path: string, init?: RequestInit) => await app.handle(createTestRequest(path, init))),
+  )
 
   const track = Object.assign(
     (input: IntegrationTrackInput) => {
@@ -100,13 +220,31 @@ export function createIntegrationTestContext(options: IntegrationTestContextOpti
       mediaId(id: string | null | undefined) {
         pushTrackedId(tracked.mediaIds, id)
       },
+      user(value: IntegrationTrackedValue) {
+        pushTrackedId(tracked.userIds, value)
+      },
+      role(value: IntegrationTrackedValue) {
+        pushTrackedId(tracked.roleIds, value)
+      },
+      post(value: IntegrationTrackedValue) {
+        pushTrackedId(tracked.postIds, value)
+      },
+      category(value: IntegrationTrackedValue) {
+        pushTrackedId(tracked.categoryIds, value)
+      },
+      comment(value: IntegrationTrackedValue) {
+        pushTrackedId(tracked.commentIds, value)
+      },
+      media(value: IntegrationTrackedValue) {
+        pushTrackedId(tracked.mediaIds, value)
+      },
       forget(input: IntegrationTrackInput) {
-        if (input.userId) tracked.userIds = tracked.userIds.filter((id) => id !== input.userId)
-        if (input.roleId) tracked.roleIds = tracked.roleIds.filter((id) => id !== input.roleId)
-        if (input.postId) tracked.postIds = tracked.postIds.filter((id) => id !== input.postId)
-        if (input.categoryId) tracked.categoryIds = tracked.categoryIds.filter((id) => id !== input.categoryId)
-        if (input.commentId) tracked.commentIds = tracked.commentIds.filter((id) => id !== input.commentId)
-        if (input.mediaId) tracked.mediaIds = tracked.mediaIds.filter((id) => id !== input.mediaId)
+        forgetTrackedId(tracked.userIds, input.userId)
+        forgetTrackedId(tracked.roleIds, input.roleId)
+        forgetTrackedId(tracked.postIds, input.postId)
+        forgetTrackedId(tracked.categoryIds, input.categoryId)
+        forgetTrackedId(tracked.commentIds, input.commentId)
+        forgetTrackedId(tracked.mediaIds, input.mediaId)
       },
       snapshot() {
         return {
@@ -119,7 +257,7 @@ export function createIntegrationTestContext(options: IntegrationTestContextOpti
         }
       },
     },
-  )
+  ) satisfies IntegrationTrackHelper
 
   async function actor(
     permissionKeys: readonly PermissionString[] = [],
@@ -158,30 +296,29 @@ export function createIntegrationTestContext(options: IntegrationTestContextOpti
       track.roleId(role.id)
     }
 
-    return Object.assign(
-      async (path: string, init?: RequestInit) => await session.fetcher(new URL(path, 'http://localhost').toString(), init),
-      {
-        client,
-        session,
-        userId,
-      },
-    )
+    return createActorRunner(session, client, userId)
   }
 
-  async function json<TBody>(
+  async function jsonWithRunner<TBody>(
     path: string,
     init: RequestInit = {},
     runner: IntegrationRequestRunner = anonymous,
-  ): Promise<IntegrationJsonResult<TBody>> {
-    const response = await runner(path, init)
-
-    return {
-      response,
-      body: await readJson<TBody>(response),
-    }
+  ) {
+    return await json<TBody>(path, init, runner)
   }
 
+  async function requestJsonWithRunner<TBody>(
+    path: string,
+    init: IntegrationJsonRequestInit = {},
+    runner: IntegrationRequestRunner = anonymous,
+  ) {
+    return await requestJson<TBody>(path, init, runner)
+  }
+
+  const signInAs = actor
+
   async function cleanup() {
+    // 先按快照里的依赖顺序删关联数据，再清空本地跟踪状态，避免漏删后续依赖记录。
     await cleanupTestData(track.snapshot(), prisma)
 
     tracked.userIds = []
@@ -197,7 +334,9 @@ export function createIntegrationTestContext(options: IntegrationTestContextOpti
     context,
     anonymous,
     actor,
-    json,
+    signInAs,
+    json: jsonWithRunner,
+    requestJson: requestJsonWithRunner,
     jsonHeaders: createJsonHeaders,
     track,
     cleanup,

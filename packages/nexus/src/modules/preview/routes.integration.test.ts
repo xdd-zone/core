@@ -1,21 +1,12 @@
-import type { PermissionString } from '@nexus/core/permissions'
-import type { CookieFetcherSession, TestApp } from '../../test'
-import type { AuthSession } from '../auth/model'
+import type { IntegrationRequestRunner } from '@nexus/test'
 import type { PreviewMarkdownResponse } from './model'
 
-import { beforeAll, describe, expect, it } from 'bun:test'
-
 import {
-  cleanupTestData,
-  createCookieFetcher,
-  createTestApp,
-  createTestRequest,
-  createTestSuffix,
+  createIntegrationTestContext,
   expectErrorResponse,
-  grantPermissionsToUser,
-  readJson,
   seedBasePermissions,
-} from '../../test'
+} from '@nexus/test'
+import { afterEach, beforeAll, describe, expect, it } from 'bun:test'
 import { PostPermissions } from '../post/permissions'
 
 const TEST_APP_OPTIONS = {
@@ -39,113 +30,60 @@ const TEST_APP_OPTIONS = {
   },
 } as const
 
-interface SignedInUser {
-  session: CookieFetcherSession
-  userId: string
-}
+const integration = createIntegrationTestContext(TEST_APP_OPTIONS)
+const anonymousRunner = integration.anonymous
 
-async function signInTestUser(app: TestApp): Promise<SignedInUser> {
-  const suffix = createTestSuffix('preview-user')
-  const session = createCookieFetcher(app)
-  const response = await session.fetcher('http://localhost/api/auth/sign-up/email', {
+async function requestPreview(body: unknown, runner: IntegrationRequestRunner = anonymousRunner) {
+  return await runner('/api/preview/markdown', {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: `${suffix}@example.com`,
-      password: 'password123',
-      name: `Preview User ${suffix}`,
-    }),
-  })
-
-  expect(response.status).toBe(200)
-  const body = await readJson<AuthSession>(response)
-
-  return {
-    session,
-    userId: body.user.id,
-  }
-}
-
-async function grantTestPermissions(userId: string, permissionKeys: readonly PermissionString[], roleIds: string[]) {
-  const { role } = await grantPermissionsToUser(userId, permissionKeys, {
-    roleName: createTestSuffix('preview-role'),
-  })
-  roleIds.push(role.id)
-}
-
-async function requestPreview(session: CookieFetcherSession, body: unknown) {
-  return await session.fetcher('http://localhost/api/preview/markdown', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
+    headers: integration.jsonHeaders(),
     body: JSON.stringify(body),
   })
 }
 
 describe('Preview routes', () => {
-  const { app } = createTestApp(TEST_APP_OPTIONS)
-
   beforeAll(async () => {
     await seedBasePermissions()
   })
 
+  afterEach(async () => {
+    await integration.cleanup()
+  })
+
   it('拥有 WRITE_ALL 权限时应返回 Markdown 预览', async () => {
-    const userIds: string[] = []
-    const roleIds: string[] = []
-
-    try {
-      const user = await signInTestUser(app)
-      userIds.push(user.userId)
-      await grantTestPermissions(user.userId, [PostPermissions.WRITE_ALL], roleIds)
-
-      const response = await requestPreview(user.session, {
+    const user = await integration.actor([PostPermissions.WRITE_ALL], { prefix: 'preview-user' })
+    const response = await requestPreview(
+      {
         markdown: '# 预览标题\n\n正文',
-      })
+      },
+      user,
+    )
 
-      expect(response.status).toBe(200)
-      const body = await readJson<PreviewMarkdownResponse>(response)
-      expect(body.toc[0]?.slug).toBe('预览标题')
-      expect(body.html).toContain('<h1 id="预览标题">预览标题</h1>')
-    } finally {
-      await cleanupTestData({ roleIds, userIds })
-    }
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as PreviewMarkdownResponse
+    expect(body.toc[0]?.slug).toBe('预览标题')
+    expect(body.html).toContain('<h1 id="预览标题">预览标题</h1>')
   })
 
   it('未授予 WRITE_ALL 权限时应返回 403', async () => {
-    const userIds: string[] = []
-
-    try {
-      const user = await signInTestUser(app)
-      userIds.push(user.userId)
-
-      const response = await requestPreview(user.session, {
+    const user = await integration.actor([], { prefix: 'preview-user' })
+    const response = await requestPreview(
+      {
         markdown: '# 预览标题',
-      })
+      },
+      user,
+    )
 
-      await expectErrorResponse(response, {
-        status: 403,
-        errorCode: 'FORBIDDEN',
-      })
-    } finally {
-      await cleanupTestData({ userIds })
-    }
+    await expectErrorResponse(response, {
+      status: 403,
+      errorCode: 'FORBIDDEN',
+    })
   })
 
   it('未登录访问应返回 401', async () => {
-    const response = await app.handle(
-      createTestRequest('/api/preview/markdown', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          markdown: '# 预览标题',
-        }),
-      }),
-    )
+    const response = await requestPreview({
+      markdown: '# 预览标题',
+    })
 
     await expectErrorResponse(response, {
       status: 401,
@@ -154,47 +92,33 @@ describe('Preview routes', () => {
   })
 
   it('非法 coverImage 应返回 422', async () => {
-    const userIds: string[] = []
-    const roleIds: string[] = []
-
-    try {
-      const user = await signInTestUser(app)
-      userIds.push(user.userId)
-      await grantTestPermissions(user.userId, [PostPermissions.WRITE_ALL], roleIds)
-
-      const response = await requestPreview(user.session, {
+    const user = await integration.actor([PostPermissions.WRITE_ALL], { prefix: 'preview-user' })
+    const response = await requestPreview(
+      {
         markdown: '# 预览标题',
         coverImage: 'bad-cover-image',
-      })
+      },
+      user,
+    )
 
-      await expectErrorResponse(response, {
-        status: 422,
-        errorCode: 'VALIDATION',
-      })
-    } finally {
-      await cleanupTestData({ roleIds, userIds })
-    }
+    await expectErrorResponse(response, {
+      status: 422,
+      errorCode: 'VALIDATION',
+    })
   })
 
   it('空 Markdown 应返回 422', async () => {
-    const userIds: string[] = []
-    const roleIds: string[] = []
-
-    try {
-      const user = await signInTestUser(app)
-      userIds.push(user.userId)
-      await grantTestPermissions(user.userId, [PostPermissions.WRITE_ALL], roleIds)
-
-      const response = await requestPreview(user.session, {
+    const user = await integration.actor([PostPermissions.WRITE_ALL], { prefix: 'preview-user' })
+    const response = await requestPreview(
+      {
         markdown: ' ',
-      })
+      },
+      user,
+    )
 
-      await expectErrorResponse(response, {
-        status: 422,
-        errorCode: 'VALIDATION',
-      })
-    } finally {
-      await cleanupTestData({ roleIds, userIds })
-    }
+    await expectErrorResponse(response, {
+      status: 422,
+      errorCode: 'VALIDATION',
+    })
   })
 })
