@@ -1,4 +1,4 @@
-import type { AuthenticatedSecuritySession } from '../auth'
+import type { AuthenticatedSecuritySession, SecuritySession } from '../auth'
 import type { SessionService } from '../auth/session.service'
 import type { PermissionString } from '../permissions'
 import type { AuthRequirement } from './auth.plugin'
@@ -24,15 +24,29 @@ export interface AccessContext {
  * 访问控制插件。
  */
 export function createAccessPlugin(sessionService: SessionService) {
+  const authCache = new WeakMap<Request, Promise<AuthenticatedSecuritySession | SecuritySession>>()
+
+  function getCachedSession(request: Request) {
+    const cached = authCache.get(request)
+    if (cached) {
+      return cached
+    }
+
+    const pending = sessionService.getSession(request.headers)
+    authCache.set(request, pending)
+
+    return pending
+  }
+
   async function requireAuthenticatedSession(request: Request): Promise<AuthenticatedSecuritySession> {
-    const auth = await sessionService.getSession(request.headers)
+    const auth = await getCachedSession(request)
     assertAuthenticated(auth)
 
     return auth
   }
 
   async function resolveSecurityContext(context: { request: Request }) {
-    const auth = await sessionService.getSession(context.request.headers)
+    const auth = await getCachedSession(context.request)
 
     return {
       auth,

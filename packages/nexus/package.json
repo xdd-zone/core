@@ -77,6 +77,11 @@
       "import": "./src/public/permissions.ts",
       "default": "./src/public/permissions.ts"
     },
+    "./test": {
+      "types": "./src/test/index.ts",
+      "import": "./src/test/index.ts",
+      "default": "./src/test/index.ts"
+    },
     "./rbac-types": {
       "types": "./src/public/rbac-types.ts",
       "import": "./src/public/rbac-types.ts",
@@ -89,7 +94,10 @@
   "scripts": {
     "dev": "NODE_ENV=development bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
-    "test": "bun test src/core/config/load-config.test.ts src/core/auth/auth-api.service.test.ts src/shared/schema/slug.test.ts src/infra/storage/media-storage.test.ts src/modules/category/service.test.ts src/modules/post/service.test.ts src/modules/public-site/service.test.ts src/modules/media/service.test.ts src/modules/comment/service.test.ts src/modules/rbac/service.test.ts src/modules/user/service.test.ts src/eden/eden-smoke.test.ts src/eden/openapi-smoke.test.ts",
+    "test": "bun run test:unit && bun run test:integration && bun run test:smoke",
+    "test:unit": "bun test $(find ./src -name '*.unit.test.ts' | sort)",
+    "test:integration": "bun test $(find ./src -name '*.integration.test.ts' | sort)",
+    "test:smoke": "bun test $(find ./src -name '*.smoke.test.ts' | sort)",
     "seed": "bun run prisma/seed/seed.ts",
     "prisma:apply-indexes": "bun run prisma/scripts/apply-partial-unique-indexes.ts",
     "prisma:generate": "prisma generate",

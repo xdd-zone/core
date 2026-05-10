@@ -12,9 +12,23 @@ export type AuthRequirement = 'optional' | 'required'
  * 路由级认证插件。
  */
 export function createAuthPlugin(sessionService: SessionService) {
+  const authCache = new WeakMap<Request, Promise<SecuritySession>>()
+
+  function getCachedSession(request: Request) {
+    const cached = authCache.get(request)
+    if (cached) {
+      return cached
+    }
+
+    const pending = sessionService.getSession(request.headers)
+    authCache.set(request, pending)
+
+    return pending
+  }
+
   return new Elysia({ name: 'auth-plugin' })
     .resolve({ as: 'scoped' }, async ({ request }) => {
-      const auth = await sessionService.getSession(request.headers)
+      const auth = await getCachedSession(request)
 
       return {
         auth,
@@ -30,7 +44,7 @@ export function createAuthPlugin(sessionService: SessionService) {
 
         return {
           resolve: async ({ request }) => {
-            const auth = await sessionService.getSession(request.headers)
+            const auth = await getCachedSession(request)
             assertAuthenticated(auth)
 
             return {

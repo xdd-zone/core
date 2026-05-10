@@ -1,43 +1,74 @@
 import type { CosSdkClient } from './cos-media-storage'
-import { readFile, rm, writeFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
+
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
 
 import { NotFoundError } from '@nexus/core/http'
 import { afterEach, describe, expect, it } from 'bun:test'
 
 import { CosMediaStorage } from './cos-media-storage'
 import { LocalMediaStorage } from './local-media-storage'
-import { MediaStorage } from './media-storage'
 
-const mediaDir = resolve(process.cwd(), 'storage/media')
 const outsideFilePath = resolve(import.meta.dir, '../../../storage/media-storage-test-outside.txt')
-const createdStoragePaths = new Set<string>()
+const testStorageDirs = new Set<string>()
 
 async function cleanupPath(filePath: string) {
   await rm(filePath, { force: true, recursive: true }).catch(() => undefined)
 }
 
+async function createLocalStorage() {
+  const rootDir = await mkdtemp(join(tmpdir(), 'xdd-nexus-media-test-'))
+  testStorageDirs.add(rootDir)
+
+  return {
+    rootDir,
+    storage: new LocalMediaStorage(rootDir),
+  }
+}
+
 afterEach(async () => {
-  for (const storagePath of createdStoragePaths) {
-    await MediaStorage.remove(storagePath).catch(() => undefined)
+  for (const rootDir of testStorageDirs) {
+    await cleanupPath(rootDir)
   }
 
-  createdStoragePaths.clear()
+  testStorageDirs.clear()
   await cleanupPath(outsideFilePath)
 })
 
-describe('MediaStorage', () => {
+describe('LocalMediaStorage', () => {
   it('保存文件时应使用固定的媒体目录', async () => {
+    const { rootDir, storage } = await createLocalStorage()
     const file = new File(['hello media'], 'avatar.php', {
       type: 'image/jpeg',
     })
 
-    const result = await new LocalMediaStorage().save(file)
-    createdStoragePaths.add(result.storagePath)
+    const result = await storage.save(file)
 
     expect(result.fileName).toEndWith('.jpg')
     expect(result.storagePath).toBe(result.fileName)
-    expect(await readFile(resolve(mediaDir, result.storagePath), 'utf8')).toBe('hello media')
+    expect(await readFile(resolve(rootDir, result.storagePath), 'utf8')).toBe('hello media')
+  })
+
+  it('打开文件时应返回文件内容和下载头', async () => {
+    const { storage } = await createLocalStorage()
+    const result = await storage.save(
+      new File(['hello media'], 'avatar.php', {
+        type: 'image/png',
+      }),
+    )
+
+    const response = await storage.openFile(result.storagePath, {
+      originalName: '头像.png',
+      mimeType: 'image/png',
+      size: 11,
+    })
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe('image/png')
+    expect(response.headers.get('content-length')).toBe('11')
+    expect(response.headers.get('content-disposition')).toBe(`inline; filename="${encodeURIComponent('头像.png')}"`)
+    expect(await response.text()).toBe('hello media')
   })
 
   it('读取和删除文件时应拒绝访问存储目录外的路径', async () => {

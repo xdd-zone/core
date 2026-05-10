@@ -509,7 +509,16 @@ export function createErrorPlugin(config: ErrorPluginConfig = CONFIG, baseLogger
 
         let result: ErrorHandlingResult
 
-        if (errorCode === 'NOT_FOUND') {
+        if (error instanceof HttpError) {
+          const status = error.statusCode
+          result = {
+            status,
+            response: buildErrorResponse(status, error.message, {
+              errorCode: error.code,
+            }),
+            logLevel: status >= 500 ? 'error' : 'warn',
+          }
+        } else if (errorCode === 'NOT_FOUND') {
           result = {
             status: 404,
             response: buildErrorResponse(404, '请求的资源不存在', {
@@ -535,15 +544,6 @@ export function createErrorPlugin(config: ErrorPluginConfig = CONFIG, baseLogger
               details: isDev ? { message: errorMessage } : undefined,
             }),
             logLevel: 'warn',
-          }
-        } else if (error instanceof HttpError) {
-          const status = error.statusCode
-          result = {
-            status,
-            response: buildErrorResponse(status, error.message, {
-              errorCode: error.code,
-            }),
-            logLevel: status >= 500 ? 'error' : 'warn',
           }
         } else {
           const prismaResult = handlePrismaError(error, isDev)

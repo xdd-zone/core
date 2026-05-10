@@ -1,4 +1,5 @@
 import type { MediaRecord } from './repository'
+
 import { MediaStorage } from '@nexus/infra/storage/media-storage'
 import { afterEach, describe, expect, it, spyOn } from 'bun:test'
 
@@ -20,6 +21,49 @@ function createMediaRecord(override: Partial<MediaRecord> = {}): MediaRecord {
     ...override,
   }
 }
+
+describe('MediaService.list', () => {
+  afterEach(() => {
+    spyOn(MediaRepository, 'paginate').mockRestore()
+  })
+
+  it('应返回序列化后的分页列表', async () => {
+    const paginateSpy = spyOn(MediaRepository, 'paginate').mockResolvedValue({
+      items: [createMediaRecord()],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+    })
+
+    const result = await MediaService.list({ page: 1, pageSize: 20 })
+
+    expect(paginateSpy).toHaveBeenCalledWith({ page: 1, pageSize: 20 })
+    expect(result.items[0]?.id).toBe('media-1')
+    expect(result.items[0]?.mimeType).toBe('image/png')
+  })
+})
+
+describe('MediaService.findById', () => {
+  afterEach(() => {
+    spyOn(MediaRepository, 'findById').mockRestore()
+  })
+
+  it('应返回媒体详情', async () => {
+    const findSpy = spyOn(MediaRepository, 'findById').mockResolvedValue(createMediaRecord())
+
+    const result = await MediaService.findById('media-1')
+
+    expect(findSpy).toHaveBeenCalledWith('media-1')
+    expect(result.id).toBe('media-1')
+  })
+
+  it('媒体不存在时应抛错', async () => {
+    spyOn(MediaRepository, 'findById').mockResolvedValue(null)
+
+    await expect(MediaService.findById('missing')).rejects.toThrow('媒体不存在')
+  })
+})
 
 describe('MediaService.remove', () => {
   afterEach(() => {
@@ -49,9 +93,7 @@ describe('MediaService.remove', () => {
   it('本地文件删除失败时应保留数据库删除结果', async () => {
     spyOn(MediaRepository, 'findById').mockResolvedValue(createMediaRecord())
 
-    const deleteSpy = spyOn(MediaRepository, 'delete').mockImplementation(async () => {
-      return createMediaRecord()
-    })
+    const deleteSpy = spyOn(MediaRepository, 'delete').mockImplementation(async () => createMediaRecord())
     const storageRemoveError = new Error('remove failed')
     spyOn(MediaStorage, 'remove').mockRejectedValue(storageRemoveError)
     const consoleErrorSpy = spyOn(console, 'error').mockImplementation(() => undefined)
@@ -60,11 +102,22 @@ describe('MediaService.remove', () => {
     expect(deleteSpy).toHaveBeenCalledWith('media-1')
     expect(consoleErrorSpy).toHaveBeenCalled()
   })
+
+  it('媒体不存在时应抛错且不删除文件', async () => {
+    spyOn(MediaRepository, 'findById').mockResolvedValue(null)
+    const deleteSpy = spyOn(MediaRepository, 'delete').mockResolvedValue(createMediaRecord())
+    const removeSpy = spyOn(MediaStorage, 'remove').mockResolvedValue()
+
+    await expect(MediaService.remove('missing')).rejects.toThrow('媒体不存在')
+    expect(deleteSpy).not.toHaveBeenCalled()
+    expect(removeSpy).not.toHaveBeenCalled()
+  })
 })
 
 describe('MediaService.upload', () => {
   afterEach(() => {
     spyOn(MediaStorage, 'save').mockRestore()
+    spyOn(MediaStorage, 'remove').mockRestore()
     spyOn(MediaRepository, 'create').mockRestore()
   })
 
@@ -125,6 +178,23 @@ describe('MediaService.upload', () => {
       }),
     )
   })
+
+  it('数据库写入失败时应回滚已保存文件', async () => {
+    const file = new File(['hello'], 'avatar.png', {
+      type: 'image/png',
+    })
+    const error = new Error('create failed')
+    const removeSpy = spyOn(MediaStorage, 'remove').mockResolvedValue()
+
+    spyOn(MediaStorage, 'save').mockResolvedValue({
+      fileName: 'avatar.png',
+      storagePath: 'avatar.png',
+    })
+    spyOn(MediaRepository, 'create').mockRejectedValue(error)
+
+    await expect(MediaService.upload('user-1', file)).rejects.toBe(error)
+    expect(removeSpy).toHaveBeenCalledWith('avatar.png')
+  })
 })
 
 describe('MediaService.openFile', () => {
@@ -150,5 +220,13 @@ describe('MediaService.openFile', () => {
       mimeType: 'image/png',
       size: 12,
     })
+  })
+
+  it('媒体不存在时不访问存储层', async () => {
+    spyOn(MediaRepository, 'findById').mockResolvedValue(null)
+    const openFileSpy = spyOn(MediaStorage, 'openFile').mockResolvedValue(new Response())
+
+    await expect(MediaService.openFile('missing')).rejects.toThrow('媒体不存在')
+    expect(openFileSpy).not.toHaveBeenCalled()
   })
 })

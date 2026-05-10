@@ -62,8 +62,7 @@ export async function resolveMediaStorageDir(fromDir: string = MODULE_DIR): Prom
   return join(nexusPackageRoot, 'storage/media')
 }
 
-async function resolveMediaStoragePath(storagePath: string): Promise<string> {
-  const mediaStorageDir = await resolveMediaStorageDir()
+async function resolveMediaStoragePath(storagePath: string, mediaStorageDir: string): Promise<string> {
   const resolvedPath = resolve(mediaStorageDir, storagePath)
   const relativePath = relative(mediaStorageDir, resolvedPath)
 
@@ -75,8 +74,14 @@ async function resolveMediaStoragePath(storagePath: string): Promise<string> {
 }
 
 export class LocalMediaStorage implements MediaStorageDriver {
+  constructor(private readonly rootDir?: string) {}
+
+  private async getMediaStorageDir() {
+    return this.rootDir ?? (await resolveMediaStorageDir())
+  }
+
   async save(file: File): Promise<MediaStorageSaveResult> {
-    const mediaStorageDir = await resolveMediaStorageDir()
+    const mediaStorageDir = await this.getMediaStorageDir()
     await mkdir(mediaStorageDir, { recursive: true })
 
     const fileName = createMediaFileName(file)
@@ -91,7 +96,7 @@ export class LocalMediaStorage implements MediaStorageDriver {
   }
 
   async openFile(storagePath: string, options: MediaStorageOpenFileOptions): Promise<Response> {
-    const resolvedPath = await resolveMediaStoragePath(storagePath)
+    const resolvedPath = await resolveMediaStoragePath(storagePath, await this.getMediaStorageDir())
 
     try {
       await access(resolvedPath)
@@ -110,7 +115,7 @@ export class LocalMediaStorage implements MediaStorageDriver {
   }
 
   async remove(storagePath: string): Promise<void> {
-    const resolvedPath = await resolveMediaStoragePath(storagePath)
+    const resolvedPath = await resolveMediaStoragePath(storagePath, await this.getMediaStorageDir())
     await rm(resolvedPath, { force: true })
   }
 }

@@ -1,6 +1,5 @@
 import type { CategoryBaseData } from './types'
 import { afterEach, describe, expect, it, spyOn } from 'bun:test'
-import { PublicSiteRepository, PublicSiteService } from '../public-site'
 import { CategoryRepository } from './repository'
 import { CategoryService } from './service'
 
@@ -29,7 +28,6 @@ describe('CategoryService', () => {
     spyOn(CategoryRepository, 'findById').mockRestore()
     spyOn(CategoryRepository, 'paginate').mockRestore()
     spyOn(CategoryRepository, 'update').mockRestore()
-    spyOn(PublicSiteRepository, 'findCategories').mockRestore()
   })
 
   it('创建分类未传 slug 时应生成合法 slug', async () => {
@@ -97,43 +95,54 @@ describe('CategoryService', () => {
     expect(result.items[0]?.publishedPostCount).toBe(2)
   })
 
-  it('公开列表只查询可见分类，并且文章数只返回已发布数量', async () => {
-    const findCategoriesSpy = spyOn(PublicSiteRepository, 'findCategories').mockResolvedValue([
-      createCategory({
-        _count: {
-          posts: 2,
-        },
-      }),
-    ])
+  it('列表应按关键字和可见状态构建查询条件', async () => {
+    const paginateSpy = spyOn(CategoryRepository, 'paginate').mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 20,
+      totalPages: 0,
+    })
+    spyOn(CategoryRepository, 'countPublishedPosts').mockResolvedValue(new Map())
 
-    const result = await PublicSiteService.listCategories({
-      keyword: '测试',
+    await CategoryService.list({
+      page: 1,
+      pageSize: 20,
+      keyword: '工程',
+      isVisible: false,
     })
 
-    expect(findCategoriesSpy).toHaveBeenCalledWith({
-      OR: [
-        {
-          name: {
-            contains: '测试',
-            mode: 'insensitive',
+    expect(paginateSpy).toHaveBeenCalledWith(
+      {
+        isVisible: false,
+        OR: [
+          {
+            name: {
+              contains: '工程',
+              mode: 'insensitive',
+            },
           },
-        },
-        {
-          slug: {
-            contains: '测试',
-            mode: 'insensitive',
+          {
+            slug: {
+              contains: '工程',
+              mode: 'insensitive',
+            },
           },
-        },
-        {
-          description: {
-            contains: '测试',
-            mode: 'insensitive',
+          {
+            description: {
+              contains: '工程',
+              mode: 'insensitive',
+            },
           },
-        },
-      ],
-      isVisible: true,
-    })
-    expect(result[0]?.postCount).toBe(2)
+        ],
+      },
+      {
+        page: 1,
+        pageSize: 20,
+        keyword: '工程',
+        isVisible: false,
+      },
+    )
   })
 
   it('删除不存在分类应报错', async () => {
@@ -142,5 +151,11 @@ describe('CategoryService', () => {
 
     await expect(CategoryService.remove('missing')).rejects.toThrow('分类不存在')
     expect(deleteSpy).not.toHaveBeenCalled()
+  })
+
+  it('查询不存在分类应报错', async () => {
+    spyOn(CategoryRepository, 'findById').mockResolvedValue(null)
+
+    await expect(CategoryService.findById('missing')).rejects.toThrow('分类不存在')
   })
 })

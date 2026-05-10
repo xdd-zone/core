@@ -1,6 +1,7 @@
 import type { AccessPluginInstance } from '@nexus/core'
 
 import { assertAuthenticated, Permissions } from '@nexus/core'
+import { ApiErrorSchema } from '@nexus/shared/schema'
 import { Elysia } from 'elysia'
 
 import {
@@ -41,7 +42,12 @@ export function createUserModule({ accessPlugin }: UserModuleOptions) {
       {
         auth: 'required',
         me: Permissions.USER.READ_OWN,
-        response: UserSchema,
+        response: {
+          200: UserSchema,
+          401: ApiErrorSchema,
+          403: ApiErrorSchema,
+          404: ApiErrorSchema,
+        },
         detail: UserOpenApi.me,
       },
     )
@@ -56,7 +62,14 @@ export function createUserModule({ accessPlugin }: UserModuleOptions) {
         auth: 'required',
         me: Permissions.USER.UPDATE_OWN,
         body: UpdateMyProfileBodySchema,
-        response: UserSchema,
+        response: {
+          200: UserSchema,
+          400: ApiErrorSchema,
+          401: ApiErrorSchema,
+          403: ApiErrorSchema,
+          404: ApiErrorSchema,
+          409: ApiErrorSchema,
+        },
         detail: UserOpenApi.updateMe,
       },
     )
@@ -71,34 +84,63 @@ export function createUserModule({ accessPlugin }: UserModuleOptions) {
         auth: 'required',
         me: Permissions.USER.UPDATE_OWN,
         body: UpdateMyPasswordBodySchema,
-        response: UpdateMyPasswordResponseSchema,
+        response: {
+          200: UpdateMyPasswordResponseSchema,
+          400: ApiErrorSchema,
+          401: ApiErrorSchema,
+          403: ApiErrorSchema,
+          404: ApiErrorSchema,
+        },
         detail: UserOpenApi.updateMyPassword,
       },
     )
     .get('/', async ({ query }) => await UserService.list(query), {
       permission: Permissions.USER.READ_ALL,
       query: UserListQuerySchema,
-      response: UserListSchema,
+      response: {
+        200: UserListSchema,
+        400: ApiErrorSchema,
+        401: ApiErrorSchema,
+        403: ApiErrorSchema,
+      },
       detail: UserOpenApi.list,
     })
     .patch('/:id/status', async ({ body, params }) => await UserService.updateStatus(params.id, body.status), {
       permission: Permissions.USER.DISABLE_ALL,
       params: UserIdParamsSchema,
       body: UpdateUserStatusBodySchema,
-      response: UserSchema,
+      response: {
+        200: UserSchema,
+        400: ApiErrorSchema,
+        401: ApiErrorSchema,
+        403: ApiErrorSchema,
+        404: ApiErrorSchema,
+      },
       detail: UserOpenApi.updateStatus,
     })
     .get('/:id', async ({ params }) => await UserService.findById(params.id), {
       permission: Permissions.USER.READ_ALL,
       params: UserIdParamsSchema,
-      response: UserSchema,
+      response: {
+        200: UserSchema,
+        401: ApiErrorSchema,
+        403: ApiErrorSchema,
+        404: ApiErrorSchema,
+      },
       detail: UserOpenApi.findById,
     })
     .patch('/:id', async ({ body, params }) => await UserService.updateByAdmin(params.id, body), {
       permission: Permissions.USER.UPDATE_ALL,
       params: UserIdParamsSchema,
       body: UpdateUserBodySchema,
-      response: UserSchema,
+      response: {
+        200: UserSchema,
+        400: ApiErrorSchema,
+        401: ApiErrorSchema,
+        403: ApiErrorSchema,
+        404: ApiErrorSchema,
+        409: ApiErrorSchema,
+      },
       detail: UserOpenApi.updateByAdmin,
     })
 }

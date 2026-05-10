@@ -1,14 +1,15 @@
 import type { AuthMethodsService } from './auth-methods.service'
 import type { BetterAuthInstance } from './better-auth'
 
+import type { BetterAuthAdapter } from './better-auth.adapter'
+import { cleanupTestData } from '@nexus/test'
 import { prisma } from '@nexus/infra/database/client'
 import { afterAll, describe, expect, it } from 'bun:test'
 import { createAccountStatusService } from './account-status.service'
 import { createAuthApiService } from './auth-api.service'
-import { createOAuthRedirectService } from './oauth-redirect.service'
-import type { BetterAuthAdapter } from './better-auth.adapter'
 import { createBetterAuthAdapter } from './better-auth.adapter'
 import { createBetterAuthCookieService } from './cookie.service'
+import { createOAuthRedirectService } from './oauth-redirect.service'
 import { createSessionService } from './session.service'
 
 const tempSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -134,17 +135,9 @@ function createService(
 }
 
 afterAll(async () => {
-  if (createdUserIds.length === 0) {
-    return
-  }
-
-  await prisma.user.deleteMany({
-    where: {
-      id: {
-        in: createdUserIds,
-      },
-    },
-  })
+  await cleanupTestData({
+    userIds: createdUserIds,
+  }, prisma)
 })
 
 describe('AuthApiService.signInGithub', () => {
@@ -370,6 +363,63 @@ describe('AccountStatusService', () => {
   })
 })
 
+describe('AuthApiService.signOut', () => {
+  it('应先撤销服务端 session，再清理 Better Auth cookie', async () => {
+    const calls: string[] = []
+    const headers = new Headers()
+    const service = createAuthApiService(
+      {
+        auth: {
+          trustedOrigins: ['http://localhost:2333'],
+          methods: {
+            emailPassword: {
+              enabled: true,
+              allowSignUp: true,
+            },
+            github: {
+              enabled: true,
+              allowSignUp: true,
+            },
+            google: {
+              enabled: false,
+              allowSignUp: false,
+            },
+            wechat: {
+              enabled: false,
+              allowSignUp: false,
+            },
+          },
+        },
+        betterAuth: {
+          secret: 'auth-api-service-test-secret-value-32',
+          url: 'http://localhost:7788',
+          providers: {},
+        },
+      },
+      authMethodsService,
+      {
+        clearBetterAuthCookies: (targetHeaders) => {
+          calls.push('clear')
+          if (targetHeaders instanceof Headers) {
+            targetHeaders.append('set-cookie', 'better-auth.session_token=; Path=/; Max-Age=0')
+          }
+        },
+        forwardBetterAuthRedirect: async () => '',
+        forwardBetterAuthResponse: async () => ({}),
+        resolveBetterAuthSessionUserId: async () => null,
+        revokeBetterAuthSession: async () => {
+          calls.push('revoke')
+        },
+      } as BetterAuthAdapter,
+    )
+
+    await service.signOut(new Request('http://localhost:7788/api/auth/sign-out'), headers)
+
+    expect(calls).toEqual(['revoke', 'clear'])
+    expect(getSetCookieValues(headers).some((cookie) => cookie.startsWith('better-auth.session_token=;'))).toBe(true)
+  })
+})
+
 describe('BetterAuthAdapter.signOut', () => {
   it('停用账号登出时应直接通过 session token 删除服务端 session', async () => {
     const { token, userId } = await createUserSession('INACTIVE')
@@ -400,6 +450,56 @@ describe('BetterAuthAdapter.signOut', () => {
 })
 
 describe('SessionService', () => {
+  it('Better Auth 返回有效 session 且用户 ACTIVE 时应返回已登录', async () => {
+    const { token, userId } = await createUserSession('ACTIVE')
+    const session = await prisma.session.findUniqueOrThrow({
+      where: {
+        token,
+      },
+    })
+    const service = createSessionService({
+      api: {
+        getSession: async () => ({
+          user: {
+            id: userId,
+          },
+          session,
+        }),
+      },
+    } as unknown as BetterAuthInstance)
+
+    const auth = await service.getSession(new Headers())
+
+    expect(auth.isAuthenticated).toBe(true)
+    expect(auth.user?.id).toBe(userId)
+    expect(auth.session?.id).toBe(session.id)
+  })
+
+  it('Better Auth 返回 session 但用户已停用时应返回未登录', async () => {
+    const { token, userId } = await createUserSession('INACTIVE')
+    const session = await prisma.session.findUniqueOrThrow({
+      where: {
+        token,
+      },
+    })
+    const service = createSessionService({
+      api: {
+        getSession: async () => ({
+          user: {
+            id: userId,
+          },
+          session,
+        }),
+      },
+    } as unknown as BetterAuthInstance)
+
+    await expect(service.getSession(new Headers())).resolves.toEqual({
+      session: null,
+      user: null,
+      isAuthenticated: false,
+    })
+  })
+
   it('Better Auth 找不到有效 session 时应返回未登录', async () => {
     const service = createSessionService({
       api: {

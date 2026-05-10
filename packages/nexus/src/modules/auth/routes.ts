@@ -1,5 +1,6 @@
 import type { AuthApiService, AuthMethodsService, AuthPluginInstance } from '@nexus/core'
 
+import { ApiErrorSchema } from '@nexus/shared/schema'
 import { Elysia } from 'elysia'
 
 import {
@@ -73,7 +74,10 @@ export function createAuthModule({ authApiService, authMethodsService, authPlugi
         AuthSessionSchema.parse(await authApiService.signUpEmail(request, body, set.headers)),
       {
         body: SignUpEmailBodySchema,
-        response: AuthSessionSchema,
+        response: {
+          200: AuthSessionSchema,
+          400: ApiErrorSchema,
+        },
         detail: AuthOpenApi.signUpEmail,
       },
     )
@@ -83,7 +87,10 @@ export function createAuthModule({ authApiService, authMethodsService, authPlugi
         AuthSessionSchema.parse(await authApiService.signInEmail(request, body, set.headers)),
       {
         body: SignInEmailBodySchema,
-        response: AuthSessionSchema,
+        response: {
+          200: AuthSessionSchema,
+          400: ApiErrorSchema,
+        },
         detail: AuthOpenApi.signInEmail,
       },
     )
@@ -103,7 +110,10 @@ export function createAuthModule({ authApiService, authMethodsService, authPlugi
     })
     .get('/me', ({ auth }) => SessionSchema.parse(auth), {
       auth: 'required',
-      response: SessionSchema,
+      response: {
+        200: SessionSchema,
+        401: ApiErrorSchema,
+      },
       detail: AuthOpenApi.me,
     })
 }

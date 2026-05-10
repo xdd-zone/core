@@ -1,7 +1,7 @@
-import { UnauthorizedError } from '@nexus/core/http'
-import { prisma } from '@nexus/infra/database/client'
 import type { BetterAuthAdapter } from './better-auth.adapter'
 import type { AuthMutableHeaders } from './cookie.service'
+import { UnauthorizedError } from '@nexus/core/http'
+import { prisma } from '@nexus/infra/database/client'
 
 export interface AccountStatusService {
   assertActiveSignedInUser: (userId: string, headers: AuthMutableHeaders) => Promise<void>

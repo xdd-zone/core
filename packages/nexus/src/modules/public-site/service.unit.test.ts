@@ -1,4 +1,4 @@
-import type { PublicSiteArchivePostDateData, PublicSitePostSummaryData } from './types'
+import type { PublicSiteArchivePostDateData, PublicSiteCategoryData, PublicSitePostSummaryData } from './types'
 import { afterEach, describe, expect, it, spyOn } from 'bun:test'
 import { PublicSiteRepository } from './repository'
 import { PublicSiteService } from './service'
@@ -24,6 +24,20 @@ function createPublicPostSummary(overrides: Partial<PublicSitePostSummaryData> =
     publishedAt: new Date('2026-05-10T00:00:00.000Z'),
     createdAt: new Date('2026-05-01T00:00:00.000Z'),
     updatedAt: new Date('2026-05-10T00:00:00.000Z'),
+    ...overrides,
+  }
+}
+
+function createPublicCategory(overrides: Partial<PublicSiteCategoryData> = {}): PublicSiteCategoryData {
+  return {
+    id: 'category-1',
+    name: 'Category',
+    slug: 'category',
+    description: null,
+    sortOrder: 0,
+    _count: {
+      posts: 1,
+    },
     ...overrides,
   }
 }
@@ -220,5 +234,113 @@ describe('PublicSiteService archives', () => {
         },
       ],
     })
+  })
+})
+
+describe('PublicSiteService posts', () => {
+  afterEach(() => {
+    spyOn(PublicSiteRepository, 'paginatePosts').mockRestore()
+    spyOn(PublicSiteRepository, 'findCategoryBySlug').mockRestore()
+  })
+
+  it('公开文章列表应只查询已发布文章和可见分类文章', async () => {
+    const paginatePostsSpy = spyOn(PublicSiteRepository, 'paginatePosts').mockResolvedValue({
+      items: [createPublicPostSummary()],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+    })
+
+    await PublicSiteService.listPosts({
+      page: 1,
+      pageSize: 20,
+    })
+
+    expect(paginatePostsSpy).toHaveBeenCalledWith(
+      {
+        status: 'PUBLISHED',
+        OR: [
+          {
+            categoryId: null,
+          },
+          {
+            category: {
+              isVisible: true,
+            },
+          },
+        ],
+      },
+      {
+        page: 1,
+        pageSize: 20,
+      },
+    )
+  })
+
+  it('按分类 slug 查文章时应先确认分类可见', async () => {
+    const findCategoryBySlugSpy = spyOn(PublicSiteRepository, 'findCategoryBySlug').mockResolvedValue(
+      createPublicCategory(),
+    )
+    const paginatePostsSpy = spyOn(PublicSiteRepository, 'paginatePosts').mockResolvedValue({
+      items: [createPublicPostSummary()],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+    })
+
+    await PublicSiteService.listPostsByCategorySlug('category', {
+      page: 1,
+      pageSize: 20,
+      tag: 'tag-a',
+    })
+
+    expect(findCategoryBySlugSpy).toHaveBeenCalledWith('category')
+    expect(paginatePostsSpy).toHaveBeenCalledWith(
+      {
+        status: 'PUBLISHED',
+        category: {
+          slug: 'category',
+          isVisible: true,
+        },
+        tags: {
+          has: 'tag-a',
+        },
+      },
+      {
+        keyword: undefined,
+        page: 1,
+        pageSize: 20,
+        tag: 'tag-a',
+        categorySlug: 'category',
+      },
+    )
+  })
+})
+
+describe('PublicSiteService categories', () => {
+  afterEach(() => {
+    spyOn(PublicSiteRepository, 'findCategories').mockRestore()
+  })
+
+  it('分类列表应只查询可见分类', async () => {
+    const findCategoriesSpy = spyOn(PublicSiteRepository, 'findCategories').mockResolvedValue([createPublicCategory()])
+
+    const result = await PublicSiteService.listCategories({})
+
+    expect(findCategoriesSpy).toHaveBeenCalledWith({
+      isVisible: true,
+    })
+    expect(result).toEqual([
+      {
+        id: 'category-1',
+        name: 'Category',
+        slug: 'category',
+        description: null,
+        sortOrder: 0,
+        postCount: 1,
+      },
+    ])
   })
 })
