@@ -50,6 +50,8 @@ Nexus 测试工具放在：
   创建临时角色，给用户分配权限。
 - `packages/nexus/src/test/fixtures.ts`
   创建用户、分类、文章、评论和媒体测试数据。
+- `packages/nexus/src/test/integration.ts`
+  用 `createIntegrationTestContext()` 写路由集成测试，统一处理匿名请求、登录用户、权限、JSON 请求和测试数据清理。
 
 新增 Nexus 测试文件按这个命名：
 
@@ -62,7 +64,7 @@ routes.integration.test.ts
 补接口测试时按这个范围选：
 
 - 改 `service.ts`：补 `service.unit.test.ts`，用 spy 断言 repository 调用和业务错误。
-- 改 `routes.ts`：补 `routes.integration.test.ts`，用 `createTestApp()` 和 `app.handle(Request)` 测 HTTP 状态码、权限、schema 和返回值。
+- 改 `routes.ts`：补 `routes.integration.test.ts`。普通路由测试优先用 `createIntegrationTestContext()`；只测底层 HTTP 行为时再直接用 `createTestApp()` 和 `app.handle(Request)`。
 - 改删除或登出接口：必须断言 `204` 且响应体为空。
 - 改公开接口：补匿名访问用例。
 - 改 OpenAPI 或 Eden 类型：补 `packages/nexus/src/eden/*.smoke.test.ts`。

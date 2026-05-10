@@ -1,25 +1,18 @@
-import type { PermissionString } from '@nexus/core/permissions'
-
 import type { Comment, CommentList } from './model'
 
 import {
-  cleanupTestData,
   createCommentFixture,
-  createCookieClient,
+  createIntegrationTestContext,
   createPostFixture,
-  createTestApp,
-  createTestRequest,
   expectErrorResponse,
   expectNoBody,
-  grantPermissionsToUser,
-  readJson,
 } from '@nexus/test'
 
 import { afterEach, describe, expect, it } from 'bun:test'
 
 import { CommentPermissions } from './permissions'
 
-const { app } = createTestApp({
+const integration = createIntegrationTestContext({
   config: {
     auth: {
       methods: {
@@ -32,47 +25,9 @@ const { app } = createTestApp({
   },
 })
 
-let createdUserIds: string[] = []
-let createdRoleIds: string[] = []
-let createdPostIds: string[] = []
-let createdCommentIds: string[] = []
-
-type RequestRunner = (path: string, init?: RequestInit) => Promise<Response>
-
-const anonymousRunner: RequestRunner = async (path, init) => await app.handle(createTestRequest(path, init))
-
-function jsonHeaders(): Headers {
-  const headers = new Headers()
-  headers.set('content-type', 'application/json')
-  return headers
-}
-
-async function createActor(permissionKeys: readonly PermissionString[]): Promise<RequestRunner> {
-  const { client, session } = createCookieClient(app)
-  const suffix = crypto.randomUUID()
-  const result = await client.api.auth['sign-up'].email.post({
-    email: `comment-${suffix}@example.com`,
-    password: 'test-password-123',
-    name: `Comment ${suffix}`,
-  })
-  expect(result.status).toBe(200)
-  expect(result.error).toBeNull()
-
-  const userId = result.data?.user?.id
-  expect(userId).toBeTruthy()
-  if (!userId) {
-    throw new Error('缺少测试用户 ID')
-  }
-
-  createdUserIds.push(userId)
-
-  if (permissionKeys.length > 0) {
-    const { role } = await grantPermissionsToUser(userId, permissionKeys)
-    createdRoleIds.push(role.id)
-  }
-
-  return async (path, init) => await session.fetcher(new URL(path, 'http://localhost'), init)
-}
+const anonymousRunner = integration.anonymous
+const jsonHeaders = integration.jsonHeaders
+const createActor = integration.actor
 
 async function createPublishedPost() {
   const post = await createPostFixture({
@@ -81,34 +36,20 @@ async function createPublishedPost() {
       publishedAt: new Date('2026-05-01T00:00:00.000Z'),
     },
   })
-  createdPostIds.push(post.id)
+  integration.track.postId(post.id)
   return post
 }
 
 async function requestJson<T>(
   path: string,
   init: RequestInit,
-  runner: RequestRunner = anonymousRunner,
+  runner = anonymousRunner,
 ): Promise<{ body: T; response: Response }> {
-  const response = await runner(path, init)
-  return {
-    response,
-    body: await readJson<T>(response),
-  }
+  return await integration.json<T>(path, init, runner)
 }
 
 afterEach(async () => {
-  await cleanupTestData({
-    userIds: createdUserIds,
-    roleIds: createdRoleIds,
-    postIds: createdPostIds,
-    commentIds: createdCommentIds,
-  })
-
-  createdUserIds = []
-  createdRoleIds = []
-  createdPostIds = []
-  createdCommentIds = []
+  await integration.cleanup()
 })
 
 describe('comment routes', () => {
@@ -129,7 +70,7 @@ describe('comment routes', () => {
     expect(response.status).toBe(200)
     expect(body.status).toBe('pending')
     expect(body.postId).toBe(post.id)
-    createdCommentIds.push(body.id)
+    integration.track.commentId(body.id)
   })
 
   it('匿名创建未发布文章评论应返回 404', async () => {
@@ -138,7 +79,7 @@ describe('comment routes', () => {
         status: 'DRAFT',
       },
     })
-    createdPostIds.push(post.id)
+    integration.track.postId(post.id)
 
     const response = await anonymousRunner('/api/comment', {
       method: 'POST',
@@ -174,7 +115,7 @@ describe('comment routes', () => {
         status: 'APPROVED',
       },
     })
-    createdCommentIds.push(comment.id)
+    integration.track.commentId(comment.id)
 
     await expectErrorResponse(await anonymousRunner('/api/comment'), { status: 401 })
 
@@ -204,7 +145,7 @@ describe('comment routes', () => {
   it('可以更新评论状态', async () => {
     const post = await createPublishedPost()
     const comment = await createCommentFixture(post.id)
-    createdCommentIds.push(comment.id)
+    integration.track.commentId(comment.id)
     const runner = await createActor([CommentPermissions.MODERATE_ALL])
 
     const { response, body } = await requestJson<Comment>(
@@ -232,7 +173,8 @@ describe('comment routes', () => {
         status: 'DELETED',
       },
     })
-    createdCommentIds.push(comment.id, deletedComment.id)
+    integration.track.commentId(comment.id)
+    integration.track.commentId(deletedComment.id)
 
     await expectErrorResponse(
       await anonymousRunner(`/api/comment/${comment.id}/status`, {
@@ -293,7 +235,7 @@ describe('comment routes', () => {
   it('删除评论返回 204 空 body', async () => {
     const post = await createPublishedPost()
     const comment = await createCommentFixture(post.id)
-    createdCommentIds.push(comment.id)
+    integration.track.commentId(comment.id)
     const runner = await createActor([CommentPermissions.MODERATE_ALL])
 
     const response = await runner(`/api/comment/${comment.id}`, {
@@ -306,7 +248,7 @@ describe('comment routes', () => {
   it('删除评论失败时返回对应状态码', async () => {
     const post = await createPublishedPost()
     const comment = await createCommentFixture(post.id)
-    createdCommentIds.push(comment.id)
+    integration.track.commentId(comment.id)
 
     await expectErrorResponse(
       await anonymousRunner(`/api/comment/${comment.id}`, {
@@ -346,7 +288,8 @@ describe('comment routes', () => {
         status: 'DELETED',
       },
     })
-    createdCommentIds.push(visibleComment.id, deletedComment.id)
+    integration.track.commentId(visibleComment.id)
+    integration.track.commentId(deletedComment.id)
     const runner = await createActor([CommentPermissions.READ_ALL])
 
     const { response, body } = await requestJson<CommentList>('/api/comment?page=1&pageSize=20', {}, runner)

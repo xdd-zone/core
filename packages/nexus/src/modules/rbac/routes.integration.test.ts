@@ -1,21 +1,16 @@
-import type { PermissionString } from '@nexus/core'
 import { Permissions } from '@nexus/core'
 import { prisma } from '@nexus/infra/database'
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import {
-  cleanupTestData,
-  createCookieFetcher,
-  createTestApp,
+  createIntegrationTestContext,
   createTestSuffix,
   createUserFixture,
   expectErrorResponse,
   expectNoBody,
-  grantPermissionsToUser,
-  readJson,
   seedBasePermissions,
 } from '../../test'
 
-const { app } = createTestApp({
+const integration = createIntegrationTestContext({
   config: {
     auth: {
       methods: {
@@ -28,58 +23,28 @@ const { app } = createTestApp({
   },
 })
 
-const createdUserIds: string[] = []
-const createdRoleIds: string[] = []
-
-async function signUpSession(prefix: string) {
-  const suffix = createTestSuffix(prefix)
-  const session = createCookieFetcher(app)
-  const response = await session.fetcher(new URL('/api/auth/sign-up/email', 'http://localhost'), {
-    body: JSON.stringify({
-      email: `${suffix}@example.com`,
-      password: `${prefix}-pass-123`,
-      name: `RBAC Route ${suffix}`,
-    }),
-    headers: {
-      'content-type': 'application/json',
-    },
-    method: 'POST',
-  })
-  const body = await readJson<{ user: { id: string } }>(response)
-
-  expect(response.status).toBe(200)
-  createdUserIds.push(body.user.id)
-
-  return {
-    session,
-    userId: body.user.id,
-  }
-}
-
-async function createActorWithPermissions(permissionKeys: readonly PermissionString[]) {
-  const actor = await signUpSession('rbac-actor')
-  const { role } = await grantPermissionsToUser(actor.userId, permissionKeys, {
-    roleName: createTestSuffix('rbac-actor-role'),
-    assignedBy: actor.userId,
-  })
-  createdRoleIds.push(role.id)
-
-  return actor
-}
+const anonymousRunner = integration.anonymous
+const createActorWithPermissions = integration.actor
 
 beforeAll(async () => {
   await seedBasePermissions(prisma)
 })
 
 afterAll(async () => {
-  await cleanupTestData({ userIds: createdUserIds, roleIds: createdRoleIds }, prisma)
+  await integration.cleanup()
 })
 
 describe('rbac routes', () => {
   it('GET /roles 返回角色列表', async () => {
-    const actor = await createActorWithPermissions([Permissions.ROLE.READ_ALL])
-    const response = await actor.session.fetcher(new URL('/api/rbac/roles?page=1&pageSize=20', 'http://localhost'))
-    const body = await readJson<{ items: Array<{ name: string }> }>(response)
+    const actor = await createActorWithPermissions([Permissions.ROLE.READ_ALL], {
+      prefix: 'rbac-actor',
+      assignedBy: 'self',
+    })
+    const { response, body } = await integration.json<{ items: Array<{ name: string }> }>(
+      '/api/rbac/roles?page=1&pageSize=20',
+      {},
+      actor,
+    )
 
     expect(response.status).toBe(200)
     expect(body.items.some((role) => role.name === 'superAdmin')).toBe(true)
@@ -88,7 +53,7 @@ describe('rbac routes', () => {
 
   it('RBAC 后台接口未登录时返回 401', async () => {
     const target = await createUserFixture({ suffix: createTestSuffix('rbac-anon-target') }, prisma)
-    createdUserIds.push(target.id)
+    integration.track.userId(target.id)
 
     const role = await prisma.role.findUnique({
       where: {
@@ -101,23 +66,17 @@ describe('rbac routes', () => {
     }
 
     const responses = await Promise.all([
-      app.handle(new Request(new URL('/api/rbac/roles', 'http://localhost'))),
-      app.handle(new Request(new URL(`/api/rbac/users/${target.id}/roles`, 'http://localhost'))),
-      app.handle(
-        new Request(new URL(`/api/rbac/users/${target.id}/roles`, 'http://localhost'), {
-          body: JSON.stringify({ roleId: role.id }),
-          headers: {
-            'content-type': 'application/json',
-          },
-          method: 'POST',
-        }),
-      ),
-      app.handle(
-        new Request(new URL(`/api/rbac/users/${target.id}/roles/${role.id}`, 'http://localhost'), { method: 'DELETE' }),
-      ),
-      app.handle(new Request(new URL(`/api/rbac/users/${target.id}/permissions`, 'http://localhost'))),
-      app.handle(new Request(new URL('/api/rbac/users/me/permissions', 'http://localhost'))),
-      app.handle(new Request(new URL('/api/rbac/users/me/roles', 'http://localhost'))),
+      anonymousRunner('/api/rbac/roles'),
+      anonymousRunner(`/api/rbac/users/${target.id}/roles`),
+      anonymousRunner(`/api/rbac/users/${target.id}/roles`, {
+        body: JSON.stringify({ roleId: role.id }),
+        headers: integration.jsonHeaders(),
+        method: 'POST',
+      }),
+      anonymousRunner(`/api/rbac/users/${target.id}/roles/${role.id}`, { method: 'DELETE' }),
+      anonymousRunner(`/api/rbac/users/${target.id}/permissions`),
+      anonymousRunner('/api/rbac/users/me/permissions'),
+      anonymousRunner('/api/rbac/users/me/roles'),
     ])
 
     for (const response of responses) {
@@ -128,9 +87,9 @@ describe('rbac routes', () => {
   })
 
   it('RBAC 后台接口无权限时返回 403', async () => {
-    const actor = await signUpSession('rbac-forbidden')
+    const actor = await integration.actor([], { prefix: 'rbac-forbidden' })
     const target = await createUserFixture({ suffix: createTestSuffix('rbac-forbidden-target') }, prisma)
-    createdUserIds.push(target.id)
+    integration.track.userId(target.id)
 
     const role = await prisma.role.findUnique({
       where: {
@@ -143,19 +102,17 @@ describe('rbac routes', () => {
     }
 
     const responses = await Promise.all([
-      actor.session.fetcher(new URL('/api/rbac/roles', 'http://localhost')),
-      actor.session.fetcher(new URL(`/api/rbac/users/${target.id}/roles`, 'http://localhost')),
-      actor.session.fetcher(new URL(`/api/rbac/users/${target.id}/roles`, 'http://localhost'), {
+      actor('/api/rbac/roles'),
+      actor(`/api/rbac/users/${target.id}/roles`),
+      actor(`/api/rbac/users/${target.id}/roles`, {
         body: JSON.stringify({ roleId: role.id }),
-        headers: {
-          'content-type': 'application/json',
-        },
+        headers: integration.jsonHeaders(),
         method: 'POST',
       }),
-      actor.session.fetcher(new URL(`/api/rbac/users/${target.id}/roles/${role.id}`, 'http://localhost'), {
+      actor(`/api/rbac/users/${target.id}/roles/${role.id}`, {
         method: 'DELETE',
       }),
-      actor.session.fetcher(new URL(`/api/rbac/users/${target.id}/permissions`, 'http://localhost')),
+      actor(`/api/rbac/users/${target.id}/permissions`),
     ])
 
     for (const response of responses) {
@@ -166,13 +123,12 @@ describe('rbac routes', () => {
   })
 
   it('可以给用户分配角色并移除，移除返回 204 空 body', async () => {
-    const actor = await createActorWithPermissions([
-      Permissions.ROLE.READ_ALL,
-      Permissions.USER_ROLE.ASSIGN_ALL,
-      Permissions.USER_ROLE.REVOKE_ALL,
-    ])
+    const actor = await createActorWithPermissions(
+      [Permissions.ROLE.READ_ALL, Permissions.USER_ROLE.ASSIGN_ALL, Permissions.USER_ROLE.REVOKE_ALL],
+      { prefix: 'rbac-actor', assignedBy: 'self' },
+    )
     const target = await createUserFixture({ suffix: createTestSuffix('rbac-target') }, prisma)
-    createdUserIds.push(target.id)
+    integration.track.userId(target.id)
 
     const role = await prisma.role.findUnique({
       where: {
@@ -184,17 +140,19 @@ describe('rbac routes', () => {
       throw new Error('缺少 user 角色')
     }
 
-    const assignResponse = await actor.session.fetcher(
-      new URL(`/api/rbac/users/${target.id}/roles`, 'http://localhost'),
+    const { response: assignResponse, body: assignBody } = await integration.json<{
+      userId: string
+      roleId: string
+      assignedBy: string | null
+    }>(
+      `/api/rbac/users/${target.id}/roles`,
       {
         body: JSON.stringify({ roleId: role.id }),
-        headers: {
-          'content-type': 'application/json',
-        },
+        headers: integration.jsonHeaders(),
         method: 'POST',
       },
+      actor,
     )
-    const assignBody = await readJson<{ userId: string; roleId: string; assignedBy: string | null }>(assignResponse)
 
     expect(assignResponse.status).toBe(200)
     expect(assignBody).toMatchObject({
@@ -203,8 +161,9 @@ describe('rbac routes', () => {
       assignedBy: actor.userId,
     })
 
-    const rolesResponse = await actor.session.fetcher(new URL(`/api/rbac/users/${target.id}/roles`, 'http://localhost'))
-    const rolesBody = await readJson<Array<{ roleId: string; roleName: string }>>(rolesResponse)
+    const { response: rolesResponse, body: rolesBody } = await integration.json<
+      Array<{ roleId: string; roleName: string }>
+    >(`/api/rbac/users/${target.id}/roles`, {}, actor)
 
     expect(rolesResponse.status).toBe(200)
     expect(rolesBody).toContainEqual(
@@ -214,27 +173,22 @@ describe('rbac routes', () => {
       }),
     )
 
-    const removeResponse = await actor.session.fetcher(
-      new URL(`/api/rbac/users/${target.id}/roles/${role.id}`, 'http://localhost'),
-      {
-        method: 'DELETE',
-      },
-    )
+    const removeResponse = await actor(`/api/rbac/users/${target.id}/roles/${role.id}`, {
+      method: 'DELETE',
+    })
 
     await expectNoBody(removeResponse)
   })
 
   it('GET /users/me/permissions 返回当前用户权限和角色', async () => {
-    const actor = await createActorWithPermissions([
-      Permissions.USER_PERMISSION.READ_OWN,
-      Permissions.ROLE.READ_ALL,
-      Permissions.USER_ROLE.ASSIGN_ALL,
-    ])
-    const response = await actor.session.fetcher(new URL('/api/rbac/users/me/permissions', 'http://localhost'))
-    const body = await readJson<{
+    const actor = await createActorWithPermissions(
+      [Permissions.USER_PERMISSION.READ_OWN, Permissions.ROLE.READ_ALL, Permissions.USER_ROLE.ASSIGN_ALL],
+      { prefix: 'rbac-actor', assignedBy: 'self' },
+    )
+    const { response, body } = await integration.json<{
       permissions: Array<{ key: string }>
       roles: Array<{ id: string; name: string }>
-    }>(response)
+    }>('/api/rbac/users/me/permissions', {}, actor)
 
     expect(response.status).toBe(200)
     expect(body.permissions).toContainEqual(
@@ -246,15 +200,17 @@ describe('rbac routes', () => {
   })
 
   it('GET /users/me/roles 返回当前用户角色及权限', async () => {
-    const actor = await createActorWithPermissions([Permissions.USER_PERMISSION.READ_OWN])
-    const response = await actor.session.fetcher(new URL('/api/rbac/users/me/roles', 'http://localhost'))
-    const body = await readJson<{
+    const actor = await createActorWithPermissions([Permissions.USER_PERMISSION.READ_OWN], {
+      prefix: 'rbac-actor',
+      assignedBy: 'self',
+    })
+    const { response, body } = await integration.json<{
       roles: Array<{
         name: string
         source: string
         permissions: Array<{ key: string }>
       }>
-    }>(response)
+    }>('/api/rbac/users/me/roles', {}, actor)
 
     expect(response.status).toBe(200)
     expect(body.roles.some((role) => role.name.startsWith('rbac-actor-role') && role.source === 'manual')).toBe(true)
@@ -266,11 +222,10 @@ describe('rbac routes', () => {
   })
 
   it('查询不存在用户时返回 404', async () => {
-    const actor = await createActorWithPermissions([
-      Permissions.ROLE.READ_ALL,
-      Permissions.USER_PERMISSION.READ_ALL,
-      Permissions.USER_ROLE.REVOKE_ALL,
-    ])
+    const actor = await createActorWithPermissions(
+      [Permissions.ROLE.READ_ALL, Permissions.USER_PERMISSION.READ_ALL, Permissions.USER_ROLE.REVOKE_ALL],
+      { prefix: 'rbac-actor', assignedBy: 'self' },
+    )
     const role = await prisma.role.findUnique({
       where: {
         name: 'user',
@@ -282,9 +237,9 @@ describe('rbac routes', () => {
     }
 
     const responses = await Promise.all([
-      actor.session.fetcher(new URL('/api/rbac/users/missing-user/roles', 'http://localhost')),
-      actor.session.fetcher(new URL('/api/rbac/users/missing-user/permissions', 'http://localhost')),
-      actor.session.fetcher(new URL(`/api/rbac/users/missing-user/roles/${role.id}`, 'http://localhost'), {
+      actor('/api/rbac/users/missing-user/roles'),
+      actor('/api/rbac/users/missing-user/permissions'),
+      actor(`/api/rbac/users/missing-user/roles/${role.id}`, {
         method: 'DELETE',
       }),
     ])
@@ -299,16 +254,17 @@ describe('rbac routes', () => {
   })
 
   it('RBAC 非法参数返回 422', async () => {
-    const actor = await createActorWithPermissions([Permissions.ROLE.READ_ALL, Permissions.USER_ROLE.ASSIGN_ALL])
+    const actor = await createActorWithPermissions([Permissions.ROLE.READ_ALL, Permissions.USER_ROLE.ASSIGN_ALL], {
+      prefix: 'rbac-actor',
+      assignedBy: 'self',
+    })
 
     const responses = await Promise.all([
-      actor.session.fetcher(new URL('/api/rbac/roles?page=abc', 'http://localhost')),
-      actor.session.fetcher(new URL('/api/rbac/roles?page=0', 'http://localhost')),
-      actor.session.fetcher(new URL(`/api/rbac/users/${actor.userId}/roles`, 'http://localhost'), {
+      actor('/api/rbac/roles?page=abc'),
+      actor('/api/rbac/roles?page=0'),
+      actor(`/api/rbac/users/${actor.userId}/roles`, {
         body: JSON.stringify({ roleId: '' }),
-        headers: {
-          'content-type': 'application/json',
-        },
+        headers: integration.jsonHeaders(),
         method: 'POST',
       }),
     ])

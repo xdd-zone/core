@@ -1,4 +1,3 @@
-import type { PermissionString } from '@nexus/core/permissions'
 import type {
   MediaStorageDriver,
   MediaStorageOpenFileOptions,
@@ -8,17 +7,7 @@ import type {
 import type { Media, MediaList } from './model'
 
 import { MediaStorage } from '@nexus/infra/storage/media-storage'
-import {
-  cleanupTestData,
-  createCookieClient,
-  createMediaFixture,
-  createTestApp,
-  createTestRequest,
-  expectErrorResponse,
-  expectNoBody,
-  grantPermissionsToUser,
-  readJson,
-} from '@nexus/test'
+import { createIntegrationTestContext, createMediaFixture, expectErrorResponse, expectNoBody } from '@nexus/test'
 
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 
@@ -53,7 +42,7 @@ class TestMediaStorageDriver implements MediaStorageDriver {
   }
 }
 
-const { app } = createTestApp({
+const integration = createIntegrationTestContext({
   config: {
     auth: {
       methods: {
@@ -67,51 +56,16 @@ const { app } = createTestApp({
 })
 
 let storageDriver: TestMediaStorageDriver
-let createdUserIds: string[] = []
-let createdRoleIds: string[] = []
-let createdMediaIds: string[] = []
 
-type RequestRunner = (path: string, init?: RequestInit) => Promise<Response>
-
-const anonymousRunner: RequestRunner = async (path, init) => await app.handle(createTestRequest(path, init))
-
-async function createActor(permissionKeys: readonly PermissionString[]): Promise<RequestRunner> {
-  const { client, session } = createCookieClient(app)
-  const suffix = crypto.randomUUID()
-  const result = await client.api.auth['sign-up'].email.post({
-    email: `media-${suffix}@example.com`,
-    password: 'test-password-123',
-    name: `Media ${suffix}`,
-  })
-  expect(result.status).toBe(200)
-  expect(result.error).toBeNull()
-
-  const userId = result.data?.user?.id
-  expect(userId).toBeTruthy()
-  if (!userId) {
-    throw new Error('缺少测试用户 ID')
-  }
-
-  createdUserIds.push(userId)
-
-  if (permissionKeys.length > 0) {
-    const { role } = await grantPermissionsToUser(userId, permissionKeys)
-    createdRoleIds.push(role.id)
-  }
-
-  return async (path, init) => await session.fetcher(createTestRequest(path, init))
-}
+const anonymousRunner = integration.anonymous
+const createActor = integration.actor
 
 async function requestJson<T>(
   path: string,
   init: RequestInit,
-  runner: RequestRunner = anonymousRunner,
+  runner = anonymousRunner,
 ): Promise<{ body: T; response: Response }> {
-  const response = await runner(path, init)
-  return {
-    response,
-    body: await readJson<T>(response),
-  }
+  return await integration.json<T>(path, init, runner)
 }
 
 beforeEach(() => {
@@ -122,15 +76,7 @@ beforeEach(() => {
 afterEach(async () => {
   MediaStorage.resetDriver()
 
-  await cleanupTestData({
-    userIds: createdUserIds,
-    roleIds: createdRoleIds,
-    mediaIds: createdMediaIds,
-  })
-
-  createdUserIds = []
-  createdRoleIds = []
-  createdMediaIds = []
+  await integration.cleanup()
 })
 
 describe('media routes', () => {
@@ -158,7 +104,7 @@ describe('media routes', () => {
     expect(body.mimeType).toBe('image/png')
     expect(new URL(body.url).pathname).toBe(`/api/media/${body.id}/file`)
     expect(storageDriver.savedFiles).toHaveLength(1)
-    createdMediaIds.push(body.id)
+    integration.track.mediaId(body.id)
   })
 
   it('上传非图片返回 400', async () => {
@@ -187,7 +133,7 @@ describe('media routes', () => {
 
   it('后台列表和详情需要读取权限', async () => {
     const media = await createMediaFixture()
-    createdMediaIds.push(media.id)
+    integration.track.mediaId(media.id)
 
     await expectErrorResponse(await anonymousRunner('/api/media'), { status: 401 })
 
@@ -234,7 +180,7 @@ describe('media routes', () => {
         storagePath: 'test/avatar.png',
       },
     })
-    createdMediaIds.push(media.id)
+    integration.track.mediaId(media.id)
 
     const response = await anonymousRunner(`/api/media/${media.id}/file`)
 
@@ -259,7 +205,7 @@ describe('media routes', () => {
         storagePath: 'test/avatar.png',
       },
     })
-    createdMediaIds.push(media.id)
+    integration.track.mediaId(media.id)
     const runner = await createActor([MediaPermissions.WRITE_ALL])
 
     const response = await runner(`/api/media/${media.id}`, {
@@ -268,12 +214,12 @@ describe('media routes', () => {
 
     await expectNoBody(response)
     expect(storageDriver.removedPaths).toEqual(['test/avatar.png'])
-    createdMediaIds = createdMediaIds.filter((id) => id !== media.id)
+    integration.track.forget({ mediaId: media.id })
   })
 
   it('删除媒体失败时返回对应状态码', async () => {
     const media = await createMediaFixture()
-    createdMediaIds.push(media.id)
+    integration.track.mediaId(media.id)
 
     await expectErrorResponse(
       await anonymousRunner(`/api/media/${media.id}`, {

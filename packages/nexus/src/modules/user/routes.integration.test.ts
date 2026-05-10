@@ -2,18 +2,14 @@ import { Permissions } from '@nexus/core'
 import { prisma } from '@nexus/infra/database'
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import {
-  cleanupTestData,
-  createCookieFetcher,
-  createTestApp,
   createTestSuffix,
+  createIntegrationTestContext,
   createUserFixture,
   expectErrorResponse,
-  grantPermissionsToUser,
-  readJson,
   seedBasePermissions,
 } from '../../test'
 
-const { app } = createTestApp({
+const integration = createIntegrationTestContext({
   config: {
     auth: {
       methods: {
@@ -26,44 +22,26 @@ const { app } = createTestApp({
   },
 })
 
-const createdUserIds: string[] = []
-const createdRoleIds: string[] = []
+const anonymousRunner = integration.anonymous
 
 function jsonRequest(path: string, body?: unknown, init: RequestInit = {}) {
-  return new Request(new URL(path, 'http://localhost'), {
+  return anonymousRunner(path, {
     ...init,
     body: body === undefined ? init.body : JSON.stringify(body),
-    headers: {
-      'content-type': 'application/json',
-      ...init.headers,
-    },
+    headers: integration.jsonHeaders(init.headers),
   })
 }
 
 async function signUpSession(prefix: string) {
-  const suffix = createTestSuffix(prefix)
-  const session = createCookieFetcher(app)
-  const response = await session.fetcher(new URL('/api/auth/sign-up/email', 'http://localhost'), {
-    body: JSON.stringify({
-      email: `${suffix}@example.com`,
-      password: `${prefix}-pass-123`,
-      name: `User Route ${suffix}`,
-    }),
-    headers: {
-      'content-type': 'application/json',
-    },
-    method: 'POST',
+  const actor = await integration.actor([], { prefix, name: `User Route ${createTestSuffix(prefix)}` })
+  const response = await actor('/api/user/me')
+  const body = (await response.json()) as { email?: string | null }
+
+  return Object.assign(actor, {
+    session: actor.session,
+    userId: actor.userId,
+    email: body.email,
   })
-  const body = await readJson<{ user: { id: string; email?: string | null } }>(response)
-
-  expect(response.status).toBe(200)
-  createdUserIds.push(body.user.id)
-
-  return {
-    session,
-    userId: body.user.id,
-    email: body.user.email,
-  }
 }
 
 beforeAll(async () => {
@@ -71,14 +49,13 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  await cleanupTestData({ userIds: createdUserIds, roleIds: createdRoleIds }, prisma)
+  await integration.cleanup()
 })
 
 describe('user routes', () => {
   it('GET /me 登录态返回当前用户资料', async () => {
     const actor = await signUpSession('user-me')
-    const response = await actor.session.fetcher(new URL('/api/user/me', 'http://localhost'))
-    const body = await readJson<{ id: string; email: string | null }>(response)
+    const { response, body } = await integration.json<{ id: string; email: string | null }>('/api/user/me', {}, actor)
 
     expect(response.status).toBe(200)
     expect(body.id).toBe(actor.userId)
@@ -86,7 +63,7 @@ describe('user routes', () => {
   })
 
   it('GET /me 未登录返回 401', async () => {
-    const response = await app.handle(jsonRequest('/api/user/me'))
+    const response = await jsonRequest('/api/user/me')
 
     await expectErrorResponse(response, {
       status: 401,
@@ -95,7 +72,7 @@ describe('user routes', () => {
   })
 
   it('PATCH /me 未登录返回 401', async () => {
-    const response = await app.handle(jsonRequest('/api/user/me', { name: '匿名用户' }, { method: 'PATCH' }))
+    const response = await jsonRequest('/api/user/me', { name: '匿名用户' }, { method: 'PATCH' })
 
     await expectErrorResponse(response, {
       status: 401,
@@ -105,7 +82,7 @@ describe('user routes', () => {
 
   it('PATCH /me 可以更新当前用户资料', async () => {
     const actor = await signUpSession('user-update-me')
-    const response = await actor.session.fetcher(new URL('/api/user/me', 'http://localhost'), {
+    const response = await actor('/api/user/me', {
       body: JSON.stringify({
         name: '更新后的名字',
         introduce: '新的简介',
@@ -115,7 +92,7 @@ describe('user routes', () => {
       },
       method: 'PATCH',
     })
-    const body = await readJson<{ id: string; name: string; introduce: string | null }>(response)
+    const body = (await response.json()) as { id: string; name: string; introduce: string | null }
 
     expect(response.status).toBe(200)
     expect(body).toMatchObject({
@@ -136,9 +113,9 @@ describe('user routes', () => {
       },
       prisma,
     )
-    createdUserIds.push(duplicate.id)
+    integration.track.userId(duplicate.id)
 
-    const response = await actor.session.fetcher(new URL('/api/user/me', 'http://localhost'), {
+    const response = await actor('/api/user/me', {
       body: JSON.stringify({
         email: duplicate.email,
       }),
@@ -166,9 +143,9 @@ describe('user routes', () => {
       },
       prisma,
     )
-    createdUserIds.push(duplicate.id)
+    integration.track.userId(duplicate.id)
 
-    const response = await actor.session.fetcher(new URL('/api/user/me', 'http://localhost'), {
+    const response = await actor('/api/user/me', {
       body: JSON.stringify({
         username: duplicate.username,
       }),
@@ -198,9 +175,9 @@ describe('user routes', () => {
       },
       prisma,
     )
-    createdUserIds.push(duplicate.id)
+    integration.track.userId(duplicate.id)
 
-    const response = await actor.session.fetcher(new URL('/api/user/me', 'http://localhost'), {
+    const response = await actor('/api/user/me', {
       body: JSON.stringify({
         phone: duplicate.phone,
       }),
@@ -219,7 +196,7 @@ describe('user routes', () => {
 
   it('PATCH /me 非法请求体返回 422', async () => {
     const actor = await signUpSession('user-update-me-invalid')
-    const response = await actor.session.fetcher(new URL('/api/user/me', 'http://localhost'), {
+    const response = await actor('/api/user/me', {
       body: JSON.stringify({
         email: 'invalid-email',
       }),
@@ -236,8 +213,10 @@ describe('user routes', () => {
   })
 
   it('PATCH /me/password 未登录返回 401', async () => {
-    const response = await app.handle(
-      jsonRequest('/api/user/me/password', { newPassword: 'new-password-123' }, { method: 'PATCH' }),
+    const response = await jsonRequest(
+      '/api/user/me/password',
+      { newPassword: 'new-password-123' },
+      { method: 'PATCH' },
     )
 
     await expectErrorResponse(response, {
@@ -258,7 +237,7 @@ describe('user routes', () => {
       },
     })
 
-    const response = await actor.session.fetcher(new URL('/api/user/me/password', 'http://localhost'), {
+    const response = await actor('/api/user/me/password', {
       body: JSON.stringify({
         newPassword: 'new-password-123',
       }),
@@ -267,7 +246,7 @@ describe('user routes', () => {
       },
       method: 'PATCH',
     })
-    const body = await readJson<{ hasPassword: boolean }>(response)
+    const body = (await response.json()) as { hasPassword: boolean }
 
     expect(response.status).toBe(200)
     expect(body).toEqual({
@@ -277,7 +256,7 @@ describe('user routes', () => {
 
   it('PATCH /me/password 当前密码错误返回 400', async () => {
     const actor = await signUpSession('user-password-invalid-current')
-    const response = await actor.session.fetcher(new URL('/api/user/me/password', 'http://localhost'), {
+    const response = await actor('/api/user/me/password', {
       body: JSON.stringify({
         currentPassword: 'wrong-password',
         newPassword: 'new-password-123',
@@ -297,7 +276,7 @@ describe('user routes', () => {
 
   it('PATCH /me/password 缺当前密码返回 400', async () => {
     const actor = await signUpSession('user-password-required-current')
-    const response = await actor.session.fetcher(new URL('/api/user/me/password', 'http://localhost'), {
+    const response = await actor('/api/user/me/password', {
       body: JSON.stringify({
         newPassword: 'new-password-123',
       }),
@@ -316,7 +295,7 @@ describe('user routes', () => {
 
   it('PATCH /me/password 非法请求体返回 422', async () => {
     const actor = await signUpSession('user-password-invalid-body')
-    const response = await actor.session.fetcher(new URL('/api/user/me/password', 'http://localhost'), {
+    const response = await actor('/api/user/me/password', {
       body: JSON.stringify({
         newPassword: 'short',
       }),
@@ -334,13 +313,13 @@ describe('user routes', () => {
 
   it('后台列表、详情、状态、更新未登录均返回 401', async () => {
     const target = await createUserFixture({ suffix: createTestSuffix('user-anon-target') }, prisma)
-    createdUserIds.push(target.id)
+    integration.track.userId(target.id)
 
     const responses = await Promise.all([
-      app.handle(jsonRequest('/api/user/')),
-      app.handle(jsonRequest(`/api/user/${target.id}`)),
-      app.handle(jsonRequest(`/api/user/${target.id}/status`, { status: 'INACTIVE' }, { method: 'PATCH' })),
-      app.handle(jsonRequest(`/api/user/${target.id}`, { name: '未登录更新' }, { method: 'PATCH' })),
+      jsonRequest('/api/user/'),
+      jsonRequest(`/api/user/${target.id}`),
+      jsonRequest(`/api/user/${target.id}/status`, { status: 'INACTIVE' }, { method: 'PATCH' }),
+      jsonRequest(`/api/user/${target.id}`, { name: '未登录更新' }, { method: 'PATCH' }),
     ])
 
     for (const response of responses) {
@@ -354,19 +333,19 @@ describe('user routes', () => {
   it('后台列表、详情、状态、更新无权限均返回 403', async () => {
     const actor = await signUpSession('user-forbidden')
     const target = await createUserFixture({ suffix: createTestSuffix('user-forbidden-target') }, prisma)
-    createdUserIds.push(target.id)
+    integration.track.userId(target.id)
 
     const responses = await Promise.all([
-      actor.session.fetcher(new URL('/api/user/', 'http://localhost')),
-      actor.session.fetcher(new URL(`/api/user/${target.id}`, 'http://localhost')),
-      actor.session.fetcher(new URL(`/api/user/${target.id}/status`, 'http://localhost'), {
+      actor('/api/user/'),
+      actor(`/api/user/${target.id}`),
+      actor(`/api/user/${target.id}/status`, {
         body: JSON.stringify({ status: 'INACTIVE' }),
         headers: {
           'content-type': 'application/json',
         },
         method: 'PATCH',
       }),
-      actor.session.fetcher(new URL(`/api/user/${target.id}`, 'http://localhost'), {
+      actor(`/api/user/${target.id}`, {
         body: JSON.stringify({ name: '无权限更新' }),
         headers: {
           'content-type': 'application/json',
@@ -384,49 +363,46 @@ describe('user routes', () => {
   })
 
   it('后台列表、详情、状态、更新有权限均返回 200', async () => {
-    const actor = await signUpSession('user-admin')
     const target = await createUserFixture({ suffix: createTestSuffix('user-admin-target') }, prisma)
-    createdUserIds.push(target.id)
+    integration.track.userId(target.id)
 
-    const { role } = await grantPermissionsToUser(actor.userId, [
-      Permissions.USER.READ_ALL,
-      Permissions.USER.DISABLE_ALL,
-      Permissions.USER.UPDATE_ALL,
-    ])
-    createdRoleIds.push(role.id)
+    const admin = await integration.actor(
+      [Permissions.USER.READ_ALL, Permissions.USER.DISABLE_ALL, Permissions.USER.UPDATE_ALL],
+      { prefix: 'user-admin' },
+    )
 
-    const listResponse = await actor.session.fetcher(new URL('/api/user/?page=1&pageSize=10', 'http://localhost'))
-    const listBody = await readJson<{ items: Array<{ id: string }> }>(listResponse)
+    const listResponse = await admin('/api/user/?page=1&pageSize=10')
+    const listBody = (await listResponse.json()) as { items: Array<{ id: string }> }
     expect(listResponse.status).toBe(200)
     expect(listBody.items.some((item) => item.id === target.id)).toBe(true)
 
-    const detailResponse = await actor.session.fetcher(new URL(`/api/user/${target.id}`, 'http://localhost'))
-    const detailBody = await readJson<{ id: string }>(detailResponse)
+    const detailResponse = await admin(`/api/user/${target.id}`)
+    const detailBody = (await detailResponse.json()) as { id: string }
     expect(detailResponse.status).toBe(200)
     expect(detailBody.id).toBe(target.id)
 
-    const statusResponse = await actor.session.fetcher(new URL(`/api/user/${target.id}/status`, 'http://localhost'), {
+    const statusResponse = await admin(`/api/user/${target.id}/status`, {
       body: JSON.stringify({ status: 'INACTIVE' }),
       headers: {
         'content-type': 'application/json',
       },
       method: 'PATCH',
     })
-    const statusBody = await readJson<{ id: string; status: string }>(statusResponse)
+    const statusBody = (await statusResponse.json()) as { id: string; status: string }
     expect(statusResponse.status).toBe(200)
     expect(statusBody).toMatchObject({
       id: target.id,
       status: 'INACTIVE',
     })
 
-    const updateResponse = await actor.session.fetcher(new URL(`/api/user/${target.id}`, 'http://localhost'), {
+    const updateResponse = await admin(`/api/user/${target.id}`, {
       body: JSON.stringify({ name: '后台更新用户' }),
       headers: {
         'content-type': 'application/json',
       },
       method: 'PATCH',
     })
-    const updateBody = await readJson<{ id: string; name: string }>(updateResponse)
+    const updateBody = (await updateResponse.json()) as { id: string; name: string }
     expect(updateResponse.status).toBe(200)
     expect(updateBody).toMatchObject({
       id: target.id,
@@ -435,20 +411,20 @@ describe('user routes', () => {
   })
 
   it('后台更新不存在用户和更新不存在用户状态均返回 404', async () => {
-    const actor = await signUpSession('user-admin-missing')
-    const { role } = await grantPermissionsToUser(actor.userId, [Permissions.USER.DISABLE_ALL, Permissions.USER.UPDATE_ALL])
-    createdRoleIds.push(role.id)
+    const actor = await integration.actor([Permissions.USER.DISABLE_ALL, Permissions.USER.UPDATE_ALL], {
+      prefix: 'user-admin-missing',
+    })
     const missingId = createTestSuffix('missing-user')
 
     const [statusResponse, updateResponse] = await Promise.all([
-      actor.session.fetcher(new URL(`/api/user/${missingId}/status`, 'http://localhost'), {
+      actor(`/api/user/${missingId}/status`, {
         body: JSON.stringify({ status: 'INACTIVE' }),
         headers: {
           'content-type': 'application/json',
         },
         method: 'PATCH',
       }),
-      actor.session.fetcher(new URL(`/api/user/${missingId}`, 'http://localhost'), {
+      actor(`/api/user/${missingId}`, {
         body: JSON.stringify({ name: 'missing-user' }),
         headers: {
           'content-type': 'application/json',
