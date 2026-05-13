@@ -9,6 +9,7 @@ import {
   readJson,
   seedBasePermissions,
 } from '../../test'
+import { prisma } from '../../infra/database'
 
 const integration = createIntegrationTestContext({
   config: {
@@ -503,6 +504,60 @@ describe('auth routes', () => {
         message: '邮箱密码登录当前未开启',
         errorCode: 'AUTH_METHOD_DISABLED',
       })
+    })
+
+    it('邮箱登录停用账号时返回 401 并删除 session', async () => {
+      const suffix = createTestSuffix('auth-route-inactive-sign-in')
+      const password = 'inactive-pass-123'
+      const signUpResponse = await app.handle(
+        jsonRequest(
+          '/api/auth/sign-up/email',
+          {
+            email: `${suffix}@example.com`,
+            password,
+            name: `Inactive Auth ${suffix}`,
+          },
+          { method: 'POST' },
+        ),
+      )
+      const signUpBody = await readJson<AuthSessionBody>(signUpResponse)
+      integration.track.userId(signUpBody.user?.id ?? '')
+
+      expect(signUpResponse.status).toBe(200)
+      const userId = signUpBody.user?.id ?? ''
+      await prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          status: 'INACTIVE',
+        },
+      })
+
+      const response = await app.handle(
+        jsonRequest(
+          '/api/auth/sign-in/email',
+          {
+            email: `${suffix}@example.com`,
+            password,
+          },
+          { method: 'POST' },
+        ),
+      )
+
+      await expectErrorResponse(response, {
+        status: 401,
+        message: '账号已被停用',
+        errorCode: 'UNAUTHORIZED',
+      })
+
+      const sessionCount = await prisma.session.count({
+        where: {
+          userId,
+        },
+      })
+      expect(sessionCount).toBe(0)
+      expect(response.headers.get('set-cookie')).toContain('better-auth.session_token=;')
     })
   })
 

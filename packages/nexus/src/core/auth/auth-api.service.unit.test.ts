@@ -225,6 +225,94 @@ describe('AuthApiService.signInGithub', () => {
     expect(redirect.searchParams.get('method')).toBe('github')
   })
 
+  it('相对 callbackURL 应转成可信前端完整地址', async () => {
+    const headers = new Headers()
+    let socialPayload: Record<string, unknown> | null = null
+    const service = createService('', 'https://github.example/oauth', {
+      onBetterAuthRequest: async (request) => {
+        socialPayload = (await request.json()) as Record<string, unknown>
+      },
+    })
+
+    const redirectURL = await service.signInGithub(
+      new Request(
+        'http://localhost:7788/api/auth/sign-in/github?callbackURL=%2Fdashboard%3Ftab%3Dposts%23latest',
+        {
+          headers: {
+            referer: 'http://localhost:2333/login?redirect=%2Fdashboard',
+          },
+        },
+      ),
+      headers,
+    )
+
+    expect(redirectURL).toBe('https://github.example/oauth')
+    expect(socialPayload).not.toBeNull()
+    const payload = socialPayload as unknown as Record<string, unknown>
+    expect(payload.callbackURL).toBe('http://localhost:2333/dashboard?tab=posts#latest')
+    expect(payload.newUserCallbackURL).toBe('http://localhost:2333/dashboard?tab=posts#latest')
+    expect(payload.errorCallbackURL).toBe('http://localhost:2333/login?redirect=%2Fdashboard%3Ftab%3Dposts%23latest')
+  })
+
+  it('非法协议 callbackURL 应回跳登录页且不调用 Better Auth', async () => {
+    const headers = new Headers()
+    let betterAuthCalled = false
+    const service = createService('', 'https://github.example/oauth', {
+      onBetterAuthRequest: () => {
+        betterAuthCalled = true
+      },
+    })
+
+    const redirectURL = await service.signInGithub(
+      new Request('http://localhost:7788/api/auth/sign-in/github?callbackURL=javascript%3Aalert%281%29', {
+        headers: {
+          referer: 'http://localhost:2333/login?redirect=%2Fdashboard',
+        },
+      }),
+      headers,
+    )
+
+    const redirect = new URL(redirectURL)
+    expect(`${redirect.origin}${redirect.pathname}`).toBe('http://localhost:2333/login')
+    expect(redirect.searchParams.get('redirect')).toBe('/dashboard')
+    expect(redirect.searchParams.get('error')).toBe('invalid_callback_url')
+    expect(redirect.searchParams.get('method')).toBe('github')
+    expect(betterAuthCalled).toBe(false)
+  })
+
+  it('缺少 referer 但 callbackURL 可信时应继续发起 GitHub 登录', async () => {
+    const headers = new Headers()
+    let socialPayload: Record<string, unknown> | null = null
+    const service = createService('', 'https://github.example/oauth', {
+      onBetterAuthRequest: async (request) => {
+        socialPayload = (await request.json()) as Record<string, unknown>
+      },
+    })
+
+    const redirectURL = await service.signInGithub(
+      new Request(
+        'http://localhost:7788/api/auth/sign-in/github?callbackURL=http%3A%2F%2Flocalhost%3A2333%2Fdashboard',
+      ),
+      headers,
+    )
+
+    expect(redirectURL).toBe('https://github.example/oauth')
+    expect(socialPayload).not.toBeNull()
+    expect((socialPayload as unknown as Record<string, unknown>).callbackURL).toBe('http://localhost:2333/dashboard')
+  })
+
+  it('缺少可信浏览器来源且 callbackURL 非法时应继续抛错', async () => {
+    const headers = new Headers()
+    const service = createService('', 'https://github.example/oauth')
+
+    await expect(
+      service.signInGithub(
+        new Request('http://localhost:7788/api/auth/sign-in/github?callbackURL=https%3A%2F%2Fevil.example%2Fdashboard'),
+        headers,
+      ),
+    ).rejects.toThrow('Invalid callbackURL')
+  })
+
   it('OAuthRedirectService 应解析可信重定向来源', () => {
     const redirectService = createOAuthRedirectService({
       configuredAuthOrigin: 'http://localhost:7788',
@@ -334,6 +422,132 @@ describe('AuthApiService.callbackGithub', () => {
     })
     expect(sessionCount).toBe(1)
   })
+
+  it('GitHub callback 未写入 session cookie 时应保留原回跳地址', async () => {
+    const headers = new Headers()
+    const service = createService('', 'http://localhost:2333/dashboard')
+
+    const redirectURL = await service.callbackGithub(
+      new Request('http://localhost:7788/api/auth/callback/github'),
+      headers,
+    )
+
+    expect(redirectURL).toBe('http://localhost:2333/dashboard')
+    expect(getSetCookieValues(headers).some((cookie) => cookie.startsWith('better-auth.session_token=;'))).toBe(false)
+  })
+
+  it('GitHub callback 停用账号遇到外部 redirectURL 时应继续抛出未授权错误', async () => {
+    const { token, userId } = await createUserSession('INACTIVE')
+    const headers = new Headers()
+    const service = createService(token, 'https://evil.example/dashboard')
+
+    await expect(
+      service.callbackGithub(new Request('http://localhost:7788/api/auth/callback/github'), headers),
+    ).rejects.toThrow('账号已被停用')
+
+    const sessionCount = await prisma.session.count({
+      where: {
+        userId,
+      },
+    })
+    expect(sessionCount).toBe(0)
+    expect(getSetCookieValues(headers).some((cookie) => cookie.startsWith('better-auth.session_token=;'))).toBe(true)
+  })
+
+  it('GitHub callback 停用账号回跳登录页时应保留 redirect 的 query 和 hash', async () => {
+    const { token } = await createUserSession('BANNED')
+    const headers = new Headers()
+    const service = createService(token, 'http://localhost:2333/dashboard?from=github#profile')
+
+    const redirectURL = await service.callbackGithub(
+      new Request('http://localhost:7788/api/auth/callback/github'),
+      headers,
+    )
+
+    const redirect = new URL(redirectURL)
+    expect(redirect.searchParams.get('redirect')).toBe('/dashboard?from=github#profile')
+    expect(redirect.searchParams.get('error')).toBe('inactive_account')
+    expect(redirect.searchParams.get('method')).toBe('github')
+  })
+})
+
+describe('AuthApiService.signInEmail', () => {
+  it('邮箱登录返回停用账号会话时应删除 session 并清除 cookie', async () => {
+    const { token, userId } = await createUserSession('INACTIVE')
+    const headers = new Headers()
+    const service = createAuthApiService(
+      {
+        auth: {
+          trustedOrigins: ['http://localhost:2333'],
+          methods: {
+            emailPassword: {
+              enabled: true,
+              allowSignUp: true,
+            },
+            github: {
+              enabled: true,
+              allowSignUp: true,
+            },
+            google: {
+              enabled: false,
+              allowSignUp: false,
+            },
+            wechat: {
+              enabled: false,
+              allowSignUp: false,
+            },
+          },
+        },
+        betterAuth: {
+          secret: 'auth-api-service-test-secret-value-32',
+          url: 'http://localhost:7788',
+          providers: {},
+        },
+      },
+      authMethodsService,
+      {
+        clearBetterAuthCookies: (targetHeaders) => {
+          if (targetHeaders instanceof Headers) {
+            targetHeaders.append('set-cookie', 'better-auth.session_token=; Path=/; Max-Age=0')
+          }
+        },
+        forwardBetterAuthRedirect: async () => '',
+        forwardBetterAuthResponse: async () => ({
+          session: {
+            id: `email-inactive-session-${tempSuffix}`,
+            token,
+            userId,
+          },
+          user: {
+            id: userId,
+          },
+        }),
+        resolveBetterAuthSessionUserId: async () => null,
+        revokeBetterAuthSession: async () => undefined,
+      } as BetterAuthAdapter,
+    )
+
+    await expect(
+      service.signInEmail(
+        new Request('http://localhost:7788/api/auth/sign-in/email', {
+          method: 'POST',
+        }),
+        {
+          email: 'inactive@example.com',
+          password: 'inactive-pass-123',
+        },
+        headers,
+      ),
+    ).rejects.toThrow('账号已被停用')
+
+    const sessionCount = await prisma.session.count({
+      where: {
+        userId,
+      },
+    })
+    expect(sessionCount).toBe(0)
+    expect(getSetCookieValues(headers).some((cookie) => cookie.startsWith('better-auth.session_token=;'))).toBe(true)
+  })
 })
 
 describe('AccountStatusService', () => {
@@ -416,6 +630,112 @@ describe('AuthApiService.signOut', () => {
     await service.signOut(new Request('http://localhost:7788/api/auth/sign-out'), headers)
 
     expect(calls).toEqual(['revoke', 'clear'])
+    expect(getSetCookieValues(headers).some((cookie) => cookie.startsWith('better-auth.session_token=;'))).toBe(true)
+  })
+
+  it('没有 session cookie 时应仍然清理 Better Auth cookie', async () => {
+    const headers = new Headers()
+    const service = createAuthApiService(
+      {
+        auth: {
+          trustedOrigins: ['http://localhost:2333'],
+          methods: {
+            emailPassword: {
+              enabled: true,
+              allowSignUp: true,
+            },
+            github: {
+              enabled: true,
+              allowSignUp: true,
+            },
+            google: {
+              enabled: false,
+              allowSignUp: false,
+            },
+            wechat: {
+              enabled: false,
+              allowSignUp: false,
+            },
+          },
+        },
+        betterAuth: {
+          secret: 'auth-api-service-test-secret-value-32',
+          url: 'http://localhost:7788',
+          providers: {},
+        },
+      },
+      authMethodsService,
+      {
+        clearBetterAuthCookies: (targetHeaders) => {
+          if (targetHeaders instanceof Headers) {
+            targetHeaders.append('set-cookie', 'better-auth.session_token=; Path=/; Max-Age=0')
+          }
+        },
+        forwardBetterAuthRedirect: async () => '',
+        forwardBetterAuthResponse: async () => ({}),
+        resolveBetterAuthSessionUserId: async () => null,
+        revokeBetterAuthSession: async () => undefined,
+      } as BetterAuthAdapter,
+    )
+
+    await expect(service.signOut(new Request('http://localhost:7788/api/auth/sign-out'), headers)).resolves.toBeUndefined()
+    expect(getSetCookieValues(headers).some((cookie) => cookie.startsWith('better-auth.session_token=;'))).toBe(true)
+  })
+
+  it('未知 session token 登出时应仍然清理 Better Auth cookie', async () => {
+    const headers = new Headers()
+    const betterAuthInstance = {
+      options: {
+        secret: 'auth-api-service-test-secret-value-32',
+        url: 'http://localhost:7788',
+      },
+      handler: async () => new Response('{}'),
+    } as unknown as BetterAuthInstance
+    const adapter = createBetterAuthAdapter(betterAuthInstance)
+    const service = createAuthApiService(
+      {
+        auth: {
+          trustedOrigins: ['http://localhost:2333'],
+          methods: {
+            emailPassword: {
+              enabled: true,
+              allowSignUp: true,
+            },
+            github: {
+              enabled: true,
+              allowSignUp: true,
+            },
+            google: {
+              enabled: false,
+              allowSignUp: false,
+            },
+            wechat: {
+              enabled: false,
+              allowSignUp: false,
+            },
+          },
+        },
+        betterAuth: {
+          secret: 'auth-api-service-test-secret-value-32',
+          url: 'http://localhost:7788',
+          providers: {},
+        },
+      },
+      authMethodsService,
+      adapter,
+    )
+
+    await expect(
+      service.signOut(
+        new Request('http://localhost:7788/api/auth/sign-out', {
+          headers: {
+            cookie: 'better-auth.session_token=missing-token.signature',
+          },
+        }),
+        headers,
+      ),
+    ).resolves.toBeUndefined()
+
     expect(getSetCookieValues(headers).some((cookie) => cookie.startsWith('better-auth.session_token=;'))).toBe(true)
   })
 })
@@ -551,6 +871,18 @@ describe('BetterAuthCookieService', () => {
     expect(token).toBe('request-token')
   })
 
+  it('应解析 URL encode 后的 session token', () => {
+    const headers = new Headers()
+    headers.append('Set-Cookie', 'better-auth.session_token=response-token%2Esignature; Path=/; HttpOnly')
+    const cookieService = createBetterAuthCookieService({
+      secret: 'auth-api-service-test-secret-value-32',
+    })
+
+    const token = cookieService.resolveSessionToken(new Request('http://localhost:7788/api/auth/callback/github'), headers)
+
+    expect(token).toBe('response-token')
+  })
+
   it('应优先从响应 Set-Cookie 中解析 session token', () => {
     const headers = new Headers()
     headers.append('Set-Cookie', 'better-auth.session_token=response-token.signature; Path=/; HttpOnly')
@@ -584,6 +916,26 @@ describe('BetterAuthCookieService', () => {
     const cookies = getSetCookieValues(headers)
     expect(cookies).toContain('better-auth.session_token=token.signature; Path=/; HttpOnly')
     expect(cookies).toContain('better-auth.session_data=data; Path=/; HttpOnly')
+  })
+
+  it('应把多个 Set-Cookie 追加到普通对象 headers', () => {
+    const responseHeaders = new Headers()
+    responseHeaders.append('Set-Cookie', 'better-auth.session_token=token.signature; Path=/; HttpOnly')
+    responseHeaders.append('Set-Cookie', 'better-auth.session_data=data; Path=/; HttpOnly')
+    const headers: Record<string, string | string[]> = {
+      'Set-Cookie': 'existing=value; Path=/',
+    }
+    const cookieService = createBetterAuthCookieService({
+      secret: 'auth-api-service-test-secret-value-32',
+    })
+
+    cookieService.copySetCookies(responseHeaders, headers)
+
+    expect(headers['Set-Cookie']).toEqual([
+      'existing=value; Path=/',
+      'better-auth.session_token=token.signature; Path=/; HttpOnly',
+      'better-auth.session_data=data; Path=/; HttpOnly',
+    ])
   })
 
   it('清除 cookie 时应保留 Better Auth 配置里的属性并清理 account_data', () => {
