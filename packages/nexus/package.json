@@ -103,7 +103,7 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push && bun run prisma:apply-indexes",
     "prisma:push:reset": "prisma db push --force-reset && bun run prisma:apply-indexes",
-    "prisma:reset": "prisma db push --force-reset && bun run prisma:apply-indexes",
+    "prisma:reset": "bun run prisma:push:reset && bun run seed",
     "type-check": "bun --bun tsc --noEmit"
   },
   "dependencies": {
