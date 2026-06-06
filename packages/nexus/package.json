@@ -100,9 +100,9 @@
     "test:smoke": "bun test $(find ./src -name '*.smoke.test.ts' | sort)",
     "seed": "bun run prisma/seed/seed.ts",
     "prisma:apply-indexes": "bun run prisma/scripts/apply-partial-unique-indexes.ts",
-    "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push && bun run prisma:apply-indexes",
-    "prisma:push:reset": "prisma db push --force-reset && bun run prisma:apply-indexes",
+    "prisma:generate": "bunx --bun prisma generate",
+    "prisma:push": "bunx --bun prisma db push && bun run prisma:apply-indexes",
+    "prisma:push:reset": "bunx --bun prisma db push --force-reset && bun run prisma:apply-indexes",
     "prisma:reset": "bun run prisma:push:reset && bun run seed",
     "type-check": "bun --bun tsc --noEmit"
   },
@@ -111,6 +111,7 @@
     "@elysiajs/openapi": "^1.4.14",
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
+    "@prisma/client-runtime-utils": "^7.6.0",
     "better-auth": "^1.5.6",
     "cos-nodejs-sdk-v5": "^2.15.4",
     "dotenv": "^17.4.0",
@@ -122,11 +123,13 @@
     "zod": "^4.3.4"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^6.7.3",
     "@elysiajs/eden": "catalog:",
     "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^14.1.2",
     "@xdd-zone/eslint-config": "workspace:*",
     "bun-types": "catalog:",
+    "eslint-config-prettier": "^10.1.8",
     "prisma": "^7.6.0",
     "typescript": "catalog:"
   }
