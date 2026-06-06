@@ -4,8 +4,8 @@ import { Permissions } from '@nexus/core'
 import { prisma } from '@nexus/infra/database'
 import { afterEach, beforeAll, describe, expect, it } from 'bun:test'
 import {
-  createTestSuffix,
   createIntegrationTestContext,
+  createTestSuffix,
   createUserFixture,
   expectErrorResponse,
   seedBasePermissions,

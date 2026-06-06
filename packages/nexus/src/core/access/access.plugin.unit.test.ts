@@ -2,8 +2,8 @@ import type { Session as PrismaSession, User } from '@nexus-prisma/generated/cli
 import type { SecuritySession, SessionService } from '../auth'
 import { HttpError } from '@nexus/core/http'
 import { PermissionService } from '@nexus/core/permissions'
-import { Elysia } from 'elysia'
 import { afterEach, describe, expect, it } from 'bun:test'
+import { Elysia } from 'elysia'
 import { createAccessPlugin } from './access.plugin'
 import { createAuthPlugin } from './auth.plugin'
 

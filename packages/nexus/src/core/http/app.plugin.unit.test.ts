@@ -1,5 +1,5 @@
-import type { ResolvedConfig } from '../config'
 import type { Logger } from '../../infra/logger'
+import type { ResolvedConfig } from '../config'
 import { describe, expect, it } from 'bun:test'
 import { Elysia } from 'elysia'
 import { setupAppPlugin } from './app.plugin'
@@ -10,7 +10,7 @@ interface MockLoggerCalls {
   error: Array<[unknown, string]>
   info: Array<[unknown, string]>
   warn: Array<[unknown, string]>
-  waitForInfoMessage(message: string): Promise<void>
+  waitForInfoMessage: (message: string) => Promise<void>
 }
 
 function createConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {

@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it } from 'bun:test'
+import { prisma } from '../../infra/database'
 import {
   createCookieFetcher,
   createIntegrationTestContext,
@@ -9,7 +10,6 @@ import {
   readJson,
   seedBasePermissions,
 } from '../../test'
-import { prisma } from '../../infra/database'
 
 const integration = createIntegrationTestContext({
   config: {

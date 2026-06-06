@@ -1,5 +1,5 @@
 import type { CommentStatus, ContentStatus, Prisma, PrismaClient, UserStatus } from '@nexus-prisma/generated/client'
-import type { IntegrationTrackHelper, IntegrationTrackedValue } from './integration'
+import type { IntegrationTrackedValue, IntegrationTrackHelper } from './integration'
 
 import { prisma as defaultPrisma } from '../infra/database'
 import { createTestSuffix } from './db'
