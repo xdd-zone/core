@@ -1,8 +1,8 @@
 import type { Session as PrismaSession, User } from '@nexus-prisma/generated/client'
 import type { SecuritySession, SessionService } from '../auth'
 import { HttpError } from '@nexus/core/http'
-import { Elysia } from 'elysia'
 import { describe, expect, it } from 'bun:test'
+import { Elysia } from 'elysia'
 import { createAuthPlugin } from './auth.plugin'
 
 function createUser(id: string, status: User['status'] = 'ACTIVE'): User {

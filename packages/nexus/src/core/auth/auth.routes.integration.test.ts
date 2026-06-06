@@ -1,9 +1,9 @@
 import type { AuthApiService, AuthMethodsService, SessionService } from '@nexus/core'
 import type { AuthMutableHeaders } from './cookie.service'
-import { BadRequestError, HttpError } from '@nexus/core/http'
 import { createAuthPlugin } from '@nexus/core/access'
-import { Elysia } from 'elysia'
+import { BadRequestError, HttpError } from '@nexus/core/http'
 import { describe, expect, it } from 'bun:test'
+import { Elysia } from 'elysia'
 import { createAuthModule } from '../../modules/auth/routes'
 
 const anonymousSession = {

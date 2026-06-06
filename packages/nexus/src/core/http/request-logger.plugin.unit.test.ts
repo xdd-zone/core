@@ -8,7 +8,7 @@ interface MockLoggerCalls {
   info: Array<[unknown, string]>
   warn: Array<[unknown, string]>
   error: Array<[unknown, string]>
-  waitForInfoMessage(message: string): Promise<void>
+  waitForInfoMessage: (message: string) => Promise<void>
 }
 
 function createMockLogger() {

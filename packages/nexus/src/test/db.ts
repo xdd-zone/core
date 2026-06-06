@@ -2,9 +2,9 @@ import type { PrismaClient } from '@nexus-prisma/generated/client'
 import type { PermissionString } from '../core/permissions'
 
 import { parsePermission, PermissionService, SYSTEM_PERMISSION_DEFINITIONS, SYSTEM_ROLE_NAMES } from '../core/permissions'
+import { prisma as defaultPrisma } from '../infra/database'
 import { BUSINESS_PERMISSION_DEFINITIONS } from '../modules/permissions'
 import { SYSTEM_ROLE_PERMISSION_KEYS } from '../modules/rbac/constants'
-import { prisma as defaultPrisma } from '../infra/database'
 
 const ROLE_DEFINITIONS = {
   superAdmin: {

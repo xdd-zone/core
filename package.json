@@ -14,11 +14,20 @@
   "bugs": {
     "url": "https://github.com/xdd-zone/core/issues"
   },
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "catalog": {
+      "@elysiajs/eden": "^1.4.9",
+      "bun-types": "^1.3.11",
+      "eslint": "^9.39.4",
+      "prettier": "^3.8.1",
+      "typescript": "^5.9.3"
+    }
+  },
   "engines": {
-    "bun": "1.3.5"
+    "bun": "1.3.11"
   },
   "scripts": {
     "dev": "bun run --filter @xdd-zone/nexus --filter @xdd-zone/console --parallel dev",
@@ -46,8 +55,8 @@
     "db": "bun run scripts/db/local.ts"
   },
   "devDependencies": {
-    "eslint": "^9.39.4",
-    "prettier": "^3.8.1",
-    "typescript": "^5.9.3"
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
   }
 }
