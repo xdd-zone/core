@@ -123,13 +123,11 @@
     "zod": "^4.3.4"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^6.7.3",
     "@elysiajs/eden": "catalog:",
     "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^14.1.2",
     "@xdd-zone/eslint-config": "workspace:*",
     "bun-types": "catalog:",
-    "eslint-config-prettier": "^10.1.8",
     "prisma": "^7.6.0",
     "typescript": "catalog:"
   }
