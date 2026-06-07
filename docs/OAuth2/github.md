@@ -48,7 +48,7 @@ GITHUB_CLIENT_SECRET=your-github-client-secret
 
 ## 第 3 步：打开项目配置
 
-在 `packages/nexus/config.yaml` 里确认：
+在 `apps/nexus/config.yaml` 里确认：
 
 ```yaml
 auth:
@@ -101,18 +101,18 @@ bun run dev
 
 ### 后端
 
-- `packages/nexus/src/core/auth/better-auth.ts`
-- `packages/nexus/src/core/auth/auth-api.service.ts`
-- `packages/nexus/src/core/auth/auth-methods.service.ts`
-- `packages/nexus/src/modules/auth/routes.ts`
+- `apps/nexus/src/core/auth/better-auth.ts`
+- `apps/nexus/src/core/auth/auth-api.service.ts`
+- `apps/nexus/src/core/auth/auth-methods.service.ts`
+- `apps/nexus/src/modules/auth/routes.ts`
 
 ### 前端
 
-- `packages/console/src/modules/auth/auth.api.ts`
+- `apps/console/src/modules/auth/auth.api.ts`
   生成 GitHub 登录跳转地址。
-- `packages/console/src/modules/auth/auth.query.ts`
-- `packages/console/src/pages/auth/Login.tsx`
-- `packages/console/src/shared/api/eden.ts`
+- `apps/console/src/modules/auth/auth.query.ts`
+- `apps/console/src/pages/auth/Login.tsx`
+- `apps/console/src/shared/api/eden.ts`
 
 ## 常见问题
 

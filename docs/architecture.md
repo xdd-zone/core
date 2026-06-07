@@ -6,9 +6,9 @@
 
 仓库现在有两个主包：
 
-- `packages/console`
+- `apps/console`
   后台前端。
-- `packages/nexus`
+- `apps/nexus`
   后端 API 服务。
 
 前后端都在一个仓库里维护，接口类型和权限导出也一起放在仓库里。
@@ -43,12 +43,12 @@
 
 - 维护第二套接口定义
 
-## `packages/nexus` 怎么分层
+## `apps/nexus` 怎么分层
 
 当前目录：
 
 ```text
-packages/nexus/src/
+apps/nexus/src/
 ├── app.ts
 ├── server.ts
 ├── index.ts
@@ -143,12 +143,12 @@ createConfig()
 - `eden.ts`
   `type App = typeof app`。
 
-## `packages/console` 怎么分层
+## `apps/console` 怎么分层
 
 当前最常改的目录：
 
 ```text
-packages/console/src/
+apps/console/src/
 ├── app/
 ├── components/
 ├── layout/
@@ -201,10 +201,10 @@ packages/console/src/
 
 当前约定很直接：
 
-1. 后端在 `packages/nexus/src/modules/*` 定义接口。
+1. 后端在 `apps/nexus/src/modules/*` 定义接口。
 2. OpenAPI 从后端路由和 schema 自动导出。
 3. Eden 类型从 `type App = typeof app` 推导。
-4. 前端在 `packages/console/src/shared/api/eden.ts` 创建 Treaty 客户端。
+4. 前端在 `apps/console/src/shared/api/eden.ts` 创建 Treaty 客户端。
 5. 页面通过 `modules/*` 里的 query / mutation 调接口。
 
 需要明确 HTTP 类型时，从这些导出拿：
@@ -223,11 +223,11 @@ packages/console/src/
 ## 当前认证和权限模型
 
 - 固定角色只有 `superAdmin / user`
-- 系统基础权限放在 `packages/nexus/src/core/permissions/permissions.ts`
-- 业务权限放在 `packages/nexus/src/modules/*/permissions.ts`
-- 权限说明由 `packages/nexus/src/core/permissions/registry.ts` 读取
+- 系统基础权限放在 `apps/nexus/src/core/permissions/permissions.ts`
+- 业务权限放在 `apps/nexus/src/modules/*/permissions.ts`
+- 权限说明由 `apps/nexus/src/core/permissions/registry.ts` 读取
 - `own` 只用于当前用户资料相关场景
-- 前端页面访问控制走 `packages/console/src/app/access/access-control.ts`
+- 前端页面访问控制走 `apps/console/src/app/access/access-control.ts`
 - 后端接口权限校验走 `authPlugin` 或 `accessPlugin`
 
 ### 权限文件怎么分
@@ -245,22 +245,22 @@ SYSTEM
 位置：
 
 ```text
-packages/nexus/src/core/permissions/permissions.ts
+apps/nexus/src/core/permissions/permissions.ts
 ```
 
 业务模块自己放业务权限。当前位置：
 
 ```text
-packages/nexus/src/modules/post/permissions.ts
-packages/nexus/src/modules/media/permissions.ts
-packages/nexus/src/modules/comment/permissions.ts
-packages/nexus/src/modules/site-config/permissions.ts
+apps/nexus/src/modules/post/permissions.ts
+apps/nexus/src/modules/media/permissions.ts
+apps/nexus/src/modules/comment/permissions.ts
+apps/nexus/src/modules/site-config/permissions.ts
 ```
 
 业务权限汇总在：
 
 ```text
-packages/nexus/src/modules/permissions.ts
+apps/nexus/src/modules/permissions.ts
 ```
 
 `core/permissions` 不导入 `modules/post`、`modules/media`、`modules/comment`、`modules/site-config`。
@@ -269,31 +269,31 @@ packages/nexus/src/modules/permissions.ts
 
 ### 新增或调整接口
 
-去 `packages/nexus/src/modules/<feature>/`。
+去 `apps/nexus/src/modules/<feature>/`。
 
 ### 新增或调整页面
 
 同时检查：
 
-- `packages/console/src/app/router/routes.tsx`
-- `packages/console/src/app/navigation/navigation.ts`
-- `packages/console/src/app/access/access-control.ts`
-- `packages/console/src/pages/*`
-- `packages/console/src/modules/*`
+- `apps/console/src/app/router/routes.tsx`
+- `apps/console/src/app/navigation/navigation.ts`
+- `apps/console/src/app/access/access-control.ts`
+- `apps/console/src/pages/*`
+- `apps/console/src/modules/*`
 
 ### 新增要给前端复用的类型
 
-去 `packages/nexus/src/public/*-types.ts`。
+去 `apps/nexus/src/public/*-types.ts`。
 
 ### 改认证、GitHub 登录、权限
 
 同时检查：
 
-- `packages/nexus/src/core/auth/*`
-- `packages/nexus/src/core/access/*`
-- `packages/nexus/src/core/permissions/*`
-- `packages/nexus/src/modules/*/permissions.ts`
-- `packages/nexus/src/modules/permissions.ts`
-- `packages/nexus/src/modules/auth`
-- `packages/console/src/modules/auth`
-- `packages/console/src/app/access/access-control.ts`
+- `apps/nexus/src/core/auth/*`
+- `apps/nexus/src/core/access/*`
+- `apps/nexus/src/core/permissions/*`
+- `apps/nexus/src/modules/*/permissions.ts`
+- `apps/nexus/src/modules/permissions.ts`
+- `apps/nexus/src/modules/auth`
+- `apps/console/src/modules/auth`
+- `apps/console/src/app/access/access-control.ts`

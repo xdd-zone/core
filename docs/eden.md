@@ -6,27 +6,27 @@
 
 当前 Eden 主要有两件事：
 
-1. 给 `packages/console` 提供带类型的 Treaty 客户端
-2. 给 `packages/nexus` 提供 smoke test
+1. 给 `apps/console` 提供带类型的 Treaty 客户端
+2. 给 `apps/nexus` 提供 smoke test
 
 ## 相关文件
 
 ### 后端
 
-- `packages/nexus/src/app.ts`
+- `apps/nexus/src/app.ts`
   创建 Elysia app。
-- `packages/nexus/src/public/eden.ts`
+- `apps/nexus/src/public/eden.ts`
   导出 `type App = typeof app`。
-- `packages/nexus/src/eden/eden-smoke.test.ts`
+- `apps/nexus/src/eden/eden-smoke.test.ts`
   Eden smoke 测试。
-- `packages/nexus/src/eden/openapi-smoke.test.ts`
+- `apps/nexus/src/eden/openapi-smoke.test.ts`
   OpenAPI smoke 测试。
 
 ### 前端
 
-- `packages/console/src/shared/api/eden.ts`
+- `apps/console/src/shared/api/eden.ts`
   Treaty 客户端、API 基址、cookie、错误拆包。
-- `packages/console/src/modules/*`
+- `apps/console/src/modules/*`
   页面侧 query / mutation。
 
 ## 后端怎么导出 Eden 类型
@@ -43,7 +43,7 @@ export type App = typeof app
 
 ## 前端怎么用
 
-当前前端统一在 `packages/console/src/shared/api/eden.ts` 创建客户端。
+当前前端统一在 `apps/console/src/shared/api/eden.ts` 创建客户端。
 
 关键点：
 
@@ -79,20 +79,20 @@ await api.rbac.users({ userId }).roles.post(body)
 
 按这个顺序：
 
-1. 改 `packages/nexus/src/modules/<name>/model.ts`
+1. 改 `apps/nexus/src/modules/<name>/model.ts`
 2. 改 `service.ts / repository.ts`
 3. 改 `routes.ts`
-4. 确认模块已经挂到 `packages/nexus/src/modules/index.ts`
+4. 确认模块已经挂到 `apps/nexus/src/modules/index.ts`
 
-正常情况下，不需要手动改 `packages/nexus/src/public/eden.ts`。
+正常情况下，不需要手动改 `apps/nexus/src/public/eden.ts`。
 
 ### 后端改完，前端也要用
 
 继续做这些事：
 
-1. 在对应的 `packages/console/src/modules/<name>/` 里补 query / mutation
+1. 在对应的 `apps/console/src/modules/<name>/` 里补 query / mutation
 2. 页面里使用 query / mutation
-3. 如果页面真要复用明确 HTTP 类型，再补 `packages/nexus/src/public/*-types.ts`
+3. 如果页面真要复用明确 HTTP 类型，再补 `apps/nexus/src/public/*-types.ts`
 
 ## API 基址和 cookie
 
@@ -108,7 +108,7 @@ await api.rbac.users({ userId }).roles.post(body)
 
 1. 前端请求带 `credentials: 'include'`
 2. 后端 CORS 允许带 cookie
-3. `packages/nexus/config.yaml` 的 `trustedOrigins` 包含当前来源
+3. `apps/nexus/config.yaml` 的 `trustedOrigins` 包含当前来源
 
 ## Eden smoke test 看什么
 

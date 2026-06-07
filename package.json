@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "private": true,
-  "description": "XDD Zone Core - Backend API",
+  "description": "XDD Zone Core",
   "author": "xidongdong-153",
   "license": "MIT",
   "homepage": "https://github.com/xdd-zone/core#readme",
@@ -16,26 +16,20 @@
   },
   "workspaces": {
     "packages": [
+      "apps/*",
       "packages/*"
     ],
     "catalog": {
-      "@elysiajs/eden": "^1.4.9",
       "bun-types": "^1.3.11",
       "eslint": "^9.39.4",
       "prettier": "^3.8.1",
       "typescript": "^5.9.3"
     },
     "catalogs": {
-      "prisma": {
-        "prisma": "^7.6.0",
-        "@prisma/client": "^7.6.0",
-        "@prisma/adapter-pg": "^7.6.0",
-        "@prisma/client-runtime-utils": "^7.6.0"
-      },
       "shiki": {
-        "shiki": "^4.0.2",
         "@shikijs/langs": "^4.0.2",
-        "@shikijs/transformers": "^4.0.2"
+        "@shikijs/transformers": "^4.0.2",
+        "shiki": "^4.0.2"
       },
       "react": {
         "react": "^19.2.4",
@@ -61,21 +55,17 @@
     "build:nexus": "bun run --filter @xdd-zone/nexus build",
     "build:console": "bun run --filter @xdd-zone/console build",
     "lint": "bun run lint:nexus && bun run lint:console",
-    "lint:nexus": "eslint --no-error-on-unmatched-pattern --config packages/nexus/eslint.config.js packages/nexus/src",
-    "lint:console": "eslint --config packages/console/eslint.config.js packages/console/src",
+    "lint:nexus": "eslint --no-error-on-unmatched-pattern --config apps/nexus/eslint.config.js apps/nexus/src",
+    "lint:console": "eslint --config apps/console/eslint.config.js apps/console/src",
     "lint:fix": "bun run lint:fix:nexus && bun run lint:fix:console",
-    "lint:fix:nexus": "eslint --no-error-on-unmatched-pattern --config packages/nexus/eslint.config.js packages/nexus/src --fix",
-    "lint:fix:console": "eslint --config packages/console/eslint.config.js packages/console/src --fix",
-    "format": "prettier --write packages/",
-    "format:check": "prettier --check packages/",
-    "type-check": "bun run --filter '*' type-check",
-    "clean": "rm -rf packages/*/node_modules packages/*/dist",
-    "prisma:generate": "bun run --filter @xdd-zone/nexus prisma:generate",
-    "prisma:push": "bun run --filter @xdd-zone/nexus prisma:push",
-    "prisma:push:reset": "bun run --filter @xdd-zone/nexus prisma:push:reset",
-    "prisma:reset": "bun run --filter @xdd-zone/nexus prisma:reset",
-    "seed": "bun run --filter @xdd-zone/nexus seed",
-    "db": "bun run scripts/db/local.ts"
+    "lint:fix:nexus": "eslint --no-error-on-unmatched-pattern --config apps/nexus/eslint.config.js apps/nexus/src --fix",
+    "lint:fix:console": "eslint --config apps/console/eslint.config.js apps/console/src --fix",
+    "format": "prettier --write apps/ packages/",
+    "format:check": "prettier --check apps/ packages/",
+    "type-check": "bun run type-check:nexus && bun run type-check:console",
+    "type-check:nexus": "bun run --filter @xdd-zone/nexus type-check",
+    "type-check:console": "bun run --filter @xdd-zone/console type-check",
+    "clean": "rm -rf apps/*/node_modules apps/*/dist packages/*/node_modules packages/*/dist"
   },
   "devDependencies": {
     "eslint": "catalog:",

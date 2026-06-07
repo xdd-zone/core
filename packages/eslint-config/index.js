@@ -30,6 +30,8 @@ export default antfu(
       '*.generated.ts',
       '*.generated.js',
       '*.tsbuildinfo',
+      'apps/*/dist',
+      'apps/*/node_modules',
       'packages/*/dist',
       'packages/*/node_modules',
 

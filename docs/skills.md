@@ -12,7 +12,7 @@
 
 - 想先看仓库结构
 - 想先定位相关文档和代码入口
-- 不确定该改 `packages/nexus` 还是 `packages/console`
+- 不确定该改 `apps/nexus` 还是 `apps/console`
 - 想按当前仓库方式继续实现
 
 ## 按任务类型继续补技能
@@ -23,17 +23,17 @@
 
 - `write-docs`
 
-### 改 `packages/nexus`
+### 改 `apps/nexus`
 
 先用：
 
 - `elysiajs`
 
-### 改 `packages/console` 页面、布局、导航
+### 改 `apps/console` 页面、布局、导航
 
 先看：
 
-- `packages/console/design-context.md`
+- `apps/console/design-context.md`
 
 再用：
 

@@ -14,11 +14,11 @@ docs/third-party/public-site.md
 后端接口代码在这里：
 
 ```text
-packages/nexus/src/modules/public-site/routes.ts
-packages/nexus/src/modules/public-site/model.ts
-packages/nexus/src/modules/comment/routes.ts
-packages/nexus/src/modules/comment/model.ts
-packages/nexus/src/modules/media/routes.ts
+apps/nexus/src/modules/public-site/routes.ts
+apps/nexus/src/modules/public-site/model.ts
+apps/nexus/src/modules/comment/routes.ts
+apps/nexus/src/modules/comment/model.ts
+apps/nexus/src/modules/media/routes.ts
 ```
 
 OpenAPI 页面在这里：
@@ -657,13 +657,13 @@ curl http://localhost:7788/openapi/json -o openapi.json
 
 - `docs/api.md`
   全量接口表。
-- `packages/nexus/src/modules/public-site/routes.ts`
+- `apps/nexus/src/modules/public-site/routes.ts`
   个人站内容接口路径。
-- `packages/nexus/src/modules/public-site/model.ts`
+- `apps/nexus/src/modules/public-site/model.ts`
   个人站内容接口参数和返回结构。
-- `packages/nexus/src/modules/comment/routes.ts`
+- `apps/nexus/src/modules/comment/routes.ts`
   评论创建接口路径。
-- `packages/nexus/src/modules/comment/model.ts`
+- `apps/nexus/src/modules/comment/model.ts`
   评论创建接口请求体和返回结构。
-- `packages/nexus/src/public/public-site-types.ts`
+- `apps/nexus/src/public/public-site-types.ts`
   TypeScript 类型导出。

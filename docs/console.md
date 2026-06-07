@@ -1,6 +1,6 @@
 # Console 前端指南
 
-这份文档说明 `packages/console` 现在怎么组织，以及改页面时该先看哪几处。
+这份文档说明 `apps/console` 现在怎么组织，以及改页面时该先看哪几处。
 
 ## 包定位
 
@@ -16,14 +16,14 @@
 
 只要任务涉及页面、布局、导航或展示型组件，先看：
 
-1. `packages/console/design-context.md`
-2. `packages/console/README.md`
+1. `apps/console/design-context.md`
+2. `apps/console/README.md`
 3. 这份文档
 
 ## 关键目录
 
 ```text
-packages/console/src/
+apps/console/src/
 ├── app/
 ├── components/
 ├── layout/
@@ -56,7 +56,7 @@ packages/console/src/
 
 当前路由统一放在：
 
-- `packages/console/src/app/router/routes.tsx`
+- `apps/console/src/app/router/routes.tsx`
 
 当前主要路径：
 
@@ -95,7 +95,7 @@ packages/console/src/
 
 当前菜单放在：
 
-- `packages/console/src/app/navigation/navigation.ts`
+- `apps/console/src/app/navigation/navigation.ts`
 
 如果你新增页面，通常要同时检查这三处：
 
@@ -116,18 +116,18 @@ packages/console/src/
 
 主要文件：
 
-- `packages/console/src/modules/auth/auth.query.ts`
-- `packages/console/src/modules/auth/auth.store.ts`
-- `packages/console/src/app/router/guards.tsx`
+- `apps/console/src/modules/auth/auth.query.ts`
+- `apps/console/src/modules/auth/auth.store.ts`
+- `apps/console/src/app/router/guards.tsx`
 
 ## 请求层怎么写
 
 前端统一在这里创建 Treaty 客户端：
 
-- `packages/console/src/shared/api/eden.ts`
+- `apps/console/src/shared/api/eden.ts`
 
 普通接口默认直接用这个客户端。
-只有 GitHub 登录这种浏览器跳转动作，才放在 `packages/console/src/modules/auth/auth.api.ts` 里单独处理，不再额外给每个接口写一层一一对应的包装。
+只有 GitHub 登录这种浏览器跳转动作，才放在 `apps/console/src/modules/auth/auth.api.ts` 里单独处理，不再额外给每个接口写一层一一对应的包装。
 
 需要明确 HTTP 类型时，从 `@xdd-zone/nexus/*-types` 引入。
 
@@ -135,7 +135,7 @@ packages/console/src/
 
 页面级访问控制统一在：
 
-- `packages/console/src/app/access/access-control.ts`
+- `apps/console/src/app/access/access-control.ts`
 
 这里负责判断当前用户能不能进入某个后台路径。
 如果后端接口返回 `401 / 403`，前端页面也应保持同样语义。
@@ -189,16 +189,16 @@ packages/console/src/
 
 同时检查：
 
-- `packages/console/src/modules/auth/auth.api.ts`
-- `packages/console/src/modules/auth/auth.query.ts`
-- `packages/console/src/pages/auth/Login.tsx`
-- `packages/console/src/app/router/guards.tsx`
+- `apps/console/src/modules/auth/auth.api.ts`
+- `apps/console/src/modules/auth/auth.query.ts`
+- `apps/console/src/pages/auth/Login.tsx`
+- `apps/console/src/app/router/guards.tsx`
 
 ### 改主题
 
 看：
 
-- `packages/console/src/assets/styles/theme/*`
-- `packages/console/src/utils/theme.ts`
-- `packages/console/src/utils/catppuccin.antd.ts`
+- `apps/console/src/assets/styles/theme/*`
+- `apps/console/src/utils/theme.ts`
+- `apps/console/src/utils/catppuccin.antd.ts`
 - [docs/theme.md](./theme.md)

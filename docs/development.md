@@ -8,7 +8,7 @@
 - Docker 可用
 - `.env` 里至少有 `DATABASE_URL`、`BETTER_AUTH_URL`、`BETTER_AUTH_SECRET`
 - 如果要测 GitHub 登录，再补 `GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET`
-- `packages/nexus/config.yaml` 的 `auth.trustedOrigins` 已包含当前 Console 地址
+- `apps/nexus/config.yaml` 的 `auth.trustedOrigins` 已包含当前 Console 地址
 
 ## 初始化
 
@@ -71,14 +71,14 @@ bun run prisma:push
 
 至少会碰到这些文件：
 
-- `packages/nexus/src/modules/<feature>/model.ts`
-- `packages/nexus/src/modules/<feature>/service.ts`
-- `packages/nexus/src/modules/<feature>/repository.ts`
-- `packages/nexus/src/modules/<feature>/routes.ts`
+- `apps/nexus/src/modules/<feature>/model.ts`
+- `apps/nexus/src/modules/<feature>/service.ts`
+- `apps/nexus/src/modules/<feature>/repository.ts`
+- `apps/nexus/src/modules/<feature>/routes.ts`
 
 如果接口还要给前端复用明确的 HTTP 类型，再补：
 
-- `packages/nexus/src/public/*-types.ts`
+- `apps/nexus/src/public/*-types.ts`
 
 ## 改前端页面时怎么走
 
@@ -91,12 +91,12 @@ bun run prisma:push
 
 最常改的文件：
 
-- `packages/console/src/app/router/routes.tsx`
-- `packages/console/src/app/router/guards.tsx`
-- `packages/console/src/app/navigation/navigation.ts`
-- `packages/console/src/app/access/access-control.ts`
-- `packages/console/src/modules/*`
-- `packages/console/src/pages/*`
+- `apps/console/src/app/router/routes.tsx`
+- `apps/console/src/app/router/guards.tsx`
+- `apps/console/src/app/navigation/navigation.ts`
+- `apps/console/src/app/access/access-control.ts`
+- `apps/console/src/modules/*`
+- `apps/console/src/pages/*`
 
 ## 代码该放哪
 
@@ -117,7 +117,7 @@ bun run prisma:push
 - `service.ts` 里遇到业务错误时，抛出 `HttpError` 子类，比如 `NotFoundError`、`BadRequestError`、`ConflictError`。
 - `service.ts` 和 `repository.ts` 不导入 Elysia，不调用 `status()`，不设置 `set.status`。
 - `routes.ts` 只在纯 HTTP 行为里设置状态码，比如删除成功返回 `204`、GitHub 登录返回 `302`、文件响应返回 `Response`。
-- 错误响应由 `packages/nexus/src/core/http/error.plugin.ts` 返回统一结构。
+- 错误响应由 `apps/nexus/src/core/http/error.plugin.ts` 返回统一结构。
 - 接口可能返回哪些错误码，写在模块自己的 `openapi.ts` 的 `apiDetail({ errors })` 里。
 
 ### 前端
@@ -134,32 +134,32 @@ bun run prisma:push
 
 ### 认证
 
-- `packages/nexus/src/core/auth/*`
-- `packages/nexus/src/core/access/auth.plugin.ts`
-- `packages/nexus/src/modules/auth/*`
-- `packages/console/src/modules/auth/*`
-- `packages/console/src/pages/auth/Login.tsx`
+- `apps/nexus/src/core/auth/*`
+- `apps/nexus/src/core/access/auth.plugin.ts`
+- `apps/nexus/src/modules/auth/*`
+- `apps/console/src/modules/auth/*`
+- `apps/console/src/pages/auth/Login.tsx`
 
 ### 权限
 
-- `packages/nexus/src/core/access/access.plugin.ts`
-- `packages/nexus/src/core/access/*`
-- `packages/nexus/src/core/permissions/*`
-- `packages/nexus/src/modules/*/permissions.ts`
-- `packages/nexus/src/modules/permissions.ts`
-- `packages/console/src/app/access/access-control.ts`
+- `apps/nexus/src/core/access/access.plugin.ts`
+- `apps/nexus/src/core/access/*`
+- `apps/nexus/src/core/permissions/*`
+- `apps/nexus/src/modules/*/permissions.ts`
+- `apps/nexus/src/modules/permissions.ts`
+- `apps/console/src/app/access/access-control.ts`
 
 系统基础权限放在 `core/permissions/permissions.ts`。业务权限放在对应业务模块的 `permissions.ts`。
 
 新增业务权限时：
 
-1. 在 `packages/nexus/src/modules/<feature>/permissions.ts` 写权限常量和权限说明
-2. 在 `packages/nexus/src/modules/permissions.ts` 加入权限说明
-3. 在 `packages/nexus/src/modules/<feature>/routes.ts` 使用该模块自己的权限常量
-4. 在 `packages/console/src/app/access/access-control.ts` 补页面访问规则
+1. 在 `apps/nexus/src/modules/<feature>/permissions.ts` 写权限常量和权限说明
+2. 在 `apps/nexus/src/modules/permissions.ts` 加入权限说明
+3. 在 `apps/nexus/src/modules/<feature>/routes.ts` 使用该模块自己的权限常量
+4. 在 `apps/console/src/app/access/access-control.ts` 补页面访问规则
 5. 如果页面内部还要判断按钮权限，从 `@xdd-zone/nexus/permissions` 引入业务权限常量
 
-不要把业务权限写进 `packages/nexus/src/core/permissions/permissions.ts`。
+不要把业务权限写进 `apps/nexus/src/core/permissions/permissions.ts`。
 
 ## 回归检查
 

@@ -28,11 +28,11 @@
 
 代码入口：
 
-- `packages/nexus/src/modules`
-- `packages/nexus/src/core/auth`
-- `packages/nexus/src/core/access`
-- `packages/nexus/src/core/permissions`
-- `packages/nexus/src/public`
+- `apps/nexus/src/modules`
+- `apps/nexus/src/core/auth`
+- `apps/nexus/src/core/access`
+- `apps/nexus/src/core/permissions`
+- `apps/nexus/src/public`
 
 ## 要改 Console 前端
 
@@ -42,15 +42,15 @@
 2. [theme.md](./theme.md)
 3. [development.md](./development.md)
 4. [eden.md](./eden.md)
-5. [packages/console/README.md](../packages/console/README.md)
+5. [apps/console/README.md](../apps/console/README.md)
 
 代码入口：
 
-- `packages/console/src/app/router`
-- `packages/console/src/app/navigation`
-- `packages/console/src/app/access/access-control.ts`
-- `packages/console/src/modules`
-- `packages/console/src/pages`
+- `apps/console/src/app/router`
+- `apps/console/src/app/navigation`
+- `apps/console/src/app/access/access-control.ts`
+- `apps/console/src/modules`
+- `apps/console/src/pages`
 
 ## 要改认证或 GitHub 登录
 
@@ -63,10 +63,10 @@
 
 代码入口：
 
-- `packages/nexus/src/core/auth`
-- `packages/nexus/src/modules/auth`
-- `packages/console/src/modules/auth`
-- `packages/console/src/pages/auth/Login.tsx`
+- `apps/nexus/src/core/auth`
+- `apps/nexus/src/modules/auth`
+- `apps/console/src/modules/auth`
+- `apps/console/src/pages/auth/Login.tsx`
 
 ## 要改权限
 
@@ -78,12 +78,12 @@
 
 代码入口：
 
-- `packages/nexus/src/core/permissions`
-- `packages/nexus/src/core/access/access.plugin.ts`
-- `packages/nexus/src/core/access`
-- `packages/nexus/src/modules/*/permissions.ts`
-- `packages/nexus/src/modules/permissions.ts`
-- `packages/console/src/app/access/access-control.ts`
+- `apps/nexus/src/core/permissions`
+- `apps/nexus/src/core/access/access.plugin.ts`
+- `apps/nexus/src/core/access`
+- `apps/nexus/src/modules/*/permissions.ts`
+- `apps/nexus/src/modules/permissions.ts`
+- `apps/console/src/app/access/access-control.ts`
 
 ## 要排查联调问题
 
@@ -120,10 +120,10 @@
 
 代码入口：
 
-- `packages/nexus/src/modules/public-site`
-- `packages/nexus/src/modules/comment`
-- `packages/nexus/src/modules/media`
-- `packages/nexus/src/public/public-site-types.ts`
+- `apps/nexus/src/modules/public-site`
+- `apps/nexus/src/modules/comment`
+- `apps/nexus/src/modules/media`
+- `apps/nexus/src/public/public-site-types.ts`
 
 ## 其他文档
 

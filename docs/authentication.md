@@ -20,7 +20,7 @@
 
 登录方式和可信来源统一在这里维护：
 
-- `packages/nexus/config.yaml`
+- `apps/nexus/config.yaml`
 
 当前最常改的是：
 
@@ -50,28 +50,28 @@ auth:
 
 ### 后端
 
-- `packages/nexus/src/modules/auth/routes.ts`
+- `apps/nexus/src/modules/auth/routes.ts`
   认证接口入口。
-- `packages/nexus/src/core/auth/auth-api.service.ts`
+- `apps/nexus/src/core/auth/auth-api.service.ts`
   邮箱注册、邮箱登录、GitHub 登录、登出。
-- `packages/nexus/src/core/auth/auth-methods.service.ts`
+- `apps/nexus/src/core/auth/auth-methods.service.ts`
   登录方式列表和是否开放的判断。
-- `packages/nexus/src/core/auth/better-auth.ts`
+- `apps/nexus/src/core/auth/better-auth.ts`
   Better Auth 实例和 provider 注册。
-- `packages/nexus/src/core/auth/session.service.ts`
+- `apps/nexus/src/core/auth/session.service.ts`
   session 解析。
 
 ### 前端
 
-- `packages/console/src/modules/auth/auth.query.ts`
+- `apps/console/src/modules/auth/auth.query.ts`
   读取 `/api/auth/get-session`。
-- `packages/console/src/modules/auth/auth.api.ts`
+- `apps/console/src/modules/auth/auth.api.ts`
   只处理 GitHub 登录地址这类浏览器跳转动作，不负责普通接口请求。
-- `packages/console/src/modules/auth/auth.store.ts`
+- `apps/console/src/modules/auth/auth.store.ts`
   保存登录弹窗和登录方式列表这类前端状态。
-- `packages/console/src/pages/auth/Login.tsx`
+- `apps/console/src/pages/auth/Login.tsx`
   登录页。
-- `packages/console/src/app/router/guards.tsx`
+- `apps/console/src/app/router/guards.tsx`
   路由进入前检查 session。
 
 ## `authPlugin` 和 `accessPlugin` 怎么选
@@ -144,9 +144,9 @@ auth:
 
 前端统一通过这两层恢复会话：
 
-- `packages/console/src/modules/auth/auth.query.ts`
+- `apps/console/src/modules/auth/auth.query.ts`
   读 `/api/auth/get-session`
-- `packages/console/src/app/router/guards.tsx`
+- `apps/console/src/app/router/guards.tsx`
   进入页面前先确认是否有 session
 
 ## 常见问题
@@ -166,7 +166,7 @@ auth:
 
 1. GitHub OAuth App callback URL 是否写成 `{BETTER_AUTH_URL}/api/auth/callback/github`
 2. 当前前端 API 基址是否正确
-3. `packages/nexus/config.yaml` 里的 `github.enabled` 是否为 `true`
+3. `apps/nexus/config.yaml` 里的 `github.enabled` 是否为 `true`
 4. 登录页 URL 上的 `error` 参数是什么
 
 GitHub 详细接法看 [docs/OAuth2/github.md](./OAuth2/github.md)。

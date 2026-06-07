@@ -13,11 +13,11 @@
 
 后端接口主要分布在这些位置：
 
-- `packages/nexus/src/modules/*/routes.ts`
+- `apps/nexus/src/modules/*/routes.ts`
   路由、鉴权声明、OpenAPI 说明。
-- `packages/nexus/src/modules/*/model.ts`
+- `apps/nexus/src/modules/*/model.ts`
   body / query / params / response schema。
-- `packages/nexus/src/shared/openapi/api-detail.ts`
+- `apps/nexus/src/shared/openapi/api-detail.ts`
   `apiDetail(...)`。
 
 ## 响应规则
@@ -45,7 +45,7 @@ GitHub 登录和回调返回 `302`。
 
 错误响应统一由后端错误插件处理。
 
-业务错误在 `packages/nexus/src/modules/*/service.ts` 里抛出 `HttpError` 子类。`service.ts` 和 `repository.ts` 不直接使用 Elysia 的 `status()`。这样所有错误都会走 `packages/nexus/src/core/http/error.plugin.ts`，前端收到的错误结构保持一致。
+业务错误在 `apps/nexus/src/modules/*/service.ts` 里抛出 `HttpError` 子类。`service.ts` 和 `repository.ts` 不直接使用 Elysia 的 `status()`。这样所有错误都会走 `apps/nexus/src/core/http/error.plugin.ts`，前端收到的错误结构保持一致。
 
 常见状态码：
 
@@ -191,6 +191,6 @@ GitHub 登录和回调返回 `302`。
 
 前端默认不手写 `fetch`，统一走：
 
-- `packages/console/src/shared/api/eden.ts`
+- `apps/console/src/shared/api/eden.ts`
 
 需要明确 HTTP 类型时，从 `@xdd-zone/nexus/*-types` 引入。

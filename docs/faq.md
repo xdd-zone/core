@@ -44,7 +44,7 @@ bun run prisma:generate
 
 1. GitHub callback URL 是否是 `{BETTER_AUTH_URL}/api/auth/callback/github`
 2. `GITHUB_CLIENT_ID` 和 `GITHUB_CLIENT_SECRET` 是否已配置
-3. `packages/nexus/config.yaml` 的 `auth.methods.github.enabled` 是否开启
+3. `apps/nexus/config.yaml` 的 `auth.methods.github.enabled` 是否开启
 4. 前端 API 基址是否正确
 5. 登录页地址上的 `error` 参数是什么
 

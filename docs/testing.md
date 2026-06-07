@@ -43,17 +43,17 @@ bun run --filter @xdd-zone/nexus test:smoke
 
 Nexus 测试工具放在：
 
-- `packages/nexus/src/test/app.ts`
+- `apps/nexus/src/test/app.ts`
   创建测试 app、构造 `Request`、读取 JSON、断言错误响应和空 body。
-- `packages/nexus/src/test/eden.ts`
+- `apps/nexus/src/test/eden.ts`
   创建不走真实网络的 Eden client，并保留 cookie。
-- `packages/nexus/src/test/db.ts`
+- `apps/nexus/src/test/db.ts`
   生成测试后缀、写入基础角色权限、按外键顺序清理测试数据。
-- `packages/nexus/src/test/permissions.ts`
+- `apps/nexus/src/test/permissions.ts`
   创建临时角色，给用户分配权限。
-- `packages/nexus/src/test/fixtures.ts`
+- `apps/nexus/src/test/fixtures.ts`
   创建用户、分类、文章、评论和媒体测试数据。
-- `packages/nexus/src/test/integration.ts`
+- `apps/nexus/src/test/integration.ts`
   用 `createIntegrationTestContext()` 写路由集成测试，统一处理匿名请求、登录用户、权限、JSON 请求和测试数据清理。
 
 ## Nexus 测试写法规范
@@ -70,12 +70,12 @@ routes.integration.test.ts
 
 优先级按改动落点选：
 
-- 改 `packages/nexus/src/modules/*/service.ts`
+- 改 `apps/nexus/src/modules/*/service.ts`
   先补同目录 `service.unit.test.ts`。
-- 改 `packages/nexus/src/modules/*/routes.ts`
+- 改 `apps/nexus/src/modules/*/routes.ts`
   先补同目录 `routes.integration.test.ts`。
-- 改 `packages/nexus/src/public/*`、`packages/nexus/src/eden/*`、`packages/nexus/src/modules/*/openapi.ts`
-  先补 `packages/nexus/src/eden/*.smoke.test.ts`。
+- 改 `apps/nexus/src/public/*`、`apps/nexus/src/eden/*`、`apps/nexus/src/modules/*/openapi.ts`
+  先补 `apps/nexus/src/eden/*.smoke.test.ts`。
 
 不要把 service 逻辑塞进 smoke。不要把 OpenAPI 契约检查塞进普通路由集成测试。
 
@@ -89,7 +89,7 @@ const integration = createIntegrationTestContext(TEST_APP_OPTIONS)
 
 文件位置：
 
-- `packages/nexus/src/test/integration.ts`
+- `apps/nexus/src/test/integration.ts`
 
 这个 helper 会给你：
 
@@ -137,9 +137,9 @@ const { response, body } = await integration.json<MyResponse>(
 
 当前参考文件：
 
-- `packages/nexus/src/modules/post/routes.integration.test.ts`
-- `packages/nexus/src/modules/site-config/routes.integration.test.ts`
-- `packages/nexus/src/modules/category/routes.integration.test.ts`
+- `apps/nexus/src/modules/post/routes.integration.test.ts`
+- `apps/nexus/src/modules/site-config/routes.integration.test.ts`
+- `apps/nexus/src/modules/category/routes.integration.test.ts`
 
 不要再新写一套 `createTestApp + new Request + response.json()` 的重复样板，只为了发普通 JSON 请求。
 
@@ -160,9 +160,9 @@ const anonymousRunner = integration.anonymous
 
 当前参考文件：
 
-- `packages/nexus/src/modules/public-site/routes.integration.test.ts`
-- `packages/nexus/src/modules/post/routes.integration.test.ts`
-- `packages/nexus/src/modules/comment/routes.integration.test.ts`
+- `apps/nexus/src/modules/public-site/routes.integration.test.ts`
+- `apps/nexus/src/modules/post/routes.integration.test.ts`
+- `apps/nexus/src/modules/comment/routes.integration.test.ts`
 
 如果测试标题里写的是“匿名访问”，默认先用 `anonymousRunner`，不要先建登录用户。
 
@@ -177,7 +177,7 @@ const anonymousRunner = integration.anonymous
 
 入口文件：
 
-- `packages/nexus/src/test/app.ts`
+- `apps/nexus/src/test/app.ts`
 
 常用组合：
 
@@ -188,9 +188,9 @@ const response = await app.handle(createTestRequest('/openapi/json'))
 
 当前参考文件：
 
-- `packages/nexus/src/modules/auth/routes.integration.test.ts`
-- `packages/nexus/src/core/http/error.plugin.unit.test.ts`
-- `packages/nexus/src/core/access/*.unit.test.ts`
+- `apps/nexus/src/modules/auth/routes.integration.test.ts`
+- `apps/nexus/src/core/http/error.plugin.unit.test.ts`
+- `apps/nexus/src/core/access/*.unit.test.ts`
 
 如果你已经进入普通模块路由集成测试，优先还是 `createIntegrationTestContext()`，不要回到 `createTestApp()` 重搭一遍。
 
@@ -217,7 +217,7 @@ const user = await integration.actor([PostPermissions.READ_ALL, PostPermissions.
 
 这两个 helper 在：
 
-- `packages/nexus/src/test/eden.ts`
+- `apps/nexus/src/test/eden.ts`
 
 ### 旧写法怎么替换
 
@@ -234,7 +234,7 @@ const user = await integration.actor([PostPermissions.READ_ALL, PostPermissions.
 3. 用 `integration.track.*` 登记手动创建的 fixture
 4. 用 `afterEach(async () => { await integration.cleanup() })`
 
-只有像 `packages/nexus/src/eden/eden.smoke.test.ts` 这种整文件都在直接控制 Eden client 生命周期的 smoke，才继续自己维护清理数组。
+只有像 `apps/nexus/src/eden/eden.smoke.test.ts` 这种整文件都在直接控制 Eden client 生命周期的 smoke，才继续自己维护清理数组。
 
 ### 最少要断什么
 
@@ -255,7 +255,7 @@ await expectNoBody(response)
 
 `expectNoBody()` 在：
 
-- `packages/nexus/src/test/app.ts`
+- `apps/nexus/src/test/app.ts`
 
 #### 公开接口
 
@@ -268,7 +268,7 @@ await expectNoBody(response)
 物理动作：
 
 - 在 `routes.integration.test.ts` 里用 `anonymousRunner('/api/public-site/...')`
-- 在 `packages/nexus/src/eden/openapi.smoke.test.ts` 里断公开 path 只有当前允许的 method
+- 在 `apps/nexus/src/eden/openapi.smoke.test.ts` 里断公开 path 只有当前允许的 method
 
 #### OpenAPI / Eden 契约
 
@@ -311,7 +311,7 @@ bun run --filter @xdd-zone/nexus test:integration
 
 文件位置：
 
-- `packages/nexus/src/eden/openapi.smoke.test.ts`
+- `apps/nexus/src/eden/openapi.smoke.test.ts`
 
 当前推荐做法：
 

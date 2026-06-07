@@ -15,15 +15,15 @@ HTML 根节点通过 `data-theme` 切换主题。
 
 ## 相关文件
 
-- `packages/console/src/assets/styles/theme/catppuccin.css`
+- `apps/console/src/assets/styles/theme/catppuccin.css`
   Catppuccin 原始颜色变量。
-- `packages/console/src/assets/styles/theme/variables.css`
+- `apps/console/src/assets/styles/theme/variables.css`
   语义变量映射。
-- `packages/console/src/assets/styles/theme/dark-mode.css`
+- `apps/console/src/assets/styles/theme/dark-mode.css`
   暗色变体。
-- `packages/console/src/utils/theme.ts`
+- `apps/console/src/utils/theme.ts`
   写入 `data-theme`。
-- `packages/console/src/utils/catppuccin.antd.ts`
+- `apps/console/src/utils/catppuccin.antd.ts`
   Ant Design 主题配置。
 
 ## 常用语义类
@@ -69,7 +69,7 @@ updateThemeAttribute('latte')
 
 Ant Design 主题统一在这里生成：
 
-- `packages/console/src/utils/catppuccin.antd.ts`
+- `apps/console/src/utils/catppuccin.antd.ts`
 
 页面里不要自己拼一套新的 token。
 
