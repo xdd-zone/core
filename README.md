@@ -1,242 +1,179 @@
 # XDD Zone Core
 
-XDD Zone Core 是一个基于 Bun 的 monorepo，当前同时维护后台前端和 Elysia API 服务。
+XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前维护一个前端控制台、一个 Hono API 服务和一份共享 ESLint / Prettier 配置。
 
 ## 现在有哪些包
 
 - `@xdd-zone/console`
-  后台管理前端，放页面、路由、导航、布局、认证联调和主题。
+  前端控制台，放在 `apps/console`。
 - `@xdd-zone/nexus`
-  后端 API 服务，放接口、认证、权限、OpenAPI、Eden 类型和 Prisma 接入。
+  Hono API 服务，放在 `apps/nexus`。
 - `@xdd-zone/eslint-config`
-  仓库共享的 ESLint / Prettier 配置。
+  共享 ESLint / Prettier 配置，放在 `packages/eslint-config`。
 
 ## 仓库结构
 
 ```text
 .
+├── apps/
+│   ├── console/
+│   └── nexus/
 ├── docs/
 ├── packages/
-│   ├── console/
-│   ├── eslint-config/
-│   └── nexus/
-├── scripts/
+│   └── eslint-config/
 ├── package.json
+├── turbo.json
 └── tsconfig.base.json
 ```
 
 最常看的目录：
 
 - `apps/console/src/app/router`
-  前端路由、登录校验、重定向。
+  前端路由。
 - `apps/console/src/app/navigation`
-  后台菜单和导航分组。
-- `apps/console/src/modules`
-  前端 query / mutation 和页面侧逻辑。
-- `apps/nexus/src/modules`
-  后端业务模块，`routes.ts` 定义路由，`index.ts` 做模块导出。
-- `apps/nexus/src/core/auth`
-  认证实例、session 和认证接口服务。
-- `apps/nexus/src/core/access`
-  认证插件、权限插件和守卫。
-- `apps/nexus/src/core/permissions`
-  系统基础权限、权限判断和权限注册表。
-- `apps/nexus/src/public`
-  给前端复用的 HTTP 类型、Eden 类型、权限导出。
+  控制台菜单。
+- `apps/console/src/layout`
+  控制台整体布局。
+- `apps/console/src/pages`
+  页面组件。
+- `apps/nexus/src/index.ts`
+  Hono app、示例接口和 Node 服务启动入口。
+- `packages/eslint-config`
+  仓库共享的 ESLint / Prettier 配置。
 
 ## 技术栈
 
-- Bun 1.3.5
+- Node.js 22+
+- pnpm 10+
+- Turborepo 2
 - React 19 + Vite 8
-- Elysia 1.4.x
-- Better Auth 1.5.x
-- PostgreSQL + Prisma 7.x
-- Zod 4.x
-- TypeScript strict
+- Hono 4
+- TypeScript 5
+- ESLint 9 + Prettier 3
+
+## Monorepo 管理
+
+当前仓库用 pnpm 管理 workspace 和 catalog：
+
+- workspace 范围写在根目录 `pnpm-workspace.yaml` 的 `packages`。
+- 公共依赖版本写在根目录 `pnpm-workspace.yaml` 的 `catalog` 和 `catalogs`。
+- 子包通过 `catalog:`、`catalog:react`、`catalog:vite`、`catalog:shiki` 引用统一版本。
+
+当前仓库用 Turborepo 管理任务：
+
+- 根目录脚本统一调用 `turbo run ...`。
+- `turbo.json` 定义 `dev`、`build`、`lint`、`format`、`type-check`、`test`、`clean`。
+- 单独运行某个包时，用包名过滤，比如 `--filter=@xdd-zone/console`。
+
+包名保持当前写法，不改成文章里的 `web`、`admin`、`api`。
 
 ## 快速开始
 
 ### 1. 安装依赖
 
 ```bash
-bun install
+pnpm install
 ```
 
-### 2. 配环境变量
-
-本地至少准备这些值：
-
-```env
-DATABASE_URL=postgresql://xdd:xdd_local_dev@localhost:55432/xdd_core_local
-BETTER_AUTH_URL=http://localhost:7788
-BETTER_AUTH_SECRET=replace-with-a-secure-secret
-GITHUB_CLIENT_ID=your-github-client-id
-GITHUB_CLIENT_SECRET=your-github-client-secret
-```
-
-还要确认：
-
-- `apps/nexus/config.yaml` 里的 `auth.trustedOrigins` 包含当前 Console 地址。
-- `apps/nexus/config.yaml` 里的 `auth.methods` 已按当前环境打开或关闭登录方式。
-- GitHub OAuth App 的 callback URL 是 `{BETTER_AUTH_URL}/api/auth/callback/github`。
-
-### 3. 准备数据库
+### 2. 启动开发环境
 
 ```bash
-bun run db prepare
-```
-
-如果你刚改了 Prisma schema，并且可以直接清空本地数据，执行：
-
-```bash
-bun run prisma:push:reset
-bun run seed
-```
-
-如果只想同步 schema，不清空数据：
-
-```bash
-bun run prisma:push
-```
-
-### 4. 启动开发环境
-
-```bash
-bun run dev
+pnpm dev
 ```
 
 默认地址：
 
-- Console: `http://localhost:2333`
-- API: `http://localhost:7788/api`
-- OpenAPI 页面: `http://localhost:7788/openapi`
-- OpenAPI JSON: `http://localhost:7788/openapi/json`
-- Health: `http://localhost:7788/api/health`
+- Console: `http://localhost:5173`
+- Nexus: `http://localhost:7788`
+- Health: `http://localhost:7788/health`
+
+如果只想启动一个包：
+
+```bash
+pnpm dev:console
+pnpm dev:nexus
+```
+
+### 3. 请求健康检查
+
+```bash
+curl http://localhost:7788/health
+```
+
+当前返回：
+
+```json
+{
+  "status": "ok"
+}
+```
 
 ## 常用命令
 
 ```bash
 # 开发
-bun run dev
-bun run dev:console
-bun run dev:nexus
+pnpm dev
+pnpm dev:console
+pnpm dev:nexus
 
 # 构建
-bun run build
-bun run build:console
-bun run build:nexus
+pnpm build
+pnpm build:console
+pnpm build:nexus
 
 # 检查
-bun run lint
-bun run lint:fix
-bun run format
-bun run format:check
-bun run type-check
+pnpm lint
+pnpm lint:fix
+pnpm format
+pnpm format:check
+pnpm type-check
 
-# 数据库
-bun run db up
-bun run db down
-bun run db status
-bun run db logs
-bun run db prepare
-bun run prisma:generate
-bun run prisma:push
-bun run prisma:push:reset
-bun run prisma:reset
-bun run seed
+# 清理子包构建产物
+pnpm clean
 ```
 
 ## 代码放哪里
-
-### 改后端接口
-
-优先看这些位置：
-
-- `apps/nexus/src/modules/<feature>/model.ts`
-- `apps/nexus/src/modules/<feature>/service.ts`
-- `apps/nexus/src/modules/<feature>/repository.ts`
-- `apps/nexus/src/modules/<feature>/routes.ts`
-
-默认顺序：
-
-```text
-先改 model.ts
--> 再改 service.ts / repository.ts
--> 最后在 routes.ts 注册或调整路由
-```
-
-业务错误在 `service.ts` 里抛出 `HttpError` 子类。`service.ts` 和 `repository.ts` 不直接使用 Elysia 的 `status()`。
 
 ### 改前端页面
 
 优先看这些位置：
 
 - `apps/console/src/app/router/routes.tsx`
-- `apps/console/src/app/router/guards.tsx`
 - `apps/console/src/app/navigation/navigation.ts`
-- `apps/console/src/modules/*`
-- `apps/console/src/pages/*`
-- `apps/console/src/app/access/access-control.ts`
+- `apps/console/src/layout`
+- `apps/console/src/pages`
 
-当前前端普通接口直接用 `apps/console/src/shared/api/eden.ts` 里的 Treaty 客户端调接口。
-像 GitHub 登录这种浏览器跳转动作，单独放在 `apps/console/src/modules/auth/auth.api.ts` 里拼地址，不再给每个接口都补一层 1:1 的 `*.api.ts` 包装。
+新增页面通常同时改路由、菜单和页面目录。
 
-### 改认证、权限、GitHub 登录
+### 改后端接口
 
-优先看这些位置：
+优先看：
 
-- `apps/nexus/src/core/auth`
-- `apps/nexus/src/core/access`
-- `apps/nexus/src/core/permissions`
-- `apps/nexus/src/modules/*/permissions.ts`
-- `apps/nexus/src/modules/permissions.ts`
-- `apps/console/src/modules/auth`
-- `apps/console/src/pages/auth/Login.tsx`
+- `apps/nexus/src/index.ts`
 
-权限文件按这个规则放：
-
-- 用户、角色、用户权限、系统管理这些基础权限放在 `apps/nexus/src/core/permissions/permissions.ts`
-- 文章、媒体、评论、站点配置这些业务权限放在对应 `apps/nexus/src/modules/*/permissions.ts`
-- 前端统一从 `@xdd-zone/nexus/permissions` 引入权限常量和匹配函数
+当前 Nexus 是基础 Hono 示例服务。新增接口先放在 `apps/nexus/src/index.ts`。如果接口变多，再用 Hono 的 `app.route()` 或 `basePath()` 分组。
 
 ## 当前接口范围
 
-当前仓库已经有这些接口分组：
-
-- 认证：`/api/auth/*`
-- 用户：`/api/user/*`
-- RBAC：`/api/rbac/*`
-- 个人站点：`/api/public-site/*`
-- 文章：`/api/post/*`
-- Markdown 预览：`/api/preview/markdown`
-- 站点配置：`/api/site-config`
-- 媒体：`/api/media/*`
-- 评论：`/api/comment/*`
-
-完整路径和说明看 [docs/api.md](./docs/api.md)。
+- `/`
+  返回服务名称和状态。
+- `/health`
+  返回健康检查状态。
+- `/api/example`
+  返回一个 Hono 示例响应。
 
 ## 文档入口
 
 按任务读文档：
 
-- 先看 [docs/index.md](./docs/index.md)
-- 改仓库结构或模块职责，看 [docs/architecture.md](./docs/architecture.md)
-- 改开发流程，看 [docs/development.md](./docs/development.md)
-- 改接口，看 [docs/api.md](./docs/api.md)
-- 改认证或 GitHub 登录，看 [docs/authentication.md](./docs/authentication.md) 和 [docs/OAuth2/github.md](./docs/OAuth2/github.md)
-- 改权限，看 [docs/rbac.md](./docs/rbac.md)
-- 改前端页面，看 [docs/console.md](./docs/console.md) 和 [docs/theme.md](./docs/theme.md)
+- 改仓库结构或模块职责，看 [docs/architecture.md](./docs/architecture.md)。
+- 改开发流程，看 [docs/development.md](./docs/development.md)。
+- 改前端页面，看 [docs/console.md](./docs/console.md) 和 [docs/theme.md](./docs/theme.md)。
 
 ## 提交前最小检查
 
 ```bash
-bun run format
-bun run lint
-bun run type-check
-```
-
-如果这次改动碰到接口、认证、权限、OpenAPI 或 Eden，再加上：
-
-```bash
-bun run --filter @xdd-zone/nexus test
+pnpm format:check
+pnpm lint
+pnpm type-check
 ```

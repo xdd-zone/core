@@ -192,10 +192,10 @@ apps/nexus/prisma/seed/seeds/seed-permissions.ts
 ## 调整 RBAC 后至少检查什么
 
 ```bash
-bun run format
-bun run lint
-bun run type-check
-bun run --filter @xdd-zone/nexus test
+pnpm format
+pnpm lint
+pnpm type-check
+pnpm --filter @xdd-zone/nexus test
 ```
 
 重点看：

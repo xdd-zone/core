@@ -16,18 +16,16 @@
 
 ## Prisma Client 没生成怎么办
 
-```bash
-bun run prisma:generate
-```
+当前仓库还没有 Prisma 脚本。确认 `package.json` 里补了对应脚本后，再按脚本名执行。
 
 ## 本地数据库连不上怎么办
 
 按这个顺序看：
 
 1. Docker 是否正常
-2. `bun run db status` 是否正常
+2. 本地数据库容器是否正在运行
 3. `.env` 里的 `DATABASE_URL` 是否正确
-4. 是否已经执行过 `bun run db prepare`
+4. 数据库表结构是否已经准备好
 
 ## 登录成功后还是拿不到 session
 
@@ -51,5 +49,5 @@ bun run prisma:generate
 ## 本机回归怎么跑
 
 ```bash
-bun run --filter @xdd-zone/nexus test
+pnpm --filter @xdd-zone/nexus test
 ```

@@ -14,7 +14,6 @@ export default antfu(
     ignores: [
       // 依赖
       'node_modules',
-      'bun.lock',
       'package-lock.json',
       'pnpm-lock.yaml',
       'yarn.lock',

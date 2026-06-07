@@ -212,7 +212,7 @@ curl "http://localhost:7788/api/public-site/posts?keyword=Elysia&page=1&pageSize
 按标签筛选：
 
 ```bash
-curl "http://localhost:7788/api/public-site/posts?tag=bun&page=1&pageSize=20"
+curl "http://localhost:7788/api/public-site/posts?tag=react&page=1&pageSize=20"
 ```
 
 按分类 `slug` 筛选：
@@ -248,7 +248,7 @@ curl "http://localhost:7788/api/public-site/posts?categorySlug=tech&page=1&pageS
         "name": "技术",
         "slug": "tech"
       },
-      "tags": ["bun", "elysia"],
+      "tags": ["react", "hono"],
       "publishedAt": "2026-05-06T11:39:11.435Z",
       "createdAt": "2026-05-06T11:39:11.435Z",
       "updatedAt": "2026-05-06T11:39:11.435Z"
@@ -341,7 +341,7 @@ curl http://localhost:7788/api/public-site/posts/hello-world
     "name": "技术",
     "slug": "tech"
   },
-  "tags": ["bun", "elysia"],
+  "tags": ["react", "hono"],
   "publishedAt": "2026-05-06T11:39:11.435Z",
   "createdAt": "2026-05-06T11:39:11.435Z",
   "updatedAt": "2026-05-06T11:39:11.435Z",

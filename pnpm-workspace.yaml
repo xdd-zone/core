@@ -1,0 +1,58 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+catalog:
+  "@tailwindcss/vite": ^4.2.2
+  "@antfu/eslint-config": ^6.7.3
+  "@hono/node-server": ^1.19.6
+  "@tanstack/history": ^1.161.6
+  "@tanstack/react-query": ^5.96.2
+  "@tanstack/react-router": ^1.168.10
+  "@tiptap/markdown": ^3.22.2
+  "@tiptap/pm": ^3.22.2
+  "@tiptap/react": ^3.22.2
+  "@tiptap/starter-kit": ^3.22.2
+  "@types/node": ^22.15.3
+  antd: ^6.3.5
+  clsx: ^2.1.1
+  dayjs: ^1.11.20
+  esbuild: ^0.28.0
+  eslint: ^9.39.4
+  eslint-config-prettier: ^10.1.8
+  eslint-plugin-format: ^1.1.0
+  eslint-plugin-react-hooks: ^7.0.1
+  eslint-plugin-react-refresh: ^0.5.2
+  hono: ^4.12.10
+  i18next: ^26.0.3
+  lucide-react: ^1.7.0
+  markdown-to-jsx: ^9.7.13
+  prettier: ^3.8.1
+  react-i18next: ^17.0.2
+  react-icons: ^5.6.0
+  react-image-crop: ^11.0.10
+  react-use: ^17.6.0
+  styled-components: ^6.3.12
+  tailwindcss: ^4.2.2
+  turbo: ^2.6.3
+  tsup: ^8.5.1
+  tsx: ^4.20.6
+  typescript: ^5.9.3
+  vitest: ^4.0.15
+  zustand: ^5.0.12
+
+catalogs:
+  react:
+    "@types/react": ^19.2.14
+    "@types/react-dom": ^19.2.3
+    react: ^19.2.4
+    react-dom: ^19.2.4
+  shiki:
+    "@shikijs/langs": ^4.0.2
+    "@shikijs/transformers": ^4.0.2
+    shiki: ^4.0.2
+  vite:
+    "@vitejs/plugin-react": ^6.0.1
+    vite: ^8.0.3
+  conflicts_@types/node_h25_5_2:
+    "@types/node": ^25.5.2

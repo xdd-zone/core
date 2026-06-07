@@ -14,62 +14,37 @@
   "bugs": {
     "url": "https://github.com/xdd-zone/core/issues"
   },
-  "workspaces": {
-    "packages": [
-      "apps/*",
-      "packages/*"
-    ],
-    "catalog": {
-      "bun-types": "^1.3.11",
-      "eslint": "^9.39.4",
-      "prettier": "^3.8.1",
-      "typescript": "^5.9.3"
-    },
-    "catalogs": {
-      "shiki": {
-        "@shikijs/langs": "^4.0.2",
-        "@shikijs/transformers": "^4.0.2",
-        "shiki": "^4.0.2"
-      },
-      "react": {
-        "react": "^19.2.4",
-        "react-dom": "^19.2.4",
-        "@types/react": "^19.2.14",
-        "@types/react-dom": "^19.2.3"
-      },
-      "vite": {
-        "vite": "^8.0.3",
-        "@vitejs/plugin-react": "^6.0.1"
-      }
-    }
-  },
+  "packageManager": "pnpm@10.24.0",
   "engines": {
-    "bun": "1.3.11"
+    "node": ">=22",
+    "pnpm": ">=10"
   },
   "scripts": {
-    "dev": "bun run --filter @xdd-zone/nexus --filter @xdd-zone/console --parallel dev",
-    "dev:all": "bun run --filter @xdd-zone/nexus --filter @xdd-zone/console --parallel dev",
-    "dev:nexus": "bun run --filter @xdd-zone/nexus dev",
-    "dev:console": "bun run --filter @xdd-zone/console dev",
-    "build": "bun run --filter '*' build",
-    "build:nexus": "bun run --filter @xdd-zone/nexus build",
-    "build:console": "bun run --filter @xdd-zone/console build",
-    "lint": "bun run lint:nexus && bun run lint:console",
-    "lint:nexus": "eslint --no-error-on-unmatched-pattern --config apps/nexus/eslint.config.js apps/nexus/src",
-    "lint:console": "eslint --config apps/console/eslint.config.js apps/console/src",
-    "lint:fix": "bun run lint:fix:nexus && bun run lint:fix:console",
-    "lint:fix:nexus": "eslint --no-error-on-unmatched-pattern --config apps/nexus/eslint.config.js apps/nexus/src --fix",
-    "lint:fix:console": "eslint --config apps/console/eslint.config.js apps/console/src --fix",
-    "format": "prettier --write apps/ packages/",
-    "format:check": "prettier --check apps/ packages/",
-    "type-check": "bun run type-check:nexus && bun run type-check:console",
-    "type-check:nexus": "bun run --filter @xdd-zone/nexus type-check",
-    "type-check:console": "bun run --filter @xdd-zone/console type-check",
-    "clean": "rm -rf apps/*/node_modules apps/*/dist packages/*/node_modules packages/*/dist"
+    "dev": "turbo run dev --filter=@xdd-zone/nexus --filter=@xdd-zone/console",
+    "dev:all": "pnpm run dev",
+    "dev:nexus": "turbo run dev --filter=@xdd-zone/nexus",
+    "dev:console": "turbo run dev --filter=@xdd-zone/console",
+    "build": "turbo run build",
+    "build:nexus": "turbo run build --filter=@xdd-zone/nexus",
+    "build:console": "turbo run build --filter=@xdd-zone/console",
+    "lint": "turbo run lint",
+    "lint:nexus": "turbo run lint --filter=@xdd-zone/nexus",
+    "lint:console": "turbo run lint --filter=@xdd-zone/console",
+    "lint:fix": "turbo run lint:fix",
+    "lint:fix:nexus": "turbo run lint:fix --filter=@xdd-zone/nexus",
+    "lint:fix:console": "turbo run lint:fix --filter=@xdd-zone/console",
+    "format": "turbo run format",
+    "format:check": "turbo run format:check",
+    "type-check": "turbo run type-check",
+    "type-check:nexus": "turbo run type-check --filter=@xdd-zone/nexus",
+    "type-check:console": "turbo run type-check --filter=@xdd-zone/console",
+    "clean": "turbo run clean"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "turbo": "catalog:",
     "typescript": "catalog:"
   }
 }

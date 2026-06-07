@@ -4,11 +4,6 @@
 .pnp.js
 package-lock.json
 
-# Bun
-**/*.bun
-bun.lock
-bun.lockb
-
 # Testing
 coverage
 packages/nexus/storage
@@ -45,8 +40,6 @@ yarn-error.log*
 *.pem
 .kiro
 .kiro/
-CLAUDE.md
-AGENTS.md
 
 # TypeScript
 *.tsbuildinfo
@@ -60,3 +53,6 @@ AGENTS.md
 # Deployment
 .vercel
 .sisyphus
+
+# Turborepo
+.turbo

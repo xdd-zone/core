@@ -59,7 +59,7 @@ STORAGE_PROVIDER=local
 
 ```bash
 cd apps/nexus
-bun run dev
+pnpm dev
 ```
 
 上传后的文件会出现在：
@@ -87,7 +87,7 @@ COS_SIGNED_URL_EXPIRES=600
 
 ```bash
 cd apps/nexus
-bun run dev
+pnpm dev
 ```
 
 注意：

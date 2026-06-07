@@ -8,21 +8,21 @@
 ## 基础检查
 
 ```bash
-bun run format
-bun run lint
-bun run type-check
+pnpm format
+pnpm lint
+pnpm type-check
 ```
 
 如果只想先看格式：
 
 ```bash
-bun run format:check
+pnpm format:check
 ```
 
 ## Nexus 测试
 
 ```bash
-bun run --filter @xdd-zone/nexus test
+pnpm --filter @xdd-zone/nexus test
 ```
 
 当前会覆盖：
@@ -36,9 +36,9 @@ bun run --filter @xdd-zone/nexus test
 按测试类型单独跑：
 
 ```bash
-bun run --filter @xdd-zone/nexus test:unit
-bun run --filter @xdd-zone/nexus test:integration
-bun run --filter @xdd-zone/nexus test:smoke
+pnpm --filter @xdd-zone/nexus test:unit
+pnpm --filter @xdd-zone/nexus test:integration
+pnpm --filter @xdd-zone/nexus test:smoke
 ```
 
 Nexus 测试工具放在：
@@ -292,16 +292,16 @@ await expectNoBody(response)
 只改 Nexus 测试时，至少跑：
 
 ```bash
-bun run --filter @xdd-zone/nexus test:smoke
+pnpm --filter @xdd-zone/nexus test:smoke
 ```
 
 如果这次同时改了普通路由测试，再补：
 
 ```bash
-bun run --filter @xdd-zone/nexus test:integration
+pnpm --filter @xdd-zone/nexus test:integration
 ```
 
-如果只改了文档，根目录的 `bun run format:check` 不会检查 `docs/`。这时手动核对：
+如果只改了文档，根目录的 `pnpm format:check` 不会检查 `docs/`。这时手动核对：
 
 1. 路径和文件名是否存在
 2. 命令名是否和 `package.json` 一致
@@ -327,9 +327,9 @@ bun run --filter @xdd-zone/nexus test:integration
 ## Console 检查
 
 ```bash
-bun run lint:console
-bun run --filter @xdd-zone/console type-check
-bun run build:console
+pnpm lint:console
+pnpm --filter @xdd-zone/console type-check
+pnpm build:console
 ```
 
 ## 本地数据库
@@ -337,11 +337,7 @@ bun run build:console
 常用命令：
 
 ```bash
-bun run db up
-bun run db down
-bun run db status
-bun run db logs
-bun run db prepare
+当前根目录没有数据库脚本。需要本地数据库时，先确认 `package.json` 里已经补了对应脚本。
 ```
 
 本地默认数据库：
@@ -356,7 +352,7 @@ bun run db prepare
 
 ### 只改文档
 
-当前根目录的 `bun run format:check` 只检查 `packages/`，不会检查 `README.md` 和 `docs/`。
+当前根目录的 `pnpm format:check` 只检查各 workspace，不会检查 `README.md` 和 `docs/`。
 
 只改 Markdown 时，先手动核对：
 
@@ -367,28 +363,28 @@ bun run db prepare
 如果这次改动同时碰了 `packages/` 里的文件，再补：
 
 ```bash
-bun run format:check
+pnpm format:check
 ```
 
 ### 改前端
 
 ```bash
-bun run lint:console
-bun run --filter @xdd-zone/console type-check
-bun run build:console
+pnpm lint:console
+pnpm --filter @xdd-zone/console type-check
+pnpm build:console
 ```
 
 ### 改后端接口、认证、权限、OpenAPI、Eden
 
 ```bash
-bun run --filter @xdd-zone/nexus type-check
-bun run --filter @xdd-zone/nexus test
+pnpm --filter @xdd-zone/nexus type-check
+pnpm --filter @xdd-zone/nexus test
 ```
 
 ### 提交前最小检查
 
 ```bash
-bun run format
-bun run lint
-bun run type-check
+pnpm format
+pnpm lint
+pnpm type-check
 ```

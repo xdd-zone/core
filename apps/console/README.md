@@ -17,14 +17,14 @@
 ```bash
 cd apps/console
 
-bun run dev
-bun run build
-bun run preview
-bun run lint
-bun run lint:fix
-bun run format
-bun run format:check
-bun run type-check
+pnpm dev
+pnpm build
+pnpm preview
+pnpm lint
+pnpm lint:fix
+pnpm format
+pnpm format:check
+pnpm type-check
 ```
 
 ## 目录结构

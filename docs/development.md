@@ -4,162 +4,78 @@
 
 ## 开发前先确认
 
-- Bun 1.3.5
-- Docker 可用
-- `.env` 里至少有 `DATABASE_URL`、`BETTER_AUTH_URL`、`BETTER_AUTH_SECRET`
-- 如果要测 GitHub 登录，再补 `GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET`
-- `apps/nexus/config.yaml` 的 `auth.trustedOrigins` 已包含当前 Console 地址
+- Node.js 22+
+- pnpm 10+
 
 ## 初始化
 
 ```bash
-bun install
-bun run db prepare
+pnpm install
 ```
 
-如果只想先生成 Prisma Client：
+## Monorepo 命令入口
 
-```bash
-bun run prisma:generate
-```
+根目录脚本通过 Turborepo 调用各个 workspace：
+
+- `apps/console` 的包名是 `@xdd-zone/console`
+- `apps/nexus` 的包名是 `@xdd-zone/nexus`
+- `packages/eslint-config` 的包名是 `@xdd-zone/eslint-config`
+
+单独运行一个包时，用根目录脚本，不需要先 `cd` 到子目录。
 
 ## 常用开发命令
 
 ```bash
 # 前后端一起跑
-bun run dev
+pnpm dev
 
 # 只跑后端
-bun run dev:nexus
+pnpm dev:nexus
 
 # 只跑前端
-bun run dev:console
+pnpm dev:console
 
 # 基础检查
-bun run format
-bun run lint
-bun run type-check
-```
-
-## 数据库约定
-
-当前项目不维护 Prisma migration 文件，数据库结构以当前 schema 为准。
-
-改完 schema 后：
-
-- 可以清空数据时，优先执行：
-
-```bash
-bun run prisma:push:reset
-bun run seed
-```
-
-- 不想清空数据时，执行：
-
-```bash
-bun run prisma:push
+pnpm format
+pnpm lint
+pnpm type-check
 ```
 
 ## 改后端接口时怎么走
 
 默认顺序：
 
-1. 先改 `model.ts`
-2. 再改 `service.ts / repository.ts`
-3. 最后改 `routes.ts`
-4. 跑检查
+1. 先改 `apps/nexus/src/index.ts`
+2. 再跑检查
 
-至少会碰到这些文件：
-
-- `apps/nexus/src/modules/<feature>/model.ts`
-- `apps/nexus/src/modules/<feature>/service.ts`
-- `apps/nexus/src/modules/<feature>/repository.ts`
-- `apps/nexus/src/modules/<feature>/routes.ts`
-
-如果接口还要给前端复用明确的 HTTP 类型，再补：
-
-- `apps/nexus/src/public/*-types.ts`
+当前 Nexus 是基础 Hono 示例服务。新增接口先放在 `apps/nexus/src/index.ts`。如果接口变多，再用 Hono 的 `app.route()` 或 `basePath()` 分组。
 
 ## 改前端页面时怎么走
 
 默认顺序：
 
-1. 先确认后端接口和登录态约定
-2. 再看页面路径和菜单是否要一起改
-3. 最后补 query / mutation 和页面实现
-4. 跑检查
+1. 先看页面路径和菜单是否要一起改
+2. 再补页面实现
+3. 跑检查
 
 最常改的文件：
 
 - `apps/console/src/app/router/routes.tsx`
-- `apps/console/src/app/router/guards.tsx`
 - `apps/console/src/app/navigation/navigation.ts`
-- `apps/console/src/app/access/access-control.ts`
-- `apps/console/src/modules/*`
 - `apps/console/src/pages/*`
 
 ## 代码该放哪
 
 ### 后端
 
-- 路由、schema 绑定、鉴权声明：`modules/*/routes.ts`
-- HTTP schema：`modules/*/model.ts`
-- 业务逻辑：`modules/*/service.ts`
-- Prisma 查询：`modules/*/repository.ts`
-- 认证：`core/auth/*`
-- 权限常量和权限判断：`core/permissions/*`
-- 认证插件、权限插件和守卫：`core/access/*`
-- HTTP 公共插件：`core/http/*`
-- 最终配置：`core/config/*`
-
-### 后端错误写法
-
-- `service.ts` 里遇到业务错误时，抛出 `HttpError` 子类，比如 `NotFoundError`、`BadRequestError`、`ConflictError`。
-- `service.ts` 和 `repository.ts` 不导入 Elysia，不调用 `status()`，不设置 `set.status`。
-- `routes.ts` 只在纯 HTTP 行为里设置状态码，比如删除成功返回 `204`、GitHub 登录返回 `302`、文件响应返回 `Response`。
-- 错误响应由 `apps/nexus/src/core/http/error.plugin.ts` 返回统一结构。
-- 接口可能返回哪些错误码，写在模块自己的 `openapi.ts` 的 `apiDetail({ errors })` 里。
+- Hono app、示例接口、Node 启动入口：`apps/nexus/src/index.ts`
 
 ### 前端
 
-- 路由树和重定向：`app/router/*`
+- 路由树：`app/router/*`
 - 菜单：`app/navigation/*`
-- 页面访问控制：`app/access/access-control.ts`
-- Treaty 客户端：`shared/api/eden.ts`
-- 页面侧请求逻辑：`modules/*`
 - 页面组件：`pages/*`
 - 布局壳层：`layout/*`
-
-## 改认证或权限时要多看哪几处
-
-### 认证
-
-- `apps/nexus/src/core/auth/*`
-- `apps/nexus/src/core/access/auth.plugin.ts`
-- `apps/nexus/src/modules/auth/*`
-- `apps/console/src/modules/auth/*`
-- `apps/console/src/pages/auth/Login.tsx`
-
-### 权限
-
-- `apps/nexus/src/core/access/access.plugin.ts`
-- `apps/nexus/src/core/access/*`
-- `apps/nexus/src/core/permissions/*`
-- `apps/nexus/src/modules/*/permissions.ts`
-- `apps/nexus/src/modules/permissions.ts`
-- `apps/console/src/app/access/access-control.ts`
-
-系统基础权限放在 `core/permissions/permissions.ts`。业务权限放在对应业务模块的 `permissions.ts`。
-
-新增业务权限时：
-
-1. 在 `apps/nexus/src/modules/<feature>/permissions.ts` 写权限常量和权限说明
-2. 在 `apps/nexus/src/modules/permissions.ts` 加入权限说明
-3. 在 `apps/nexus/src/modules/<feature>/routes.ts` 使用该模块自己的权限常量
-4. 在 `apps/console/src/app/access/access-control.ts` 补页面访问规则
-5. 如果页面内部还要判断按钮权限，从 `@xdd-zone/nexus/permissions` 引入业务权限常量
-
-不要把业务权限写进 `apps/nexus/src/core/permissions/permissions.ts`。
 
 ## 回归检查
 
@@ -176,36 +92,28 @@ bun run prisma:push
 如果同时改了 `packages/` 里的内容，再补：
 
 ```bash
-bun run format:check
+pnpm format:check
 ```
 
 ### 改前端
 
 ```bash
-bun run lint:console
-bun run --filter @xdd-zone/console type-check
-bun run build:console
+pnpm lint:console
+pnpm type-check:console
+pnpm build:console
 ```
 
-### 改后端接口、认证、权限、OpenAPI、Eden
+### 改后端接口
 
 ```bash
-bun run --filter @xdd-zone/nexus type-check
-bun run --filter @xdd-zone/nexus test
-```
-
-如果改了权限拆分或前端页面访问控制，再补：
-
-```bash
-bun run format
-bun run lint
-bun run type-check
+pnpm type-check:nexus
+pnpm build:nexus
 ```
 
 ### 提交前最小检查
 
 ```bash
-bun run format
-bun run lint
-bun run type-check
+pnpm format:check
+pnpm lint
+pnpm type-check
 ```

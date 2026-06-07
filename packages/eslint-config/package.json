@@ -13,11 +13,18 @@
     "index.js",
     "prettier.config.js"
   ],
+  "scripts": {
+    "lint": "eslint --no-error-on-unmatched-pattern .",
+    "lint:fix": "eslint --no-error-on-unmatched-pattern . --fix",
+    "format": "prettier --config prettier.config.js --write .",
+    "format:check": "prettier --config prettier.config.js --check .",
+    "clean": "rm -rf dist"
+  },
   "dependencies": {
-    "@antfu/eslint-config": "^6.7.3",
+    "@antfu/eslint-config": "catalog:",
     "eslint": "catalog:",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-format": "^1.1.0",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-format": "catalog:",
     "prettier": "catalog:"
   }
 }

@@ -85,7 +85,7 @@ auth:
 ## 第 5 步：启动并验证
 
 ```bash
-bun run dev
+pnpm dev
 ```
 
 按这个顺序验证：

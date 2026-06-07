@@ -123,7 +123,7 @@ await api.rbac.users({ userId }).roles.post(body)
 常用命令：
 
 ```bash
-bun run --filter @xdd-zone/nexus test
+pnpm --filter @xdd-zone/nexus test
 ```
 
 ## 什么时候优先看这份文档

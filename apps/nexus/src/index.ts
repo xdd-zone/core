@@ -1,3 +1,6 @@
+import { fileURLToPath } from 'node:url'
+
+import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 
 const app = new Hono()
@@ -11,10 +14,12 @@ export { app }
 
 export default app
 
-if (import.meta.main) {
-  const port = Number(Bun.env.PORT ?? 7788)
+const isEntry = process.argv[1] === fileURLToPath(import.meta.url)
 
-  Bun.serve({
+if (isEntry) {
+  const port = Number(process.env.PORT ?? 7788)
+
+  serve({
     fetch: app.fetch,
     port,
   })

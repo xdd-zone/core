@@ -185,7 +185,7 @@ GitHub 登录和回调返回 `302`。
 2. 改 `service.ts / repository.ts`
 3. 改 `routes.ts`
 4. 打开 `/openapi` 看说明有没有同步
-5. 跑 `bun run --filter @xdd-zone/nexus test`
+5. 跑 `pnpm --filter @xdd-zone/nexus test`
 
 ## 前端怎么接
 

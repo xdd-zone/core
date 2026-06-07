@@ -20,10 +20,10 @@
 ```bash
 cd apps/nexus
 
-bun run dev
-bun run build
-bun run type-check
-bun run test
+pnpm dev
+pnpm build
+pnpm type-check
+pnpm test
 ```
 
 ## 运行方式
@@ -32,13 +32,13 @@ bun run test
 
 ```bash
 cd apps/nexus
-bun run dev
+pnpm dev
 ```
 
 指定端口：
 
 ```bash
-PORT=7788 bun run dev
+PORT=7788 pnpm dev
 ```
 
 直接请求 app 时，可以在测试里用 `app.request()`：
