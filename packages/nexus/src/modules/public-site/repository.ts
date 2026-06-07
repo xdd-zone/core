@@ -1,3 +1,4 @@
+import type { Prisma } from '@nexus-prisma/generated/client'
 import type { PaginatedList, PaginationQuery } from '@nexus/infra/database'
 import type {
   PublicSiteArchivePostDateData,
@@ -48,7 +49,12 @@ export class PublicSiteRepository {
     where: PublicSitePostWhereInput,
     query: PaginationQuery,
   ): Promise<PaginatedList<PublicSitePostSummaryData>> {
-    return PrismaService.paginate<PublicSitePostSummaryData>('post', where, query, {
+    return PrismaService.paginate<
+      PublicSitePostSummaryData,
+      PublicSitePostWhereInput,
+      typeof PUBLIC_SITE_POST_SUMMARY_SELECT,
+      Prisma.PostOrderByWithRelationInput[]
+    >('post', where, query, {
       select: PUBLIC_SITE_POST_SUMMARY_SELECT,
       orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
     })
@@ -66,7 +72,12 @@ export class PublicSiteRepository {
     where: PublicSitePostWhereInput,
     query: PaginationQuery,
   ): Promise<PaginatedList<PublicSitePostSummaryData>> {
-    return PrismaService.paginate<PublicSitePostSummaryData>('post', where, query, {
+    return PrismaService.paginate<
+      PublicSitePostSummaryData,
+      PublicSitePostWhereInput,
+      typeof PUBLIC_SITE_POST_SUMMARY_SELECT,
+      Prisma.PostOrderByWithRelationInput[]
+    >('post', where, query, {
       select: PUBLIC_SITE_POST_SUMMARY_SELECT,
       orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
     })

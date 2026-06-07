@@ -18,7 +18,12 @@ export class MediaRepository {
    * 分页查询媒体资源。
    */
   static async paginate(query: PaginationQuery): Promise<PaginatedList<MediaRecord>> {
-    return PrismaService.paginate<MediaRecord>('media', {}, query, {
+    return PrismaService.paginate<
+      MediaRecord,
+      Prisma.MediaWhereInput,
+      typeof MEDIA_BASE_SELECT,
+      Prisma.MediaOrderByWithRelationInput[]
+    >('media', {}, query, {
       select: MEDIA_BASE_SELECT,
       orderBy: [{ createdAt: 'desc' }],
     })

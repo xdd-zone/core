@@ -1,4 +1,4 @@
-import type { CommentStatus } from '@nexus-prisma/generated/client'
+import type { CommentStatus, Prisma } from '@nexus-prisma/generated/client'
 import type { PaginatedList, PaginationQuery } from '@nexus/infra/database'
 import type { CommentBaseData, CommentWhereInput } from './types'
 import { prisma } from '@nexus/infra/database'
@@ -28,7 +28,12 @@ export class CommentRepository {
    * 分页查询评论。
    */
   static async paginate(where: CommentWhereInput, query: PaginationQuery): Promise<PaginatedList<CommentBaseData>> {
-    return PrismaService.paginate<CommentBaseData>('comment', where, query, {
+    return PrismaService.paginate<
+      CommentBaseData,
+      CommentWhereInput,
+      typeof COMMENT_BASE_SELECT,
+      Prisma.CommentOrderByWithRelationInput[]
+    >('comment', where, query, {
       select: COMMENT_BASE_SELECT,
       orderBy: [{ createdAt: 'desc' }, { updatedAt: 'desc' }],
     })

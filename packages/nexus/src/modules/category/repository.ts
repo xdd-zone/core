@@ -1,3 +1,4 @@
+import type { Prisma } from '@nexus-prisma/generated/client'
 import type { PaginatedList, PaginationQuery } from '@nexus/infra/database'
 import type { CategoryBaseData, CategoryWhereInput } from './types'
 import { prisma } from '@nexus/infra/database'
@@ -6,7 +7,12 @@ import { CATEGORY_BASE_SELECT } from './constants'
 
 export class CategoryRepository {
   static async paginate(where: CategoryWhereInput, query: PaginationQuery): Promise<PaginatedList<CategoryBaseData>> {
-    return PrismaService.paginate<CategoryBaseData>('category', where, query, {
+    return PrismaService.paginate<
+      CategoryBaseData,
+      CategoryWhereInput,
+      typeof CATEGORY_BASE_SELECT,
+      Prisma.CategoryOrderByWithRelationInput[]
+    >('category', where, query, {
       select: CATEGORY_BASE_SELECT,
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
     })

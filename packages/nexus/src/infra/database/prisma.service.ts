@@ -12,6 +12,24 @@ import { calculateSkip, createPaginatedResponse, normalizePagination } from './h
  */
 type PrismaModelKey = keyof typeof prisma
 
+type PrismaOrderBy = Record<string, unknown> | Record<string, unknown>[]
+
+interface PaginateDelegate<TItem, TWhere, TSelect, TOrderBy> {
+  count: (args: { where: TWhere }) => Promise<number>
+  findMany: (args: {
+    where: TWhere
+    skip: number
+    take: number
+    select?: TSelect
+    orderBy?: TOrderBy
+  }) => Promise<TItem[]>
+}
+
+interface PaginateOptions<TSelect, TOrderBy> {
+  select?: TSelect
+  orderBy?: TOrderBy
+}
+
 /**
  * Prisma 通用服务类
  * 提供跨模型的通用数据库操作方法
@@ -38,21 +56,18 @@ export class PrismaService {
    * );
    * ```
    */
-  static async paginate<T>(
+  static async paginate<TItem, TWhere, TSelect, TOrderBy extends PrismaOrderBy>(
     modelKey: PrismaModelKey,
-    where: any,
+    where: TWhere,
     query: PaginationQuery,
-    options?: {
-      select?: any
-      orderBy?: any
-    },
-  ): Promise<PaginatedList<T>> {
+    options?: PaginateOptions<TSelect, TOrderBy>,
+  ): Promise<PaginatedList<TItem>> {
     // 标准化分页参数
     const { page, pageSize } = normalizePagination(query)
     const skip = calculateSkip(page, pageSize)
 
     // 获取模型委托
-    const model = prisma[modelKey] as any
+    const model = prisma[modelKey] as unknown as PaginateDelegate<TItem, TWhere, TSelect, TOrderBy>
 
     // 并行查询总数和数据
     const [total, items] = await Promise.all([
@@ -62,7 +77,7 @@ export class PrismaService {
         skip,
         take: pageSize,
         select: options?.select,
-        orderBy: options?.orderBy ?? { id: 'desc' },
+        orderBy: options?.orderBy ?? ({ id: 'desc' } as unknown as TOrderBy),
       }),
     ])
 

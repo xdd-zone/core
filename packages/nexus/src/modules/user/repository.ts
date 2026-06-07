@@ -1,4 +1,4 @@
-import type { UserStatus } from '@nexus-prisma/generated/client'
+import type { Prisma, UserStatus } from '@nexus-prisma/generated/client'
 import type { PaginatedList, PaginationQuery } from '@nexus/infra/database'
 import type { UserBaseData, UserWhereInput } from './types'
 import { prisma } from '@nexus/infra/database'
@@ -20,7 +20,12 @@ export class UserRepository {
    * 分页查询未归档用户。
    */
   static async paginate(where: UserWhereInput, query: PaginationQuery): Promise<PaginatedList<UserBaseData>> {
-    return PrismaService.paginate<UserBaseData>('user', withActiveRecord(where), query, {
+    return PrismaService.paginate<
+      UserBaseData,
+      UserWhereInput,
+      typeof USER_BASE_SELECT,
+      Prisma.UserOrderByWithRelationInput
+    >('user', withActiveRecord(where), query, {
       select: USER_BASE_SELECT,
       orderBy: { createdAt: 'desc' },
     })
