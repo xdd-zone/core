@@ -93,6 +93,7 @@ apps/nexus/src/routes
 {
   "ok": true,
   "data": {
+    "env": "test",
     "service": "nexus",
     "status": "ok"
   },
@@ -119,6 +120,7 @@ apps/nexus/src/routes
 {
   "ok": true,
   "data": {
+    "env": "test",
     "service": "nexus",
     "message": "pong, console"
   },

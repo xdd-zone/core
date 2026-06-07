@@ -1,6 +1,7 @@
 import type { HonoEnv } from './shared/hono-env'
 import { BizCode, buildFailure } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
 
 import routes from './routes'
@@ -8,6 +9,15 @@ import { AppError } from './shared/app-error'
 import { createMeta } from './shared/meta'
 
 const app = new Hono<HonoEnv>()
+
+app.use(
+  '*',
+  cors({
+    allowHeaders: ['content-type'],
+    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    origin: ['http://localhost:2333', 'http://127.0.0.1:2333'],
+  }),
+)
 
 app.onError((error, c) => {
   const meta = createMeta()

@@ -17,7 +17,7 @@
   },
   "keywords": [],
   "scripts": {
-    "dev": "vite",
+    "dev": "VITE_APP_ENV=development VITE_NEXUS_BASE_URL=http://localhost:7788 vite",
     "build": "pnpm run type-check && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -55,6 +55,7 @@
     "styled-components": "catalog:",
     "tailwindcss": "catalog:",
     "vite": "catalog:vite",
+    "zod": "catalog:",
     "zustand": "catalog:"
   },
   "devDependencies": {

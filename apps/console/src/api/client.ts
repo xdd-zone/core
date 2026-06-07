@@ -1,8 +1,10 @@
 import type { AppType } from '@xdd-zone/nexus'
+import { getConsoleEnv } from '@console/env'
 import { hc } from 'hono/client'
 
-const nexusBaseUrl = import.meta.env.VITE_NEXUS_BASE_URL ?? 'http://localhost:7788'
+const consoleEnv = getConsoleEnv()
+const nexusBaseUrl = consoleEnv.VITE_NEXUS_BASE_URL
 
 export const nexusClient = hc<AppType>(nexusBaseUrl)
 
-export { nexusBaseUrl }
+export { consoleEnv, nexusBaseUrl }

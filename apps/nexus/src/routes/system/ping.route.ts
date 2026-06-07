@@ -3,6 +3,7 @@ import type { HonoEnv } from '../../shared/hono-env'
 import { BizCode, buildFailure, buildSuccess, PingRequestSchema } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 
+import { getNexusEnv } from '../../shared/env'
 import { createMeta } from '../../shared/meta'
 
 const pingRoute = new Hono<HonoEnv>().post('/', async (c) => {
@@ -23,7 +24,9 @@ const pingRoute = new Hono<HonoEnv>().post('/', async (c) => {
     )
   }
 
+  const env = getNexusEnv()
   const data: PingResponse = {
+    env: env.APP_ENV,
     service: 'nexus',
     message: `pong, ${parsed.data.name}`,
   }

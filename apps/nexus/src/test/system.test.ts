@@ -24,6 +24,7 @@ describe('system routes', () => {
     expect(response.status).toBe(200)
     expect(body.ok).toBe(true)
     expect(body.ok && body.data).toEqual({
+      env: 'test',
       service: 'nexus',
       status: 'ok',
     })
@@ -42,6 +43,7 @@ describe('system routes', () => {
     expect(response.status).toBe(200)
     expect(body.ok).toBe(true)
     expect(body.ok && body.data).toEqual({
+      env: 'test',
       service: 'nexus',
       message: 'pong, console',
     })

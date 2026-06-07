@@ -55,6 +55,7 @@ apps/console/src/
 ## 当前页面路径
 
 - `/`
+- `/env-example`
 - `/ui-showcase`
 - `/markdown-example`
 - `/tiptap-example`
@@ -100,16 +101,22 @@ apps/console/src/api/client.ts
 apps/console/src/api/system/ping.ts
 ```
 
-默认 Nexus 地址是：
-
-```text
-http://localhost:7788
-```
-
-如果要改地址，在 Console 环境变量里设置：
+Console 通过环境变量读取 Nexus 地址：
 
 ```text
 VITE_NEXUS_BASE_URL=http://localhost:7788
+```
+
+Console 当前还会读取运行环境：
+
+```text
+VITE_APP_ENV=development
+```
+
+示例文件在：
+
+```text
+apps/console/.env.example
 ```
 
 当前首页会请求：

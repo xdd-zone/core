@@ -56,6 +56,38 @@ export default {
     mocha: 'Mocha',
   },
   example: {
+    env: {
+      console: {
+        description: 'These values are injected into browser code by Vite.',
+        title: 'Console Variables',
+      },
+      description: 'Checks the environment values read by Console and Nexus.',
+      nexus: {
+        description: 'Nexus reads APP_ENV in the Node service.',
+        empty: 'No result',
+        title: 'Nexus Variables',
+      },
+      response: {
+        description: 'The full response is kept here so the env field can be checked.',
+        empty: 'No response yet.',
+        title: 'API Response',
+      },
+      scope: {
+        browser: 'Browser readable',
+        request: 'Request URL',
+        server: 'Server readable',
+      },
+      status: {
+        connected: 'Connected',
+        failed: 'Failed',
+        loading: 'Loading',
+      },
+      summary: {
+        console: 'Console',
+        nexus: 'Nexus',
+      },
+      title: 'Environment Example',
+    },
     errorState: {
       description: 'The page failed while loading. Retry this page or go home.',
       detailDescription: 'This example keeps a small technical block for long text and wrapping checks.',
@@ -152,6 +184,7 @@ export default {
     brand: 'XDD Console',
   },
   menu: {
+    envExample: 'Environment',
     errorExample: 'Error State',
     examples: 'Examples',
     forbiddenExample: '403 Example',

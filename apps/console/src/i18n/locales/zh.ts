@@ -56,6 +56,38 @@ export default {
     mocha: 'Mocha',
   },
   example: {
+    env: {
+      console: {
+        description: '这些值由 Vite 注入浏览器代码。',
+        title: 'Console 变量',
+      },
+      description: '检查 Console 和 Nexus 当前读取到的环境变量。',
+      nexus: {
+        description: 'Nexus 在 Node 服务里读取 APP_ENV。',
+        empty: '暂无结果',
+        title: 'Nexus 变量',
+      },
+      response: {
+        description: '这里保留完整返回体，方便确认后端返回的 env 字段。',
+        empty: '暂无返回结果。',
+        title: '接口返回',
+      },
+      scope: {
+        browser: '浏览器可读',
+        request: '请求地址',
+        server: '服务端可读',
+      },
+      status: {
+        connected: '已连接',
+        failed: '连接失败',
+        loading: '请求中',
+      },
+      summary: {
+        console: 'Console',
+        nexus: 'Nexus',
+      },
+      title: '环境变量示例',
+    },
     errorState: {
       description: '页面加载时出了点问题。重试当前页面，或返回首页继续其他操作。',
       detailDescription: '示例页保留一小块技术信息，用来确认长文本和换行表现。',
@@ -152,6 +184,7 @@ export default {
     brand: 'XDD Console',
   },
   menu: {
+    envExample: '环境变量',
     errorExample: '错误状态',
     examples: '示例',
     forbiddenExample: '403 示例',

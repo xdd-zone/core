@@ -1,6 +1,6 @@
 import type { ConsoleRouteRecord } from '@console/app/router/types'
 import { lazyRouteComponent } from '@tanstack/react-router'
-import { AlertTriangle, Crop, FileTextIcon, LayoutTemplate, Lock, Search, SquarePen } from 'lucide-react'
+import { AlertTriangle, Crop, FileTextIcon, LayoutTemplate, Lock, Search, Settings2, SquarePen } from 'lucide-react'
 
 export const exampleRoutes: ConsoleRouteRecord[] = [
   {
@@ -16,6 +16,17 @@ export const exampleRoutes: ConsoleRouteRecord[] = [
     },
     path: '/ui-showcase',
     title: 'menu.uiShowcase',
+  },
+  {
+    component: lazyRouteComponent(() => import('./pages/EnvExample'), 'EnvExample'),
+    icon: Settings2,
+    id: 'examples.env',
+    menu: {
+      group: 'examples',
+      order: 15,
+    },
+    path: '/env-example',
+    title: 'menu.envExample',
   },
   {
     component: lazyRouteComponent(() => import('./pages/MarkdownExample'), 'MarkdownExample'),

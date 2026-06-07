@@ -3,13 +3,17 @@
   "tasks": {
     "dev": {
       "cache": false,
+      "env": ["APP_ENV", "PORT", "VITE_APP_ENV", "VITE_NEXUS_BASE_URL"],
       "persistent": true
     },
     "build": {
       "dependsOn": ["^build"],
+      "env": ["APP_ENV", "PORT", "VITE_APP_ENV", "VITE_NEXUS_BASE_URL"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", "build/**"]
     },
     "lint": {
+      "env": ["APP_ENV", "PORT", "VITE_APP_ENV", "VITE_NEXUS_BASE_URL"],
       "outputs": []
     },
     "lint:fix": {
@@ -23,9 +27,11 @@
     },
     "type-check": {
       "dependsOn": ["^build"],
+      "env": ["APP_ENV", "PORT", "VITE_APP_ENV", "VITE_NEXUS_BASE_URL"],
       "outputs": []
     },
     "test": {
+      "env": ["APP_ENV", "PORT", "VITE_APP_ENV", "VITE_NEXUS_BASE_URL"],
       "outputs": ["coverage/**"]
     },
     "clean": {
