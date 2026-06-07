@@ -1,4 +1,5 @@
 import type { BaseStore } from '../types'
+import { homeRouteRecord } from '@console/app/router/records'
 import { create } from 'zustand'
 
 import { persist } from 'zustand/middleware'
@@ -62,15 +63,12 @@ export interface TabBarState extends BaseStore {
   tabs: Tab[]
 }
 
-/**
- * 默认首页标签
- */
 const DEFAULT_HOME_TAB: Tab = {
-  closable: false, // 首页不可关闭
-  icon: 'Home',
-  id: 'home',
-  label: 'menu.home',
-  path: '/',
+  closable: homeRouteRecord.tab === false ? false : (homeRouteRecord.tab?.closable ?? false),
+  icon: homeRouteRecord.icon?.name,
+  id: homeRouteRecord.id,
+  label: homeRouteRecord.title,
+  path: homeRouteRecord.path,
 }
 
 const LEGACY_HOME_TAB_IDS = new Set(['dashboard', DEFAULT_HOME_TAB.id])

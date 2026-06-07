@@ -90,9 +90,12 @@
 
 规则：
 
-- 菜单和路由分开维护。
-- 新增页面通常同时改 `apps/console/src/app/router/routes.tsx` 和 `apps/console/src/app/navigation/navigation.ts`。
-- 页面组件放在 `apps/console/src/pages`。
+- 页面按模块放在 `apps/console/src/features/<module>`。
+- 页面组件放在 `apps/console/src/features/<module>/pages`。
+- 模块页面记录放在 `apps/console/src/features/<module>/routes.tsx`。
+- 新模块要加到 `apps/console/src/app/router/records.ts`。
+- `apps/console/src/app/router/routes.tsx` 从页面记录生成路由树。
+- `apps/console/src/app/navigation/navigation.ts` 从页面记录生成菜单。
 - 当前前端保留基础控制台框架和固定示例页。
 - 当前前端没有接入 Nexus 业务接口。
 

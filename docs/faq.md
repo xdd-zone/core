@@ -39,7 +39,7 @@ http://localhost:7788/health
 本地默认地址：
 
 ```text
-http://localhost:5173
+http://localhost:2333
 ```
 
 启动命令：

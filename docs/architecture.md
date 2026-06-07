@@ -53,13 +53,13 @@
 主要目录：
 
 - `apps/console/src/app/router`
-  路由树。
+  路由类型、页面记录汇总和路由树。
 - `apps/console/src/app/navigation`
-  左侧菜单。
+  左侧菜单生成。
+- `apps/console/src/features`
+  页面模块。每个模块有自己的 `pages/` 和 `routes.tsx`。
 - `apps/console/src/layout`
   控制台布局。
-- `apps/console/src/pages`
-  页面入口。
 - `apps/console/src/assets/styles`
   全局样式和主题变量。
 - `apps/console/src/stores`

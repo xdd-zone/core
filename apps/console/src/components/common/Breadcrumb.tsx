@@ -17,7 +17,7 @@ export function Breadcrumb() {
   // 过滤出有效的路由匹配，排除根路由和索引路由
   const validMatches = matches.filter((match) => {
     const meta = resolveRouteMeta(match.staticData)
-    const hasTitle = meta.title || meta.breadcrumbTitle
+    const hasTitle = meta.title
     const isNotRoot = match.pathname !== '/'
 
     return hasTitle && isNotRoot
@@ -29,7 +29,7 @@ export function Breadcrumb() {
   // 添加路由层级
   validMatches.forEach((match, index) => {
     const meta = resolveRouteMeta(match.staticData)
-    const title = meta.breadcrumbTitle || meta.title || 'common.loading'
+    const title = meta.title || 'common.loading'
     const isLast = index === validMatches.length - 1
 
     breadcrumbItems.push({

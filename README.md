@@ -29,13 +29,13 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 最常看的目录：
 
 - `apps/console/src/app/router`
-  前端路由。
+  前端路由类型、页面记录汇总和路由树。
 - `apps/console/src/app/navigation`
-  控制台菜单。
+  控制台菜单生成。
+- `apps/console/src/features`
+  Console 页面模块。
 - `apps/console/src/layout`
   控制台整体布局。
-- `apps/console/src/pages`
-  页面组件。
 - `apps/nexus/src/index.ts`
   Hono app、示例接口和 Node 服务启动入口。
 - `packages/eslint-config`
@@ -83,7 +83,7 @@ pnpm dev
 
 默认地址：
 
-- Console: `http://localhost:5173`
+- Console: `http://localhost:2333`
 - Nexus: `http://localhost:7788`
 - Health: `http://localhost:7788/health`
 
@@ -138,12 +138,14 @@ pnpm clean
 
 优先看这些位置：
 
-- `apps/console/src/app/router/routes.tsx`
-- `apps/console/src/app/navigation/navigation.ts`
+- `apps/console/src/features/<module>/pages`
+- `apps/console/src/features/<module>/routes.tsx`
+- `apps/console/src/app/router/records.ts`
 - `apps/console/src/layout`
-- `apps/console/src/pages`
 
-新增页面通常同时改路由、菜单和页面目录。
+新增页面先放到对应模块的 `pages/` 目录，再写到同模块的 `routes.tsx`。
+如果新增了模块，把模块导出的路由记录加到 `apps/console/src/app/router/records.ts`。
+菜单从页面记录生成，已有菜单组通常不用改 `app/navigation/navigation.ts`。
 
 ### 改后端接口
 

@@ -14,7 +14,7 @@ export function AppContent() {
     select: (state) => state.status === 'pending',
   })
   const currentRouteMeta = resolveRouteMeta(matches[matches.length - 1]?.staticData)
-  const isFullWidthContent = currentRouteMeta.contentWidth === 'full'
+  const isFullWidthContent = currentRouteMeta.layout?.contentWidth === 'full'
 
   return (
     <main className="guide-content h-full flex-1 overflow-auto">

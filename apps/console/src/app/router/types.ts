@@ -1,32 +1,39 @@
+import type { RouteComponent } from '@tanstack/react-router'
 import type { LucideProps } from 'lucide-react'
 import type { ComponentType } from 'react'
 
-/**
- * 简化后的路由元信息。
- */
-export interface AppRouteMeta {
+export type ConsoleRouteComponent = RouteComponent
+
+export interface ConsoleLayoutMeta {
   contentWidth?: 'default' | 'full'
+}
 
-  /**
-   * 面包屑标题。
-   */
-  breadcrumbTitle?: string
+export interface ConsoleMenuMeta {
+  group?: string
+  order?: number
+}
 
-  /**
-   * 图标。
-   */
+export interface ConsoleTabMeta {
+  closable?: boolean
+}
+
+export interface ConsoleRouteRecord {
+  component: ConsoleRouteComponent
   icon?: ComponentType<LucideProps>
+  id: string
+  layout?: ConsoleLayoutMeta
+  menu?: false | ConsoleMenuMeta
+  path: string
+  tab?: false | ConsoleTabMeta
+  title: string
+}
 
-  /**
-   * 标签页标题。
-   */
+export interface AppRouteMeta {
+  icon?: ComponentType<LucideProps>
+  id?: string
+  layout?: ConsoleLayoutMeta
+  tab?: false | ConsoleTabMeta
   title?: string
-
-  /**
-   * 是否生成标签页。
-   * @default true
-   */
-  tab?: boolean
 }
 
 /**

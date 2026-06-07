@@ -22,9 +22,9 @@ export function getTabFromMatch(match: RouteMatchSnapshot): Tab | null {
   const path = match.pathname
 
   return {
-    closable: path !== '/',
+    closable: meta.tab?.closable ?? path !== '/',
     icon: meta.icon?.name,
-    id: generateTabId(path),
+    id: meta.id ?? generateTabId(path),
     label: meta.title,
     path,
   }

@@ -28,8 +28,8 @@
 apps/console/src/
 ├── app/
 ├── components/
+├── features/
 ├── layout/
-├── pages/
 ├── stores/
 └── utils/
 ```
@@ -37,13 +37,13 @@ apps/console/src/
 最常改的地方：
 
 - `app/router`
-  路由树。
+  路由类型、页面记录汇总和路由树。
 - `app/navigation`
-  菜单配置。
+  菜单生成。
+- `features`
+  页面模块。每个模块有自己的 `pages/` 和 `routes.tsx`。
 - `layout`
   控制台整体布局。
-- `pages`
-  页面入口。
 - `components`
   通用组件和示例组件。
 - `stores`
@@ -66,6 +66,7 @@ apps/console/src/
 路由文件：
 
 ```text
+apps/console/src/app/router/records.ts
 apps/console/src/app/router/routes.tsx
 ```
 
@@ -75,13 +76,15 @@ apps/console/src/app/router/routes.tsx
 apps/console/src/app/navigation/navigation.ts
 ```
 
-新增页面通常要同时检查：
+新增页面通常要检查：
 
-1. `routes.tsx`
-2. `navigation.ts`
-3. `apps/console/src/pages/<feature>/`
+1. `apps/console/src/features/<module>/pages/<Page>.tsx`
+2. `apps/console/src/features/<module>/routes.tsx`
+3. 新模块要加到 `apps/console/src/app/router/records.ts`
 
-如果页面不需要出现在菜单里，只改路由和页面组件。
+页面记录里的 `menu: false` 表示不进菜单。
+页面记录里的 `tab: false` 表示不生成标签页。
+页面记录里的 `layout.contentWidth: 'full'` 表示内容区使用全宽。
 
 ## 主题
 

@@ -28,7 +28,7 @@ pnpm dev:console
 
 默认地址：
 
-- Console: `http://localhost:5173`
+- Console: `http://localhost:2333`
 - Nexus: `http://localhost:7788`
 - Health: `http://localhost:7788/health`
 
@@ -73,12 +73,14 @@ pnpm build:nexus
 
 常改文件：
 
-- `apps/console/src/app/router/routes.tsx`
-- `apps/console/src/app/navigation/navigation.ts`
-- `apps/console/src/pages`
+- `apps/console/src/features/<module>/pages`
+- `apps/console/src/features/<module>/routes.tsx`
+- `apps/console/src/app/router/records.ts`
 - `apps/console/src/layout`
 
-新增页面通常同时改路由、菜单和页面组件。
+新增页面先放到对应模块的 `pages/` 目录，再写到同模块的 `routes.tsx`。
+如果新增了模块，把模块导出的路由记录加到 `apps/console/src/app/router/records.ts`。
+菜单从页面记录生成，已有菜单组通常不用改 `app/navigation/navigation.ts`。
 
 改完后按范围跑：
 

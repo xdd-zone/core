@@ -45,7 +45,7 @@ export function ErrorStateExample() {
           label: t('example.errorState.detailStack'),
           content: (
             <pre className="text-fg-muted max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs leading-6">
-              {`at ErrorStateExample (/pages/example/ErrorStateExample.tsx)
+              {`at ErrorStateExample (/features/examples/pages/ErrorStateExample.tsx)
 at RouteComponent (/app/router/routes.tsx)
 at RootLayout (/layout/RootLayout.tsx)`}
             </pre>
