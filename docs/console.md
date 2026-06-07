@@ -1,18 +1,20 @@
 # Console 前端指南
 
-这份文档说明 `apps/console` 现在怎么组织，以及改页面时该先看哪几处。
+这份文档说明 `apps/console` 当前怎么组织。
 
-## 包定位
+## 当前保留内容
 
-`@xdd-zone/console` 是后台管理前端，当前主要负责：
+`@xdd-zone/console` 现在保留基础控制台框架：
 
-- 页面、布局、导航
-- 登录页和登录态恢复
-- 页面访问控制
-- 调用 Nexus 接口并展示结果
-- 主题切换和示例页
+- React / Vite 入口。
+- TanStack Router 路由。
+- 基础布局、侧边菜单、顶部栏、标签栏和设置抽屉。
+- Catppuccin 主题。
+- 首页、404 页面和几个示例页。
 
-## 开始改 UI 前先做什么
+当前没有接入 Nexus 业务接口，也没有登录、权限和业务模块。
+
+## 开始改 UI 前先看
 
 只要任务涉及页面、布局、导航或展示型组件，先看：
 
@@ -27,7 +29,6 @@ apps/console/src/
 ├── app/
 ├── components/
 ├── layout/
-├── modules/
 ├── pages/
 ├── stores/
 └── utils/
@@ -36,47 +37,21 @@ apps/console/src/
 最常改的地方：
 
 - `app/router`
-  路由树、登录守卫、重定向。
+  路由树。
 - `app/navigation`
   菜单配置。
-- `app/access/access-control.ts`
-  页面访问控制。
-- `modules/auth`
-  登录、登出、session 查询。
-- `modules/user`
-  用户相关请求。
-- `modules/rbac`
-  角色和权限相关请求。
-- `modules/post`、`modules/comment`、`modules/media`、`modules/site-config`
-  内容管理相关请求。
-- `pages/*`
+- `layout`
+  控制台整体布局。
+- `pages`
   页面入口。
+- `components`
+  通用组件和示例组件。
+- `stores`
+  设置、标签栏等本地状态。
 
-## 路由模型
+## 当前页面路径
 
-当前路由统一放在：
-
-- `apps/console/src/app/router/routes.tsx`
-
-当前主要路径：
-
-- `/login`
-- `/dashboard`
-- `/users`
-- `/users/$id`
-- `/users/$id/edit`
-- `/users/$id/access`
-- `/roles`
-- `/profile`
-- `/articles`
-- `/articles/new`
-- `/articles/$id`
-- `/articles/$id/edit`
-- `/categories`
-- `/tags`
-- `/comments`
-- `/media`
-- `/article-settings`
+- `/`
 - `/ui-showcase`
 - `/markdown-example`
 - `/tiptap-example`
@@ -84,121 +59,47 @@ apps/console/src/
 - `/error-example`
 - `/forbidden-example`
 - `/not-found-example`
-- `/403`
 - `/404`
 
-## 菜单和路由怎么配合
+## 路由和菜单
 
-- 路由负责页面访问和跳转
-- 菜单负责展示入口
-- 页面是否允许访问，还会再走 `app/access/access-control.ts`
+路由文件：
 
-当前菜单放在：
+```text
+apps/console/src/app/router/routes.tsx
+```
 
-- `apps/console/src/app/navigation/navigation.ts`
+菜单文件：
 
-如果你新增页面，通常要同时检查这三处：
+```text
+apps/console/src/app/navigation/navigation.ts
+```
+
+新增页面通常要同时检查：
 
 1. `routes.tsx`
 2. `navigation.ts`
-3. `access-control.ts`
+3. `apps/console/src/pages/<feature>/`
 
-## 登录态模型
+如果页面不需要出现在菜单里，只改路由和页面组件。
 
-前端登录态由后端 session cookie 驱动。
+## 主题
 
-当前做法：
+主题说明看：
 
-1. 通过 `GET /api/auth/get-session` 读取当前会话
-2. React Query 缓存 session
-3. 路由进入前先确认 session
-4. 登录成功或登出后，更新缓存和页面跳转
+- [theme.md](./theme.md)
 
-主要文件：
-
-- `apps/console/src/modules/auth/auth.query.ts`
-- `apps/console/src/modules/auth/auth.store.ts`
-- `apps/console/src/app/router/guards.tsx`
-
-## 请求层怎么写
-
-前端统一在这里创建 Treaty 客户端：
-
-- `apps/console/src/shared/api/eden.ts`
-
-普通接口默认直接用这个客户端。
-只有 GitHub 登录这种浏览器跳转动作，才放在 `apps/console/src/modules/auth/auth.api.ts` 里单独处理，不再额外给每个接口写一层一一对应的包装。
-
-需要明确 HTTP 类型时，从 `@xdd-zone/nexus/*-types` 引入。
-
-## 页面访问控制
-
-页面级访问控制统一在：
-
-- `apps/console/src/app/access/access-control.ts`
-
-这里负责判断当前用户能不能进入某个后台路径。
-如果后端接口返回 `401 / 403`，前端页面也应保持同样语义。
-
-## 当前页面分组
-
-### 系统管理
-
-- 用户列表
-- 用户详情
-- 用户编辑
-- 指定用户权限
-- 角色列表
-- 我的资料
-
-### 内容管理
-
-- 文章列表
-- 新建文章
-- 文章详情
-- 编辑文章
-- 分类管理
-- 标签管理
-- 评论管理
-- 媒体管理
-- 文章设置
-
-### 示例页
-
-- UI Showcase
-- Markdown Example
-- Tiptap Example
-- Image Crop
-- Error Example
-- Forbidden Example
-- Not Found Example
-
-## 改动建议
-
-### 新增页面
-
-按这个顺序看：
-
-1. 是否已经有后端接口
-2. `routes.tsx` 是否需要加新路径
-3. `navigation.ts` 是否需要加新入口
-4. `access-control.ts` 是否需要补访问规则
-5. `modules/*` 是否需要补 query / mutation
-
-### 改登录或 GitHub 登录
-
-同时检查：
-
-- `apps/console/src/modules/auth/auth.api.ts`
-- `apps/console/src/modules/auth/auth.query.ts`
-- `apps/console/src/pages/auth/Login.tsx`
-- `apps/console/src/app/router/guards.tsx`
-
-### 改主题
-
-看：
+相关文件：
 
 - `apps/console/src/assets/styles/theme/*`
 - `apps/console/src/utils/theme.ts`
 - `apps/console/src/utils/catppuccin.antd.ts`
-- [docs/theme.md](./theme.md)
+
+## 运行和检查
+
+```bash
+pnpm dev:console
+pnpm lint:console
+pnpm type-check:console
+pnpm build:console
+```

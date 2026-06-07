@@ -1,53 +1,57 @@
 # 常见问题
 
+## 当前是什么技术栈
+
+当前仓库是 `pnpm + Turborepo + React + Hono` 的 monorepo。
+
+主要包：
+
+- `apps/console`
+- `apps/nexus`
+- `packages/eslint-config`
+
+## Nexus 地址是什么
+
+本地默认地址：
+
+```text
+http://localhost:7788
+```
+
+健康检查：
+
+```text
+http://localhost:7788/health
+```
+
 ## OpenAPI 地址是什么
 
-- 页面：`http://localhost:7788/openapi`
-- JSON：`http://localhost:7788/openapi/json`
+当前没有 OpenAPI 页面。
 
-## 为什么成功响应没有 `{ code, message, data }`
+## 为什么认证、权限和数据库文档都很短
 
-因为当前成功响应直接返回业务数据。错误响应才走统一错误结构。
+因为当前代码里还没有这些功能。
 
-## `401` 和 `403` 有什么区别
+旧技术栈重构后，这些专题先保留入口，只写当前状态，避免按旧文档去找不存在的代码。
 
-- `401`：没登录
-- `403`：已登录，但没权限
+## Console 地址是什么
 
-## Prisma Client 没生成怎么办
+本地默认地址：
 
-当前仓库还没有 Prisma 脚本。确认 `package.json` 里补了对应脚本后，再按脚本名执行。
+```text
+http://localhost:5173
+```
 
-## 本地数据库连不上怎么办
-
-按这个顺序看：
-
-1. Docker 是否正常
-2. 本地数据库容器是否正在运行
-3. `.env` 里的 `DATABASE_URL` 是否正确
-4. 数据库表结构是否已经准备好
-
-## 登录成功后还是拿不到 session
-
-先检查：
-
-1. `/api/auth/get-session` 返回了什么
-2. 前端请求有没有带 cookie
-3. `trustedOrigins` 是否包含当前前端来源
-4. `BETTER_AUTH_URL` 是否和后端实际地址一致
-
-## GitHub 登录后回到登录页怎么办
-
-先检查：
-
-1. GitHub callback URL 是否是 `{BETTER_AUTH_URL}/api/auth/callback/github`
-2. `GITHUB_CLIENT_ID` 和 `GITHUB_CLIENT_SECRET` 是否已配置
-3. `apps/nexus/config.yaml` 的 `auth.methods.github.enabled` 是否开启
-4. 前端 API 基址是否正确
-5. 登录页地址上的 `error` 参数是什么
-
-## 本机回归怎么跑
+启动命令：
 
 ```bash
-pnpm --filter @xdd-zone/nexus test
+pnpm dev:console
+```
+
+## 本机检查怎么跑
+
+```bash
+pnpm format:check
+pnpm lint
+pnpm type-check
 ```

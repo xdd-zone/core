@@ -1,299 +1,85 @@
-# 项目架构
+# 项目结构
 
-这份文档只说明当前代码怎么组织，不讲历史方案。
+这份文档只说明当前代码怎么放。
 
-## 总体结构
+## 当前包
 
-仓库现在有两个主包：
+仓库是 `pnpm + Turborepo` 的 monorepo，当前有三个包：
 
 - `apps/console`
-  后台前端。
+  前端控制台，包名是 `@xdd-zone/console`。
 - `apps/nexus`
-  后端 API 服务。
+  Hono API 服务，包名是 `@xdd-zone/nexus`。
+- `packages/eslint-config`
+  共享 ESLint / Prettier 配置，包名是 `@xdd-zone/eslint-config`。
 
-前后端都在一个仓库里维护，接口类型和权限导出也一起放在仓库里。
-
-## 包职责
-
-### `@xdd-zone/console`
-
-这里负责：
-
-- 后台页面、布局、导航
-- 登录态恢复、登录、登出
-- 页面权限拦截
-- 调用 Nexus 接口并展示结果
-
-这里不负责：
-
-- 单独定义服务端接口
-- 复制一套权限常量
-- 自己算一套和后端不一致的权限结果
-
-### `@xdd-zone/nexus`
-
-这里负责：
-
-- Elysia app 和模块路由
-- 认证、权限、守卫、OpenAPI
-- Prisma、日志、配置
-- 给前端导出 HTTP 类型和 Eden 类型
-
-这里不负责：
-
-- 维护第二套接口定义
-
-## `apps/nexus` 怎么分层
-
-当前目录：
+## 根目录
 
 ```text
-apps/nexus/src/
-├── app.ts
-├── server.ts
-├── index.ts
-├── bootstrap/
-├── core/
-├── infra/
-├── modules/
-├── public/
-├── shared/
-└── eden/
+.
+├── apps/
+│   ├── console/
+│   └── nexus/
+├── docs/
+├── packages/
+│   └── eslint-config/
+├── package.json
+├── pnpm-workspace.yaml
+├── turbo.json
+└── tsconfig.base.json
 ```
 
-### `modules/`
+## `apps/nexus`
 
-每个业务模块一个目录，`routes.ts` 写路由，`index.ts` 做模块导出。
+当前 Nexus 是基础 Hono 示例服务。
 
-推荐结构：
+主要文件：
 
-```text
-modules/<feature>/
-├── index.ts
-├── routes.ts
-├── openapi.ts
-├── model.ts
-├── service.ts
-├── repository.ts
-├── constants.ts
-└── types.ts
-```
+- `apps/nexus/src/index.ts`
+  创建 Hono app，定义示例接口，导出 `AppType`，并在直接运行时启动 Node 服务。
 
-各文件怎么分：
+当前接口：
 
-- `index.ts`
-  做模块导出。
-- `routes.ts`
-  写 prefix、tags、schema 绑定、鉴权声明、`apiDetail(...)`、service 调用。
-- `openapi.ts`
-  写 `apiDetail(...)` 的接口说明和错误码。
-- `model.ts`
-  写 body / query / params / response schema。
-- `service.ts`
-  写业务判断和流程。
-- `repository.ts`
-  写 Prisma 查询和写入。
+- `GET /`
+- `GET /health`
+- `GET /api/example`
 
-业务错误在 `service.ts` 里抛出 `HttpError` 子类。`service.ts` 和 `repository.ts` 不导入 Elysia，不调用 `status()`，不设置 `set.status`。
+新增接口先放在 `apps/nexus/src/index.ts`。接口变多后，再用 Hono 的 `app.route()` 或 `basePath()` 分组。
 
-### `core/`
+## `apps/console`
 
-这里放跨业务的能力：
+当前 Console 保留基础控制台框架和示例页。
 
-- `core/http`
-  CORS、OpenAPI、统一错误处理、请求日志。
-- `core/auth`
-  Better Auth、session 和认证接口服务。
-- `core/access`
-  认证插件、权限插件和守卫。
-- `core/permissions`
-  系统基础权限、权限判断和权限注册表。
-- `core/config`
-  读取 `config.yaml`、合并环境变量、返回最终配置。
+主要目录：
 
-### `bootstrap/`
+- `apps/console/src/app/router`
+  路由树。
+- `apps/console/src/app/navigation`
+  左侧菜单。
+- `apps/console/src/layout`
+  控制台布局。
+- `apps/console/src/pages`
+  页面入口。
+- `apps/console/src/assets/styles`
+  全局样式和主题变量。
+- `apps/console/src/stores`
+  前端本地状态。
 
-这里把配置、日志、认证能力组起来，交给 app 启动。
+当前前端没有接入 Nexus 业务接口。
 
-当前启动顺序：
+## `packages/eslint-config`
 
-```text
-createConfig()
--> createAppContext()
--> createApp(context)
--> startServer(app, context.config)
-```
+这里放共享 ESLint / Prettier 配置。
 
-### `infra/`
+子包通过 `workspace:*` 引用它。
 
-这里放基础设施实现：
+## 依赖版本
 
-- Prisma
-- logger
-- 媒体存储
+依赖版本主要放在根目录 `pnpm-workspace.yaml`：
 
-### `public/`
+- `catalog`
+- `catalogs.react`
+- `catalogs.vite`
+- `catalogs.shiki`
 
-这里放给前端和其他包直接引用的导出：
-
-- `*-types.ts`
-  各模块的 HTTP 类型。
-- `permissions.ts`
-  系统权限、业务权限、角色常量、匹配函数。
-- `eden.ts`
-  `type App = typeof app`。
-
-## `apps/console` 怎么分层
-
-当前最常改的目录：
-
-```text
-apps/console/src/
-├── app/
-├── components/
-├── layout/
-├── modules/
-├── pages/
-├── stores/
-└── utils/
-```
-
-### `app/`
-
-- `app/router`
-  路由树、登录守卫、重定向。
-- `app/navigation`
-  菜单配置。
-- `app/access/access-control.ts`
-  页面访问控制。
-- `app/query-client.ts`
-  QueryClient 初始化。
-
-### `modules/`
-
-按业务放 query / mutation 和页面侧逻辑。
-
-当前已有：
-
-- `auth`
-- `user`
-- `rbac`
-- `post`
-- `comment`
-- `media`
-- `preview`
-- `site-config`
-
-### `pages/`
-
-按页面入口放组件，比如：
-
-- `pages/dashboard`
-- `pages/user`
-- `pages/role`
-- `pages/article`
-- `pages/access`
-- `pages/example`
-- `pages/auth`
-- `pages/error`
-
-## 前后端怎么协作
-
-当前约定很直接：
-
-1. 后端在 `apps/nexus/src/modules/*` 定义接口。
-2. OpenAPI 从后端路由和 schema 自动导出。
-3. Eden 类型从 `type App = typeof app` 推导。
-4. 前端在 `apps/console/src/shared/api/eden.ts` 创建 Treaty 客户端。
-5. 页面通过 `modules/*` 里的 query / mutation 调接口。
-
-需要明确 HTTP 类型时，从这些导出拿：
-
-- `@xdd-zone/nexus/auth-types`
-- `@xdd-zone/nexus/user-types`
-- `@xdd-zone/nexus/rbac-types`
-- `@xdd-zone/nexus/post-types`
-- `@xdd-zone/nexus/comment-types`
-- `@xdd-zone/nexus/media-types`
-- `@xdd-zone/nexus/site-config-types`
-- `@xdd-zone/nexus/public-site-types`
-
-权限统一从 `@xdd-zone/nexus/permissions` 引入。
-
-## 当前认证和权限模型
-
-- 固定角色只有 `superAdmin / user`
-- 系统基础权限放在 `apps/nexus/src/core/permissions/permissions.ts`
-- 业务权限放在 `apps/nexus/src/modules/*/permissions.ts`
-- 权限说明由 `apps/nexus/src/core/permissions/registry.ts` 读取
-- `own` 只用于当前用户资料相关场景
-- 前端页面访问控制走 `apps/console/src/app/access/access-control.ts`
-- 后端接口权限校验走 `authPlugin` 或 `accessPlugin`
-
-### 权限文件怎么分
-
-系统基础权限只放这些内容：
-
-```text
-USER
-ROLE
-USER_ROLE
-USER_PERMISSION
-SYSTEM
-```
-
-位置：
-
-```text
-apps/nexus/src/core/permissions/permissions.ts
-```
-
-业务模块自己放业务权限。当前位置：
-
-```text
-apps/nexus/src/modules/post/permissions.ts
-apps/nexus/src/modules/media/permissions.ts
-apps/nexus/src/modules/comment/permissions.ts
-apps/nexus/src/modules/site-config/permissions.ts
-```
-
-业务权限汇总在：
-
-```text
-apps/nexus/src/modules/permissions.ts
-```
-
-`core/permissions` 不导入 `modules/post`、`modules/media`、`modules/comment`、`modules/site-config`。
-
-## 改动时的默认落点
-
-### 新增或调整接口
-
-去 `apps/nexus/src/modules/<feature>/`。
-
-### 新增或调整页面
-
-同时检查：
-
-- `apps/console/src/app/router/routes.tsx`
-- `apps/console/src/app/navigation/navigation.ts`
-- `apps/console/src/app/access/access-control.ts`
-- `apps/console/src/pages/*`
-- `apps/console/src/modules/*`
-
-### 新增要给前端复用的类型
-
-去 `apps/nexus/src/public/*-types.ts`。
-
-### 改认证、GitHub 登录、权限
-
-同时检查：
-
-- `apps/nexus/src/core/auth/*`
-- `apps/nexus/src/core/access/*`
-- `apps/nexus/src/core/permissions/*`
-- `apps/nexus/src/modules/*/permissions.ts`
-- `apps/nexus/src/modules/permissions.ts`
-- `apps/nexus/src/modules/auth`
-- `apps/console/src/modules/auth`
-- `apps/console/src/app/access/access-control.ts`
+子包依赖优先写 `catalog:`、`catalog:react`、`catalog:vite`、`catalog:shiki` 或 `workspace:*`。

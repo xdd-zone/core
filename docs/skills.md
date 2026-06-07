@@ -1,37 +1,42 @@
 # 常用技能
 
-这份文档只写当前仓库最常用的几个技能和使用顺序。
+这份文档只写当前仓库常用的技能顺序。
 
-## 先定位任务落点
-
-如果你刚进仓库，还不确定要改哪里，先用：
-
-- `xdd-zone-codegen`
-
-它适合这些场景：
-
-- 想先看仓库结构
-- 想先定位相关文档和代码入口
-- 不确定该改 `apps/nexus` 还是 `apps/console`
-- 想按当前仓库方式继续实现
-
-## 按任务类型继续补技能
-
-### 改说明性文案
+## 文档任务
 
 先用：
 
-- `write-docs`
+- `xdd-plain-docs`
 
-### 改 `apps/nexus`
+适用范围：
 
-先用：
+- README。
+- `docs/`。
+- 接口说明。
+- JSDoc。
+- 代码注释。
+- 错误提示。
+- 脚本说明。
 
-- `elysiajs`
+## Nexus 任务
 
-### 改 `apps/console` 页面、布局、导航
+只要目标在 `apps/nexus`，先用：
 
-先看：
+- `xdd-honojs`
+
+适用范围：
+
+- Hono app。
+- 接口。
+- 路由。
+- 模块。
+- 插件。
+- 中间件。
+- 测试。
+
+## Console 界面任务
+
+先读：
 
 - `apps/console/design-context.md`
 
@@ -39,9 +44,17 @@
 
 - `frontend-design`
 
-## 常用顺序
+适用范围：
 
-- 文档任务：`write-docs` -> `xdd-zone-codegen`
-- Nexus 任务：`elysiajs` -> `xdd-zone-codegen`
-- Console UI 任务：`frontend-design` -> `xdd-zone-codegen`
-- Console UI + 文案任务：`frontend-design` -> `write-docs` -> `xdd-zone-codegen`
+- 页面。
+- 布局。
+- 导航。
+- 展示型组件。
+
+## Console 界面加文案任务
+
+顺序：
+
+1. 读 `apps/console/design-context.md`
+2. 用 `frontend-design`
+3. 用 `xdd-plain-docs`
