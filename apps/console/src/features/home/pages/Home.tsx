@@ -1,10 +1,32 @@
+import type { PingRequest } from '@xdd-zone/contracts'
+import { nexusBaseUrl } from '@console/api/client'
+import { pingNexus } from '@console/api/system/ping'
 import { ConsolePageHeader } from '@console/components/common'
-import { Button } from 'antd'
-import { Settings, SquareActivity } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Button, Tag } from 'antd'
+import { RefreshCw, Settings, SquareActivity } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+
+const pingPayload: PingRequest = {
+  name: 'console',
+}
 
 export function Home() {
   const { t } = useTranslation()
+  const pingQuery = useQuery({
+    queryFn: () => pingNexus(pingPayload),
+    queryKey: ['nexus', 'system', 'ping'],
+  })
+
+  const pingResult = pingQuery.data
+  const requestBody = JSON.stringify(pingPayload, null, 2)
+  const responseBody = pingResult ? JSON.stringify(pingResult, null, 2) : t('home.nexus.emptyResponse')
+  const statusLabel = pingQuery.isLoading
+    ? t('home.nexus.status.loading')
+    : pingResult?.ok
+      ? t('home.nexus.status.connected')
+      : t('home.nexus.status.failed')
+  const statusColor = pingQuery.isLoading ? 'processing' : pingResult?.ok ? 'success' : 'error'
 
   return (
     <div className="space-y-6">
@@ -35,6 +57,60 @@ export function Home() {
           <Button icon={<Settings size={16} />} href="/" type="primary">
             {t('home.shell.action')}
           </Button>
+        </div>
+      </section>
+
+      <section className="border-border-subtle bg-surface rounded-lg border">
+        <div className="border-border-subtle flex flex-col gap-3 border-b px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="text-fg text-sm font-medium">{t('home.nexus.title')}</div>
+            <p className="text-fg-muted mt-1 text-sm">{t('home.nexus.description')}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Tag color={statusColor}>{statusLabel}</Tag>
+            <Button
+              icon={<RefreshCw size={15} />}
+              loading={pingQuery.isFetching}
+              onClick={() => void pingQuery.refetch()}
+              size="small"
+            >
+              {t('common.refresh')}
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-0 lg:grid-cols-[260px_minmax(0,1fr)]">
+          <div className="border-border-subtle bg-surface-muted/50 space-y-3 border-b px-5 py-4 lg:border-r lg:border-b-0">
+            <div>
+              <div className="text-fg-muted text-xs">{t('home.nexus.baseUrl')}</div>
+              <div className="text-fg mt-1 break-all text-sm">{nexusBaseUrl}</div>
+            </div>
+            <div>
+              <div className="text-fg-muted text-xs">{t('home.nexus.method')}</div>
+              <div className="text-fg mt-1 text-sm">POST /rpc/system/ping</div>
+            </div>
+            {pingResult && !pingResult.ok ? (
+              <div>
+                <div className="text-fg-muted text-xs">{t('home.nexus.errorCode')}</div>
+                <div className="text-danger mt-1 break-all text-sm">{pingResult.error.code}</div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="grid gap-0 md:grid-cols-2">
+            <div className="border-border-subtle border-b px-5 py-4 md:border-r md:border-b-0">
+              <div className="text-fg text-sm font-medium">{t('home.nexus.request')}</div>
+              <pre className="text-fg-muted bg-surface-muted/60 border-border-subtle mt-3 max-h-72 overflow-auto rounded-md border p-3 text-xs leading-5">
+                {requestBody}
+              </pre>
+            </div>
+            <div className="px-5 py-4">
+              <div className="text-fg text-sm font-medium">{t('home.nexus.response')}</div>
+              <pre className="text-fg-muted bg-surface-muted/60 border-border-subtle mt-3 max-h-72 overflow-auto rounded-md border p-3 text-xs leading-5">
+                {responseBody}
+              </pre>
+            </div>
+          </div>
         </div>
       </section>
     </div>

@@ -4,7 +4,7 @@
 
 ## 当前包
 
-仓库是 `pnpm + Turborepo` 的 monorepo，当前有三个包：
+仓库是 `pnpm + Turborepo` 的 monorepo，当前有四个包：
 
 - `apps/console`
   前端控制台，包名是 `@xdd-zone/console`。
@@ -12,6 +12,8 @@
   Hono API 服务，包名是 `@xdd-zone/nexus`。
 - `packages/eslint-config`
   共享 ESLint / Prettier 配置，包名是 `@xdd-zone/eslint-config`。
+- `packages/contracts`
+  Console 和 Nexus 共用的接口类型、schema 和响应结构，包名是 `@xdd-zone/contracts`。
 
 ## 根目录
 
@@ -22,6 +24,7 @@
 │   └── nexus/
 ├── docs/
 ├── packages/
+│   ├── contracts/
 │   └── eslint-config/
 ├── package.json
 ├── pnpm-workspace.yaml
@@ -31,20 +34,26 @@
 
 ## `apps/nexus`
 
-当前 Nexus 是基础 Hono 示例服务。
+当前 Nexus 是 Hono API 服务。
 
 主要文件：
 
 - `apps/nexus/src/index.ts`
-  创建 Hono app，定义示例接口，导出 `AppType`，并在直接运行时启动 Node 服务。
+  直接运行 Nexus 时启动 Node 服务。
+- `apps/nexus/src/app.ts`
+  创建 Hono app，注册错误处理，挂载路由，导出 `AppType`。
+- `apps/nexus/src/routes`
+  按接口域放路由。
+- `apps/nexus/src/shared`
+  放 Nexus 内部共用的错误类型、Hono 类型和响应 meta 生成函数。
 
 当前接口：
 
 - `GET /`
 - `GET /health`
-- `GET /api/example`
+- `POST /rpc/system/ping`
 
-新增接口先放在 `apps/nexus/src/index.ts`。接口变多后，再用 Hono 的 `app.route()` 或 `basePath()` 分组。
+新增接口按域放到 `apps/nexus/src/routes/<domain>`，再到 `apps/nexus/src/routes/index.ts` 挂载。
 
 ## `apps/console`
 
@@ -64,8 +73,25 @@
   全局样式和主题变量。
 - `apps/console/src/stores`
   前端本地状态。
+- `apps/console/src/api`
+  Console 调 Nexus 的请求入口。当前有 Nexus ping 验证请求。
 
-当前前端没有接入 Nexus 业务接口。
+当前前端首页会请求 Nexus 的 `POST /rpc/system/ping`。
+
+## `packages/contracts`
+
+这里放 Console 和 Nexus 都会引用的接口约定。
+
+主要目录：
+
+- `packages/contracts/src/common`
+  放 `BizCode`、`ApiResponse`、`buildSuccess()` 和 `buildFailure()`。
+- `packages/contracts/src/system`
+  放系统接口的 schema 和类型。
+- `packages/contracts/src/index.ts`
+  聚合导出。
+
+Nexus 用这里的 schema 校验请求。Console 用这里的类型构造请求和读取返回值。
 
 ## `packages/eslint-config`
 

@@ -11,18 +11,22 @@
 
 ## 代码位置
 
-当前所有接口都在：
+当前接口放在：
 
 ```text
-apps/nexus/src/index.ts
+apps/nexus/src/routes
 ```
 
-这里同时负责：
+相关入口：
 
-- 创建 Hono app。
-- 定义示例接口。
-- 导出 `AppType`。
-- 在直接运行文件时启动 Node 服务。
+- `apps/nexus/src/app.ts`
+  创建 Hono app，注册错误处理，挂载路由，导出 `AppType`。
+- `apps/nexus/src/index.ts`
+  直接运行 Nexus 时启动 Node 服务。
+- `apps/nexus/src/routes/index.ts`
+  挂载所有子路由。
+- `packages/contracts/src`
+  放接口 schema、类型和统一响应结构。
 
 ## 当前接口
 
@@ -30,7 +34,40 @@ apps/nexus/src/index.ts
 | ---- | ---- | ---- |
 | `GET` | `/` | 服务名称和状态 |
 | `GET` | `/health` | 健康检查状态 |
-| `GET` | `/api/example` | Hono 示例响应 |
+| `POST` | `/rpc/system/ping` | Nexus ping 结果 |
+
+## 响应格式
+
+所有接口都返回统一结构。
+
+成功：
+
+```json
+{
+  "ok": true,
+  "data": {},
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": "2026-06-07T00:00:00.000Z"
+  }
+}
+```
+
+失败：
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "COMMON.INVALID_REQUEST",
+    "message": "请求参数不正确"
+  },
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": "2026-06-07T00:00:00.000Z"
+  }
+}
+```
 
 ## 响应示例
 
@@ -38,8 +75,15 @@ apps/nexus/src/index.ts
 
 ```json
 {
-  "name": "@xdd-zone/nexus",
-  "status": "ok"
+  "ok": true,
+  "data": {
+    "name": "@xdd-zone/nexus",
+    "status": "ok"
+  },
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": "2026-06-07T00:00:00.000Z"
+  }
 }
 ```
 
@@ -47,15 +91,41 @@ apps/nexus/src/index.ts
 
 ```json
 {
-  "status": "ok"
+  "ok": true,
+  "data": {
+    "service": "nexus",
+    "status": "ok"
+  },
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": "2026-06-07T00:00:00.000Z"
+  }
 }
 ```
 
-### `GET /api/example`
+### `POST /rpc/system/ping`
+
+请求：
 
 ```json
 {
-  "message": "Hono 示例接口"
+  "name": "console"
+}
+```
+
+返回：
+
+```json
+{
+  "ok": true,
+  "data": {
+    "service": "nexus",
+    "message": "pong, console"
+  },
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": "2026-06-07T00:00:00.000Z"
+  }
 }
 ```
 
@@ -72,19 +142,19 @@ pnpm dev:nexus
 ```bash
 curl http://localhost:7788/
 curl http://localhost:7788/health
-curl http://localhost:7788/api/example
+curl -X POST http://localhost:7788/rpc/system/ping \
+  -H 'content-type: application/json' \
+  -d '{"name":"console"}'
 ```
 
 ## 新增接口
 
-先在 `apps/nexus/src/index.ts` 继续追加路由。
+按接口域新增 route 文件：
 
-示例：
-
-```ts
-const app = new Hono()
-  .get('/', (c) => c.json({ name: '@xdd-zone/nexus', status: 'ok' }))
-  .get('/health', (c) => c.json({ status: 'ok' }))
+```text
+apps/nexus/src/routes/<domain>/<name>.route.ts
 ```
 
-接口变多后，再用 Hono 的 `app.route()` 或 `basePath()` 分组。
+再到 `apps/nexus/src/routes/index.ts` 挂载。
+
+如果接口有请求体或返回体，先在 `packages/contracts/src/<domain>` 增加 schema 和类型。

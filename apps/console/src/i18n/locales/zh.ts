@@ -20,7 +20,22 @@ export default {
     },
   },
   home: {
-    description: '当前只保留前端基础框架。业务模块和后端接口调用已移除。',
+    description: '当前保留前端基础框架，并接入 Nexus 的最小验证接口。',
+    nexus: {
+      baseUrl: '服务地址',
+      description: '这里用 Hono RPC 请求 Nexus，检查共享类型和统一响应格式。',
+      emptyResponse: '暂无返回结果。',
+      errorCode: '错误码',
+      method: '请求',
+      request: '请求体',
+      response: '返回结果',
+      status: {
+        connected: '已连接',
+        failed: '连接失败',
+        loading: '请求中',
+      },
+      title: '后端连接',
+    },
     shell: {
       action: '查看首页',
       description: '这里保留路由、布局、主题和基础组件入口，后续业务页面可以按需要重新接入。',
@@ -29,8 +44,8 @@ export default {
     summary: {
       framework: '框架',
       frameworkValue: 'React / Vite',
-      modules: '业务模块',
-      modulesValue: '未接入',
+      modules: '后端接口',
+      modulesValue: 'Nexus RPC',
     },
     title: '控制台首页',
   },

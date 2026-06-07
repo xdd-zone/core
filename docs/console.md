@@ -12,7 +12,7 @@
 - Catppuccin 主题。
 - 首页、404 页面和几个示例页。
 
-当前没有接入 Nexus 业务接口，也没有登录、权限和业务模块。
+当前首页接入了 Nexus 的最小验证接口。当前没有登录、权限和业务模块。
 
 ## 开始改 UI 前先看
 
@@ -30,6 +30,7 @@ apps/console/src/
 ├── components/
 ├── features/
 ├── layout/
+├── api/
 ├── stores/
 └── utils/
 ```
@@ -44,6 +45,8 @@ apps/console/src/
   页面模块。每个模块有自己的 `pages/` 和 `routes.tsx`。
 - `layout`
   控制台整体布局。
+- `api`
+  调 Nexus 的请求入口。当前有 `api/client.ts` 和 `api/system/ping.ts`。
 - `components`
   通用组件和示例组件。
 - `stores`
@@ -85,6 +88,35 @@ apps/console/src/app/navigation/navigation.ts
 页面记录里的 `menu: false` 表示不进菜单。
 页面记录里的 `tab: false` 表示不生成标签页。
 页面记录里的 `layout.contentWidth: 'full'` 表示内容区使用全宽。
+
+## Nexus 请求
+
+Console 使用 Hono RPC 调 Nexus。
+
+相关文件：
+
+```text
+apps/console/src/api/client.ts
+apps/console/src/api/system/ping.ts
+```
+
+默认 Nexus 地址是：
+
+```text
+http://localhost:7788
+```
+
+如果要改地址，在 Console 环境变量里设置：
+
+```text
+VITE_NEXUS_BASE_URL=http://localhost:7788
+```
+
+当前首页会请求：
+
+```text
+POST /rpc/system/ping
+```
 
 ## 主题
 

@@ -20,7 +20,22 @@ export default {
     },
   },
   home: {
-    description: 'Only the frontend shell is kept. Business modules and backend API calls have been removed.',
+    description: 'The frontend shell is kept, with one Nexus validation endpoint connected.',
+    nexus: {
+      baseUrl: 'Base URL',
+      description: 'This block calls Nexus through Hono RPC and checks shared response types.',
+      emptyResponse: 'No response yet.',
+      errorCode: 'Error Code',
+      method: 'Request',
+      request: 'Request Body',
+      response: 'Response',
+      status: {
+        connected: 'Connected',
+        failed: 'Failed',
+        loading: 'Loading',
+      },
+      title: 'Backend Connection',
+    },
     shell: {
       action: 'View Home',
       description: 'Routing, layout, theme, and base component entry points remain ready for future pages.',
@@ -29,8 +44,8 @@ export default {
     summary: {
       framework: 'Framework',
       frameworkValue: 'React / Vite',
-      modules: 'Business Modules',
-      modulesValue: 'Not Connected',
+      modules: 'Backend API',
+      modulesValue: 'Nexus RPC',
     },
     title: 'Console Home',
   },
