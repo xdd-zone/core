@@ -1,3 +1,56 @@
+@import './core.css';
+
+[data-theme='latte'] {
+  --theme-overlay: #c4c6d0;
+  --theme-aurora-bg-start: #eff1f5;
+  --theme-aurora-bg-end: #e6e9ef;
+  --theme-aurora-vignette: rgba(230, 233, 239, 0.9);
+  --theme-aurora-1: rgba(136, 57, 239, 0.8);
+  --theme-aurora-2: rgba(30, 102, 245, 0.7);
+  --theme-aurora-3: rgba(64, 160, 43, 0.6);
+  --theme-aurora-blend-mode: multiply, overlay, color-burn;
+  --theme-aurora-grid-1: rgba(76, 79, 105, 0.09);
+  --theme-aurora-grid-2: rgba(76, 79, 105, 0.12);
+}
+
+[data-theme='frappe'] {
+  --theme-text-subtle: #8389a7;
+  --theme-aurora-bg-start: #232634;
+  --theme-aurora-bg-end: #292c3c;
+  --theme-aurora-vignette: rgba(35, 38, 52, 0.9);
+  --theme-aurora-1: rgba(202, 158, 230, 0.8);
+  --theme-aurora-2: rgba(140, 170, 238, 0.7);
+  --theme-aurora-3: rgba(166, 209, 137, 0.6);
+  --theme-aurora-blend-mode: overlay, screen, hard-light;
+  --theme-aurora-grid-1: rgba(255, 255, 255, 0.02);
+  --theme-aurora-grid-2: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='macchiato'] {
+  --theme-text-subtle: #8a91b4;
+  --theme-aurora-bg-start: #181926;
+  --theme-aurora-bg-end: #1e2030;
+  --theme-aurora-vignette: rgba(24, 25, 38, 0.9);
+  --theme-aurora-1: rgba(198, 160, 246, 0.8);
+  --theme-aurora-2: rgba(138, 173, 244, 0.7);
+  --theme-aurora-3: rgba(166, 218, 149, 0.6);
+  --theme-aurora-blend-mode: overlay, screen, hard-light;
+  --theme-aurora-grid-1: rgba(255, 255, 255, 0.02);
+  --theme-aurora-grid-2: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='mocha'] {
+  --theme-aurora-bg-start: #11111b;
+  --theme-aurora-bg-end: #181825;
+  --theme-aurora-vignette: rgba(17, 17, 27, 0.9);
+  --theme-aurora-1: rgba(203, 166, 247, 0.8);
+  --theme-aurora-2: rgba(137, 180, 250, 0.7);
+  --theme-aurora-3: rgba(166, 227, 161, 0.6);
+  --theme-aurora-blend-mode: overlay, screen, hard-light;
+  --theme-aurora-grid-1: rgba(255, 255, 255, 0.02);
+  --theme-aurora-grid-2: rgba(255, 255, 255, 0.03);
+}
+
 @theme inline {
   --font-sans: var(--font-maple-mono);
   --font-mono: var(--font-maple-mono);
@@ -52,3 +105,5 @@
   --radius-3xl: calc(var(--radius) * 1.6);
   --radius-4xl: calc(var(--radius) * 1.9);
 }
+
+@custom-variant dark (&:where([data-theme='frappe'], [data-theme='frappe'] *, [data-theme='macchiato'], [data-theme='macchiato'] *, [data-theme='mocha'], [data-theme='mocha'] *));

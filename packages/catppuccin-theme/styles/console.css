@@ -1,4 +1,4 @@
-@import './catppuccin.css';
+@import './core.css';
 
 @theme inline {
   --color-background: var(--theme-base);
@@ -73,3 +73,9 @@
   --color-gray-900: var(--theme-text);
   --color-gray-950: var(--theme-base-subtle);
 }
+
+@custom-variant dark (&:where(
+  [data-theme='frappe'], [data-theme='frappe'] *,
+  [data-theme='macchiato'], [data-theme='macchiato'] *,
+  [data-theme='mocha'], [data-theme='mocha'] *
+));

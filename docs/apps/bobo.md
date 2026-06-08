@@ -28,11 +28,7 @@
 - `apps/bobo/app/lab`
   放样式演示、主题验证和临时页面。
 - `apps/bobo/app/globals.css`
-  全局样式入口，只负责导入 Tailwind、shadcn 样式和本地样式文件。
-- `apps/bobo/app/styles/theme/catppuccin.css`
-  放运行时主题变量。
-- `apps/bobo/app/styles/theme/variables.css`
-  放 Tailwind 语义 token。
+  全局样式入口，只负责导入 Tailwind、shadcn 样式、共享主题入口和本地样式文件。
 - `apps/bobo/app/styles/base/reset.css`
   放基础样式。
 - `apps/bobo/app/styles/patterns/bobo-pattern.css`
@@ -91,8 +87,8 @@ pnpm --filter @xdd-zone/bobo format:check
 
 - 全局样式入口只改 `apps/bobo/app/globals.css`。
 - 主题色走 `data-theme` 和 Tailwind 语义类名。
-- 运行时主题变量放在 `apps/bobo/app/styles/theme/catppuccin.css`。
-- Tailwind 语义映射放在 `apps/bobo/app/styles/theme/variables.css`。
+- Bobo 使用 `@xdd-zone/catppuccin-theme/styles/bobo.css`。
+- 共享主题文件放在 `packages/catppuccin-theme`。
 - 页面和组件里优先写 `bg-surface`、`text-fg`、`border-border` 这类语义类名。
 - 不直接散写 `var(--color-*)` 和 `var(--theme-*)`。只有工具类表达不了的背景图、渐变或阴影可以少量使用。
 - 当前圆角基线是 `--radius: 0.5rem`。
@@ -107,7 +103,7 @@ pnpm --filter @xdd-zone/bobo format:check
 - 默认主题写在 `DEFAULT_THEME`。
 - 本地存储 key 写在 `THEME_STORAGE_KEY`。
 - 页面加载前的主题初始化脚本在 `apps/bobo/app/layout.tsx`。
-- 新增主题时，同时改 `THEMES`、`catppuccin.css` 和 `globals.css` 里的 dark variant。
+- 新增主题时，同时改 `@xdd-zone/catppuccin-theme` 的主题名、色板和样式入口。
 
 ## 依赖维护
 

@@ -163,7 +163,7 @@ POST /rpc/system/ping
 
 相关文件：
 
-- `apps/console/src/assets/styles/theme/*`
+- `packages/catppuccin-theme/styles/console.css`
 - `apps/console/src/utils/theme.ts`
 - `apps/console/src/utils/catppuccin.antd.ts`
 

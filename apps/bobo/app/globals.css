@@ -4,8 +4,7 @@
 @import 'shadcn/tailwind.css';
 
 /* 主题 */
-@import './styles/theme/catppuccin.css';
-@import './styles/theme/variables.css';
+@import '@xdd-zone/catppuccin-theme/styles/bobo.css';
 
 /* 基础 */
 @import './styles/base/reset.css';
@@ -15,6 +14,3 @@
 
 /* 动画 */
 @import './styles/utilities/animations.css';
-
-/* 深色主题 variant：frappe / macchiato / mocha 均视为 dark */
-@custom-variant dark (&:where([data-theme='frappe'], [data-theme='frappe'] *, [data-theme='macchiato'], [data-theme='macchiato'] *, [data-theme='mocha'], [data-theme='mocha'] *));

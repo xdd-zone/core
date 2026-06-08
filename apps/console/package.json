@@ -43,6 +43,7 @@
     "@tiptap/pm": "catalog:",
     "@tiptap/react": "catalog:",
     "@tiptap/starter-kit": "catalog:",
+    "@xdd-zone/catppuccin-theme": "workspace:*",
     "@xdd-zone/contracts": "workspace:*",
     "antd": "catalog:",
     "clsx": "catalog:",

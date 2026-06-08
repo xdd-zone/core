@@ -12,6 +12,8 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
   个人站点，放在 `apps/bobo`。
 - `@xdd-zone/contracts`
   Console 和 Nexus 共用的接口 schema、请求类型、响应类型和错误码，放在 `packages/contracts`。
+- `@xdd-zone/catppuccin-theme`
+  Console 和 Bobo 共用的 Catppuccin 主题，放在 `packages/catppuccin-theme`。
 - `@xdd-zone/eslint-config`
   共享 ESLint / Prettier 配置，放在 `packages/eslint-config`。
 
@@ -28,6 +30,7 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 │   ├── topics/
 │   └── integrations/
 ├── packages/
+│   ├── catppuccin-theme/
 │   ├── contracts/
 │   └── eslint-config/
 ├── package.json
@@ -49,6 +52,8 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
   Hono app、示例接口和 Node 服务启动入口。
 - `packages/contracts`
   Console 和 Nexus 共用的接口约定。
+- `packages/catppuccin-theme`
+  Console 和 Bobo 共用的 Catppuccin 主题。
 - `packages/eslint-config`
   仓库共享的 ESLint / Prettier 配置。
 

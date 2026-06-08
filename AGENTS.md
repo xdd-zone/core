@@ -14,6 +14,8 @@
   个人站点，放在 `apps/bobo`。
 - `@xdd-zone/contracts`
   Console 和 Nexus 共用的接口约定，放在 `packages/contracts`。
+- `@xdd-zone/catppuccin-theme`
+  Console 和 Bobo 共用的 Catppuccin 主题，放在 `packages/catppuccin-theme`。
 - `@xdd-zone/eslint-config`
   共享 ESLint / Prettier 配置，放在 `packages/eslint-config`。
 
@@ -134,7 +136,7 @@
 - `apps/bobo/app/page.tsx` 是首页。
 - `apps/bobo/app/lab` 放样式演示、主题验证和临时页面。
 - 全局样式入口是 `apps/bobo/app/globals.css`。
-- 主题变量放在 `apps/bobo/app/styles/theme`。
+- Catppuccin 主题变量从 `@xdd-zone/catppuccin-theme/styles/bobo.css` 引入。
 - 组件优先放在 `apps/bobo/components`，通用函数放在 `apps/bobo/lib`。
 - 主题色使用 `data-theme` 和 Tailwind 语义类名。
 - 页面和组件里优先使用语义类名，不直接散写颜色变量。
@@ -147,6 +149,7 @@
 规则：
 
 - 共享 ESLint / Prettier 配置放在 `packages/eslint-config`。
+- 共享 Catppuccin 主题放在 `packages/catppuccin-theme`。
 - 依赖版本优先放在 `pnpm-workspace.yaml` 的 `catalog` 或 `catalogs`。
 - 子包依赖优先写 `catalog:`、`catalog:react`、`catalog:vite`、`catalog:shiki` 或 `workspace:*`。
 - 不把包名改成 `web`、`admin`、`api`。

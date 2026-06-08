@@ -36,6 +36,7 @@
     "clean": "rm -rf .next"
   },
   "dependencies": {
+    "@xdd-zone/catppuccin-theme": "workspace:*",
     "class-variance-authority": "catalog:next",
     "clsx": "catalog:",
     "lucide-react": "catalog:next",

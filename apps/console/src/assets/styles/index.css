@@ -5,8 +5,7 @@
 @import 'tailwindcss';
 
 /* 导入主题配置 */
-@import './theme/dark-mode.css';
-@import './theme/variables.css';
+@import '@xdd-zone/catppuccin-theme/styles/console.css';
 
 /* 导入基础样式 */
 @import './base/reset.css';

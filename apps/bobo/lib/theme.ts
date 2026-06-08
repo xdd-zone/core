@@ -1,24 +1,12 @@
-export const THEMES = ['latte', 'frappe', 'macchiato', 'mocha'] as const
-
-export type ThemeName = (typeof THEMES)[number]
-
-export const DEFAULT_THEME: ThemeName = 'latte'
 export const THEME_STORAGE_KEY = 'xdd-bobo-theme'
 
-export function isThemeName(value: string | null | undefined): value is ThemeName {
-  return typeof value === 'string' && THEMES.includes(value as ThemeName)
-}
-
-export function resolveTheme(value: string | null | undefined): ThemeName {
-  return isThemeName(value) ? value : DEFAULT_THEME
-}
-
-export function getNextTheme(theme: ThemeName): ThemeName {
-  const index = THEMES.indexOf(theme)
-
-  return THEMES[(index + 1) % THEMES.length]
-}
-
-export function applyTheme(theme: ThemeName, root: HTMLElement = document.documentElement) {
-  root.dataset.theme = theme
-}
+export {
+  applyTheme,
+  DEFAULT_THEME,
+  getNextTheme,
+  isDarkTheme,
+  isThemeName,
+  resolveTheme,
+  THEMES,
+} from '@xdd-zone/catppuccin-theme'
+export type { ThemeName } from '@xdd-zone/catppuccin-theme'

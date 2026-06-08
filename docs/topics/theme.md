@@ -1,6 +1,6 @@
 # 主题系统
 
-`@xdd-zone/console` 当前使用 Catppuccin 主题。
+`@xdd-zone/console` 和 `@xdd-zone/bobo` 当前使用 Catppuccin 主题。
 
 ## 主题 ID
 
@@ -15,16 +15,18 @@ HTML 根节点通过 `data-theme` 切换主题。
 
 ## 相关文件
 
-- `apps/console/src/assets/styles/theme/catppuccin.css`
-  Catppuccin 原始颜色变量。
-- `apps/console/src/assets/styles/theme/variables.css`
-  语义变量映射。
-- `apps/console/src/assets/styles/theme/dark-mode.css`
-  暗色变体。
+- `packages/catppuccin-theme/styles/core.css`
+  Catppuccin 颜色变量。
+- `packages/catppuccin-theme/styles/console.css`
+  Console 使用的 Tailwind 语义 token。
+- `packages/catppuccin-theme/styles/bobo.css`
+  Bobo 使用的 Tailwind 语义 token 和背景变量。
 - `apps/console/src/utils/theme.ts`
   写入 `data-theme`。
 - `apps/console/src/utils/catppuccin.antd.ts`
-  Ant Design 主题配置。
+  从共享主题包导出 Ant Design 主题配置。
+- `apps/bobo/lib/theme.ts`
+  写入 `data-theme`，并保留 Bobo 的本地存储 key。
 
 ## 常用语义类
 
@@ -69,7 +71,7 @@ updateThemeAttribute('latte')
 
 Ant Design 主题统一在这里生成：
 
-- `apps/console/src/utils/catppuccin.antd.ts`
+- `packages/catppuccin-theme/src/antd.ts`
 
 页面里不要自己拼一套新的 token。
 
@@ -83,5 +85,6 @@ Ant Design 主题统一在这里生成：
 
 1. `data-theme` 是否正确写到根节点
 2. 语义类是否写对
-3. Ant Design 主题配置是否跟着切了
-4. 是否有页面自己写死了颜色
+3. app 是否导入了对应的 `@xdd-zone/catppuccin-theme/styles/*.css`
+4. Ant Design 主题配置是否跟着切了
+5. 是否有页面自己写死了颜色
