@@ -1,6 +1,6 @@
 # XDD Zone Core
 
-XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前维护一个前端控制台、一个 Hono API 服务和一份共享 ESLint / Prettier 配置。
+XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前维护一个前端控制台、一个 Hono API 服务、一份接口约定包和一份共享 ESLint / Prettier 配置。
 
 ## 现在有哪些包
 
@@ -8,6 +8,8 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
   前端控制台，放在 `apps/console`。
 - `@xdd-zone/nexus`
   Hono API 服务，放在 `apps/nexus`。
+- `@xdd-zone/contracts`
+  Console 和 Nexus 共用的接口 schema、请求类型、响应类型和错误码，放在 `packages/contracts`。
 - `@xdd-zone/eslint-config`
   共享 ESLint / Prettier 配置，放在 `packages/eslint-config`。
 
@@ -20,6 +22,7 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 │   └── nexus/
 ├── docs/
 ├── packages/
+│   ├── contracts/
 │   └── eslint-config/
 ├── package.json
 ├── turbo.json
@@ -38,6 +41,8 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
   控制台整体布局。
 - `apps/nexus/src/index.ts`
   Hono app、示例接口和 Node 服务启动入口。
+- `packages/contracts`
+  Console 和 Nexus 共用的接口约定。
 - `packages/eslint-config`
   仓库共享的 ESLint / Prettier 配置。
 
@@ -58,6 +63,7 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 - workspace 范围写在根目录 `pnpm-workspace.yaml` 的 `packages`。
 - 公共依赖版本写在根目录 `pnpm-workspace.yaml` 的 `catalog` 和 `catalogs`。
 - 子包通过 `catalog:`、`catalog:react`、`catalog:vite`、`catalog:shiki` 引用统一版本。
+- 内部包通过 `workspace:*` 引用，例如 Console 和 Nexus 都引用 `@xdd-zone/contracts`。
 
 当前仓库用 Turborepo 管理任务：
 
@@ -156,6 +162,7 @@ pnpm clean
 - `apps/nexus/src/routes/index.ts`
 
 新增接口按模块放到 `apps/nexus/src/modules/<module>`，再到 `apps/nexus/src/routes/index.ts` 挂载。
+Console 通过 `@xdd-zone/nexus/rpc` 引入 Nexus 的 RPC 类型，再用 `hono/client` 调接口。
 
 ## 当前接口范围
 

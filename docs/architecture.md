@@ -41,7 +41,9 @@
 - `apps/nexus/src/index.ts`
   直接运行 Nexus 时启动 Node 服务。
 - `apps/nexus/src/app.ts`
-  创建 Hono app，注册错误处理，挂载路由，导出 `AppType`。
+  创建 Hono app，注册错误处理，挂载路由，导出运行时 app。
+- `apps/nexus/src/rpc.ts`
+  只导出 `AppType` 类型，给 Console 的 Hono RPC client 使用。
 - `apps/nexus/src/routes`
   按接口域放路由。
 - `apps/nexus/src/shared`
@@ -57,7 +59,7 @@
 - `GET /health`
 - `POST /rpc/system/ping`
 
-新增接口按模块放到 `apps/nexus/src/modules/<module>`，再到 `apps/nexus/src/routes/index.ts` 挂载。
+新增接口按模块放到 `apps/nexus/src/modules/<module>`，再到 `apps/nexus/src/routes/index.ts` 挂载。模块路由用链式写法注册，`routes/index.ts` 用 `route()` 挂载后接住返回值。
 
 ## `apps/console`
 
@@ -81,10 +83,12 @@
   Console 调 Nexus 的请求入口。当前有 Nexus ping 验证请求。
 
 当前前端首页会请求 Nexus 的 `POST /rpc/system/ping`。
+Console 从 `@xdd-zone/nexus/rpc` 通过 `import type` 引入 `AppType`，再用 `hono/client` 创建 Nexus RPC client。
 
 ## `packages/contracts`
 
 这里放 Console 和 Nexus 都会引用的接口约定。
+这里只放 Console 和 Nexus 都要用的接口 schema、请求类型、响应类型和错误码。页面代码、前端组件、业务 hooks 和只服务单个应用的函数继续放在对应 app 里。
 
 主要目录：
 
