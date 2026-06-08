@@ -21,6 +21,11 @@
       "types": "./src/app.ts",
       "import": "./src/app.ts",
       "default": "./src/app.ts"
+    },
+    "./rpc": {
+      "types": "./src/rpc.ts",
+      "import": "./src/rpc.ts",
+      "default": "./src/rpc.ts"
     }
   },
   "imports": {
