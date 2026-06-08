@@ -49,7 +49,7 @@
 2. 再调用 `frontend-design`
 3. 再继续页面、布局、导航和展示型组件实现
 
-### 4. 涉及 `apps/bobo` 的界面开发，先读 `docs/bobo.md`，再调用 `frontend-design`
+### 4. 涉及 `apps/bobo` 的界面开发，先读 `docs/apps/bobo.md`，再调用 `frontend-design`
 
 适用范围：
 
@@ -59,7 +59,7 @@
 
 执行规则：
 
-1. 先看 `docs/bobo.md`
+1. 先看 `docs/apps/bobo.md`
 2. 再看当前要改的页面、布局和样式文件
 3. 再调用 `frontend-design`
 
@@ -72,7 +72,7 @@
 - 进了 `apps/nexus` 但没先调 `xdd-honojs`，先补调。
 - 改了文档但没先调 `xdd-plain-docs`，先补调。
 - 改了 Console UI 但没先看 `apps/console/design-context.md`，先补看。
-- 改了 Bobo UI 但没先看 `docs/bobo.md`，先补看。
+- 改了 Bobo UI 但没先看 `docs/apps/bobo.md`，先补看。
 
 ## 文档读取顺序
 
@@ -82,17 +82,17 @@
 2. `docs/` 里和当前任务最相关的文档
 3. 目标包自己的 README
 4. 如果是 Console 界面任务，再读 `apps/console/design-context.md`
-5. 如果是 Bobo 站点任务，再读 `docs/bobo.md`
+5. 如果是 Bobo 站点任务，再读 `docs/apps/bobo.md`
 
 常用入口：
 
 - `README.md`
 - `docs/development.md`
 - `docs/architecture.md`
-- `docs/api.md`
-- `docs/console.md`
-- `docs/bobo.md`
-- `docs/theme.md`
+- `docs/topics/api.md`
+- `docs/apps/console.md`
+- `docs/apps/bobo.md`
+- `docs/topics/theme.md`
 
 ## 代码组织规则
 
@@ -106,7 +106,7 @@
 - 一级路由挂载放在 `apps/nexus/src/routes/index.ts`。
 - 业务模块放在 `apps/nexus/src/modules/<module>`。
 - 路由处理函数直接返回 Hono response。
-- 新增接口按 `docs/nexus.md` 放到对应模块。
+- 新增接口按 `docs/apps/nexus.md` 放到对应模块。
 - 需要分组时优先用 Hono 的 `app.route()` 或 `basePath()`。
 - 保留 `AppType` 的类型推导，不要破坏前端可复用的路由类型。
 
@@ -140,7 +140,7 @@
 - 页面和组件里优先使用语义类名，不直接散写颜色变量。
 - 没有明确复用前，不为了形式拆组件。
 - App Router 默认写服务端组件。只有确实需要浏览器 API、交互状态或事件处理时，才加 `'use client'`。
-- 具体维护规则看 `docs/bobo.md`。
+- 具体维护规则看 `docs/apps/bobo.md`。
 
 ### 共享配置
 
@@ -239,5 +239,5 @@ pnpm type-check
 - Nexus 任务：`xdd-honojs`
 - Console 界面任务：先读 `apps/console/design-context.md`，再用 `frontend-design`
 - Console 界面 + 文案任务：先读 `apps/console/design-context.md`，再用 `frontend-design`，最后用 `xdd-plain-docs`
-- Bobo 界面任务：先读 `docs/bobo.md`，再用 `frontend-design`
-- Bobo 界面 + 文案任务：先读 `docs/bobo.md`，再用 `frontend-design`，最后用 `xdd-plain-docs`
+- Bobo 界面任务：先读 `docs/apps/bobo.md`，再用 `frontend-design`
+- Bobo 界面 + 文案任务：先读 `docs/apps/bobo.md`，再用 `frontend-design`，最后用 `xdd-plain-docs`

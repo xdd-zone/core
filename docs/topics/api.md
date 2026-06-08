@@ -28,7 +28,7 @@ apps/nexus/src/routes
 - `packages/contracts/src`
   放接口 schema、类型和统一响应结构。
 
-后续新增接口按 [nexus.md](./nexus.md) 放到 `apps/nexus/src/modules/<module>`。
+后续新增接口按 [apps/nexus.md](../apps/nexus.md) 放到 `apps/nexus/src/modules/<module>`。
 
 ## 当前接口
 

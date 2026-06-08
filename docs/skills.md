@@ -63,7 +63,7 @@
 
 先读：
 
-- `docs/bobo.md`
+- `docs/apps/bobo.md`
 
 再用：
 
@@ -80,6 +80,6 @@
 
 顺序：
 
-1. 读 `docs/bobo.md`
+1. 读 `docs/apps/bobo.md`
 2. 用 `frontend-design`
 3. 用 `xdd-plain-docs`

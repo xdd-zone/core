@@ -90,5 +90,5 @@ src/
 只要任务涉及页面、布局、导航或展示型组件，先看：
 
 1. `apps/console/design-context.md`
-2. `docs/console.md`
-3. `docs/theme.md`
+2. `docs/apps/console.md`
+3. `docs/topics/theme.md`

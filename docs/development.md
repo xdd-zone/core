@@ -63,8 +63,8 @@ pnpm format
 
 先看：
 
-- [nexus.md](./nexus.md)
-- [api.md](./api.md)
+- [apps/nexus.md](./apps/nexus.md)
+- [topics/api.md](./topics/api.md)
 
 常改文件：
 
@@ -120,7 +120,7 @@ pnpm build:console
 
 先看：
 
-- [bobo.md](./bobo.md)
+- [apps/bobo.md](./apps/bobo.md)
 
 常改文件：
 

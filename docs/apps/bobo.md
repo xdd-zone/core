@@ -15,7 +15,7 @@
 改 Bobo 时按这个顺序看：
 
 1. 根目录 `AGENTS.md`
-2. `docs/bobo.md`
+2. `docs/apps/bobo.md`
 3. `apps/bobo/README.md`
 4. 当前要改的页面、组件或样式文件
 

@@ -26,6 +26,9 @@
 │   ├── nexus/
 │   └── bobo/
 ├── docs/
+│   ├── apps/
+│   ├── topics/
+│   └── integrations/
 ├── packages/
 │   ├── contracts/
 │   └── eslint-config/
@@ -54,7 +57,7 @@
 
 后续目录和新增接口规则看：
 
-- [nexus.md](./nexus.md)
+- [apps/nexus.md](./apps/nexus.md)
 
 当前接口：
 
@@ -126,7 +129,7 @@ Console 从 `@xdd-zone/nexus/rpc` 通过 `import type` 引入 `AppType`，再用
 
 后续维护规则看：
 
-- [bobo.md](./bobo.md)
+- [apps/bobo.md](./apps/bobo.md)
 
 ## `packages/contracts`
 

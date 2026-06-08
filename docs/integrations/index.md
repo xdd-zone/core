@@ -10,6 +10,7 @@
 
 ## 已保留的旧文档入口
 
+- [GitHub OAuth](./github-oauth.md)
 - [腾讯云 COS 对象存储](./storage/tencent-cos.md)
 
 这份 COS 文档现在只记录状态，不提供旧接法步骤。

@@ -24,6 +24,9 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 │   ├── nexus/
 │   └── bobo/
 ├── docs/
+│   ├── apps/
+│   ├── topics/
+│   └── integrations/
 ├── packages/
 │   ├── contracts/
 │   └── eslint-config/
@@ -165,7 +168,7 @@ pnpm clean
 
 优先看：
 
-- [docs/nexus.md](./docs/nexus.md)
+- [docs/apps/nexus.md](./docs/apps/nexus.md)
 - `apps/nexus/src/app.ts`
 - `apps/nexus/src/routes/index.ts`
 
@@ -177,7 +180,7 @@ Console 通过 `@xdd-zone/nexus/rpc` 引入 Nexus 的 RPC 类型，再用 `hono/
 
 优先看：
 
-- [docs/bobo.md](./docs/bobo.md)
+- [docs/apps/bobo.md](./docs/apps/bobo.md)
 - `apps/bobo/app/layout.tsx`
 - `apps/bobo/app/page.tsx`
 - `apps/bobo/app/globals.css`
@@ -203,9 +206,9 @@ pnpm dev:bobo
 
 - 改仓库结构或模块职责，看 [docs/architecture.md](./docs/architecture.md)。
 - 改开发流程，看 [docs/development.md](./docs/development.md)。
-- 改后端接口，看 [docs/nexus.md](./docs/nexus.md) 和 [docs/api.md](./docs/api.md)。
-- 改前端页面，看 [docs/console.md](./docs/console.md) 和 [docs/theme.md](./docs/theme.md)。
-- 改个人站点，看 [docs/bobo.md](./docs/bobo.md)。
+- 改后端接口，看 [docs/apps/nexus.md](./docs/apps/nexus.md) 和 [docs/topics/api.md](./docs/topics/api.md)。
+- 改前端页面，看 [docs/apps/console.md](./docs/apps/console.md) 和 [docs/topics/theme.md](./docs/topics/theme.md)。
+- 改个人站点，看 [docs/apps/bobo.md](./docs/apps/bobo.md)。
 
 ## 提交前最小检查
 

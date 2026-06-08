@@ -159,7 +159,7 @@ POST /rpc/system/ping
 
 主题说明看：
 
-- [theme.md](./theme.md)
+- [topics/theme.md](../topics/theme.md)
 
 相关文件：
 
