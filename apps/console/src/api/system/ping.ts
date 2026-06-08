@@ -9,7 +9,7 @@ export async function pingNexus(payload: PingRequest): Promise<ApiResponse<PingR
       json: payload,
     })
 
-    return (await response.json()) as ApiResponse<PingResponse>
+    return await response.json()
   } catch (error) {
     return {
       ok: false,

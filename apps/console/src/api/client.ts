@@ -1,4 +1,4 @@
-import type { AppType } from '@xdd-zone/nexus'
+import type { AppType } from '@xdd-zone/nexus/rpc'
 import { getConsoleEnv } from '@console/env'
 import { hc } from 'hono/client'
 
