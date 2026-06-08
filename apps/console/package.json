@@ -67,7 +67,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
     "@tanstack/history": "catalog:",
-    "@types/node": "catalog:conflicts_@types/node_h25_5_2",
+    "@types/node": "catalog:",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
     "@vitejs/plugin-react": "catalog:vite",

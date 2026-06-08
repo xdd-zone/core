@@ -56,8 +56,6 @@ catalogs:
   vite:
     "@vitejs/plugin-react": ^6.0.1
     vite: ^8.0.3
-  conflicts_@types/node_h25_5_2:
-    "@types/node": ^25.5.2
   next:
     "@antfu/eslint-config": ^8.2.0
     "@next/eslint-plugin-next": 16.2.4

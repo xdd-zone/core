@@ -6,9 +6,7 @@
     "moduleDetection": "force",
     "useDefineForClassFields": true,
     "paths": {
-      "@console/*": ["./src/*"],
-      "@xdd-zone/contracts": ["../../packages/contracts/src/index.ts"],
-      "@xdd-zone/nexus/rpc": ["../nexus/src/rpc.ts"]
+      "@console/*": ["./src/*"]
     },
     "allowImportingTsExtensions": true,
     "noFallthroughCasesInSwitch": true,
