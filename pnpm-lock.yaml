@@ -207,9 +207,6 @@ importers:
       '@xdd-zone/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@xdd-zone/nexus':
-        specifier: workspace:*
-        version: link:../nexus
       antd:
         specifier: 'catalog:'
         version: 6.4.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -289,6 +286,9 @@ importers:
       '@xdd-zone/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@xdd-zone/nexus':
+        specifier: workspace:*
+        version: link:../nexus
       esbuild:
         specifier: 'catalog:'
         version: 0.28.0
