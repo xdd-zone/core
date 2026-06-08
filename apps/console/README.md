@@ -6,11 +6,12 @@
 
 - React / Vite 入口
 - TanStack Router 路由
+- TanStack Query 请求状态
 - 基础布局、导航、标签栏和设置抽屉
 - Catppuccin 主题
 - 首页、404 页面和几个示例页
 
-当前没有接入后端接口，也没有业务模块。
+当前接入了 Nexus 的健康检查和 ping 验证接口。当前没有登录、权限和业务模块。
 
 ## 常用命令
 
@@ -32,6 +33,7 @@ pnpm type-check
 ```text
 src/
 ├── app/
+├── api/
 ├── components/
 ├── features/
 ├── layout/
@@ -49,12 +51,15 @@ src/
   页面模块。每个模块有自己的 `pages/` 和 `routes.tsx`。
 - `layout`
   控制台整体布局。
+- `api`
+  调 Nexus 的 Hono RPC 请求和 TanStack Query hooks。
 - `stores`
   设置、标签栏等本地状态。
 
 ## 当前页面路径
 
 - `/`
+- `/env-example`
 - `/ui-showcase`
 - `/markdown-example`
 - `/tiptap-example`
@@ -71,6 +76,14 @@ src/
 3. 如果是新模块，再把模块记录加到 `apps/console/src/app/router/records.ts`
 
 `apps/console/src/app/navigation/navigation.ts` 会从页面记录生成菜单。已有菜单组只需要在模块页面记录里写 `menu.group`。
+
+## 新增 Nexus 请求时通常要改哪几处
+
+1. `apps/console/src/api/<module>/<name>.api.ts`
+2. `apps/console/src/api/<module>/<module>.query.ts`
+3. 使用接口的页面文件
+
+页面只调用 `*.query.ts` 导出的 hook。不要在页面里直接 import `nexusClient`。
 
 ## 开发前先看
 

@@ -1,30 +1,21 @@
-import type { PingRequest } from '@xdd-zone/contracts'
 import type { ReactNode } from 'react'
 import { consoleEnv, nexusBaseUrl } from '@console/api/client'
-import { pingNexus } from '@console/api/system/ping'
+import { useSystemHealthQuery } from '@console/api/system'
 import { ConsolePageHeader } from '@console/components/common'
-import { useQuery } from '@tanstack/react-query'
 import { Button, Tag } from 'antd'
 import { Monitor, RefreshCw, Server } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-const pingPayload: PingRequest = {
-  name: 'env-example',
-}
-
 export function EnvExample() {
   const { t } = useTranslation()
-  const pingQuery = useQuery({
-    queryFn: () => pingNexus(pingPayload),
-    queryKey: ['examples', 'env', 'ping'],
-  })
+  const healthQuery = useSystemHealthQuery()
 
-  const pingResult = pingQuery.data
-  const nexusEnv = pingResult?.ok ? pingResult.data.env : t('example.env.nexus.empty')
-  const statusColor = pingQuery.isLoading ? 'processing' : pingResult?.ok ? 'success' : 'error'
-  const statusLabel = pingQuery.isLoading
+  const healthResult = healthQuery.data
+  const nexusEnv = healthResult?.ok ? healthResult.data.env : t('example.env.nexus.empty')
+  const statusColor = healthQuery.isLoading ? 'processing' : healthResult?.ok ? 'success' : 'error'
+  const statusLabel = healthQuery.isLoading
     ? t('example.env.status.loading')
-    : pingResult?.ok
+    : healthResult?.ok
       ? t('example.env.status.connected')
       : t('example.env.status.failed')
 
@@ -48,7 +39,7 @@ export function EnvExample() {
       value: nexusEnv,
     },
     {
-      key: 'POST /rpc/system/ping',
+      key: 'GET /health',
       scope: t('example.env.scope.request'),
       value: nexusBaseUrl,
     },
@@ -72,8 +63,8 @@ export function EnvExample() {
         actions={
           <Button
             icon={<RefreshCw size={15} />}
-            loading={pingQuery.isFetching}
-            onClick={() => void pingQuery.refetch()}
+            loading={healthQuery.isFetching}
+            onClick={() => void healthQuery.refetch()}
             size="small"
           >
             {t('common.refresh')}
@@ -106,7 +97,7 @@ export function EnvExample() {
           <Tag color={statusColor}>{statusLabel}</Tag>
         </div>
         <pre className="text-fg-muted bg-surface-muted/50 m-0 max-h-96 overflow-auto p-5 text-xs leading-5">
-          {pingResult ? JSON.stringify(pingResult, null, 2) : t('example.env.response.empty')}
+          {healthResult ? JSON.stringify(healthResult, null, 2) : t('example.env.response.empty')}
         </pre>
       </section>
     </div>

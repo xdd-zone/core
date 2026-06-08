@@ -1,13 +1,13 @@
-import type { ApiResponse, PingRequest, PingResponse } from '@xdd-zone/contracts'
+import type { ApiResponse } from '@xdd-zone/contracts'
 import { BizCode } from '@xdd-zone/contracts'
 
-import { nexusClient } from '../client'
+interface NexusJsonResponse<TData> {
+  json: () => Promise<ApiResponse<TData>>
+}
 
-export async function pingNexus(payload: PingRequest): Promise<ApiResponse<PingResponse>> {
+export async function readNexusJson<TData>(request: Promise<NexusJsonResponse<TData>>): Promise<ApiResponse<TData>> {
   try {
-    const response = await nexusClient.rpc.system.ping.$post({
-      json: payload,
-    })
+    const response = await request
 
     return await response.json()
   } catch (error) {

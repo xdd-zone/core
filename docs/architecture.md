@@ -80,10 +80,25 @@
 - `apps/console/src/stores`
   前端本地状态。
 - `apps/console/src/api`
-  Console 调 Nexus 的请求入口。当前有 Nexus ping 验证请求。
+  Console 调 Nexus 的请求入口和 TanStack Query hooks。
 
-当前前端首页会请求 Nexus 的 `POST /rpc/system/ping`。
 Console 从 `@xdd-zone/nexus/rpc` 通过 `import type` 引入 `AppType`，再用 `hono/client` 创建 Nexus RPC client。
+
+当前 Console 请求相关文件：
+
+- `apps/console/src/api/client.ts`
+  创建 `nexusClient`，读取 `VITE_NEXUS_BASE_URL`。
+- `apps/console/src/api/rpc.ts`
+  读取 Nexus 返回的 JSON。网络失败时返回 `ApiResponse` 失败结构。
+- `apps/console/src/api/system/health.api.ts`
+  调 `GET /health`。
+- `apps/console/src/api/system/ping.api.ts`
+  调 `POST /rpc/system/ping`。
+- `apps/console/src/api/system/system.query.ts`
+  放 system 模块的 query key 和 hooks。
+
+当前前端首页会自动请求 Nexus 的 `GET /health`。点击 Ping 按钮时才请求 `POST /rpc/system/ping`。
+页面不直接 import `nexusClient`，也不手写 system query key。
 
 ## `packages/contracts`
 

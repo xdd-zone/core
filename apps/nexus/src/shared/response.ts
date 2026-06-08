@@ -7,9 +7,6 @@ export function createSuccessResponse<T>(data: T, meta: ApiMeta = createMeta()):
   return buildSuccess(data, meta)
 }
 
-export function createFailureResponse<E = unknown>(
-  error: ApiError<E>,
-  meta: ApiMeta = createMeta(),
-): ApiFailure<E> {
+export function createFailureResponse<E = unknown>(error: ApiError<E>, meta: ApiMeta = createMeta()): ApiFailure<E> {
   return buildFailure(error, meta)
 }

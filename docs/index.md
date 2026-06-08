@@ -39,6 +39,7 @@
 - `apps/console/src/app/router`
 - `apps/console/src/app/navigation`
 - `apps/console/src/features`
+- `apps/console/src/api`
 - `apps/console/src/layout`
 
 ## 当前没有实现的内容

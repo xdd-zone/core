@@ -6,6 +6,7 @@ export default {
     home: 'Home',
     loadingDescription: 'Preparing page content.',
     loadingTitle: 'Loading',
+    ping: 'Send Ping',
     refresh: 'Refresh',
     retry: 'Retry',
   },

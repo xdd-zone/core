@@ -75,7 +75,9 @@ pnpm format
 1. 在 `packages/contracts/src/<module>` 写请求 schema 和响应类型。
 2. 在 `apps/nexus/src/modules/<module>/<module>.route.ts` 用链式写法注册路由。
 3. 在 `apps/nexus/src/routes/index.ts` 用 `route()` 挂载模块路由，并接住返回值。
-4. 在 Console 里通过 `nexusClient.<path>.$get()` 或 `nexusClient.<path>.$post()` 调 Nexus，不手写接口 URL。
+4. 在 Console 的 `apps/console/src/api/<module>` 里写接口函数。接口函数内部通过 `nexusClient.<path>.$get()` 或 `nexusClient.<path>.$post()` 调 Nexus，不手写接口 URL。
+5. 在 Console 的 `apps/console/src/api/<module>/<module>.query.ts` 写 TanStack Query hook。`GET` 接口用 `useQuery`，`POST` 接口用 `useMutation`。
+6. 页面只调用 hook，不直接 import `nexusClient`，也不手写 query key。
 
 路由处理函数直接返回 Hono response，比如 `c.json(...)`。
 Console 的 RPC 类型从 `@xdd-zone/nexus/rpc` 引入，只使用 `import type`。

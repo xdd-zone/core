@@ -162,7 +162,8 @@ pnpm clean
 - `apps/nexus/src/routes/index.ts`
 
 新增接口按模块放到 `apps/nexus/src/modules/<module>`，再到 `apps/nexus/src/routes/index.ts` 挂载。
-Console 通过 `@xdd-zone/nexus/rpc` 引入 Nexus 的 RPC 类型，再用 `hono/client` 调接口。
+Console 通过 `@xdd-zone/nexus/rpc` 引入 Nexus 的 RPC 类型，再用 `hono/client` 创建 RPC client。
+页面不要直接调 `nexusClient`。Console 请求先写到 `apps/console/src/api/<module>/*.api.ts`，再在同模块的 `*.query.ts` 里写 TanStack Query hook。
 
 ## 当前接口范围
 

@@ -12,7 +12,7 @@
 - Catppuccin 主题。
 - 首页、404 页面和几个示例页。
 
-当前首页接入了 Nexus 的最小验证接口。当前没有登录、权限和业务模块。
+当前首页接入了 Nexus 的健康检查和 ping 验证接口。当前没有登录、权限和业务模块。
 
 ## 开始改 UI 前先看
 
@@ -46,7 +46,7 @@ apps/console/src/
 - `layout`
   控制台整体布局。
 - `api`
-  调 Nexus 的请求入口。当前有 `api/client.ts` 和 `api/system/ping.ts`。
+  调 Nexus 的请求入口和 TanStack Query hooks。
 - `components`
   通用组件和示例组件。
 - `stores`
@@ -98,8 +98,23 @@ Console 使用 Hono RPC 调 Nexus。
 
 ```text
 apps/console/src/api/client.ts
-apps/console/src/api/system/ping.ts
+apps/console/src/api/rpc.ts
+apps/console/src/api/system/health.api.ts
+apps/console/src/api/system/ping.api.ts
+apps/console/src/api/system/system.query.ts
+apps/console/src/api/system/index.ts
 ```
+
+文件分工：
+
+- `api/client.ts`
+  创建 `nexusClient`，读取 `VITE_NEXUS_BASE_URL`。
+- `api/rpc.ts`
+  读取 Nexus 返回的 JSON。网络请求失败时返回 `ApiResponse` 失败结构。
+- `api/system/*.api.ts`
+  调 Nexus RPC。页面不要直接 import `nexusClient`。
+- `api/system/system.query.ts`
+  放 system 模块的 query key 和 hooks。页面不要手写 system query key。
 
 Console 通过环境变量读取 Nexus 地址：
 
@@ -122,8 +137,23 @@ apps/console/.env.example
 当前首页会请求：
 
 ```text
+GET /health
 POST /rpc/system/ping
 ```
+
+当前写法：
+
+- `GET /health`
+  用 `useSystemHealthQuery()`，页面打开后自动请求，也可以点刷新按钮重新请求。
+- `POST /rpc/system/ping`
+  用 `usePingSystemMutation()`，只在点击 Ping 按钮时发送。
+
+新增 Console 请求时按这个顺序写：
+
+1. 在 `apps/console/src/api/<module>/<name>.api.ts` 写接口函数。
+2. 在 `apps/console/src/api/<module>/<module>.query.ts` 写 query key 和 hook。
+3. 页面只 import hook，不直接 import `nexusClient`。
+4. `GET` 接口用 `useQuery`，`POST` 接口用 `useMutation`。
 
 ## 主题
 

@@ -1,10 +1,9 @@
 import type { PingRequest } from '@xdd-zone/contracts'
 import { nexusBaseUrl } from '@console/api/client'
-import { pingNexus } from '@console/api/system/ping'
+import { usePingSystemMutation, useSystemHealthQuery } from '@console/api/system'
 import { ConsolePageHeader } from '@console/components/common'
-import { useQuery } from '@tanstack/react-query'
 import { Button, Tag } from 'antd'
-import { RefreshCw, Settings, SquareActivity } from 'lucide-react'
+import { RefreshCw, Send, Settings, SquareActivity } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const pingPayload: PingRequest = {
@@ -13,20 +12,23 @@ const pingPayload: PingRequest = {
 
 export function Home() {
   const { t } = useTranslation()
-  const pingQuery = useQuery({
-    queryFn: () => pingNexus(pingPayload),
-    queryKey: ['nexus', 'system', 'ping'],
-  })
+  const healthQuery = useSystemHealthQuery()
+  const pingMutation = usePingSystemMutation()
 
-  const pingResult = pingQuery.data
+  const healthResult = healthQuery.data
+  const pingResult = pingMutation.data
   const requestBody = JSON.stringify(pingPayload, null, 2)
   const responseBody = pingResult ? JSON.stringify(pingResult, null, 2) : t('home.nexus.emptyResponse')
-  const statusLabel = pingQuery.isLoading
+  const statusLabel = healthQuery.isLoading
     ? t('home.nexus.status.loading')
-    : pingResult?.ok
+    : healthResult?.ok
       ? t('home.nexus.status.connected')
       : t('home.nexus.status.failed')
-  const statusColor = pingQuery.isLoading ? 'processing' : pingResult?.ok ? 'success' : 'error'
+  const statusColor = healthQuery.isLoading ? 'processing' : healthResult?.ok ? 'success' : 'error'
+
+  const handlePing = () => {
+    pingMutation.mutate(pingPayload)
+  }
 
   return (
     <div className="space-y-6">
@@ -70,11 +72,14 @@ export function Home() {
             <Tag color={statusColor}>{statusLabel}</Tag>
             <Button
               icon={<RefreshCw size={15} />}
-              loading={pingQuery.isFetching}
-              onClick={() => void pingQuery.refetch()}
+              loading={healthQuery.isFetching}
+              onClick={() => void healthQuery.refetch()}
               size="small"
             >
               {t('common.refresh')}
+            </Button>
+            <Button icon={<Send size={15} />} loading={pingMutation.isPending} onClick={handlePing} size="small">
+              {t('common.ping')}
             </Button>
           </div>
         </div>
@@ -87,12 +92,13 @@ export function Home() {
             </div>
             <div>
               <div className="text-fg-muted text-xs">{t('home.nexus.method')}</div>
+              <div className="text-fg mt-1 text-sm">GET /health</div>
               <div className="text-fg mt-1 text-sm">POST /rpc/system/ping</div>
             </div>
-            {pingResult && !pingResult.ok ? (
+            {healthResult && !healthResult.ok ? (
               <div>
                 <div className="text-fg-muted text-xs">{t('home.nexus.errorCode')}</div>
-                <div className="text-danger mt-1 break-all text-sm">{pingResult.error.code}</div>
+                <div className="text-danger mt-1 break-all text-sm">{healthResult.error.code}</div>
               </div>
             ) : null}
           </div>

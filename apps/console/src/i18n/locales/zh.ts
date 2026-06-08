@@ -6,6 +6,7 @@ export default {
     home: '首页',
     loadingDescription: '正在准备页面内容。',
     loadingTitle: '正在加载',
+    ping: '发送 Ping',
     refresh: '刷新',
     retry: '重试',
   },
