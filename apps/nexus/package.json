@@ -35,6 +35,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@hono/zod-validator": "catalog:",
     "@xdd-zone/contracts": "workspace:*",
     "@hono/node-server": "catalog:",
     "hono": "catalog:",

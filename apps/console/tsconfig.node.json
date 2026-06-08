@@ -4,9 +4,8 @@
     "incremental": true,
     "lib": ["ES2023"],
     "moduleDetection": "force",
-    "baseUrl": ".",
     "paths": {
-      "@console/*": ["src/*"]
+      "@console/*": ["./src/*"]
     },
     "types": ["node"],
     "allowImportingTsExtensions": true,
