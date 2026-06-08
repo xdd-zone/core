@@ -28,6 +28,8 @@ apps/nexus/src/routes
 - `packages/contracts/src`
   放接口 schema、类型和统一响应结构。
 
+后续新增接口按 [nexus.md](./nexus.md) 放到 `apps/nexus/src/modules/<module>`。
+
 ## 当前接口
 
 | 方法 | 路径 | 返回 |
@@ -151,12 +153,12 @@ curl -X POST http://localhost:7788/rpc/system/ping \
 
 ## 新增接口
 
-按接口域新增 route 文件：
+按模块新增 route 文件：
 
 ```text
-apps/nexus/src/routes/<domain>/<name>.route.ts
+apps/nexus/src/modules/<module>/<module>.route.ts
 ```
 
 再到 `apps/nexus/src/routes/index.ts` 挂载。
 
-如果接口有请求体或返回体，先在 `packages/contracts/src/<domain>` 增加 schema 和类型。
+如果接口有请求体或返回体，先在 `packages/contracts/src/<module>` 增加 schema 和类型。

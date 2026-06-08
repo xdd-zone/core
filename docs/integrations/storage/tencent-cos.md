@@ -15,7 +15,7 @@
 
 - `GET /`
 - `GET /health`
-- `GET /api/example`
+- `POST /rpc/system/ping`
 
 ## 如果以后要加 COS
 

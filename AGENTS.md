@@ -79,12 +79,15 @@
 
 规则：
 
-- 当前是基础 Hono 示例服务。
-- Hono app、示例接口和 Node 启动入口放在 `apps/nexus/src/index.ts`。
+- 当前是 Hono API 服务。
+- Node 启动入口放在 `apps/nexus/src/index.ts`。
+- Hono app 组装放在 `apps/nexus/src/app.ts`。
+- 一级路由挂载放在 `apps/nexus/src/routes/index.ts`。
+- 业务模块放在 `apps/nexus/src/modules/<module>`。
 - 路由处理函数直接返回 Hono response。
-- 新增接口优先放在 `apps/nexus/src/index.ts`，除非代码已经拆出模块。
+- 新增接口按 `docs/nexus.md` 放到对应模块。
 - 需要分组时优先用 Hono 的 `app.route()` 或 `basePath()`。
-- 如果拆模块，保留 `AppType` 的类型推导，不要破坏前端可复用的路由类型。
+- 保留 `AppType` 的类型推导，不要破坏前端可复用的路由类型。
 
 ### Console
 

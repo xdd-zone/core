@@ -151,9 +151,11 @@ pnpm clean
 
 优先看：
 
-- `apps/nexus/src/index.ts`
+- [docs/nexus.md](./docs/nexus.md)
+- `apps/nexus/src/app.ts`
+- `apps/nexus/src/routes/index.ts`
 
-当前 Nexus 是基础 Hono 示例服务。新增接口先放在 `apps/nexus/src/index.ts`。如果接口变多，再用 Hono 的 `app.route()` 或 `basePath()` 分组。
+新增接口按模块放到 `apps/nexus/src/modules/<module>`，再到 `apps/nexus/src/routes/index.ts` 挂载。
 
 ## 当前接口范围
 
@@ -161,8 +163,8 @@ pnpm clean
   返回服务名称和状态。
 - `/health`
   返回健康检查状态。
-- `/api/example`
-  返回一个 Hono 示例响应。
+- `/rpc/system/ping`
+  返回 Nexus ping 结果。
 
 ## 文档入口
 
@@ -170,6 +172,7 @@ pnpm clean
 
 - 改仓库结构或模块职责，看 [docs/architecture.md](./docs/architecture.md)。
 - 改开发流程，看 [docs/development.md](./docs/development.md)。
+- 改后端接口，看 [docs/nexus.md](./docs/nexus.md) 和 [docs/api.md](./docs/api.md)。
 - 改前端页面，看 [docs/console.md](./docs/console.md) 和 [docs/theme.md](./docs/theme.md)。
 
 ## 提交前最小检查

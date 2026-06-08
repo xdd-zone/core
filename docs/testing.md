@@ -29,16 +29,16 @@ pnpm build:console
 ```bash
 pnpm type-check:nexus
 pnpm build:nexus
+cd apps/nexus && pnpm test
 ```
 
-`@xdd-zone/nexus` 现在有测试命令，但仓库里还没有测试文件：
+`@xdd-zone/nexus` 的测试文件放在：
 
-```bash
-cd apps/nexus
-pnpm test
+```text
+apps/nexus/src/test
 ```
 
-这个命令当前使用 `vitest run --passWithNoTests`。
+接口测试使用 `app.request()`，不需要启动真实端口。
 
 ## 只改文档
 

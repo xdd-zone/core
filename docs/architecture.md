@@ -47,13 +47,17 @@
 - `apps/nexus/src/shared`
   放 Nexus 内部共用的错误类型、Hono 类型和响应 meta 生成函数。
 
+后续目录和新增接口规则看：
+
+- [nexus.md](./nexus.md)
+
 当前接口：
 
 - `GET /`
 - `GET /health`
 - `POST /rpc/system/ping`
 
-新增接口按域放到 `apps/nexus/src/routes/<domain>`，再到 `apps/nexus/src/routes/index.ts` 挂载。
+新增接口按模块放到 `apps/nexus/src/modules/<module>`，再到 `apps/nexus/src/routes/index.ts` 挂载。
 
 ## `apps/console`
 

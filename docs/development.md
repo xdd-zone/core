@@ -56,17 +56,28 @@ pnpm format
 
 ## 改后端接口
 
-当前后端入口：
+先看：
 
-- `apps/nexus/src/index.ts`
+- [nexus.md](./nexus.md)
+- [api.md](./api.md)
 
-新增接口先放这里。路由处理函数直接返回 Hono response，比如 `c.json(...)`。
+常改文件：
+
+- `apps/nexus/src/app.ts`
+- `apps/nexus/src/routes/index.ts`
+- `apps/nexus/src/modules/<module>/<module>.route.ts`
+- `apps/nexus/src/modules/<module>/<module>.service.ts`
+- `apps/nexus/src/modules/<module>/<module>.repository.ts`
+- `packages/contracts/src/<module>`
+
+新增接口先在 `packages/contracts` 写请求 schema 和响应类型，再到 `apps/nexus/src/modules/<module>` 写 route。路由处理函数直接返回 Hono response，比如 `c.json(...)`。
 
 改完后按范围跑：
 
 ```bash
 pnpm type-check:nexus
 pnpm build:nexus
+cd apps/nexus && pnpm test
 ```
 
 ## 改前端页面

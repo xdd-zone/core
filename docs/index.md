@@ -16,13 +16,15 @@
 先看：
 
 1. [development.md](./development.md)
-2. [api.md](./api.md)
+2. [nexus.md](./nexus.md)
+3. [api.md](./api.md)
 
 代码入口：
 
-- `apps/nexus/src/index.ts`
+- `apps/nexus/src/app.ts`
+- `apps/nexus/src/routes/index.ts`
 
-当前 Nexus 只是基础 Hono 示例服务。
+新增接口按 [nexus.md](./nexus.md) 里的模块目录放。
 
 ## 要改 Console 前端
 
@@ -46,12 +48,11 @@
 - 认证：[authentication.md](./authentication.md)
 - GitHub OAuth：[OAuth2/github.md](./OAuth2/github.md)
 - RBAC：[rbac.md](./rbac.md)
-- Eden：[eden.md](./eden.md)
 - 外部服务：[integrations/index.md](./integrations/index.md)
-- 第三方公开站点接口：[third-party/public-site.md](./third-party/public-site.md)
 
 ## 其他文档
 
 - [testing.md](./testing.md)：当前可跑的检查命令。
+- [nexus.md](./nexus.md)：Nexus 后端目录和新增接口规则。
 - [skills.md](./skills.md)：仓库常用技能顺序。
 - [faq.md](./faq.md)：当前常见问题。
