@@ -1,0 +1,53 @@
+/*
+ * 动画与过渡
+ * 统一过渡时间和缓动函数，避免各组件各写各的。
+ */
+
+@theme inline {
+  --transition-fast: 120ms;
+  --transition-normal: 200ms;
+  --transition-slow: 350ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@layer utilities {
+  /* 入场淡入上移 */
+  .fade-in-up {
+    animation: fade-in-up var(--transition-slow) var(--ease-out-expo) both;
+  }
+
+  /* 入场淡入 */
+  .fade-in {
+    animation: fade-in var(--transition-normal) ease both;
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    .fade-in-up,
+    .fade-in {
+      animation: none;
+    }
+  }
+}

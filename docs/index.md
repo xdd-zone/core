@@ -42,6 +42,20 @@
 - `apps/console/src/api`
 - `apps/console/src/layout`
 
+## 要改 Bobo 个人站点
+
+先看：
+
+1. [bobo.md](./bobo.md)
+2. [apps/bobo/README.md](../apps/bobo/README.md)
+
+代码入口：
+
+- `apps/bobo/app/layout.tsx`
+- `apps/bobo/app/page.tsx`
+- `apps/bobo/app/globals.css`
+- `apps/bobo/app/styles`
+
 ## 当前没有实现的内容
 
 这些旧专题目前没有对应代码：
@@ -55,5 +69,6 @@
 
 - [testing.md](./testing.md)：当前可跑的检查命令。
 - [nexus.md](./nexus.md)：Nexus 后端目录和新增接口规则。
+- [bobo.md](./bobo.md)：Bobo 个人站点目录、命令和维护规则。
 - [skills.md](./skills.md)：仓库常用技能顺序。
 - [faq.md](./faq.md)：当前常见问题。

@@ -1,6 +1,6 @@
 # XDD Zone Core
 
-XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前维护一个前端控制台、一个 Hono API 服务、一份接口约定包和一份共享 ESLint / Prettier 配置。
+XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前维护一个前端控制台、一个 Hono API 服务、一个个人站点、一份接口约定包和一份共享 ESLint / Prettier 配置。
 
 ## 现在有哪些包
 
@@ -8,6 +8,8 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
   前端控制台，放在 `apps/console`。
 - `@xdd-zone/nexus`
   Hono API 服务，放在 `apps/nexus`。
+- `@xdd-zone/bobo`
+  个人站点，放在 `apps/bobo`。
 - `@xdd-zone/contracts`
   Console 和 Nexus 共用的接口 schema、请求类型、响应类型和错误码，放在 `packages/contracts`。
 - `@xdd-zone/eslint-config`
@@ -19,7 +21,8 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 .
 ├── apps/
 │   ├── console/
-│   └── nexus/
+│   ├── nexus/
+│   └── bobo/
 ├── docs/
 ├── packages/
 │   ├── contracts/
@@ -52,6 +55,7 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 - pnpm 10+
 - Turborepo 2
 - React 19 + Vite 8
+- Next.js 16
 - Hono 4
 - TypeScript 5
 - ESLint 9 + Prettier 3
@@ -91,6 +95,7 @@ pnpm dev
 
 - Console: `http://localhost:2333`
 - Nexus: `http://localhost:7788`
+- Bobo: `http://localhost:4399`
 - Health: `http://localhost:7788/health`
 
 如果只想启动一个包：
@@ -121,11 +126,13 @@ curl http://localhost:7788/health
 pnpm dev
 pnpm dev:console
 pnpm dev:nexus
+pnpm dev:bobo
 
 # 构建
 pnpm build
 pnpm build:console
 pnpm build:nexus
+pnpm build:bobo
 
 # 检查
 pnpm lint
@@ -133,6 +140,7 @@ pnpm lint:fix
 pnpm format
 pnpm format:check
 pnpm type-check
+pnpm type-check:bobo
 
 # 清理子包构建产物
 pnpm clean
@@ -165,6 +173,21 @@ pnpm clean
 Console 通过 `@xdd-zone/nexus/rpc` 引入 Nexus 的 RPC 类型，再用 `hono/client` 创建 RPC client。
 页面不要直接调 `nexusClient`。Console 请求先写到 `apps/console/src/api/<module>/*.api.ts`，再在同模块的 `*.query.ts` 里写 TanStack Query hook。
 
+### 改个人站点
+
+优先看：
+
+- [docs/bobo.md](./docs/bobo.md)
+- `apps/bobo/app/layout.tsx`
+- `apps/bobo/app/page.tsx`
+- `apps/bobo/app/globals.css`
+
+开发时运行：
+
+```bash
+pnpm dev:bobo
+```
+
 ## 当前接口范围
 
 - `/`
@@ -182,6 +205,7 @@ Console 通过 `@xdd-zone/nexus/rpc` 引入 Nexus 的 RPC 类型，再用 `hono/
 - 改开发流程，看 [docs/development.md](./docs/development.md)。
 - 改后端接口，看 [docs/nexus.md](./docs/nexus.md) 和 [docs/api.md](./docs/api.md)。
 - 改前端页面，看 [docs/console.md](./docs/console.md) 和 [docs/theme.md](./docs/theme.md)。
+- 改个人站点，看 [docs/bobo.md](./docs/bobo.md)。
 
 ## 提交前最小检查
 

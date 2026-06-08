@@ -10,7 +10,7 @@
       "dependsOn": ["^build"],
       "env": ["APP_ENV", "PORT", "VITE_APP_ENV", "VITE_NEXUS_BASE_URL"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", "build/**"]
+      "outputs": ["dist/**", "build/**", ".next/**", "!.next/cache/**"]
     },
     "lint": {
       "env": ["APP_ENV", "PORT", "VITE_APP_ENV", "VITE_NEXUS_BASE_URL"],

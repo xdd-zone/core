@@ -58,3 +58,28 @@
 1. 读 `apps/console/design-context.md`
 2. 用 `frontend-design`
 3. 用 `xdd-plain-docs`
+
+## Bobo 界面任务
+
+先读：
+
+- `docs/bobo.md`
+
+再用：
+
+- `frontend-design`
+
+适用范围：
+
+- `apps/bobo/app` 页面。
+- `apps/bobo/app` 布局。
+- `apps/bobo/app/styles` 样式。
+- `apps/bobo/components` 展示组件。
+
+## Bobo 界面加文案任务
+
+顺序：
+
+1. 读 `docs/bobo.md`
+2. 用 `frontend-design`
+3. 用 `xdd-plain-docs`

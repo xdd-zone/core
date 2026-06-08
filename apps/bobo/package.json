@@ -1,0 +1,62 @@
+{
+  "name": "@xdd-zone/bobo",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "description": "XDD Zone Bobo homepage",
+  "author": "xidongdong-153",
+  "license": "MIT",
+  "homepage": "https://github.com/xdd-zone/core#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xdd-zone/core",
+    "directory": "apps/bobo"
+  },
+  "bugs": {
+    "url": "https://github.com/xdd-zone/core/issues"
+  },
+  "keywords": [],
+  "turbo": {
+    "build": {
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ]
+    }
+  },
+  "scripts": {
+    "dev": "next dev -p 4399",
+    "build": "pnpm run type-check && next build",
+    "start": "next start -p 4399",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --config prettier.config.mjs --write .",
+    "format:check": "prettier --config prettier.config.mjs --check .",
+    "type-check": "next typegen && tsc --noEmit",
+    "clean": "rm -rf .next"
+  },
+  "dependencies": {
+    "class-variance-authority": "catalog:next",
+    "clsx": "catalog:",
+    "lucide-react": "catalog:next",
+    "next": "catalog:next",
+    "radix-ui": "catalog:next",
+    "react": "catalog:react",
+    "react-dom": "catalog:react",
+    "shadcn": "catalog:next",
+    "tailwind-merge": "catalog:next",
+    "tw-animate-css": "catalog:next"
+  },
+  "devDependencies": {
+    "@next/eslint-plugin-next": "catalog:next",
+    "@tailwindcss/postcss": "catalog:next",
+    "@types/node": "catalog:next",
+    "@types/react": "catalog:react",
+    "@types/react-dom": "catalog:react",
+    "@xdd-zone/eslint-config": "workspace:*",
+    "eslint": "catalog:next",
+    "prettier": "catalog:next",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -4,12 +4,16 @@
 
 ## 项目概况
 
-这是一个 `pnpm + Turborepo + React + Hono` 的 monorepo，当前主要目录有：
+这是一个 `pnpm + Turborepo + React + Hono + Next.js` 的 monorepo，当前主要目录有：
 
 - `@xdd-zone/console`
   前端控制台，放在 `apps/console`。
 - `@xdd-zone/nexus`
   Hono API 服务，放在 `apps/nexus`。
+- `@xdd-zone/bobo`
+  个人站点，放在 `apps/bobo`。
+- `@xdd-zone/contracts`
+  Console 和 Nexus 共用的接口约定，放在 `packages/contracts`。
 - `@xdd-zone/eslint-config`
   共享 ESLint / Prettier 配置，放在 `packages/eslint-config`。
 
@@ -45,6 +49,20 @@
 2. 再调用 `frontend-design`
 3. 再继续页面、布局、导航和展示型组件实现
 
+### 4. 涉及 `apps/bobo` 的界面开发，先读 `docs/bobo.md`，再调用 `frontend-design`
+
+适用范围：
+
+- 页面、布局、展示区块、落地页和视觉样式
+- App Router 页面文件
+- 主题变量和全局样式
+
+执行规则：
+
+1. 先看 `docs/bobo.md`
+2. 再看当前要改的页面、布局和样式文件
+3. 再调用 `frontend-design`
+
 ## 如果漏掉规则怎么办
 
 一旦发现顺序错了，立刻停下，先补做正确步骤，再继续当前任务。
@@ -54,6 +72,7 @@
 - 进了 `apps/nexus` 但没先调 `xdd-honojs`，先补调。
 - 改了文档但没先调 `xdd-plain-docs`，先补调。
 - 改了 Console UI 但没先看 `apps/console/design-context.md`，先补看。
+- 改了 Bobo UI 但没先看 `docs/bobo.md`，先补看。
 
 ## 文档读取顺序
 
@@ -63,6 +82,7 @@
 2. `docs/` 里和当前任务最相关的文档
 3. 目标包自己的 README
 4. 如果是 Console 界面任务，再读 `apps/console/design-context.md`
+5. 如果是 Bobo 站点任务，再读 `docs/bobo.md`
 
 常用入口：
 
@@ -71,6 +91,7 @@
 - `docs/architecture.md`
 - `docs/api.md`
 - `docs/console.md`
+- `docs/bobo.md`
 - `docs/theme.md`
 
 ## 代码组织规则
@@ -102,6 +123,25 @@
 - 当前前端保留基础控制台框架和固定示例页。
 - 当前前端没有接入 Nexus 业务接口。
 
+### Bobo
+
+规则：
+
+- 当前是 `Next.js 16 + React 19 + Tailwind CSS 4 + TypeScript` 的个人站点。
+- 包名是 `@xdd-zone/bobo`，目录是 `apps/bobo`。
+- 页面入口放在 `apps/bobo/app`，使用 App Router。
+- `apps/bobo/app/layout.tsx` 管全局布局、字体、metadata 和主题初始化。
+- `apps/bobo/app/page.tsx` 是首页。
+- `apps/bobo/app/lab` 放样式演示、主题验证和临时页面。
+- 全局样式入口是 `apps/bobo/app/globals.css`。
+- 主题变量放在 `apps/bobo/app/styles/theme`。
+- 组件优先放在 `apps/bobo/components`，通用函数放在 `apps/bobo/lib`。
+- 主题色使用 `data-theme` 和 Tailwind 语义类名。
+- 页面和组件里优先使用语义类名，不直接散写颜色变量。
+- 没有明确复用前，不为了形式拆组件。
+- App Router 默认写服务端组件。只有确实需要浏览器 API、交互状态或事件处理时，才加 `'use client'`。
+- 具体维护规则看 `docs/bobo.md`。
+
 ### 共享配置
 
 规则：
@@ -123,18 +163,22 @@ pnpm install
 pnpm dev
 pnpm dev:console
 pnpm dev:nexus
+pnpm dev:bobo
 
 # 构建
 pnpm build
 pnpm build:console
 pnpm build:nexus
+pnpm build:bobo
 
 # 检查
 pnpm lint
+pnpm lint:bobo
 pnpm lint:fix
 pnpm format
 pnpm format:check
 pnpm type-check
+pnpm type-check:bobo
 
 # 清理子包构建产物
 pnpm clean
@@ -166,6 +210,21 @@ pnpm format:check
 pnpm type-check
 ```
 
+### `apps/bobo`
+
+```bash
+cd apps/bobo
+
+pnpm dev
+pnpm build
+pnpm start
+pnpm lint
+pnpm lint:fix
+pnpm format
+pnpm format:check
+pnpm type-check
+```
+
 ## 文案规则
 
 - 统一用自然、直接、清楚的中文。
@@ -180,3 +239,5 @@ pnpm type-check
 - Nexus 任务：`xdd-honojs`
 - Console 界面任务：先读 `apps/console/design-context.md`，再用 `frontend-design`
 - Console 界面 + 文案任务：先读 `apps/console/design-context.md`，再用 `frontend-design`，最后用 `xdd-plain-docs`
+- Bobo 界面任务：先读 `docs/bobo.md`，再用 `frontend-design`
+- Bobo 界面 + 文案任务：先读 `docs/bobo.md`，再用 `frontend-design`，最后用 `xdd-plain-docs`

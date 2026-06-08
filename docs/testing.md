@@ -40,6 +40,20 @@ apps/nexus/src/test
 
 接口测试使用 `app.request()`，不需要启动真实端口。
 
+## Bobo 检查
+
+```bash
+pnpm lint:bobo
+pnpm type-check:bobo
+pnpm build:bobo
+```
+
+只改 `apps/bobo` 的 Markdown 时，可以只跑：
+
+```bash
+pnpm --filter @xdd-zone/bobo format:check
+```
+
 ## 只改文档
 
 只改 `docs/` 或 README 时，当前没有单独的 Markdown 检查命令。

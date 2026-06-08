@@ -1,0 +1,20 @@
+/* 外部依赖 */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+/* 主题 */
+@import './styles/theme/catppuccin.css';
+@import './styles/theme/variables.css';
+
+/* 基础 */
+@import './styles/base/reset.css';
+
+/* 装饰 */
+@import './styles/patterns/bobo-pattern.css';
+
+/* 动画 */
+@import './styles/utilities/animations.css';
+
+/* 深色主题 variant：frappe / macchiato / mocha 均视为 dark */
+@custom-variant dark (&:where([data-theme='frappe'], [data-theme='frappe'] *, [data-theme='macchiato'], [data-theme='macchiato'] *, [data-theme='mocha'], [data-theme='mocha'] *));

@@ -1,0 +1,114 @@
+/* Catppuccin 运行时主题变量，只保留会随 data-theme 切换的核心 token */
+
+:root,
+[data-theme='latte'] {
+  color-scheme: light;
+  --theme-base: #eff1f5;
+  --theme-base-muted: #e6e9ef;
+  --theme-base-subtle: #dce0e8;
+  --theme-overlay: #c4c6d0;
+  --theme-overlay-strong: #acb0be;
+  --theme-text: #4c4f69;
+  --theme-text-subtle: #6c6f85;
+  --theme-text-muted: #8c8fa1;
+  --theme-primary: #1e66f5;
+  --theme-primary-contrast: #eff1f5;
+  --theme-highlight: #7287fd;
+  --theme-aurora-bg-start: #eff1f5;
+  --theme-aurora-bg-end: #e6e9ef;
+  --theme-aurora-vignette: rgba(230, 233, 239, 0.9);
+  --theme-aurora-1: rgba(136, 57, 239, 0.8); /* Mauve */
+  --theme-aurora-2: rgba(30, 102, 245, 0.7); /* Blue */
+  --theme-aurora-3: rgba(64, 160, 43, 0.6); /* Green */
+  --theme-aurora-blend-mode: multiply, overlay, color-burn;
+  --theme-aurora-grid-1: rgba(76, 79, 105, 0.09);
+  --theme-aurora-grid-2: rgba(76, 79, 105, 0.12);
+  --theme-danger: #d20f39;
+  --theme-success: #40a02b;
+  --theme-warning: #df8e1d;
+  --theme-info: #179299;
+}
+
+[data-theme='frappe'] {
+  color-scheme: dark;
+  --theme-base: #303446;
+  --theme-base-muted: #292c3c;
+  --theme-base-subtle: #232634;
+  --theme-overlay: #51576d;
+  --theme-overlay-strong: #626880;
+  --theme-text: #c6d0f5;
+  --theme-text-subtle: #8389a7;
+  --theme-text-muted: #a5adce;
+  --theme-primary: #8caaee;
+  --theme-primary-contrast: #303446;
+  --theme-highlight: #babbf1;
+  --theme-aurora-bg-start: #232634;
+  --theme-aurora-bg-end: #292c3c;
+  --theme-aurora-vignette: rgba(35, 38, 52, 0.9);
+  --theme-aurora-1: rgba(202, 158, 230, 0.8); /* Mauve */
+  --theme-aurora-2: rgba(140, 170, 238, 0.7); /* Blue */
+  --theme-aurora-3: rgba(166, 209, 137, 0.6); /* Green */
+  --theme-aurora-blend-mode: overlay, screen, hard-light;
+  --theme-aurora-grid-1: rgba(255, 255, 255, 0.02);
+  --theme-aurora-grid-2: rgba(255, 255, 255, 0.03);
+  --theme-danger: #e78284;
+  --theme-success: #a6d189;
+  --theme-warning: #e5c890;
+  --theme-info: #81c8be;
+}
+
+[data-theme='macchiato'] {
+  color-scheme: dark;
+  --theme-base: #24273a;
+  --theme-base-muted: #1e2030;
+  --theme-base-subtle: #181926;
+  --theme-overlay: #494d64;
+  --theme-overlay-strong: #5b6078;
+  --theme-text: #cad3f5;
+  --theme-text-subtle: #8a91b4;
+  --theme-text-muted: #a5adcb;
+  --theme-primary: #8aadf4;
+  --theme-primary-contrast: #24273a;
+  --theme-highlight: #b7bdf8;
+  --theme-aurora-bg-start: #181926;
+  --theme-aurora-bg-end: #1e2030;
+  --theme-aurora-vignette: rgba(24, 25, 38, 0.9);
+  --theme-aurora-1: rgba(198, 160, 246, 0.8); /* Mauve */
+  --theme-aurora-2: rgba(138, 173, 244, 0.7); /* Blue */
+  --theme-aurora-3: rgba(166, 218, 149, 0.6); /* Green */
+  --theme-aurora-blend-mode: overlay, screen, hard-light;
+  --theme-aurora-grid-1: rgba(255, 255, 255, 0.02);
+  --theme-aurora-grid-2: rgba(255, 255, 255, 0.03);
+  --theme-danger: #ed8796;
+  --theme-success: #a6da95;
+  --theme-warning: #eed49f;
+  --theme-info: #8bd5ca;
+}
+
+[data-theme='mocha'] {
+  color-scheme: dark;
+  --theme-base: #1e1e2e;
+  --theme-base-muted: #181825;
+  --theme-base-subtle: #11111b;
+  --theme-overlay: #45475a;
+  --theme-overlay-strong: #585b70;
+  --theme-text: #cdd6f4;
+  --theme-text-subtle: #9399b2;
+  --theme-text-muted: #a6adc8;
+  --theme-primary: #89b4fa;
+  --theme-primary-contrast: #1e1e2e;
+  --theme-highlight: #b4befe;
+  --theme-aurora-bg-start: #11111b;
+  --theme-aurora-bg-end: #181825;
+  --theme-aurora-vignette: rgba(17, 17, 27, 0.9);
+  --theme-aurora-1: rgba(203, 166, 247, 0.8); /* Mauve */
+  --theme-aurora-2: rgba(137, 180, 250, 0.7); /* Blue */
+  --theme-aurora-3: rgba(166, 227, 161, 0.6); /* Green */
+  --theme-aurora-blend-mode: overlay, screen, hard-light;
+  --theme-aurora-grid-1: rgba(255, 255, 255, 0.02);
+  --theme-aurora-grid-2: rgba(255, 255, 255, 0.03);
+  --theme-danger: #f38ba8;
+  --theme-success: #a6e3a1;
+  --theme-warning: #f9e2af;
+  --theme-info: #94e2d5;
+}

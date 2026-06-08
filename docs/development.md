@@ -16,7 +16,7 @@ pnpm install
 ## 开发命令
 
 ```bash
-# 前后端一起跑
+# Console、Nexus 和 Bobo 一起跑
 pnpm dev
 
 # 只跑后端
@@ -24,12 +24,16 @@ pnpm dev:nexus
 
 # 只跑前端
 pnpm dev:console
+
+# 只跑个人站点
+pnpm dev:bobo
 ```
 
 默认地址：
 
 - Console: `http://localhost:2333`
 - Nexus: `http://localhost:7788`
+- Bobo: `http://localhost:4399`
 - Health: `http://localhost:7788/health`
 
 ## 构建命令
@@ -38,6 +42,7 @@ pnpm dev:console
 pnpm build
 pnpm build:console
 pnpm build:nexus
+pnpm build:bobo
 ```
 
 ## 检查命令
@@ -109,6 +114,33 @@ cd apps/nexus && pnpm test
 pnpm lint:console
 pnpm type-check:console
 pnpm build:console
+```
+
+## 改个人站点
+
+先看：
+
+- [bobo.md](./bobo.md)
+
+常改文件：
+
+- `apps/bobo/app/layout.tsx`
+- `apps/bobo/app/page.tsx`
+- `apps/bobo/app/lab/page.tsx`
+- `apps/bobo/app/globals.css`
+- `apps/bobo/app/styles`
+- `apps/bobo/components`
+
+新增页面优先放到 `apps/bobo/app/<route>/page.tsx`。
+全局布局、字体、metadata 和主题初始化放在 `apps/bobo/app/layout.tsx`。
+全局样式入口是 `apps/bobo/app/globals.css`。
+
+改完后按范围跑：
+
+```bash
+pnpm lint:bobo
+pnpm type-check:bobo
+pnpm build:bobo
 ```
 
 ## 只改文档
