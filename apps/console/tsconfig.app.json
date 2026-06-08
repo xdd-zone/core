@@ -1,18 +1,18 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.browser.json",
   "compilerOptions": {
     "incremental": true,
     "jsx": "react-jsx",
-    "lib": ["ES2021", "DOM", "DOM.Iterable"],
     "moduleDetection": "force",
     "useDefineForClassFields": true,
     "paths": {
-      "@console/*": ["./src/*"]
+      "@console/*": ["./src/*"],
+      "@xdd-zone/contracts": ["../../packages/contracts/src/index.ts"],
+      "@xdd-zone/nexus/rpc": ["../nexus/src/rpc.ts"]
     },
     "allowImportingTsExtensions": true,
     "noFallthroughCasesInSwitch": true,
     "noEmit": true,
-    "isolatedModules": true,
     "verbatimModuleSyntax": true
   },
   "include": ["src", "src/viteEnv.d.ts"]

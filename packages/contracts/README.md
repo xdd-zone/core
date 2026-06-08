@@ -2,6 +2,8 @@
 
 `@xdd-zone/contracts` 放 Console 和 Nexus 共用的接口类型、schema 和响应结构。
 
+这个包不能调用 Node.js 或浏览器 API。不要在这里 import `node:*`，也不要直接使用 `window`、`document`、`localStorage` 或 `sessionStorage`。
+
 ## 当前内容
 
 - `src/common/biz-code.ts`

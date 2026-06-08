@@ -16,6 +16,13 @@
     "url": "https://github.com/xdd-zone/core/issues"
   },
   "keywords": [],
+  "turbo": {
+    "build": {
+      "outputs": [
+        "dist/**"
+      ]
+    }
+  },
   "scripts": {
     "dev": "VITE_APP_ENV=development VITE_NEXUS_BASE_URL=http://localhost:7788 vite",
     "build": "pnpm run type-check && vite build",

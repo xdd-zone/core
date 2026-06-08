@@ -1,12 +1,11 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.node.json",
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
       "#nexus/routes": ["./src/routes/index.ts"],
       "#nexus/*": ["./src/*"]
     },
-    "types": ["node"],
     "outDir": "./dist"
   },
   "include": ["src/**/*"],

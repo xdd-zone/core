@@ -16,16 +16,25 @@
     "url": "https://github.com/xdd-zone/core/issues"
   },
   "keywords": [],
+  "turbo": {
+    "build": {
+      "outputs": [
+        "dist/**"
+      ]
+    }
+  },
   "exports": {
     ".": {
-      "types": "./src/app.ts",
-      "import": "./src/app.ts",
-      "default": "./src/app.ts"
+      "development": "./src/app.ts",
+      "types": "./dist/app.d.ts",
+      "import": "./dist/app.js",
+      "default": "./dist/app.js"
     },
     "./rpc": {
-      "types": "./src/rpc.ts",
-      "import": "./src/rpc.ts",
-      "default": "./src/rpc.ts"
+      "development": "./src/rpc.ts",
+      "types": "./dist/rpc.d.ts",
+      "import": "./dist/rpc.js",
+      "default": "./dist/rpc.js"
     }
   },
   "imports": {
@@ -33,8 +42,8 @@
     "#nexus/*": "./src/*.ts"
   },
   "scripts": {
-    "dev": "NODE_ENV=development APP_ENV=development PORT=7788 tsx watch src/index.ts",
-    "build": "tsup src/index.ts --format esm --dts --out-dir dist",
+    "dev": "NODE_ENV=development APP_ENV=development PORT=7788 tsx watch --conditions=development src/index.ts",
+    "build": "tsup src/index.ts src/app.ts src/rpc.ts --format esm --dts --out-dir dist",
     "lint": "eslint --no-error-on-unmatched-pattern src",
     "lint:fix": "eslint --no-error-on-unmatched-pattern src --fix",
     "format": "prettier --config prettier.config.js --write .",

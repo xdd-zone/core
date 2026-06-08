@@ -124,6 +124,8 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@console': path.resolve(__dirname, './src'),
+        '@xdd-zone/contracts': path.resolve(__dirname, '../../packages/contracts/src/index.ts'),
+        '@xdd-zone/nexus/rpc': path.resolve(__dirname, '../nexus/src/rpc.ts'),
       },
     },
     server: {
