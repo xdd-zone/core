@@ -288,6 +288,43 @@ apps/nexus/src/shared
 - `validator.ts`
   放请求校验辅助函数。如果多个 route 都需要同一种 zod validator 错误响应，可以在这里写共用函数。
 
+## 路径别名
+
+Nexus 使用 `#nexus/*` 做内部路径别名。
+
+配置放在：
+
+- `apps/nexus/package.json`
+  通过 `imports` 让 Node 运行时识别 `#nexus/*`。
+- `apps/nexus/tsconfig.json`
+  通过 `paths` 让 TypeScript 识别 `#nexus/*`。
+
+当前别名：
+
+```json
+{
+  "#nexus/routes": "./src/routes/index.ts",
+  "#nexus/*": "./src/*.ts"
+}
+```
+
+跨目录引用使用 `#nexus/*`：
+
+```ts
+import routes from '#nexus/routes'
+import { getNexusEnv } from '#nexus/shared/env'
+import systemRoute from '#nexus/modules/system/system.route'
+```
+
+同目录引用继续使用相对路径：
+
+```ts
+import { createMeta } from './meta'
+import { getHealthStatus } from './system.service'
+```
+
+不要在 Nexus 里新增 `baseUrl`。`paths` 里的目标路径要写成 `./src/*` 这种显式相对路径。
+
 ## 引用方向
 
 代码按这个方向引用：
