@@ -1,14 +1,8 @@
-import type { HonoEnv } from '../shared/hono-env'
+import type { HonoEnv } from '#nexus/shared/hono-env'
+import systemRoute from '#nexus/modules/system/system.route'
 import { Hono } from 'hono'
 
-import healthRoute from './system/health.route'
-import pingRoute from './system/ping.route'
-import rootRoute from './system/root.route'
-
-const routes = new Hono<HonoEnv>()
-  .route('/', rootRoute)
-  .route('/health', healthRoute)
-  .route('/rpc/system/ping', pingRoute)
+const routes = new Hono<HonoEnv>().route('/', systemRoute)
 
 export type RoutesType = typeof routes
 

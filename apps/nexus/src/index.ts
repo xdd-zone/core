@@ -1,9 +1,8 @@
 import { fileURLToPath } from 'node:url'
 
+import app from '#nexus/app'
+import { getNexusEnv } from '#nexus/shared/env'
 import { serve } from '@hono/node-server'
-
-import app from './app'
-import { getNexusEnv } from './shared/env'
 
 const isEntry = process.argv[1] === fileURLToPath(import.meta.url)
 

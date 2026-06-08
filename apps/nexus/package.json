@@ -23,6 +23,10 @@
       "default": "./src/app.ts"
     }
   },
+  "imports": {
+    "#nexus/routes": "./src/routes/index.ts",
+    "#nexus/*": "./src/*.ts"
+  },
   "scripts": {
     "dev": "NODE_ENV=development APP_ENV=development PORT=7788 tsx watch src/index.ts",
     "build": "tsup src/index.ts --format esm --dts --out-dir dist",

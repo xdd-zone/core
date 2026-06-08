@@ -1,12 +1,11 @@
-import type { HonoEnv } from './shared/hono-env'
+import type { HonoEnv } from '#nexus/shared/hono-env'
+import routes from '#nexus/routes'
+import { AppError } from '#nexus/shared/app-error'
+import { createMeta } from '#nexus/shared/meta'
 import { BizCode, buildFailure } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
-
-import routes from './routes'
-import { AppError } from './shared/app-error'
-import { createMeta } from './shared/meta'
 
 const app = new Hono<HonoEnv>()
 

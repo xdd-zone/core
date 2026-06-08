@@ -1,16 +1,15 @@
 import type { ApiResponse, HealthResponse, PingResponse, RootResponse } from '@xdd-zone/contracts'
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import app from '#nexus/app'
 import { BizCode } from '@xdd-zone/contracts'
 import { describe, expect, it } from 'vitest'
 
-import app from '../app'
-
-const pingRoutePath = fileURLToPath(new URL('../routes/system/ping.route.ts', import.meta.url))
+const systemRoutePath = fileURLToPath(new URL('../modules/system/system.route.ts', import.meta.url))
 
 describe('system routes', () => {
   it('uses zod validator middleware for ping request validation', async () => {
-    const source = await readFile(pingRoutePath, 'utf8')
+    const source = await readFile(systemRoutePath, 'utf8')
 
     expect(source).toContain('zValidator')
     expect(source).not.toContain('safeParse')
