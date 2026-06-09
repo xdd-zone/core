@@ -1,9 +1,9 @@
 {
   "extends": "../../tsconfig.package.json",
   "compilerOptions": {
+    "lib": ["ES2021", "DOM", "DOM.Iterable"],
     "rootDir": ".",
-    "outDir": "./dist",
-    "lib": ["ES2021", "DOM", "DOM.Iterable"]
+    "outDir": "./dist"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

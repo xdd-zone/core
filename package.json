@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "private": true,
+  "packageManager": "pnpm@10.24.0",
   "description": "XDD Zone Core",
   "author": "xidongdong-153",
   "license": "MIT",
@@ -14,7 +15,6 @@
   "bugs": {
     "url": "https://github.com/xdd-zone/core/issues"
   },
-  "packageManager": "pnpm@10.24.0",
   "engines": {
     "node": ">=22",
     "pnpm": ">=10"
@@ -29,11 +29,11 @@
     "build:momo": "turbo run build --filter=@xdd-zone/momo",
     "build:fifa": "turbo run build --filter=@xdd-zone/fifa",
     "build:bobo": "turbo run build --filter=@xdd-zone/bobo",
-    "lint": "turbo run lint",
+    "lint": "eslint --no-error-on-unmatched-pattern package.json turbo.json eslint.config.js && turbo run lint",
     "lint:momo": "turbo run lint --filter=@xdd-zone/momo",
     "lint:fifa": "turbo run lint --filter=@xdd-zone/fifa",
     "lint:bobo": "turbo run lint --filter=@xdd-zone/bobo",
-    "lint:fix": "turbo run lint:fix",
+    "lint:fix": "eslint --no-error-on-unmatched-pattern package.json turbo.json eslint.config.js --fix && turbo run lint:fix",
     "lint:fix:momo": "turbo run lint:fix --filter=@xdd-zone/momo",
     "lint:fix:fifa": "turbo run lint:fix --filter=@xdd-zone/fifa",
     "lint:fix:bobo": "turbo run lint:fix --filter=@xdd-zone/bobo",

@@ -23,6 +23,10 @@
       ]
     }
   },
+  "imports": {
+    "#momo/routes": "./src/routes/index.ts",
+    "#momo/*": "./src/*.ts"
+  },
   "exports": {
     ".": {
       "development": "./src/app.ts",
@@ -37,15 +41,11 @@
       "default": "./dist/rpc.js"
     }
   },
-  "imports": {
-    "#momo/routes": "./src/routes/index.ts",
-    "#momo/*": "./src/*.ts"
-  },
   "scripts": {
     "dev": "NODE_ENV=development APP_ENV=development PORT=7788 CORS_ORIGINS=http://localhost:2333,http://127.0.0.1:2333 tsx watch --conditions=development src/index.ts",
     "build": "tsup src/index.ts src/app.ts src/rpc.ts --format esm --dts --out-dir dist",
-    "lint": "eslint --no-error-on-unmatched-pattern src",
-    "lint:fix": "eslint --no-error-on-unmatched-pattern src --fix",
+    "lint": "eslint --no-error-on-unmatched-pattern .",
+    "lint:fix": "eslint --no-error-on-unmatched-pattern . --fix",
     "format": "prettier --config prettier.config.js --write .",
     "format:check": "prettier --config prettier.config.js --check .",
     "test": "APP_ENV=test PORT=7788 CORS_ORIGINS=http://localhost:2333,http://127.0.0.1:2333 vitest run --passWithNoTests",
@@ -53,9 +53,9 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@hono/node-server": "catalog:",
     "@hono/zod-validator": "catalog:",
     "@xdd-zone/contracts": "workspace:*",
-    "@hono/node-server": "catalog:",
     "hono": "catalog:",
     "zod": "catalog:"
   },
@@ -64,7 +64,7 @@
     "@xdd-zone/eslint-config": "workspace:*",
     "tsup": "catalog:",
     "tsx": "catalog:",
-    "vitest": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }
