@@ -42,13 +42,13 @@
     "#momo/*": "./src/*.ts"
   },
   "scripts": {
-    "dev": "NODE_ENV=development APP_ENV=development PORT=7788 tsx watch --conditions=development src/index.ts",
+    "dev": "NODE_ENV=development APP_ENV=development PORT=7788 CORS_ORIGINS=http://localhost:2333,http://127.0.0.1:2333 tsx watch --conditions=development src/index.ts",
     "build": "tsup src/index.ts src/app.ts src/rpc.ts --format esm --dts --out-dir dist",
     "lint": "eslint --no-error-on-unmatched-pattern src",
     "lint:fix": "eslint --no-error-on-unmatched-pattern src --fix",
     "format": "prettier --config prettier.config.js --write .",
     "format:check": "prettier --config prettier.config.js --check .",
-    "test": "APP_ENV=test vitest run --passWithNoTests",
+    "test": "APP_ENV=test PORT=7788 CORS_ORIGINS=http://localhost:2333,http://127.0.0.1:2333 vitest run --passWithNoTests",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist"
   },

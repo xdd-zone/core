@@ -1,12 +1,14 @@
 import type { HonoEnv } from '#momo/shared/hono-env'
 import routes from '#momo/routes'
 import { AppError } from '#momo/shared/app-error'
+import { getMomoEnv } from '#momo/shared/env'
 import { createMeta } from '#momo/shared/meta'
 import { BizCode, buildFailure } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
 
+const env = getMomoEnv()
 const app = new Hono<HonoEnv>()
 
 app.use(
@@ -14,7 +16,7 @@ app.use(
   cors({
     allowHeaders: ['content-type'],
     allowMethods: ['GET', 'POST', 'OPTIONS'],
-    origin: ['http://localhost:2333', 'http://127.0.0.1:2333'],
+    origin: env.CORS_ORIGINS,
   }),
 )
 

@@ -278,7 +278,7 @@ apps/momo/src/shared
 - `app-error.ts`
   放 `AppError` 和错误状态类型。service 可以抛出 `AppError`，`app.ts` 的 `onError()` 负责把它转成统一失败响应。
 - `env.ts`
-  读取和校验 Node 环境变量。当前 Momo 使用 `APP_ENV` 和 `PORT`。新增环境变量时先改这里。
+  读取和校验 Node 环境变量。当前 Momo 使用 `APP_ENV`、`PORT` 和 `CORS_ORIGINS`。新增环境变量时先改这里。
 - `hono-env.ts`
   定义 Hono 的 `Bindings` 和 `Variables` 类型。所有 `new Hono()` 都使用 `new Hono<HonoEnv>()`。
 - `meta.ts`

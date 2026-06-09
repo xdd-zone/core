@@ -1,7 +1,8 @@
 import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
+import { parseFifaEnv } from './src/env.schema'
 
 /**
  * 从 node_modules 路径中提取包名
@@ -26,6 +27,13 @@ function getPackageName(id: string): string | null {
 }
 
 export default defineConfig(({ mode }) => {
+  const momoProxyTarget = process.env.MOMO_PROXY_TARGET || 'https://momo.test.xdd.ink'
+
+  parseFifaEnv({
+    ...loadEnv(mode, __dirname, 'VITE_'),
+    ...process.env,
+  })
+
   return {
     build: {
       // 静态资源目录
@@ -128,10 +136,22 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       // 允许通过域名访问（用于反向代理）
-      allowedHosts: ['fifa.xdd.ink', '.xdd.ink'],
+      allowedHosts: ['fifa.test.xdd.ink', '.xdd.ink'],
       host: true,
       open: true,
       port: 2333,
+      proxy: {
+        '/health': {
+          changeOrigin: true,
+          secure: true,
+          target: momoProxyTarget,
+        },
+        '/rpc': {
+          changeOrigin: true,
+          secure: true,
+          target: momoProxyTarget,
+        },
+      },
     },
   }
 })

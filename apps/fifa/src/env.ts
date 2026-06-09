@@ -1,14 +1,10 @@
-import { z } from 'zod'
+import type { FifaEnv } from './env.schema'
+import { parseFifaEnv } from './env.schema'
 
-const fifaEnvSchema = z.object({
-  VITE_APP_ENV: z.enum(['development', 'test', 'production']),
-  VITE_MOMO_BASE_URL: z.string().url(),
-})
-
-export type FifaEnv = z.infer<typeof fifaEnvSchema>
+export type { FifaEnv } from './env.schema'
 
 export function getFifaEnv(): FifaEnv {
-  return fifaEnvSchema.parse({
+  return parseFifaEnv({
     VITE_APP_ENV: import.meta.env.VITE_APP_ENV,
     VITE_MOMO_BASE_URL: import.meta.env.VITE_MOMO_BASE_URL,
   })

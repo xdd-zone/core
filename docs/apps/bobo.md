@@ -67,6 +67,28 @@ pnpm --filter @xdd-zone/bobo start
 pnpm --filter @xdd-zone/bobo format:check
 ```
 
+## 环境变量
+
+Bobo 通过环境变量读取 Momo 地址：
+
+```text
+MOMO_BASE_URL=http://localhost:7788
+```
+
+示例文件在：
+
+```text
+apps/bobo/.env.example
+```
+
+本地开发配置放在：
+
+```text
+apps/bobo/.env.development
+```
+
+`MOMO_BASE_URL` 只给 Next 服务端代码读取。只有浏览器代码直接请求 Momo 时，才使用 `NEXT_PUBLIC_` 前缀。
+
 ## 页面规则
 
 - 新页面放在 `apps/bobo/app/<route>/page.tsx`。

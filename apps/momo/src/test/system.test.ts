@@ -41,6 +41,16 @@ describe('system routes', () => {
     })
   })
 
+  it('returns CORS header for an allowed origin', async () => {
+    const response = await app.request('/health', {
+      headers: {
+        origin: 'http://localhost:2333',
+      },
+    })
+
+    expect(response.headers.get('access-control-allow-origin')).toBe('http://localhost:2333')
+  })
+
   it('returns ping response for a valid request', async () => {
     const response = await app.request('/rpc/system/ping', {
       body: JSON.stringify({ name: 'fifa' }),
