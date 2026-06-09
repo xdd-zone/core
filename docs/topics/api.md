@@ -1,6 +1,6 @@
 # API 指南
 
-这份文档说明当前 Nexus API。
+这份文档说明当前 Momo API。
 
 ## 基础地址
 
@@ -14,21 +14,21 @@
 当前接口放在：
 
 ```text
-apps/nexus/src/routes
+apps/momo/src/routes
 ```
 
 相关入口：
 
-- `apps/nexus/src/app.ts`
+- `apps/momo/src/app.ts`
   创建 Hono app，注册错误处理，挂载路由，导出 `AppType`。
-- `apps/nexus/src/index.ts`
-  直接运行 Nexus 时启动 Node 服务。
-- `apps/nexus/src/routes/index.ts`
+- `apps/momo/src/index.ts`
+  直接运行 Momo 时启动 Node 服务。
+- `apps/momo/src/routes/index.ts`
   挂载所有子路由。
 - `packages/contracts/src`
   放接口 schema、类型和统一响应结构。
 
-后续新增接口按 [apps/nexus.md](../apps/nexus.md) 放到 `apps/nexus/src/modules/<module>`。
+后续新增接口按 [apps/momo.md](../apps/momo.md) 放到 `apps/momo/src/modules/<module>`。
 
 ## 当前接口
 
@@ -36,7 +36,7 @@ apps/nexus/src/routes
 | ---- | ---- | ---- |
 | `GET` | `/` | 服务名称和状态 |
 | `GET` | `/health` | 健康检查状态 |
-| `POST` | `/rpc/system/ping` | Nexus ping 结果 |
+| `POST` | `/rpc/system/ping` | Momo ping 结果 |
 
 ## 响应格式
 
@@ -79,7 +79,7 @@ apps/nexus/src/routes
 {
   "ok": true,
   "data": {
-    "name": "@xdd-zone/nexus",
+    "name": "@xdd-zone/momo",
     "status": "ok"
   },
   "meta": {
@@ -96,7 +96,7 @@ apps/nexus/src/routes
   "ok": true,
   "data": {
     "env": "test",
-    "service": "nexus",
+    "service": "momo",
     "status": "ok"
   },
   "meta": {
@@ -112,7 +112,7 @@ apps/nexus/src/routes
 
 ```json
 {
-  "name": "console"
+  "name": "fifa"
 }
 ```
 
@@ -123,8 +123,8 @@ apps/nexus/src/routes
   "ok": true,
   "data": {
     "env": "test",
-    "service": "nexus",
-    "message": "pong, console"
+    "service": "momo",
+    "message": "pong, fifa"
   },
   "meta": {
     "requestId": "uuid",
@@ -135,10 +135,10 @@ apps/nexus/src/routes
 
 ## 本地验证
 
-先启动 Nexus：
+先启动 Momo：
 
 ```bash
-pnpm dev:nexus
+pnpm dev:momo
 ```
 
 再请求：
@@ -148,7 +148,7 @@ curl http://localhost:7788/
 curl http://localhost:7788/health
 curl -X POST http://localhost:7788/rpc/system/ping \
   -H 'content-type: application/json' \
-  -d '{"name":"console"}'
+  -d '{"name":"fifa"}'
 ```
 
 ## 新增接口
@@ -156,9 +156,9 @@ curl -X POST http://localhost:7788/rpc/system/ping \
 按模块新增 route 文件：
 
 ```text
-apps/nexus/src/modules/<module>/<module>.route.ts
+apps/momo/src/modules/<module>/<module>.route.ts
 ```
 
-再到 `apps/nexus/src/routes/index.ts` 挂载。
+再到 `apps/momo/src/routes/index.ts` 挂载。
 
 如果接口有请求体或返回体，先在 `packages/contracts/src/<module>` 增加 schema 和类型。

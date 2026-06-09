@@ -6,33 +6,33 @@
 
 这是一个 `pnpm + Turborepo + React + Hono + Next.js` 的 monorepo，当前主要目录有：
 
-- `@xdd-zone/console`
-  前端控制台，放在 `apps/console`。
-- `@xdd-zone/nexus`
-  Hono API 服务，放在 `apps/nexus`。
+- `@xdd-zone/fifa`
+  前端控制台，放在 `apps/fifa`。
+- `@xdd-zone/momo`
+  Hono API 服务，放在 `apps/momo`。
 - `@xdd-zone/bobo`
   个人站点，放在 `apps/bobo`。
 - `@xdd-zone/contracts`
-  Console 和 Nexus 共用的接口约定，放在 `packages/contracts`。
+  Fifa 和 Momo 共用的接口约定，放在 `packages/contracts`。
 - `@xdd-zone/catppuccin-theme`
-  Console 和 Bobo 共用的 Catppuccin 主题，放在 `packages/catppuccin-theme`。
+  Fifa 和 Bobo 共用的 Catppuccin 主题，放在 `packages/catppuccin-theme`。
 - `@xdd-zone/eslint-config`
   共享 ESLint / Prettier 配置，放在 `packages/eslint-config`。
 
 ## 必须先做的技能调用
 
-### 1. 涉及 `apps/nexus`，先调用 `xdd-honojs`
+### 1. 涉及 `apps/momo`，先调用 `xdd-honojs`
 
 适用范围：
 
 - 接口、路由、模块、插件、中间件
 - `model`、`service`、`repository`、`types`、`constants`
 - `bootstrap`、`config`、`infra`
-- `apps/nexus` 里的测试、说明文档、代码审查
+- `apps/momo` 里的测试、说明文档、代码审查
 
 执行规则：
 
-- 只要目标在 `apps/nexus`，第一步就是调用 `xdd-honojs`。
+- 只要目标在 `apps/momo`，第一步就是调用 `xdd-honojs`。
 
 ### 2. 涉及 README、`docs/`、注释、JSDoc、错误提示、提示词，先调用 `xdd-plain-docs`
 
@@ -43,11 +43,11 @@
 - 文案要写清用途、位置、使用方式、输入输出和返回结果。
 - 同一任务里发现术语不统一、重复表达、风格不一致，只整理当前任务碰到的范围。
 
-### 3. 涉及 `apps/console` 的界面开发，先读设计上下文，再调用 `frontend-design`
+### 3. 涉及 `apps/fifa` 的界面开发，先读设计上下文，再调用 `frontend-design`
 
 执行规则：
 
-1. 先看 `apps/console/design-context.md`
+1. 先看 `apps/fifa/design-context.md`
 2. 再调用 `frontend-design`
 3. 再继续页面、布局、导航和展示型组件实现
 
@@ -71,9 +71,9 @@
 
 例如：
 
-- 进了 `apps/nexus` 但没先调 `xdd-honojs`，先补调。
+- 进了 `apps/momo` 但没先调 `xdd-honojs`，先补调。
 - 改了文档但没先调 `xdd-plain-docs`，先补调。
-- 改了 Console UI 但没先看 `apps/console/design-context.md`，先补看。
+- 改了 Fifa UI 但没先看 `apps/fifa/design-context.md`，先补看。
 - 改了 Bobo UI 但没先看 `docs/apps/bobo.md`，先补看。
 
 ## 文档读取顺序
@@ -83,7 +83,7 @@
 1. 仓库根目录 `AGENTS.md`
 2. `docs/` 里和当前任务最相关的文档
 3. 目标包自己的 README
-4. 如果是 Console 界面任务，再读 `apps/console/design-context.md`
+4. 如果是 Fifa 界面任务，再读 `apps/fifa/design-context.md`
 5. 如果是 Bobo 站点任务，再读 `docs/apps/bobo.md`
 
 常用入口：
@@ -92,38 +92,38 @@
 - `docs/development.md`
 - `docs/architecture.md`
 - `docs/topics/api.md`
-- `docs/apps/console.md`
+- `docs/apps/fifa.md`
 - `docs/apps/bobo.md`
 - `docs/topics/theme.md`
 
 ## 代码组织规则
 
-### Nexus
+### Momo
 
 规则：
 
 - 当前是 Hono API 服务。
-- Node 启动入口放在 `apps/nexus/src/index.ts`。
-- Hono app 组装放在 `apps/nexus/src/app.ts`。
-- 一级路由挂载放在 `apps/nexus/src/routes/index.ts`。
-- 业务模块放在 `apps/nexus/src/modules/<module>`。
+- Node 启动入口放在 `apps/momo/src/index.ts`。
+- Hono app 组装放在 `apps/momo/src/app.ts`。
+- 一级路由挂载放在 `apps/momo/src/routes/index.ts`。
+- 业务模块放在 `apps/momo/src/modules/<module>`。
 - 路由处理函数直接返回 Hono response。
-- 新增接口按 `docs/apps/nexus.md` 放到对应模块。
+- 新增接口按 `docs/apps/momo.md` 放到对应模块。
 - 需要分组时优先用 Hono 的 `app.route()` 或 `basePath()`。
 - 保留 `AppType` 的类型推导，不要破坏前端可复用的路由类型。
 
-### Console
+### Fifa
 
 规则：
 
-- 页面按模块放在 `apps/console/src/features/<module>`。
-- 页面组件放在 `apps/console/src/features/<module>/pages`。
-- 模块页面记录放在 `apps/console/src/features/<module>/routes.tsx`。
-- 新模块要加到 `apps/console/src/app/router/records.ts`。
-- `apps/console/src/app/router/routes.tsx` 从页面记录生成路由树。
-- `apps/console/src/app/navigation/navigation.ts` 从页面记录生成菜单。
+- 页面按模块放在 `apps/fifa/src/features/<module>`。
+- 页面组件放在 `apps/fifa/src/features/<module>/pages`。
+- 模块页面记录放在 `apps/fifa/src/features/<module>/routes.tsx`。
+- 新模块要加到 `apps/fifa/src/app/router/records.ts`。
+- `apps/fifa/src/app/router/routes.tsx` 从页面记录生成路由树。
+- `apps/fifa/src/app/navigation/navigation.ts` 从页面记录生成菜单。
 - 当前前端保留基础控制台框架和固定示例页。
-- 当前前端没有接入 Nexus 业务接口。
+- 当前前端没有接入 Momo 业务接口。
 
 ### Bobo
 
@@ -164,14 +164,14 @@ pnpm install
 
 # 开发
 pnpm dev
-pnpm dev:console
-pnpm dev:nexus
+pnpm dev:fifa
+pnpm dev:momo
 pnpm dev:bobo
 
 # 构建
 pnpm build
-pnpm build:console
-pnpm build:nexus
+pnpm build:fifa
+pnpm build:momo
 pnpm build:bobo
 
 # 检查
@@ -187,10 +187,10 @@ pnpm type-check:bobo
 pnpm clean
 ```
 
-### `apps/nexus`
+### `apps/momo`
 
 ```bash
-cd apps/nexus
+cd apps/momo
 
 pnpm dev
 pnpm build
@@ -198,10 +198,10 @@ pnpm type-check
 pnpm test
 ```
 
-### `apps/console`
+### `apps/fifa`
 
 ```bash
-cd apps/console
+cd apps/fifa
 
 pnpm dev
 pnpm build
@@ -239,8 +239,8 @@ pnpm type-check
 ## 常用技能顺序
 
 - 文档任务：`xdd-plain-docs`
-- Nexus 任务：`xdd-honojs`
-- Console 界面任务：先读 `apps/console/design-context.md`，再用 `frontend-design`
-- Console 界面 + 文案任务：先读 `apps/console/design-context.md`，再用 `frontend-design`，最后用 `xdd-plain-docs`
+- Momo 任务：`xdd-honojs`
+- Fifa 界面任务：先读 `apps/fifa/design-context.md`，再用 `frontend-design`
+- Fifa 界面 + 文案任务：先读 `apps/fifa/design-context.md`，再用 `frontend-design`，最后用 `xdd-plain-docs`
 - Bobo 界面任务：先读 `docs/apps/bobo.md`，再用 `frontend-design`
 - Bobo 界面 + 文案任务：先读 `docs/apps/bobo.md`，再用 `frontend-design`，最后用 `xdd-plain-docs`

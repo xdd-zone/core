@@ -1,6 +1,6 @@
 # 主题系统
 
-`@xdd-zone/console` 和 `@xdd-zone/bobo` 当前使用 Catppuccin 主题。
+`@xdd-zone/fifa` 和 `@xdd-zone/bobo` 当前使用 Catppuccin 主题。
 
 ## 主题 ID
 
@@ -17,13 +17,13 @@ HTML 根节点通过 `data-theme` 切换主题。
 
 - `packages/catppuccin-theme/styles/core.css`
   Catppuccin 颜色变量。
-- `packages/catppuccin-theme/styles/console.css`
-  Console 使用的 Tailwind 语义 token。
+- `packages/catppuccin-theme/styles/fifa.css`
+  Fifa 使用的 Tailwind 语义 token。
 - `packages/catppuccin-theme/styles/bobo.css`
   Bobo 使用的 Tailwind 语义 token 和背景变量。
-- `apps/console/src/utils/theme.ts`
+- `apps/fifa/src/utils/theme.ts`
   写入 `data-theme`。
-- `apps/console/src/utils/catppuccin.antd.ts`
+- `apps/fifa/src/utils/catppuccin.antd.ts`
   从共享主题包导出 Ant Design 主题配置。
 - `apps/bobo/lib/theme.ts`
   写入 `data-theme`，并保留 Bobo 的本地存储 key。
@@ -61,7 +61,7 @@ HTML 根节点通过 `data-theme` 切换主题。
 ## 怎么切主题
 
 ```ts
-import { updateThemeAttribute } from '@console/utils/theme'
+import { updateThemeAttribute } from '@fifa/utils/theme'
 
 updateThemeAttribute('mocha')
 updateThemeAttribute('latte')

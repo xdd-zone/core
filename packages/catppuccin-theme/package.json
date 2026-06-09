@@ -41,7 +41,7 @@
       "default": "./dist/antd.js"
     },
     "./styles/core.css": "./styles/core.css",
-    "./styles/console.css": "./styles/console.css",
+    "./styles/fifa.css": "./styles/fifa.css",
     "./styles/bobo.css": "./styles/bobo.css"
   },
   "files": [

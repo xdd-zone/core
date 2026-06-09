@@ -16,26 +16,26 @@ pnpm type-check
 pnpm format
 ```
 
-## Console 检查
+## Fifa 检查
 
 ```bash
-pnpm lint:console
-pnpm type-check:console
-pnpm build:console
+pnpm lint:fifa
+pnpm type-check:fifa
+pnpm build:fifa
 ```
 
-## Nexus 检查
+## Momo 检查
 
 ```bash
-pnpm type-check:nexus
-pnpm build:nexus
-cd apps/nexus && pnpm test
+pnpm type-check:momo
+pnpm build:momo
+cd apps/momo && pnpm test
 ```
 
-`@xdd-zone/nexus` 的测试文件放在：
+`@xdd-zone/momo` 的测试文件放在：
 
 ```text
-apps/nexus/src/test
+apps/momo/src/test
 ```
 
 接口测试使用 `app.request()`，不需要启动真实端口。

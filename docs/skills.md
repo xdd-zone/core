@@ -18,9 +18,9 @@
 - 错误提示。
 - 脚本说明。
 
-## Nexus 任务
+## Momo 任务
 
-只要目标在 `apps/nexus`，先用：
+只要目标在 `apps/momo`，先用：
 
 - `xdd-honojs`
 
@@ -34,11 +34,11 @@
 - 中间件。
 - 测试。
 
-## Console 界面任务
+## Fifa 界面任务
 
 先读：
 
-- `apps/console/design-context.md`
+- `apps/fifa/design-context.md`
 
 再用：
 
@@ -51,11 +51,11 @@
 - 导航。
 - 展示型组件。
 
-## Console 界面加文案任务
+## Fifa 界面加文案任务
 
 顺序：
 
-1. 读 `apps/console/design-context.md`
+1. 读 `apps/fifa/design-context.md`
 2. 用 `frontend-design`
 3. 用 `xdd-plain-docs`
 

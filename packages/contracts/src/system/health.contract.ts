@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const HealthResponseSchema = z.object({
   env: z.enum(['development', 'test', 'production']),
-  service: z.literal('nexus'),
+  service: z.literal('momo'),
   status: z.literal('ok'),
 })
 

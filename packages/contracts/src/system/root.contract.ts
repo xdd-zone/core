@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const RootResponseSchema = z.object({
-  name: z.literal('@xdd-zone/nexus'),
+  name: z.literal('@xdd-zone/momo'),
   status: z.literal('ok'),
 })
 

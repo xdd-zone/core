@@ -16,31 +16,31 @@
 先看：
 
 1. [development.md](./development.md)
-2. [apps/nexus.md](./apps/nexus.md)
+2. [apps/momo.md](./apps/momo.md)
 3. [topics/api.md](./topics/api.md)
 
 代码入口：
 
-- `apps/nexus/src/app.ts`
-- `apps/nexus/src/routes/index.ts`
+- `apps/momo/src/app.ts`
+- `apps/momo/src/routes/index.ts`
 
-新增接口按 [apps/nexus.md](./apps/nexus.md) 里的模块目录放。
+新增接口按 [apps/momo.md](./apps/momo.md) 里的模块目录放。
 
-## 要改 Console 前端
+## 要改 Fifa 前端
 
 先看：
 
-1. [apps/console.md](./apps/console.md)
+1. [apps/fifa.md](./apps/fifa.md)
 2. [topics/theme.md](./topics/theme.md)
-3. [apps/console/README.md](../apps/console/README.md)
+3. [apps/fifa/README.md](../apps/fifa/README.md)
 
 代码入口：
 
-- `apps/console/src/app/router`
-- `apps/console/src/app/navigation`
-- `apps/console/src/features`
-- `apps/console/src/api`
-- `apps/console/src/layout`
+- `apps/fifa/src/app/router`
+- `apps/fifa/src/app/navigation`
+- `apps/fifa/src/features`
+- `apps/fifa/src/api`
+- `apps/fifa/src/layout`
 
 ## 要改 Bobo 个人站点
 
@@ -86,7 +86,7 @@ docs/
 ## 其他文档
 
 - [testing.md](./testing.md)：当前可跑的检查命令。
-- [apps/nexus.md](./apps/nexus.md)：Nexus 后端目录和新增接口规则。
+- [apps/momo.md](./apps/momo.md)：Momo 后端目录和新增接口规则。
 - [apps/bobo.md](./apps/bobo.md)：Bobo 个人站点目录、命令和维护规则。
 - [skills.md](./skills.md)：仓库常用技能顺序。
 - [faq.md](./faq.md)：当前常见问题。

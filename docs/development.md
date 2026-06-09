@@ -16,14 +16,14 @@ pnpm install
 ## 开发命令
 
 ```bash
-# Console、Nexus 和 Bobo 一起跑
+# Fifa、Momo 和 Bobo 一起跑
 pnpm dev
 
 # 只跑后端
-pnpm dev:nexus
+pnpm dev:momo
 
 # 只跑前端
-pnpm dev:console
+pnpm dev:fifa
 
 # 只跑个人站点
 pnpm dev:bobo
@@ -31,8 +31,8 @@ pnpm dev:bobo
 
 默认地址：
 
-- Console: `http://localhost:2333`
-- Nexus: `http://localhost:7788`
+- Fifa: `http://localhost:2333`
+- Momo: `http://localhost:7788`
 - Bobo: `http://localhost:4399`
 - Health: `http://localhost:7788/health`
 
@@ -40,8 +40,8 @@ pnpm dev:bobo
 
 ```bash
 pnpm build
-pnpm build:console
-pnpm build:nexus
+pnpm build:fifa
+pnpm build:momo
 pnpm build:bobo
 ```
 
@@ -63,57 +63,57 @@ pnpm format
 
 先看：
 
-- [apps/nexus.md](./apps/nexus.md)
+- [apps/momo.md](./apps/momo.md)
 - [topics/api.md](./topics/api.md)
 
 常改文件：
 
-- `apps/nexus/src/app.ts`
-- `apps/nexus/src/routes/index.ts`
-- `apps/nexus/src/modules/<module>/<module>.route.ts`
-- `apps/nexus/src/modules/<module>/<module>.service.ts`
-- `apps/nexus/src/modules/<module>/<module>.repository.ts`
+- `apps/momo/src/app.ts`
+- `apps/momo/src/routes/index.ts`
+- `apps/momo/src/modules/<module>/<module>.route.ts`
+- `apps/momo/src/modules/<module>/<module>.service.ts`
+- `apps/momo/src/modules/<module>/<module>.repository.ts`
 - `packages/contracts/src/<module>`
 
 新增接口时按这个顺序处理：
 
 1. 在 `packages/contracts/src/<module>` 写请求 schema 和响应类型。
-2. 在 `apps/nexus/src/modules/<module>/<module>.route.ts` 用链式写法注册路由。
-3. 在 `apps/nexus/src/routes/index.ts` 用 `route()` 挂载模块路由，并接住返回值。
-4. 在 Console 的 `apps/console/src/api/<module>` 里写接口函数。接口函数内部通过 `nexusClient.<path>.$get()` 或 `nexusClient.<path>.$post()` 调 Nexus，不手写接口 URL。
-5. 在 Console 的 `apps/console/src/api/<module>/<module>.query.ts` 写 TanStack Query hook。`GET` 接口用 `useQuery`，`POST` 接口用 `useMutation`。
-6. 页面只调用 hook，不直接 import `nexusClient`，也不手写 query key。
+2. 在 `apps/momo/src/modules/<module>/<module>.route.ts` 用链式写法注册路由。
+3. 在 `apps/momo/src/routes/index.ts` 用 `route()` 挂载模块路由，并接住返回值。
+4. 在 Fifa 的 `apps/fifa/src/api/<module>` 里写接口函数。接口函数内部通过 `momoClient.<path>.$get()` 或 `momoClient.<path>.$post()` 调 Momo，不手写接口 URL。
+5. 在 Fifa 的 `apps/fifa/src/api/<module>/<module>.query.ts` 写 TanStack Query hook。`GET` 接口用 `useQuery`，`POST` 接口用 `useMutation`。
+6. 页面只调用 hook，不直接 import `momoClient`，也不手写 query key。
 
 路由处理函数直接返回 Hono response，比如 `c.json(...)`。
-Console 的 RPC 类型从 `@xdd-zone/nexus/rpc` 引入，只使用 `import type`。
+Fifa 的 RPC 类型从 `@xdd-zone/momo/rpc` 引入，只使用 `import type`。
 
 改完后按范围跑：
 
 ```bash
-pnpm type-check:nexus
-pnpm build:nexus
-cd apps/nexus && pnpm test
+pnpm type-check:momo
+pnpm build:momo
+cd apps/momo && pnpm test
 ```
 
 ## 改前端页面
 
 常改文件：
 
-- `apps/console/src/features/<module>/pages`
-- `apps/console/src/features/<module>/routes.tsx`
-- `apps/console/src/app/router/records.ts`
-- `apps/console/src/layout`
+- `apps/fifa/src/features/<module>/pages`
+- `apps/fifa/src/features/<module>/routes.tsx`
+- `apps/fifa/src/app/router/records.ts`
+- `apps/fifa/src/layout`
 
 新增页面先放到对应模块的 `pages/` 目录，再写到同模块的 `routes.tsx`。
-如果新增了模块，把模块导出的路由记录加到 `apps/console/src/app/router/records.ts`。
+如果新增了模块，把模块导出的路由记录加到 `apps/fifa/src/app/router/records.ts`。
 菜单从页面记录生成，已有菜单组通常不用改 `app/navigation/navigation.ts`。
 
 改完后按范围跑：
 
 ```bash
-pnpm lint:console
-pnpm type-check:console
-pnpm build:console
+pnpm lint:fifa
+pnpm type-check:fifa
+pnpm build:fifa
 ```
 
 ## 改个人站点

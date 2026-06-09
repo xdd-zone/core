@@ -278,7 +278,7 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
-  apps/console:
+  apps/fifa:
     dependencies:
       '@shikijs/langs':
         specifier: catalog:shiki
@@ -389,9 +389,9 @@ importers:
       '@xdd-zone/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@xdd-zone/nexus':
+      '@xdd-zone/momo':
         specifier: workspace:*
-        version: link:../nexus
+        version: link:../momo
       esbuild:
         specifier: 'catalog:'
         version: 0.28.0
@@ -405,7 +405,7 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
-  apps/nexus:
+  apps/momo:
     dependencies:
       '@hono/node-server':
         specifier: 'catalog:'

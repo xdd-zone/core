@@ -1,0 +1,70 @@
+{
+  "name": "@xdd-zone/momo",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "description": "XDD Zone Backend API",
+  "author": "xidongdong-153",
+  "license": "MIT",
+  "homepage": "https://github.com/xdd-zone/core#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xdd-zone/core",
+    "directory": "apps/momo"
+  },
+  "bugs": {
+    "url": "https://github.com/xdd-zone/core/issues"
+  },
+  "keywords": [],
+  "turbo": {
+    "build": {
+      "outputs": [
+        "dist/**"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "development": "./src/app.ts",
+      "types": "./dist/app.d.ts",
+      "import": "./dist/app.js",
+      "default": "./dist/app.js"
+    },
+    "./rpc": {
+      "development": "./src/rpc.ts",
+      "types": "./dist/rpc.d.ts",
+      "import": "./dist/rpc.js",
+      "default": "./dist/rpc.js"
+    }
+  },
+  "imports": {
+    "#momo/routes": "./src/routes/index.ts",
+    "#momo/*": "./src/*.ts"
+  },
+  "scripts": {
+    "dev": "NODE_ENV=development APP_ENV=development PORT=7788 tsx watch --conditions=development src/index.ts",
+    "build": "tsup src/index.ts src/app.ts src/rpc.ts --format esm --dts --out-dir dist",
+    "lint": "eslint --no-error-on-unmatched-pattern src",
+    "lint:fix": "eslint --no-error-on-unmatched-pattern src --fix",
+    "format": "prettier --config prettier.config.js --write .",
+    "format:check": "prettier --config prettier.config.js --check .",
+    "test": "APP_ENV=test vitest run --passWithNoTests",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "catalog:",
+    "@xdd-zone/contracts": "workspace:*",
+    "@hono/node-server": "catalog:",
+    "hono": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@xdd-zone/eslint-config": "workspace:*",
+    "tsup": "catalog:",
+    "tsx": "catalog:",
+    "vitest": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.browser.json",
+  "compilerOptions": {
+    "incremental": true,
+    "jsx": "react-jsx",
+    "moduleDetection": "force",
+    "useDefineForClassFields": true,
+    "paths": {
+      "@fifa/*": ["./src/*"]
+    },
+    "allowImportingTsExtensions": true,
+    "noFallthroughCasesInSwitch": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src", "src/viteEnv.d.ts"]
+}

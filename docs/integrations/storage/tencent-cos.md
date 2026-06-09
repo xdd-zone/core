@@ -4,14 +4,14 @@
 
 ## 当前情况
 
-- `apps/nexus` 没有媒体上传接口。
-- `apps/nexus` 没有本地文件存储或 COS 存储代码。
+- `apps/momo` 没有媒体上传接口。
+- `apps/momo` 没有本地文件存储或 COS 存储代码。
 - 当前没有 `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET`、`COS_REGION` 等环境变量要求。
 - 当前没有 `POST /api/media/upload` 接口。
 
 ## 当前可用接口
 
-当前 Nexus 只有：
+当前 Momo 只有：
 
 - `GET /`
 - `GET /health`

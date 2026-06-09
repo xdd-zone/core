@@ -6,7 +6,7 @@ export const PingRequestSchema = z.object({
 
 export const PingResponseSchema = z.object({
   env: z.enum(['development', 'test', 'production']),
-  service: z.literal('nexus'),
+  service: z.literal('momo'),
   message: z.string(),
 })
 

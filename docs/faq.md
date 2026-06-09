@@ -6,11 +6,11 @@
 
 主要包：
 
-- `apps/console`
-- `apps/nexus`
+- `apps/fifa`
+- `apps/momo`
 - `packages/eslint-config`
 
-## Nexus 地址是什么
+## Momo 地址是什么
 
 本地默认地址：
 
@@ -34,7 +34,7 @@ http://localhost:7788/health
 
 旧技术栈重构后，这些专题先保留入口，只写当前状态，避免按旧文档去找不存在的代码。
 
-## Console 地址是什么
+## Fifa 地址是什么
 
 本地默认地址：
 
@@ -45,7 +45,7 @@ http://localhost:2333
 启动命令：
 
 ```bash
-pnpm dev:console
+pnpm dev:fifa
 ```
 
 ## 本机检查怎么跑

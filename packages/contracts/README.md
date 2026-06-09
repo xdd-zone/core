@@ -1,6 +1,6 @@
 # @xdd-zone/contracts
 
-`@xdd-zone/contracts` 放 Console 和 Nexus 共用的接口类型、schema 和响应结构。
+`@xdd-zone/contracts` 放 Fifa 和 Momo 共用的接口类型、schema 和响应结构。
 
 这个包不能调用 Node.js 或浏览器 API。不要在这里 import `node:*`，也不要直接使用 `window`、`document`、`localStorage` 或 `sessionStorage`。
 
@@ -17,13 +17,13 @@
 
 ## 使用方式
 
-Nexus 用 schema 校验请求：
+Momo 用 schema 校验请求：
 
 ```ts
 import { PingRequestSchema } from '@xdd-zone/contracts'
 ```
 
-Console 用类型构造请求和读取返回：
+Fifa 用类型构造请求和读取返回：
 
 ```ts
 import type { PingRequest, PingResponse } from '@xdd-zone/contracts'

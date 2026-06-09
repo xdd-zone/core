@@ -18,9 +18,6 @@ out
 packages/*/dist
 packages/*/node_modules
 
-# Prisma 生成文件
-packages/nexus/src/infra/database/prisma/generated
-
 # 环境文件
 .env
 .env.*

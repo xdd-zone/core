@@ -4,16 +4,16 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 
 ## 现在有哪些包
 
-- `@xdd-zone/console`
-  前端控制台，放在 `apps/console`。
-- `@xdd-zone/nexus`
-  Hono API 服务，放在 `apps/nexus`。
+- `@xdd-zone/fifa`
+  前端控制台，放在 `apps/fifa`。
+- `@xdd-zone/momo`
+  Hono API 服务，放在 `apps/momo`。
 - `@xdd-zone/bobo`
   个人站点，放在 `apps/bobo`。
 - `@xdd-zone/contracts`
-  Console 和 Nexus 共用的接口 schema、请求类型、响应类型和错误码，放在 `packages/contracts`。
+  Fifa 和 Momo 共用的接口 schema、请求类型、响应类型和错误码，放在 `packages/contracts`。
 - `@xdd-zone/catppuccin-theme`
-  Console 和 Bobo 共用的 Catppuccin 主题，放在 `packages/catppuccin-theme`。
+  Fifa 和 Bobo 共用的 Catppuccin 主题，放在 `packages/catppuccin-theme`。
 - `@xdd-zone/eslint-config`
   共享 ESLint / Prettier 配置，放在 `packages/eslint-config`。
 
@@ -22,8 +22,8 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 ```text
 .
 ├── apps/
-│   ├── console/
-│   ├── nexus/
+│   ├── fifa/
+│   ├── momo/
 │   └── bobo/
 ├── docs/
 │   ├── apps/
@@ -40,20 +40,20 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 
 最常看的目录：
 
-- `apps/console/src/app/router`
+- `apps/fifa/src/app/router`
   前端路由类型、页面记录汇总和路由树。
-- `apps/console/src/app/navigation`
+- `apps/fifa/src/app/navigation`
   控制台菜单生成。
-- `apps/console/src/features`
-  Console 页面模块。
-- `apps/console/src/layout`
+- `apps/fifa/src/features`
+  Fifa 页面模块。
+- `apps/fifa/src/layout`
   控制台整体布局。
-- `apps/nexus/src/index.ts`
+- `apps/momo/src/index.ts`
   Hono app、示例接口和 Node 服务启动入口。
 - `packages/contracts`
-  Console 和 Nexus 共用的接口约定。
+  Fifa 和 Momo 共用的接口约定。
 - `packages/catppuccin-theme`
-  Console 和 Bobo 共用的 Catppuccin 主题。
+  Fifa 和 Bobo 共用的 Catppuccin 主题。
 - `packages/eslint-config`
   仓库共享的 ESLint / Prettier 配置。
 
@@ -75,13 +75,13 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 - workspace 范围写在根目录 `pnpm-workspace.yaml` 的 `packages`。
 - 公共依赖版本写在根目录 `pnpm-workspace.yaml` 的 `catalog` 和 `catalogs`。
 - 子包通过 `catalog:`、`catalog:react`、`catalog:vite`、`catalog:shiki` 引用统一版本。
-- 内部包通过 `workspace:*` 引用，例如 Console 和 Nexus 都引用 `@xdd-zone/contracts`。
+- 内部包通过 `workspace:*` 引用，例如 Fifa 和 Momo 都引用 `@xdd-zone/contracts`。
 
 当前仓库用 Turborepo 管理任务：
 
 - 根目录脚本统一调用 `turbo run ...`。
 - `turbo.json` 定义 `dev`、`build`、`lint`、`format`、`type-check`、`test`、`clean`。
-- 单独运行某个包时，用包名过滤，比如 `--filter=@xdd-zone/console`。
+- 单独运行某个包时，用包名过滤，比如 `--filter=@xdd-zone/fifa`。
 
 包名保持当前写法，不改成文章里的 `web`、`admin`、`api`。
 
@@ -101,16 +101,16 @@ pnpm dev
 
 默认地址：
 
-- Console: `http://localhost:2333`
-- Nexus: `http://localhost:7788`
+- Fifa: `http://localhost:2333`
+- Momo: `http://localhost:7788`
 - Bobo: `http://localhost:4399`
 - Health: `http://localhost:7788/health`
 
 如果只想启动一个包：
 
 ```bash
-pnpm dev:console
-pnpm dev:nexus
+pnpm dev:fifa
+pnpm dev:momo
 ```
 
 ### 3. 请求健康检查
@@ -132,14 +132,14 @@ curl http://localhost:7788/health
 ```bash
 # 开发
 pnpm dev
-pnpm dev:console
-pnpm dev:nexus
+pnpm dev:fifa
+pnpm dev:momo
 pnpm dev:bobo
 
 # 构建
 pnpm build
-pnpm build:console
-pnpm build:nexus
+pnpm build:fifa
+pnpm build:momo
 pnpm build:bobo
 
 # 检查
@@ -160,26 +160,26 @@ pnpm clean
 
 优先看这些位置：
 
-- `apps/console/src/features/<module>/pages`
-- `apps/console/src/features/<module>/routes.tsx`
-- `apps/console/src/app/router/records.ts`
-- `apps/console/src/layout`
+- `apps/fifa/src/features/<module>/pages`
+- `apps/fifa/src/features/<module>/routes.tsx`
+- `apps/fifa/src/app/router/records.ts`
+- `apps/fifa/src/layout`
 
 新增页面先放到对应模块的 `pages/` 目录，再写到同模块的 `routes.tsx`。
-如果新增了模块，把模块导出的路由记录加到 `apps/console/src/app/router/records.ts`。
+如果新增了模块，把模块导出的路由记录加到 `apps/fifa/src/app/router/records.ts`。
 菜单从页面记录生成，已有菜单组通常不用改 `app/navigation/navigation.ts`。
 
 ### 改后端接口
 
 优先看：
 
-- [docs/apps/nexus.md](./docs/apps/nexus.md)
-- `apps/nexus/src/app.ts`
-- `apps/nexus/src/routes/index.ts`
+- [docs/apps/momo.md](./docs/apps/momo.md)
+- `apps/momo/src/app.ts`
+- `apps/momo/src/routes/index.ts`
 
-新增接口按模块放到 `apps/nexus/src/modules/<module>`，再到 `apps/nexus/src/routes/index.ts` 挂载。
-Console 通过 `@xdd-zone/nexus/rpc` 引入 Nexus 的 RPC 类型，再用 `hono/client` 创建 RPC client。
-页面不要直接调 `nexusClient`。Console 请求先写到 `apps/console/src/api/<module>/*.api.ts`，再在同模块的 `*.query.ts` 里写 TanStack Query hook。
+新增接口按模块放到 `apps/momo/src/modules/<module>`，再到 `apps/momo/src/routes/index.ts` 挂载。
+Fifa 通过 `@xdd-zone/momo/rpc` 引入 Momo 的 RPC 类型，再用 `hono/client` 创建 RPC client。
+页面不要直接调 `momoClient`。Fifa 请求先写到 `apps/fifa/src/api/<module>/*.api.ts`，再在同模块的 `*.query.ts` 里写 TanStack Query hook。
 
 ### 改个人站点
 
@@ -203,7 +203,7 @@ pnpm dev:bobo
 - `/health`
   返回健康检查状态。
 - `/rpc/system/ping`
-  返回 Nexus ping 结果。
+  返回 Momo ping 结果。
 
 ## 文档入口
 
@@ -211,8 +211,8 @@ pnpm dev:bobo
 
 - 改仓库结构或模块职责，看 [docs/architecture.md](./docs/architecture.md)。
 - 改开发流程，看 [docs/development.md](./docs/development.md)。
-- 改后端接口，看 [docs/apps/nexus.md](./docs/apps/nexus.md) 和 [docs/topics/api.md](./docs/topics/api.md)。
-- 改前端页面，看 [docs/apps/console.md](./docs/apps/console.md) 和 [docs/topics/theme.md](./docs/topics/theme.md)。
+- 改后端接口，看 [docs/apps/momo.md](./docs/apps/momo.md) 和 [docs/topics/api.md](./docs/topics/api.md)。
+- 改前端页面，看 [docs/apps/fifa.md](./docs/apps/fifa.md) 和 [docs/topics/theme.md](./docs/topics/theme.md)。
 - 改个人站点，看 [docs/apps/bobo.md](./docs/apps/bobo.md)。
 
 ## 提交前最小检查

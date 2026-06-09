@@ -6,7 +6,6 @@ package-lock.json
 
 # Testing
 coverage
-packages/nexus/storage
 
 # Production
 build
@@ -29,8 +28,6 @@ out
 ./logs
 
 # Database
-packages/nexus/prisma/generated
-packages/nexus/prisma/migrations
 
 # Debug
 npm-debug.log*
