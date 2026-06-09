@@ -60,9 +60,7 @@
 
 这些旧专题目前没有对应代码：
 
-- 认证：[topics/authentication.md](./topics/authentication.md)
 - GitHub OAuth：[integrations/github-oauth.md](./integrations/github-oauth.md)
-- RBAC：[topics/rbac.md](./topics/rbac.md)
 - 外部服务：[integrations/index.md](./integrations/index.md)
 
 ## 目录结构
@@ -80,7 +78,7 @@ docs/
 ```
 
 - `apps/` 放每个应用自己的说明。
-- `topics/` 放登录、权限、主题、API 这类多个应用都会碰到的说明。
+- `topics/` 放主题、API 这类多个应用都会碰到的说明。
 - `integrations/` 放第三方服务接入说明。
 
 ## 其他文档
