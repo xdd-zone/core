@@ -79,8 +79,6 @@ app.notFound((c) => {
 
 const appWithRoutes = app.route('/', routes)
 
-export type AppType = typeof appWithRoutes
-
 export { appWithRoutes as app }
 
 export default appWithRoutes

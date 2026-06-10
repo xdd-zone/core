@@ -1,1 +1,1 @@
-export type { RoutesType as AppType } from '#momo/routes'
+export type { MomoRpcType as AppType } from '#momo/routes'

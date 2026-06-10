@@ -9,7 +9,8 @@
 后续保留这些约定：
 
 - `src/index.ts` 只启动 Node 服务。
-- `src/app.ts` 创建 Hono app，注册全局中间件、错误处理和路由，导出 `AppType`。
+- `src/app.ts` 创建 Hono app，注册全局中间件、错误处理和路由，导出运行时 app。
+- `src/rpc.ts` 导出给 Hono RPC client 使用的 `AppType`。
 - `src/routes/index.ts` 只挂载一级路由。
 - `src/modules` 放业务模块。
 - `src/middleware` 放通用 Hono middleware。
@@ -119,9 +120,9 @@ apps/momo/src/
 - 注册 `onError()`。
 - 注册 `notFound()`。
 - 挂载 `routes/index.ts`。
-- 导出 `app`、默认导出和 `AppType`。
+- 导出 `app` 和默认导出。
 
-`AppType` 要保留。Fifa 后续可以用它拿到 Momo 的路由类型。
+`AppType` 从 `src/rpc.ts` 导出。Fifa 后续可以用它拿到 Momo 的路由类型。
 
 ## 路由
 
@@ -136,14 +137,14 @@ apps/momo/src/routes/index.ts
 示例：
 
 ```ts
-const routes = new Hono<HonoEnv>()
+const rpcRoutes = new Hono<HonoEnv>()
   .route('/', systemRoute)
   .route('/rpc/auth', authRoute)
   .route('/rpc/users', userRoute)
 
-export type RoutesType = typeof routes
+export type MomoRpcType = typeof rpcRoutes
 
-export default routes
+export default rpcRoutes
 ```
 
 这里不写请求处理函数，不直接访问数据库，也不拼响应内容。

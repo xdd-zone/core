@@ -7,7 +7,9 @@
 - `src/index.ts`
   直接运行 Momo 时启动 Node 服务。
 - `src/app.ts`
-  创建 Hono app，注册错误处理，挂载路由，导出 `app`、默认导出和 `AppType`。
+  创建 Hono app，注册错误处理，挂载路由，导出 `app` 和默认导出。
+- `src/rpc.ts`
+  只导出给 Hono RPC client 使用的 `AppType` 类型。
 - `src/routes`
   按接口域放路由。
 - `src/shared`

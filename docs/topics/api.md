@@ -20,7 +20,9 @@ apps/momo/src/routes
 相关入口：
 
 - `apps/momo/src/app.ts`
-  创建 Hono app，注册错误处理，挂载路由，导出 `AppType`。
+  创建 Hono app，注册错误处理，挂载路由，导出运行时 app。
+- `apps/momo/src/rpc.ts`
+  导出给 Hono RPC client 使用的 `AppType`。
 - `apps/momo/src/index.ts`
   直接运行 Momo 时启动 Node 服务。
 - `apps/momo/src/routes/index.ts`
