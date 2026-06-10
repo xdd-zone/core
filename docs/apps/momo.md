@@ -249,6 +249,56 @@ apps/momo/src/infra/db
 
 业务模块不能在 route 里直接创建数据库连接。需要读写数据库时，先写 repository，再由 service 调用 repository。
 
+### 数据库
+
+Momo 使用 PostgreSQL 和 Drizzle ORM。
+
+相关文件：
+
+- `apps/momo/compose.yaml`
+  本地 PostgreSQL Docker 配置。
+- `apps/momo/drizzle.config.ts`
+  Drizzle Kit 配置。这里指定 schema 入口和 migration 输出目录。
+- `apps/momo/src/infra/db/client.ts`
+  创建 PostgreSQL 连接，并导出 `getDb()`。
+- `apps/momo/src/infra/db/schema/index.ts`
+  Drizzle schema 入口。后续新增表时，从这里导出。
+- `apps/momo/src/infra/db/migrations`
+  Drizzle 生成的 migration 文件目录。
+
+本地数据库地址：
+
+```text
+DATABASE_URL=postgres://momo:momo@localhost:55432/momo
+```
+
+常用命令：
+
+```bash
+pnpm --filter @xdd-zone/momo db:up
+pnpm --filter @xdd-zone/momo db:down
+pnpm --filter @xdd-zone/momo db:generate
+pnpm --filter @xdd-zone/momo db:migrate
+pnpm --filter @xdd-zone/momo db:check
+pnpm --filter @xdd-zone/momo db:studio
+```
+
+新增表时，先在 `apps/momo/src/infra/db/schema/<module>.schema.ts` 写 schema，再从 `apps/momo/src/infra/db/schema/index.ts` 导出。
+
+改完 schema 后运行：
+
+```bash
+pnpm --filter @xdd-zone/momo db:generate
+```
+
+检查生成的 SQL 后，再运行：
+
+```bash
+pnpm --filter @xdd-zone/momo db:migrate
+```
+
+业务代码不要在 route 或 service 里直接创建数据库连接。需要读写数据库时，在模块的 repository 里调用 `getDb()`。
+
 缓存相关代码放在：
 
 ```text
@@ -278,7 +328,7 @@ apps/momo/src/shared
 - `app-error.ts`
   放 `AppError` 和错误状态类型。service 可以抛出 `AppError`，`app.ts` 的 `onError()` 负责把它转成统一失败响应。
 - `env.ts`
-  读取和校验 Node 环境变量。当前 Momo 使用 `APP_ENV`、`PORT` 和 `CORS_ORIGINS`。新增环境变量时先改这里。
+  读取和校验 Node 环境变量。当前 Momo 使用 `APP_ENV`、`PORT`、`CORS_ORIGINS` 和 `DATABASE_URL`。新增环境变量时先改这里。
 - `hono-env.ts`
   定义 Hono 的 `Bindings` 和 `Variables` 类型。所有 `new Hono()` 都使用 `new Hono<HonoEnv>()`。
 - `meta.ts`

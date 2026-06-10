@@ -12,6 +12,7 @@ const momoEnvSchema = z.object({
       .map((origin) => origin.trim())
       .filter(Boolean)
   }, z.array(z.string().url()).min(1)),
+  DATABASE_URL: z.string().url(),
   PORT: z.coerce.number().int().min(1).max(65535),
 })
 
@@ -21,6 +22,7 @@ export function getMomoEnv(source: NodeJS.ProcessEnv = process.env): MomoEnv {
   return momoEnvSchema.parse({
     APP_ENV: source.APP_ENV,
     CORS_ORIGINS: source.CORS_ORIGINS,
+    DATABASE_URL: source.DATABASE_URL,
     PORT: source.PORT,
   })
 }

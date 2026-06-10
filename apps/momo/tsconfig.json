@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.node.json",
   "compilerOptions": {
     "rootDir": ".",
+    "customConditions": ["development"],
     "paths": {
       "#momo/routes": ["./src/routes/index.ts"],
       "#momo/*": ["./src/*"]
