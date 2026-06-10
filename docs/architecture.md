@@ -50,13 +50,21 @@
 - `apps/momo/src/index.ts`
   直接运行 Momo 时启动 Node 服务。
 - `apps/momo/src/app.ts`
-  创建 Hono app，注册错误处理，挂载路由，导出运行时 app。
+  创建运行时 app，给测试和包导出使用。
+- `apps/momo/src/bootstrap`
+  创建 runtime，注册全局中间件、错误处理、404 和一级路由。
 - `apps/momo/src/rpc.ts`
   只导出 `AppType` 类型，给 Fifa 的 Hono RPC client 使用。
-- `apps/momo/src/routes`
-  按接口域放路由。
+- `apps/momo/src/routes/index.ts`
+  挂载一级路由。
+- `apps/momo/src/modules`
+  放接口模块。当前系统接口在 `apps/momo/src/modules/system`。
+- `apps/momo/src/middleware`
+  放 request context、请求日志和 CORS middleware。
+- `apps/momo/src/infra/db`
+  放 PostgreSQL 连接、Drizzle schema 入口和 migration 目录。
 - `apps/momo/src/shared`
-  放 Momo 内部共用的错误类型、Hono 类型和响应 meta 生成函数。
+  放 Momo 内部共用的错误类型、环境变量读取、Hono 类型和响应 meta 生成函数。
 
 后续目录和新增接口规则看：
 
@@ -68,7 +76,7 @@
 - `GET /health`
 - `POST /rpc/system/ping`
 
-新增接口按模块放到 `apps/momo/src/modules/<module>`，再到 `apps/momo/src/routes/index.ts` 挂载。模块路由用链式写法注册，`routes/index.ts` 用 `route()` 挂载后接住返回值。
+新增接口按模块放到 `apps/momo/src/modules/<module>`，再到 `apps/momo/src/routes/index.ts` 用 `route()` 挂载。模块路由用链式写法注册。
 
 模块里有多个 service 或 repository 时，按 `apps/momo.md` 的规则迁到 `services/`、`repositories/`，并通过目录下的 `index.ts` 导出。
 

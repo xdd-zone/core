@@ -21,8 +21,9 @@
 
 代码入口：
 
-- `apps/momo/src/app.ts`
+- `apps/momo/src/bootstrap/create-app.ts`
 - `apps/momo/src/routes/index.ts`
+- `apps/momo/src/modules/<module>/<module>.route.ts`
 
 新增接口按 [apps/momo.md](./apps/momo.md) 里的模块目录放。
 

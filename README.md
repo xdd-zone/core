@@ -49,7 +49,11 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 - `apps/fifa/src/layout`
   控制台整体布局。
 - `apps/momo/src/index.ts`
-  Hono app、示例接口和 Node 服务启动入口。
+  Node 服务启动入口。
+- `apps/momo/src/bootstrap`
+  Momo runtime、全局中间件、错误处理和路由组装。
+- `apps/momo/src/modules`
+  Momo 接口模块。
 - `packages/contracts`
   Fifa 和 Momo 共用的接口约定。
 - `packages/catppuccin-theme`
@@ -123,7 +127,16 @@ curl http://localhost:7788/health
 
 ```json
 {
-  "status": "ok"
+  "ok": true,
+  "data": {
+    "env": "development",
+    "service": "momo",
+    "status": "ok"
+  },
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": "2026-06-07T00:00:00.000Z"
+  }
 }
 ```
 
@@ -174,8 +187,9 @@ pnpm clean
 优先看：
 
 - [docs/apps/momo.md](./docs/apps/momo.md)
-- `apps/momo/src/app.ts`
+- `apps/momo/src/bootstrap/create-app.ts`
 - `apps/momo/src/routes/index.ts`
+- `apps/momo/src/modules/<module>/<module>.route.ts`
 
 新增接口按模块放到 `apps/momo/src/modules/<module>`，再到 `apps/momo/src/routes/index.ts` 挂载。
 Fifa 通过 `@xdd-zone/momo/rpc` 引入 Momo 的 RPC 类型，再用 `hono/client` 创建 RPC client。

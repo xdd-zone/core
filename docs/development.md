@@ -149,7 +149,7 @@ pnpm format
 
 常改文件：
 
-- `apps/momo/src/app.ts`
+- `apps/momo/src/bootstrap/create-app.ts`
 - `apps/momo/src/routes/index.ts`
 - `apps/momo/src/modules/<module>/<module>.route.ts`
 - `apps/momo/src/modules/<module>/<module>.service.ts`
@@ -164,7 +164,7 @@ pnpm format
 2. 在 `apps/momo/src/modules/<module>/<module>.route.ts` 用链式写法注册路由。
 3. 需要业务判断时，添加或修改 `<module>.service.ts`。如果模块已经有 `services/` 目录，就放到 `services/` 里，并从 `services/index.ts` 导出。
 4. 需要数据库读写时，添加或修改 `<module>.repository.ts`。如果模块已经有 `repositories/` 目录，就放到 `repositories/` 里，并从 `repositories/index.ts` 导出。
-5. 在 `apps/momo/src/routes/index.ts` 用 `route()` 挂载模块路由，并接住返回值。
+5. 在 `apps/momo/src/routes/index.ts` 用 `route()` 挂载模块路由。
 6. 在 Fifa 的 `apps/fifa/src/api/<module>` 里写接口函数。接口函数内部通过 `momoClient.<path>.$get()` 或 `momoClient.<path>.$post()` 调 Momo，不手写接口 URL。
 7. 在 Fifa 的 `apps/fifa/src/api/<module>/<module>.query.ts` 写 TanStack Query hook。`GET` 接口用 `useQuery`，`POST` 接口用 `useMutation`。
 8. 页面只调用 hook，不直接 import `momoClient`，也不手写 query key。

@@ -317,7 +317,7 @@ modules/<module>/
 
 这里可以引入 `infra/db`。不要引入 Hono app、route 或 service。
 
-repository 返回普通数据，错误处理交给 service 或 `app.ts` 的 `onError()`。
+repository 返回普通数据，错误处理交给 service 或 `create-app.ts` 的 `onError()`。
 
 `<module>.types.ts` 只放 Momo 内部使用的模块类型。
 
@@ -616,7 +616,7 @@ apps/momo/src/shared
 常用文件：
 
 - `app-error.ts`
-  放 `AppError` 和错误状态类型。service 可以抛出 `AppError`，`app.ts` 的 `onError()` 负责把它转成统一失败响应。
+  放 `AppError` 和错误状态类型。service 可以抛出 `AppError`，`create-app.ts` 的 `onError()` 负责把它转成统一失败响应。
 - `env.ts`
   读取和校验 Node 环境变量。当前 Momo 使用 `APP_ENV`、`PORT`、`CORS_ORIGINS` 和 `DATABASE_URL`。新增环境变量时先改这里。
 - `hono-env.ts`

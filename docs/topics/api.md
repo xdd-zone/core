@@ -14,19 +14,23 @@
 当前接口放在：
 
 ```text
-apps/momo/src/routes
+apps/momo/src/modules/system/system.route.ts
 ```
 
 相关入口：
 
 - `apps/momo/src/app.ts`
-  创建 Hono app，注册错误处理，挂载路由，导出运行时 app。
+  创建运行时 app，给测试和包导出使用。
+- `apps/momo/src/bootstrap/create-app.ts`
+  创建 Hono app，注册全局中间件、错误处理、404 和一级路由。
 - `apps/momo/src/rpc.ts`
   导出给 Hono RPC client 使用的 `AppType`。
 - `apps/momo/src/index.ts`
   直接运行 Momo 时启动 Node 服务。
 - `apps/momo/src/routes/index.ts`
-  挂载所有子路由。
+  挂载一级路由。
+- `apps/momo/src/modules`
+  放接口模块。
 - `packages/contracts/src`
   放接口 schema、类型和统一响应结构。
 

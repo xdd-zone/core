@@ -104,7 +104,8 @@
 
 - 当前是 Hono API 服务。
 - Node 启动入口放在 `apps/momo/src/index.ts`。
-- Hono app 组装放在 `apps/momo/src/app.ts`。
+- Hono app 组装放在 `apps/momo/src/bootstrap/create-app.ts`。
+- `apps/momo/src/app.ts` 只创建运行时 app，给测试和包导出使用。
 - 一级路由挂载放在 `apps/momo/src/routes/index.ts`。
 - 业务模块放在 `apps/momo/src/modules/<module>`。
 - 路由处理函数直接返回 Hono response。
