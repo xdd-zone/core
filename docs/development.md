@@ -13,6 +13,87 @@
 pnpm install
 ```
 
+## 依赖维护
+
+外部依赖版本统一写在根目录 `pnpm-workspace.yaml`。
+子包 `package.json` 只写自己需要哪些依赖，不直接写版本号。
+
+当前仓库按这几类放版本：
+
+- `catalog`
+  放通用依赖，比如 `typescript`、`zod`、`hono`、`eslint`。
+- `catalogs.react`
+  放 React 和 React 类型包。
+- `catalogs.vite`
+  放 Vite 和 Vite React 插件。
+- `catalogs.shiki`
+  放 Shiki 相关包。
+- `catalogs.next`
+  放 Bobo 使用的 Next.js 相关包。
+
+子包里按来源写依赖版本：
+
+```json
+{
+  "dependencies": {
+    "zod": "catalog:",
+    "react": "catalog:react",
+    "vite": "catalog:vite",
+    "next": "catalog:next",
+    "@xdd-zone/contracts": "workspace:*"
+  }
+}
+```
+
+新增外部依赖时按这个顺序处理：
+
+1. 在根目录 `pnpm-workspace.yaml` 的 `catalog` 或 `catalogs.<name>` 里写版本号。
+2. 在目标包的 `package.json` 里写 `catalog:` 或 `catalog:<name>`。
+3. 在根目录执行 `pnpm install`。
+4. 按影响范围执行检查命令。
+
+升级外部依赖时按这个顺序处理：
+
+1. 只改根目录 `pnpm-workspace.yaml` 里的版本号。
+2. 在根目录执行 `pnpm install`，让 `pnpm-lock.yaml` 跟着更新。
+3. 按影响范围执行检查命令。
+
+删除外部依赖时按这个顺序处理：
+
+1. 从目标包的 `package.json` 删除依赖。
+2. 如果没有其他包再使用这个依赖，从根目录 `pnpm-workspace.yaml` 删除对应版本。
+3. 在根目录执行 `pnpm install`。
+4. 按影响范围执行检查命令。
+
+仓库内部包使用 `workspace:*`，比如 `@xdd-zone/contracts`、`@xdd-zone/catppuccin-theme`、`@xdd-zone/eslint-config`。
+内部包不写到 `catalog`。
+
+常用检查命令：
+
+```bash
+# 全仓库检查
+pnpm type-check
+pnpm lint
+pnpm build
+
+# 只检查 Momo
+pnpm type-check:momo
+pnpm lint:momo
+pnpm build:momo
+
+# 只检查 Fifa
+pnpm type-check:fifa
+pnpm lint:fifa
+pnpm build:fifa
+
+# 只检查 Bobo
+pnpm type-check:bobo
+pnpm lint:bobo
+pnpm build:bobo
+```
+
+不要在 `apps/*` 或 `packages/*` 下面新增独立的 `pnpm-lock.yaml` 或 `pnpm-workspace.yaml`。
+
 ## 开发命令
 
 ```bash
