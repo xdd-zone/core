@@ -9,7 +9,8 @@
 后续保留这些约定：
 
 - `src/index.ts` 只启动 Node 服务。
-- `src/app.ts` 创建 Hono app，注册全局中间件、错误处理和路由，导出运行时 app。
+- `src/app.ts` 创建运行时 app，给测试和包导出使用。
+- `src/bootstrap` 放启动组装函数。
 - `src/rpc.ts` 导出给 Hono RPC client 使用的 `AppType`。
 - `src/routes/index.ts` 只挂载一级路由。
 - `src/modules` 放业务模块。
@@ -26,6 +27,7 @@
 apps/momo/src/
 ├── index.ts
 ├── app.ts
+├── bootstrap/
 ├── routes/
 ├── modules/
 ├── middleware/
@@ -38,10 +40,12 @@ apps/momo/src/
 
 - `routes/index.ts`
   一级路由挂载文件。
+- `bootstrap`
+  创建 runtime，组装 Hono app，注册全局中间件、错误处理和路由。
 - `modules`
   业务模块。模块先按当前需要放 route、service、repository 和内部类型，文件变多后再迁到目录里。
 - `middleware`
-  登录态检查、request id、请求日志、权限检查这类通用 middleware。
+  request context、请求日志、CORS 这类通用 middleware。
 - `infra`
   数据库、缓存、文件存储和第三方 SDK 的连接代码。
 - `shared`
@@ -55,6 +59,10 @@ apps/momo/src/
 apps/momo/src/
 ├── index.ts
 ├── app.ts
+├── bootstrap/
+│   ├── index.ts
+│   ├── create-app.ts
+│   └── create-runtime.ts
 ├── routes/
 │   └── index.ts
 ├── modules/
@@ -80,8 +88,10 @@ apps/momo/src/
 │       ├── user.repository.ts
 │       └── user.types.ts
 ├── middleware/
-│   ├── auth.middleware.ts
-│   └── request-id.middleware.ts
+│   ├── index.ts
+│   ├── cors.middleware.ts
+│   ├── request-context.middleware.ts
+│   └── request-log.middleware.ts
 ├── infra/
 │   ├── db/
 │   │   ├── client.ts
@@ -110,7 +120,7 @@ apps/momo/src/
 
 `src/index.ts` 只负责启动服务。
 
-这里读取环境变量，调用 `@hono/node-server` 的 `serve()`，监听端口。
+这里调用 `createRuntime()`，再调用 `createMomoApp(runtime)`，最后用 `@hono/node-server` 的 `serve()` 监听端口。
 
 不要在这里写：
 
@@ -119,18 +129,61 @@ apps/momo/src/
 - 业务判断。
 - 数据库代码。
 
-`src/app.ts` 只负责创建和组装 Hono app。
+`src/app.ts` 给测试和包导出使用。
 
 这里做这些事：
 
-- 创建 `new Hono<HonoEnv>()`。
-- 注册全局中间件。
-- 注册 `onError()`。
-- 注册 `notFound()`。
-- 挂载 `routes/index.ts`。
+- 调用 `createRuntime()`。
+- 调用 `createMomoApp(runtime)`。
 - 导出 `app` 和默认导出。
 
+不要把新的组装逻辑写回 `src/app.ts`。需要改 app 组装时，改 `src/bootstrap/create-app.ts`。
+
 `AppType` 从 `src/rpc.ts` 导出。Fifa 后续可以用它拿到 Momo 的路由类型。
+
+## 启动组装
+
+启动组装代码放在：
+
+```text
+apps/momo/src/bootstrap
+```
+
+当前文件：
+
+- `create-runtime.ts`
+  读取 `shared/env.ts`，返回 `MomoRuntime`。
+- `create-app.ts`
+  创建 `new Hono<HonoEnv>()`，注册全局中间件、错误处理、404 和一级路由。
+- `index.ts`
+  统一导出 `createRuntime()`、`createMomoApp()` 和 `MomoRuntime`。
+
+`MomoRuntime` 当前只有 `env`。后续如果加数据库、缓存或文件存储连接，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
+
+不要把 env、db、cache 写进 `c.var`。`c.var` 只放当前请求的数据。
+
+`create-app.ts` 里的注册顺序按当前代码维护：
+
+```text
+registerRequestContext(app)
+registerRequestLog(app, runtime.env)
+registerCors(app, runtime.env)
+app.onError(...)
+app.notFound(...)
+app.route('/', createRoutes(runtime))
+```
+
+改全局 middleware 顺序时，先确认它是否依赖 `c.var.requestId` 或 `c.var.startedAt`。
+
+`app.onError()` 统一处理：
+
+- `AppError`
+- Hono 的 `HTTPException`
+- 未识别错误
+
+错误响应里的 meta 使用 `c.var.requestId`。
+
+`app.notFound()` 只在顶层 app 注册。不要在子路由里重复注册 404。
 
 ## 路由
 
@@ -145,14 +198,16 @@ apps/momo/src/routes/index.ts
 示例：
 
 ```ts
-const rpcRoutes = new Hono<HonoEnv>()
-  .route('/', systemRoute)
-  .route('/rpc/auth', authRoute)
-  .route('/rpc/users', userRoute)
+export function createRoutes(runtime: MomoRuntime) {
+  return new Hono<HonoEnv>()
+    .route('/', createSystemRoute(runtime))
+    .route('/rpc/auth', createAuthRoute(runtime))
+    .route('/rpc/users', createUserRoute(runtime))
+}
 
-export type MomoRpcType = typeof rpcRoutes
+export type MomoRpcType = ReturnType<typeof createRoutes>
 
-export default rpcRoutes
+export default createRoutes
 ```
 
 这里不写请求处理函数，不直接访问数据库，也不拼响应内容。
@@ -412,7 +467,7 @@ apps/momo/src/modules/system/
 - `GET /health`
 - `POST /rpc/system/ping`
 
-`system` 模块不直接访问数据库。需要读取运行环境时，调用 `shared/env.ts`。
+`system` 模块不直接访问数据库。需要读取运行环境时，由 route 从 `runtime.env` 传给 service，不在 service 里直接调用 `getMomoEnv()`。
 
 ## 中间件
 
@@ -424,12 +479,47 @@ apps/momo/src/middleware
 
 适合放这里的代码：
 
-- 登录态检查。
 - request id 生成和写入。
+- 请求开始时间写入。
 - 请求日志。
-- 权限检查。
+- CORS。
 
 只被一个 route 使用一次的中间件，可以先放在对应的 `<module>.route.ts`。
+
+当前文件：
+
+- `request-context.middleware.ts`
+  导出 `requestContextMiddleware` 和 `registerRequestContext()`。这里写入 `c.var.requestId` 和 `c.var.startedAt`。
+- `request-log.middleware.ts`
+  导出 `createRequestLogMiddleware()` 和 `registerRequestLog()`。这里在 `await next()` 之后记录请求方法、路径、响应状态、耗时和 requestId。测试环境不打印日志。
+- `cors.middleware.ts`
+  导出 `registerCors()`。这里读取 `runtime.env.CORS_ORIGINS`。
+- `index.ts`
+  只做统一导出，不写注册逻辑。
+
+新增全局 middleware 时按这个方式写：
+
+1. 在 `apps/momo/src/middleware/<name>.middleware.ts` 写 middleware。
+2. 如果需要全局注册，在同一个文件里导出 `register<Name>()`。
+3. 从 `apps/momo/src/middleware/index.ts` 导出。
+4. 在 `apps/momo/src/bootstrap/create-app.ts` 里调用注册函数。
+
+不要把注册函数写在 `middleware/index.ts`。这个文件只放导出语句。
+
+middleware 需要给后面的 handler 放请求状态时，写到 `c.set()`，并在 `shared/hono-env.ts` 里补 `Variables` 类型。当前已有：
+
+```ts
+Variables: {
+  requestId: string
+  startedAt: number
+  user?: {
+    id: string
+    role: string
+  }
+}
+```
+
+只有当前请求里的临时状态放 `c.var`。进程级数据继续放 `runtime`。
 
 ## 外部资源
 
@@ -553,6 +643,8 @@ Momo 使用 `#momo/*` 做内部路径别名。
 
 ```json
 {
+  "#momo/bootstrap": "./src/bootstrap/index.ts",
+  "#momo/middleware": "./src/middleware/index.ts",
   "#momo/routes": "./src/routes/index.ts",
   "#momo/*": "./src/*.ts"
 }
@@ -561,9 +653,9 @@ Momo 使用 `#momo/*` 做内部路径别名。
 跨目录引用使用 `#momo/*`：
 
 ```ts
-import routes from '#momo/routes'
+import { createMomoApp } from '#momo/bootstrap'
 import { getMomoEnv } from '#momo/shared/env'
-import systemRoute from '#momo/modules/system/system.route'
+import { createSystemRoute } from '#momo/modules/system/system.route'
 ```
 
 同目录引用继续使用相对路径：
@@ -581,17 +673,27 @@ import { getHealthStatus } from './system.service'
 
 ```text
 index.ts
-  -> app.ts
+  -> bootstrap/create-runtime.ts
+  -> bootstrap/create-app.ts
+    -> middleware/*
     -> routes/index.ts
       -> modules/*/*.route.ts
         -> modules/*/*.service.ts 或 modules/*/services/*.service.ts
           -> modules/*/*.repository.ts 或 modules/*/repositories/*.repository.ts
             -> infra/*
+
+app.ts
+  -> bootstrap/create-runtime.ts
+  -> bootstrap/create-app.ts
 ```
 
 通用代码引用规则：
 
-- `app.ts` 可以引用 `routes`、`middleware`、`shared`。
+- `index.ts` 只引用 `bootstrap` 和 `@hono/node-server`。
+- `app.ts` 只引用 `bootstrap`，用于导出测试和包使用的 app。
+- `bootstrap/create-app.ts` 可以引用 `routes`、`middleware`、`shared`。
+- `bootstrap/create-runtime.ts` 可以引用 `shared/env.ts` 和 `infra` 里的进程级资源。
+- `middleware/index.ts` 只导出 middleware 文件。
 - `routes/index.ts` 只引用 `modules/*/*.route.ts`。
 - `*.route.ts` 可以引用同模块 service、`contracts`、`shared`。如果模块有 `services/index.ts`，route 从 `./services` 引入。
 - `*.service.ts` 可以引用同模块 repository、`contracts`、`shared`。

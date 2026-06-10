@@ -4,6 +4,8 @@
     "rootDir": ".",
     "customConditions": ["development"],
     "paths": {
+      "#momo/bootstrap": ["./src/bootstrap/index.ts"],
+      "#momo/middleware": ["./src/middleware/index.ts"],
       "#momo/routes": ["./src/routes/index.ts"],
       "#momo/*": ["./src/*"]
     },

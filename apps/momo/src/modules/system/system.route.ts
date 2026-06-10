@@ -1,5 +1,8 @@
+import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
-import { createFailureResponse, createSuccessResponse } from '#momo/shared/response'
+import { AppError } from '#momo/shared/app-error'
+import { createMeta } from '#momo/shared/meta'
+import { createSuccessResponse } from '#momo/shared/response'
 import { createValidationFailure } from '#momo/shared/validator'
 import { zValidator } from '@hono/zod-validator'
 import { PingRequestSchema } from '@xdd-zone/contracts'
@@ -7,27 +10,31 @@ import { Hono } from 'hono'
 
 import { getHealthStatus, getRootInfo, pingSystem } from './system.service'
 
-const systemRoute = new Hono<HonoEnv>()
-  .get('/', (c) => {
-    return c.json(createSuccessResponse(getRootInfo()))
-  })
-  .get('/health', (c) => {
-    return c.json(createSuccessResponse(getHealthStatus()))
-  })
-  .post(
-    '/rpc/system/ping',
-    zValidator('json', PingRequestSchema, (result, c) => {
-      if (result.success) {
-        return
-      }
+export function createSystemRoute(runtime: MomoRuntime) {
+  return new Hono<HonoEnv>()
+    .get('/', (c) => {
+      return c.json(createSuccessResponse(getRootInfo(), createMeta(c.var.requestId)))
+    })
+    .get('/health', (c) => {
+      return c.json(createSuccessResponse(getHealthStatus(runtime.env), createMeta(c.var.requestId)))
+    })
+    .post(
+      '/rpc/system/ping',
+      zValidator('json', PingRequestSchema, (result) => {
+        if (result.success) {
+          return
+        }
 
-      return c.json(createFailureResponse(createValidationFailure(result.error)), 400)
-    }),
-    (c) => {
-      const payload = c.req.valid('json')
+        const failure = createValidationFailure(result.error)
 
-      return c.json(createSuccessResponse(pingSystem(payload.name)))
-    },
-  )
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      (c) => {
+        const payload = c.req.valid('json')
 
-export default systemRoute
+        return c.json(createSuccessResponse(pingSystem(runtime.env, payload.name), createMeta(c.var.requestId)))
+      },
+    )
+}
+
+export default createSystemRoute

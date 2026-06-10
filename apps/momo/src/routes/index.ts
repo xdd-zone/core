@@ -1,9 +1,12 @@
+import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
-import systemRoute from '#momo/modules/system/system.route'
+import { createSystemRoute } from '#momo/modules/system/system.route'
 import { Hono } from 'hono'
 
-const rpcRoutes = new Hono<HonoEnv>().route('/', systemRoute)
+export function createRoutes(runtime: MomoRuntime) {
+  return new Hono<HonoEnv>().route('/', createSystemRoute(runtime))
+}
 
-export type MomoRpcType = typeof rpcRoutes
+export type MomoRpcType = ReturnType<typeof createRoutes>
 
-export default rpcRoutes
+export default createRoutes

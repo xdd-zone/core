@@ -1,6 +1,5 @@
+import type { MomoEnv } from '#momo/shared/env'
 import type { HealthResponse, PingResponse, RootResponse } from '@xdd-zone/contracts'
-
-import { getMomoEnv } from '#momo/shared/env'
 
 export function getRootInfo(): RootResponse {
   return {
@@ -9,9 +8,7 @@ export function getRootInfo(): RootResponse {
   }
 }
 
-export function getHealthStatus(): HealthResponse {
-  const env = getMomoEnv()
-
+export function getHealthStatus(env: MomoEnv): HealthResponse {
   return {
     env: env.APP_ENV,
     service: 'momo',
@@ -19,9 +16,7 @@ export function getHealthStatus(): HealthResponse {
   }
 }
 
-export function pingSystem(name: string): PingResponse {
-  const env = getMomoEnv()
-
+export function pingSystem(env: MomoEnv, name: string): PingResponse {
   return {
     env: env.APP_ENV,
     service: 'momo',
