@@ -70,6 +70,8 @@
 
 新增接口按模块放到 `apps/momo/src/modules/<module>`，再到 `apps/momo/src/routes/index.ts` 挂载。模块路由用链式写法注册，`routes/index.ts` 用 `route()` 挂载后接住返回值。
 
+模块里有多个 service 或 repository 时，按 `apps/momo.md` 的规则迁到 `services/`、`repositories/`，并通过目录下的 `index.ts` 导出。
+
 ## `apps/fifa`
 
 当前 Fifa 保留基础控制台框架和示例页。

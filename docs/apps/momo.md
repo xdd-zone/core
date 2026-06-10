@@ -39,7 +39,7 @@ apps/momo/src/
 - `routes/index.ts`
   一级路由挂载文件。
 - `modules`
-  业务模块。每个模块放自己的 route、service、repository 和内部类型。
+  业务模块。模块先按当前需要放 route、service、repository 和内部类型，文件变多后再迁到目录里。
 - `middleware`
   登录态检查、request id、请求日志、权限检查这类通用 middleware。
 - `infra`
@@ -63,8 +63,16 @@ apps/momo/src/
 │   │   └── system.service.ts
 │   ├── auth/
 │   │   ├── auth.route.ts
-│   │   ├── auth.service.ts
-│   │   ├── auth.repository.ts
+│   │   ├── services/
+│   │   │   ├── index.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── session.service.ts
+│   │   │   └── password-reset.service.ts
+│   │   ├── repositories/
+│   │   │   ├── index.ts
+│   │   │   ├── user.repository.ts
+│   │   │   ├── session.repository.ts
+│   │   │   └── password-reset.repository.ts
 │   │   └── auth.types.ts
 │   └── user/
 │       ├── user.route.ts
@@ -149,6 +157,53 @@ export default rpcRoutes
 
 这里不写请求处理函数，不直接访问数据库，也不拼响应内容。
 
+### 路由处理函数
+
+Hono route handler 贴着路由写，不单独加 controller 文件。
+
+推荐写法：
+
+```ts
+const userRoute = new Hono<HonoEnv>().get('/:id', async (c) => {
+  const id = c.req.param('id')
+  const user = await getUserById(id)
+
+  if (!user) {
+    return c.json({ error: 'user not found' }, 404)
+  }
+
+  return c.json({ user }, 200)
+})
+```
+
+不要把 handler 抽成接收 `Context` 的 controller：
+
+```ts
+const getUser = async (c: Context) => {
+  const id = c.req.param('id')
+  return c.json({ id })
+}
+
+userRoute.get('/:id', getUser)
+```
+
+这种写法会让 Hono 不容易从 `/:id` 里推导参数类型。路由、校验和 handler 放在一起，类型最稳。
+
+如果 handler 变长，先把业务判断放到 service，不新增 controller：
+
+```ts
+const userRoute = new Hono<HonoEnv>().get('/:id', async (c) => {
+  const id = c.req.param('id')
+  const user = await userService.getById(id)
+
+  if (!user) {
+    return c.json({ error: 'user not found' }, 404)
+  }
+
+  return c.json({ user }, 200)
+})
+```
+
 ## 业务模块
 
 业务模块放在：
@@ -157,14 +212,32 @@ export default rpcRoutes
 apps/momo/src/modules/<module>
 ```
 
-每个模块使用同一组文件名：
+模块按当前需要放文件。小模块不要提前建空的 service、repository 或 types。
+
+### 最小模块
+
+只有接口，没有业务判断和数据库读写时，可以只有 route：
+
+```text
+modules/system/
+└── system.route.ts
+```
+
+需要把业务判断从 route 里拿出来时，再加 service：
+
+```text
+modules/system/
+├── system.route.ts
+└── system.service.ts
+```
+
+需要数据库读写时，再加 repository：
 
 ```text
 modules/<module>/
 ├── <module>.route.ts
 ├── <module>.service.ts
-├── <module>.repository.ts
-└── <module>.types.ts
+└── <module>.repository.ts
 ```
 
 `<module>.route.ts` 写 Hono 路由、请求校验、调用 service、返回 Hono response。
@@ -194,6 +267,132 @@ repository 返回普通数据，错误处理交给 service 或 `app.ts` 的 `onE
 `<module>.types.ts` 只放 Momo 内部使用的模块类型。
 
 前后端共用的请求 schema、请求类型、响应类型和响应结构放在 `packages/contracts`。
+
+### 多个 service 和 repository
+
+一个模块里可以有多个 service 或 repository。
+
+适合拆多个 service 的情况：
+
+- 一个模块里有多类业务动作，比如登录、会话、密码重置。
+- 某段业务逻辑被多个 route 调用。
+- 单个 service 文件已经混了几类不相关的方法。
+
+适合拆多个 repository 的情况：
+
+- 一个模块读写多张表。
+- 一个模块同时读数据库和外部服务。
+- 某类查询很多，继续放在一个 repository 里会太长。
+
+多个文件时，把 service 和 repository 迁到目录里：
+
+```text
+modules/auth/
+├── auth.route.ts
+├── services/
+│   ├── index.ts
+│   ├── auth.service.ts
+│   ├── session.service.ts
+│   └── password-reset.service.ts
+├── repositories/
+│   ├── index.ts
+│   ├── user.repository.ts
+│   ├── session.repository.ts
+│   └── password-reset.repository.ts
+└── auth.types.ts
+```
+
+目录里有多个 service 时，加 `services/index.ts`，从这里导出目录下的服务：
+
+```ts
+export { authService } from './auth.service'
+export { sessionService } from './session.service'
+export { passwordResetService } from './password-reset.service'
+```
+
+route 从 `./services` 引入服务：
+
+```ts
+import { authService, sessionService } from './services'
+```
+
+不要在 route 里直接引入 `./services/auth.service` 或 `./services/session.service`。
+
+目录里有多个 repository 时，也加 `repositories/index.ts`：
+
+```ts
+export { userRepository } from './user.repository'
+export { sessionRepository } from './session.repository'
+export { passwordResetRepository } from './password-reset.repository'
+```
+
+service 从 `./repositories` 引入 repository：
+
+```ts
+import { sessionRepository, userRepository } from './repositories'
+```
+
+`index.ts` 只写导出语句，不写业务判断，也不创建数据库连接。
+
+### 从单文件迁到目录
+
+模块刚开始只有一个 service 时，用：
+
+```text
+modules/auth/
+├── auth.route.ts
+└── auth.service.ts
+```
+
+后续出现第二个 service 时，迁成：
+
+```text
+modules/auth/
+├── auth.route.ts
+└── services/
+    ├── index.ts
+    ├── auth.service.ts
+    └── session.service.ts
+```
+
+原来的 `auth.service.ts` 移到 `services/auth.service.ts`，再从 `services/index.ts` 导出。改完后只更新 import 路径，不顺手改业务逻辑。
+
+repository 同理。
+
+刚开始只有一个 repository 时，用：
+
+```text
+modules/auth/
+├── auth.route.ts
+└── auth.repository.ts
+```
+
+后续出现第二个 repository 时，迁成：
+
+```text
+modules/auth/
+├── auth.route.ts
+└── repositories/
+    ├── index.ts
+    ├── user.repository.ts
+    └── session.repository.ts
+```
+
+### 引用规则
+
+`route` 可以调用一个或多个 service。
+
+`service` 可以调用一个或多个 repository。
+
+`repository` 不调用 service，不引入 Hono。
+
+`service` 不接收 Hono 的 `Context`，不返回 `c.json()`。
+
+`route` 负责读取 `param`、`query`、`json`，也负责返回 Hono response。
+
+`service` 返回普通数据或抛出 `AppError`。
+
+`repository` 只返回数据库或外部资源的数据。
 
 ## system 模块
 
@@ -385,8 +584,8 @@ index.ts
   -> app.ts
     -> routes/index.ts
       -> modules/*/*.route.ts
-        -> modules/*/*.service.ts
-          -> modules/*/*.repository.ts
+        -> modules/*/*.service.ts 或 modules/*/services/*.service.ts
+          -> modules/*/*.repository.ts 或 modules/*/repositories/*.repository.ts
             -> infra/*
 ```
 
@@ -394,9 +593,13 @@ index.ts
 
 - `app.ts` 可以引用 `routes`、`middleware`、`shared`。
 - `routes/index.ts` 只引用 `modules/*/*.route.ts`。
-- `*.route.ts` 可以引用同模块 service、`contracts`、`shared`。
+- `*.route.ts` 可以引用同模块 service、`contracts`、`shared`。如果模块有 `services/index.ts`，route 从 `./services` 引入。
 - `*.service.ts` 可以引用同模块 repository、`contracts`、`shared`。
 - `*.repository.ts` 可以引用 `infra/db`。
+- `services/index.ts` 只导出 `services/*.service.ts`。
+- `repositories/index.ts` 只导出 `repositories/*.repository.ts`。
+- `services/*.service.ts` 可以引用同模块 repository、`contracts`、`shared`。如果模块有 `repositories/index.ts`，service 从 `./repositories` 引入。
+- `repositories/*.repository.ts` 可以引用 `infra/db`。
 - `infra` 不引用 `modules`。
 - `shared` 不引用 `modules`、`routes` 和 `app.ts`。
 
@@ -406,8 +609,8 @@ index.ts
 
 1. 在 `packages/contracts/src/<module>` 添加请求 schema 和响应类型。
 2. 在 `apps/momo/src/modules/<module>/<module>.route.ts` 添加 Hono route。
-3. 需要业务判断时，在同目录添加或修改 `<module>.service.ts`。
-4. 需要数据库读写时，在同目录添加或修改 `<module>.repository.ts`。
+3. 需要业务判断时，添加或修改 `<module>.service.ts`。如果模块已经有 `services/` 目录，就放到 `services/` 里，并从 `services/index.ts` 导出。
+4. 需要数据库读写时，添加或修改 `<module>.repository.ts`。如果模块已经有 `repositories/` 目录，就放到 `repositories/` 里，并从 `repositories/index.ts` 导出。
 5. 在 `apps/momo/src/routes/index.ts` 挂载模块路由。
 6. 在 `apps/momo/src/test/<module>.test.ts` 添加接口测试。
 
