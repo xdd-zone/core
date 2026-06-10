@@ -57,6 +57,23 @@
 - `apps/bobo/app/globals.css`
 - `apps/bobo/app/styles`
 
+## 要改共享包
+
+先看：
+
+1. [packages.md](./packages.md)
+
+如果是接口约定或主题相关，再看：
+
+- 接口约定：[topics/api.md](./topics/api.md)
+- 主题系统：[topics/theme.md](./topics/theme.md)
+
+代码入口：
+
+- `packages/contracts`
+- `packages/catppuccin-theme`
+- `packages/eslint-config`
+
 ## 当前没有实现的内容
 
 这些旧专题目前没有对应代码：
@@ -73,6 +90,7 @@ docs/
 ├── integrations/
 ├── architecture.md
 ├── development.md
+├── packages.md
 ├── testing.md
 ├── skills.md
 └── faq.md
@@ -85,6 +103,7 @@ docs/
 ## 其他文档
 
 - [testing.md](./testing.md)：当前可跑的检查命令。
+- [packages.md](./packages.md)：共享包目录、包边界和检查命令。
 - [apps/momo.md](./apps/momo.md)：Momo 后端目录和新增接口规则。
 - [apps/bobo.md](./apps/bobo.md)：Bobo 个人站点目录、命令和维护规则。
 - [skills.md](./skills.md)：仓库常用技能顺序。
