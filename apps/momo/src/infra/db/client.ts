@@ -5,7 +5,7 @@ import postgres from 'postgres'
 import * as schema from './schema/index'
 
 type SqlClient = ReturnType<typeof postgres>
-type DbClient = ReturnType<typeof drizzle<typeof schema>>
+export type DbClient = ReturnType<typeof drizzle<typeof schema>>
 
 let sqlClient: SqlClient | undefined
 let dbClient: DbClient | undefined
