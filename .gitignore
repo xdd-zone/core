@@ -6,6 +6,8 @@ package-lock.json
 
 # Testing
 coverage
+# 查询调试脚本
+apps/momo/scripts/query-playground.ts
 
 # Production
 build
