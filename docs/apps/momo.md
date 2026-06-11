@@ -658,6 +658,8 @@ pnpm --filter @xdd-zone/momo db:studio
 
 新增表时，先在 `apps/momo/src/infra/db/schema/<module>.schema.ts` 写 schema，再从 `apps/momo/src/infra/db/schema/index.ts` 导出。
 
+非生成的 Drizzle schema 字段都要补 TS 简易注释。注释只写字段存什么、什么时候使用。`auth.schema.ts` 这类生成文件不手动补注释。
+
 改完 schema 后运行：
 
 ```bash

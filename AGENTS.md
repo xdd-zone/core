@@ -154,6 +154,7 @@ pnpm exec prettier --check <改过的 md 文件>
 - 业务模块放在 `apps/momo/src/modules/<module>`。
 - 路由处理函数直接返回 Hono response。
 - 新增接口按 `docs/apps/momo.md` 放到对应模块。
+- 非生成的 Drizzle schema 字段都要补 TS 简易注释。生成文件不手动补注释。
 - 需要分组时优先用 Hono 的 `app.route()` 或 `basePath()`。
 - 保留 `AppType` 的类型推导，不要破坏前端可复用的路由类型。
 
