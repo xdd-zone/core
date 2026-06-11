@@ -7,7 +7,7 @@ import {
   hasActiveAuthMethod,
   hasPasswordAccount,
   isUserActive,
-} from './access.repository'
+} from '../access.repository'
 
 export async function assertFifaOwner(userId: string): Promise<void> {
   if (!(await isUserActive(userId))) {

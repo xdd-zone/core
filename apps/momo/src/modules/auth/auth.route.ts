@@ -6,8 +6,7 @@ import { createSuccessResponse } from '#momo/shared/response'
 import { BizCode } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 
-import { assertFifaOwner, ensureBoboVisitor } from './access.service'
-import { getCurrentAuthUser, handleAuthRequest } from './auth.service'
+import { assertFifaOwner, ensureBoboVisitor, getCurrentAuthUser, handleAuthRequest } from './services'
 
 export function createAuthRoute(_runtime: MomoRuntime) {
   return new Hono<HonoEnv>()

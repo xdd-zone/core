@@ -15,7 +15,7 @@
 - `src/routes/index.ts`
   挂载一级路由。
 - `src/modules`
-  放接口模块。当前系统接口在 `src/modules/system`。
+  放接口模块。系统接口在 `src/modules/system`，认证接口在 `src/modules/auth`。
 - `src/middleware`
   放 request context、请求日志和 CORS middleware。
 - `src/infra/db`
@@ -28,8 +28,14 @@
   返回健康检查状态，使用统一响应格式。
 - `/rpc/system/ping`
   接收 `{ "name": "fifa" }`，返回 `pong, fifa`。
+- `/api/auth/*`
+  交给 `better-auth` 处理登录、登出、OAuth callback 和 session cookie。
+- `/rpc/fifa/auth/me`
+  读取当前 session，检查当前用户能不能进入 `fifa`。
+- `/rpc/bobo/auth/me`
+  读取当前 session。未登录时返回 `user: null`，已登录时补上 `bobo.visitor` 角色。
 
-当前没有认证、权限、文件存储和业务模块。数据库连接和 Drizzle 配置已经保留，当前没有业务表。
+当前没有文件存储和其他业务模块。认证表和访问表已经放在 `src/infra/db/schema`，migration 放在 `src/infra/db/migrations`。
 
 ## 常用命令
 
@@ -46,7 +52,16 @@ pnpm db:generate
 pnpm db:migrate
 pnpm db:check
 pnpm db:studio
+pnpm auth:generate
+pnpm seed:owner
 ```
+
+## 环境变量
+
+- `apps/momo/.env.example`
+  记录 Momo 需要的变量名和示例值。
+- `apps/momo/.env.development`
+  本机开发使用。这个文件被 `.gitignore` 忽略，不提交到仓库。
 
 ## 运行方式
 
@@ -61,6 +76,15 @@ pnpm dev
 
 ```bash
 PORT=7788 pnpm dev
+```
+
+创建 owner 账号：
+
+```bash
+cd apps/momo
+pnpm db:up
+pnpm db:migrate
+pnpm seed:owner
 ```
 
 直接请求 app 时，可以在测试里用 `app.request()`：

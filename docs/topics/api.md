@@ -15,6 +15,7 @@
 
 ```text
 apps/momo/src/modules/system/system.route.ts
+apps/momo/src/modules/auth/auth.route.ts
 ```
 
 相关入口：
@@ -43,6 +44,15 @@ apps/momo/src/modules/system/system.route.ts
 | `GET` | `/` | 服务名称和状态 |
 | `GET` | `/health` | 健康检查状态 |
 | `POST` | `/rpc/system/ping` | Momo ping 结果 |
+| `GET` | `/rpc/fifa/auth/me` | 当前 fifa 用户 |
+| `GET` | `/rpc/bobo/auth/me` | 当前 bobo 用户，未登录时 `user` 为 `null` |
+| `GET`/`POST` | `/api/auth/*` | `better-auth` 登录、登出、OAuth callback 和 session cookie |
+
+公开邮箱注册被禁用：
+
+| 方法 | 路径 | 返回 |
+| ---- | ---- | ---- |
+| `POST` | `/api/auth/sign-up/email` | `403 AUTH.METHOD_NOT_ALLOWED` |
 
 ## 响应格式
 
@@ -122,6 +132,41 @@ apps/momo/src/modules/system/system.route.ts
 }
 ```
 
+### `GET /rpc/fifa/auth/me`
+
+未登录时返回：
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "AUTH.UNAUTHENTICATED",
+    "message": "当前请求未登录"
+  },
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": "2026-06-07T00:00:00.000Z"
+  }
+}
+```
+
+### `GET /rpc/bobo/auth/me`
+
+未登录时返回：
+
+```json
+{
+  "ok": true,
+  "data": {
+    "user": null
+  },
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": "2026-06-07T00:00:00.000Z"
+  }
+}
+```
+
 返回：
 
 ```json
@@ -155,6 +200,11 @@ curl http://localhost:7788/health
 curl -X POST http://localhost:7788/rpc/system/ping \
   -H 'content-type: application/json' \
   -d '{"name":"fifa"}'
+curl -i http://localhost:7788/rpc/fifa/auth/me
+curl -i http://localhost:7788/rpc/bobo/auth/me
+curl -i -X POST http://localhost:7788/api/auth/sign-up/email \
+  -H 'content-type: application/json' \
+  -d '{"email":"demo@example.com","password":"password123","name":"Demo"}'
 ```
 
 ## 新增接口

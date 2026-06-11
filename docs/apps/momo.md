@@ -43,7 +43,7 @@ apps/momo/src/
 - `bootstrap`
   创建 runtime，组装 Hono app，注册全局中间件、错误处理和路由。
 - `modules`
-  业务模块。模块先按当前需要放 route、service、repository 和内部类型，文件变多后再迁到目录里。
+  业务模块。当前有 `system` 和 `auth`。模块先按当前需要放 route、service、repository 和内部类型，文件变多后再迁到目录里。
 - `middleware`
   request context、请求日志、CORS 这类通用 middleware。
 - `infra`
@@ -70,18 +70,13 @@ apps/momo/src/
 │   │   ├── system.route.ts
 │   │   └── system.service.ts
 │   ├── auth/
+│   │   ├── access.repository.ts
+│   │   ├── access.service.ts
+│   │   ├── auth.config.ts
 │   │   ├── auth.route.ts
-│   │   ├── services/
-│   │   │   ├── index.ts
-│   │   │   ├── auth.service.ts
-│   │   │   ├── session.service.ts
-│   │   │   └── password-reset.service.ts
-│   │   ├── repositories/
-│   │   │   ├── index.ts
-│   │   │   ├── user.repository.ts
-│   │   │   ├── session.repository.ts
-│   │   │   └── password-reset.repository.ts
-│   │   └── auth.types.ts
+│   │   ├── auth.service.ts
+│   │   ├── auth.types.ts
+│   │   └── index.ts
 │   └── user/
 │       ├── user.route.ts
 │       ├── user.service.ts
@@ -140,6 +135,46 @@ apps/momo/src/
 不要把新的组装逻辑写回 `src/app.ts`。需要改 app 组装时，改 `src/bootstrap/create-app.ts`。
 
 `AppType` 从 `src/rpc.ts` 导出。Fifa 后续可以用它拿到 Momo 的路由类型。
+
+## 环境变量
+
+环境变量读取代码放在：
+
+```text
+apps/momo/src/shared/env.ts
+```
+
+示例文件：
+
+- `apps/momo/.env.example`
+  提交到仓库，记录变量名和示例值。
+- `apps/momo/.env.development`
+  本机开发使用。这个文件被 `.gitignore` 忽略，不提交到仓库。
+
+当前 Momo 使用这些变量：
+
+```text
+APP_ENV
+PORT
+CORS_ORIGINS
+DATABASE_URL
+BETTER_AUTH_SECRET
+BETTER_AUTH_URL
+GITHUB_CLIENT_ID
+GITHUB_CLIENT_SECRET
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+```
+
+`seed:owner` 还会读取：
+
+```text
+OWNER_EMAIL
+OWNER_PASSWORD
+OWNER_DISPLAY_NAME
+```
+
+`pnpm dev`、`pnpm auth:generate` 和 `pnpm seed:owner` 会读取 `apps/momo/.env.development`。
 
 ## 启动组装
 
@@ -618,7 +653,7 @@ apps/momo/src/shared
 - `app-error.ts`
   放 `AppError` 和错误状态类型。service 可以抛出 `AppError`，`create-app.ts` 的 `onError()` 负责把它转成统一失败响应。
 - `env.ts`
-  读取和校验 Node 环境变量。当前 Momo 使用 `APP_ENV`、`PORT`、`CORS_ORIGINS` 和 `DATABASE_URL`。新增环境变量时先改这里。
+  读取和校验 Node 环境变量。新增 Momo 运行时变量时先改这里，再补 `apps/momo/.env.example`。
 - `hono-env.ts`
   定义 Hono 的 `Bindings` 和 `Variables` 类型。所有 `new Hono()` 都使用 `new Hono<HonoEnv>()`。
 - `meta.ts`
