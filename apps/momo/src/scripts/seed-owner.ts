@@ -6,7 +6,7 @@ import {
   roles,
   user,
   userRoleBindings,
-} from '#momo/infra/db/schema'
+} from '#momo/infra/db/schema/index'
 import { and, eq } from 'drizzle-orm'
 
 const localDefaults: Record<string, string> = {

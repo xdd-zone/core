@@ -1,6 +1,6 @@
 import type { AuthUserView } from './auth.types'
 import { getDb } from '#momo/infra/db/client'
-import { user } from '#momo/infra/db/schema'
+import { user } from '#momo/infra/db/schema/index'
 import { AppError } from '#momo/shared/app-error'
 import { BizCode } from '@xdd-zone/contracts'
 import { eq } from 'drizzle-orm'
