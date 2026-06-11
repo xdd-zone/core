@@ -1,16 +1,27 @@
 # 外部服务接入状态
 
-当前仓库没有接入外部服务。
+这份文档记录当前仓库已经写进代码的第三方服务配置。
 
-## 当前情况
+## 当前已有配置
 
-- `apps/momo` 没有对象存储、短信、邮件或第三方 API 代码。
-- `apps/fifa` 没有外部服务配置页面。
-- 当前没有外部服务环境变量要求。
+- `apps/momo` 通过 `better-auth` 配置了 GitHub 登录。
+- `apps/momo` 通过 `better-auth` 配置了 Google 登录。
+- 登录、OAuth callback 和 session cookie 由 `/api/auth/*` 处理。
 
-## 已保留的旧文档入口
+相关文档：
 
 - [GitHub OAuth](./github-oauth.md)
+- [Google OAuth](./google-oauth.md)
+
+## 当前没有接入的服务
+
+- `apps/momo` 没有对象存储代码。
+- `apps/momo` 没有短信发送代码。
+- `apps/momo` 没有邮件发送代码。
+- `apps/fifa` 没有外部服务配置页面。
+
+已保留的状态文档：
+
 - [腾讯云 COS 对象存储](./storage/tencent-cos.md)
 
 这份 COS 文档现在只记录状态，不提供旧接法步骤。

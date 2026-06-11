@@ -9,13 +9,17 @@
 - 当前没有 `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET`、`COS_REGION` 等环境变量要求。
 - 当前没有 `POST /api/media/upload` 接口。
 
-## 当前可用接口
+## 当前和文件存储无关的接口
 
-当前 Momo 只有：
+当前 Momo 已有这些和文件存储无关的接口：
 
 - `GET /`
 - `GET /health`
 - `POST /rpc/system/ping`
+- `GET` 或 `POST /api/auth/*`
+- `POST /api/auth/sign-up/email`
+- `GET /rpc/fifa/auth/me`
+- `GET /rpc/bobo/auth/me`
 
 ## 如果以后要加 COS
 

@@ -218,6 +218,12 @@ pnpm dev:bobo
   返回健康检查状态。
 - `/rpc/system/ping`
   返回 Momo ping 结果。
+- `/api/auth/*`
+  交给 `better-auth` 处理登录、登出、OAuth callback 和 session cookie。
+- `/rpc/fifa/auth/me`
+  返回当前 `fifa` 用户，要求当前用户有 `fifa.owner`。
+- `/rpc/bobo/auth/me`
+  返回当前 `bobo` 用户，未登录时返回 `user: null`。
 
 ## 文档入口
 

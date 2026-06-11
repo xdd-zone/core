@@ -58,7 +58,7 @@
 - `apps/momo/src/routes/index.ts`
   挂载一级路由。
 - `apps/momo/src/modules`
-  放接口模块。当前系统接口在 `apps/momo/src/modules/system`。
+  放接口模块。当前系统接口在 `apps/momo/src/modules/system`，认证接口在 `apps/momo/src/modules/auth`。
 - `apps/momo/src/middleware`
   放 request context、请求日志和 CORS middleware。
 - `apps/momo/src/infra/db`
@@ -75,6 +75,10 @@
 - `GET /`
 - `GET /health`
 - `POST /rpc/system/ping`
+- `GET` 或 `POST /api/auth/*`
+- `POST /api/auth/sign-up/email`
+- `GET /rpc/fifa/auth/me`
+- `GET /rpc/bobo/auth/me`
 
 新增接口按模块放到 `apps/momo/src/modules/<module>`，再到 `apps/momo/src/routes/index.ts` 用 `route()` 挂载。模块路由用链式写法注册。
 

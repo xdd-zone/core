@@ -74,11 +74,12 @@
 - `packages/catppuccin-theme`
 - `packages/eslint-config`
 
-## 当前没有实现的内容
+## 第三方服务
 
-这些旧专题目前没有对应代码：
+当前第三方服务状态看：
 
 - GitHub OAuth：[integrations/github-oauth.md](./integrations/github-oauth.md)
+- Google OAuth：[integrations/google-oauth.md](./integrations/google-oauth.md)
 - 外部服务：[integrations/index.md](./integrations/index.md)
 
 ## 目录结构

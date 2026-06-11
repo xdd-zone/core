@@ -56,7 +56,9 @@ apps/momo/src/modules/auth/auth.route.ts
 
 ## 响应格式
 
-所有接口都返回统一结构。
+Momo 自己写的接口返回统一结构。
+
+`/api/auth/*` 交给 `better-auth` 处理，可能返回 `better-auth` 自己的 JSON、重定向响应或 `set-cookie`。不要按下面的统一结构解析 `/api/auth/*`。
 
 成功：
 
@@ -132,6 +134,23 @@ apps/momo/src/modules/auth/auth.route.ts
 }
 ```
 
+返回：
+
+```json
+{
+  "ok": true,
+  "data": {
+    "env": "test",
+    "service": "momo",
+    "message": "pong, fifa"
+  },
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": "2026-06-07T00:00:00.000Z"
+  }
+}
+```
+
 ### `GET /rpc/fifa/auth/me`
 
 未登录时返回：
@@ -142,6 +161,27 @@ apps/momo/src/modules/auth/auth.route.ts
   "error": {
     "code": "AUTH.UNAUTHENTICATED",
     "message": "当前请求未登录"
+  },
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": "2026-06-07T00:00:00.000Z"
+  }
+}
+```
+
+已登录但没有 `fifa.owner`，或没有 password 登录记录时，返回 403。
+
+通过检查时返回：
+
+```json
+{
+  "ok": true,
+  "data": {
+    "user": {
+      "id": "user-id",
+      "displayName": "Owner",
+      "avatarUrl": null
+    }
   },
   "meta": {
     "requestId": "uuid",
@@ -167,15 +207,17 @@ apps/momo/src/modules/auth/auth.route.ts
 }
 ```
 
-返回：
+已登录时会检查用户状态，并补上 `bobo.visitor`。返回：
 
 ```json
 {
   "ok": true,
   "data": {
-    "env": "test",
-    "service": "momo",
-    "message": "pong, fifa"
+    "user": {
+      "id": "user-id",
+      "displayName": "Visitor",
+      "avatarUrl": null
+    }
   },
   "meta": {
     "requestId": "uuid",
