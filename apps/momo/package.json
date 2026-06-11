@@ -44,14 +44,16 @@
     }
   },
   "scripts": {
-    "dev": "NODE_ENV=development APP_ENV=development PORT=7788 CORS_ORIGINS=http://localhost:2333,http://127.0.0.1:2333 DATABASE_URL=postgres://momo:momo@localhost:55432/momo tsx watch --conditions=development src/index.ts",
+    "dev": "NODE_ENV=development APP_ENV=development PORT=7788 CORS_ORIGINS=http://localhost:2333,http://127.0.0.1:2333 DATABASE_URL=postgres://momo:momo@localhost:55432/momo BETTER_AUTH_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx BETTER_AUTH_URL=http://localhost:7788 GITHUB_CLIENT_ID=test-github-client-id GITHUB_CLIENT_SECRET=test-github-client-secret GOOGLE_CLIENT_ID=test-google-client-id GOOGLE_CLIENT_SECRET=test-google-client-secret tsx watch --conditions=development src/index.ts",
     "build": "tsup src/index.ts src/app.ts src/rpc.ts --format esm --dts --out-dir dist",
     "lint": "eslint --no-error-on-unmatched-pattern .",
     "lint:fix": "eslint --no-error-on-unmatched-pattern . --fix",
     "format": "prettier --config prettier.config.js --write .",
     "format:check": "prettier --config prettier.config.js --check .",
-    "test": "APP_ENV=test PORT=7788 CORS_ORIGINS=http://localhost:2333,http://127.0.0.1:2333 DATABASE_URL=postgres://momo:momo@localhost:55432/momo vitest run --passWithNoTests",
+    "test": "APP_ENV=test PORT=7788 CORS_ORIGINS=http://localhost:2333,http://127.0.0.1:2333 DATABASE_URL=postgres://momo:momo@localhost:55432/momo BETTER_AUTH_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx BETTER_AUTH_URL=http://localhost:7788 GITHUB_CLIENT_ID=test-github-client-id GITHUB_CLIENT_SECRET=test-github-client-secret GOOGLE_CLIENT_ID=test-google-client-id GOOGLE_CLIENT_SECRET=test-google-client-secret vitest run --passWithNoTests",
     "type-check": "tsc --noEmit",
+    "auth:generate": "better-auth generate --config src/modules/auth/auth.config.ts --output src/infra/db/schema/auth.schema.ts --yes",
+    "seed:owner": "tsx --conditions=development src/scripts/seed-owner.ts",
     "db:up": "docker compose -f compose.yaml up -d",
     "db:down": "docker compose -f compose.yaml down",
     "db:generate": "DATABASE_URL=${DATABASE_URL:-postgres://momo:momo@localhost:55432/momo} drizzle-kit generate",
@@ -64,12 +66,14 @@
     "@hono/node-server": "catalog:",
     "@hono/zod-validator": "catalog:",
     "@xdd-zone/contracts": "workspace:*",
+    "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "hono": "catalog:",
     "postgres": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@better-auth/cli": "catalog:",
     "@types/node": "catalog:",
     "@xdd-zone/eslint-config": "workspace:*",
     "drizzle-kit": "catalog:",
