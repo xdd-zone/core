@@ -1,10 +1,6 @@
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
-import {
-  registerCors,
-  registerRequestContext,
-  registerRequestLog,
-} from '#momo/middleware'
+import { registerCors, registerRequestContext, registerRequestLog } from '#momo/middleware'
 import { createRoutes } from '#momo/routes'
 import { AppError } from '#momo/shared/app-error'
 import { createMeta } from '#momo/shared/meta'

@@ -14,9 +14,7 @@ export function createRequestLogMiddleware(env: MomoEnv) {
     const elapsed = Date.now() - c.var.startedAt
     const pathname = new URL(c.req.url).pathname
 
-    console.warn(
-      `${c.req.method} ${pathname} ${c.res.status} ${elapsed}ms requestId=${c.var.requestId}`,
-    )
+    console.warn(`${c.req.method} ${pathname} ${c.res.status} ${elapsed}ms requestId=${c.var.requestId}`)
   })
 }
 

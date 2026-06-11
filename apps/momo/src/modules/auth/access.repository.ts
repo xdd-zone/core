@@ -22,11 +22,7 @@ export async function hasPasswordAccount(userId: string): Promise<boolean> {
 }
 
 export async function isUserActive(userId: string): Promise<boolean> {
-  const rows = await getDb()
-    .select({ status: user.status })
-    .from(user)
-    .where(eq(user.id, userId))
-    .limit(1)
+  const rows = await getDb().select({ status: user.status }).from(user).where(eq(user.id, userId)).limit(1)
 
   return rows[0]?.status === 'active'
 }
