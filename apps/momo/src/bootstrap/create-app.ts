@@ -1,5 +1,6 @@
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
+import { configureDbClient } from '#momo/infra/db/client'
 import { createChildLogger, createErrorLogFields } from '#momo/infra/logger'
 import { registerCors, registerRequestContext, registerRequestLog } from '#momo/middleware'
 import { createRoutes } from '#momo/routes'
@@ -12,6 +13,9 @@ import { HTTPException } from 'hono/http-exception'
 export function createMomoApp(runtime: MomoRuntime) {
   const app = new Hono<HonoEnv>()
   const httpLogger = createChildLogger(runtime.logger, 'http')
+  const dbLogger = createChildLogger(runtime.logger, 'db')
+
+  configureDbClient({ env: runtime.env, logger: dbLogger })
 
   registerRequestContext(app)
   registerRequestLog(app, httpLogger)
@@ -51,7 +55,9 @@ export function createMomoApp(runtime: MomoRuntime) {
       {
         event: 'http.request.failed',
         requestId: c.var.requestId,
-        ...createErrorLogFields(error instanceof Error ? error : undefined),
+        ...createErrorLogFields(error instanceof Error ? error : undefined, {
+          includeStack: runtime.env.APP_ENV === 'development',
+        }),
       },
       '请求处理失败',
     )

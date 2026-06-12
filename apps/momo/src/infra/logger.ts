@@ -6,10 +6,23 @@ import pino from 'pino'
 export type MomoLogger = Pick<Logger, 'debug' | 'error' | 'info' | 'warn'>
 type BetterAuthLogLevel = 'debug' | 'error' | 'info' | 'warn'
 
+export const LOGGER_REDACT_PATHS = [
+  'authorization',
+  'cookie',
+  'password',
+  'secret',
+  'token',
+  'clientSecret',
+]
+
 export function createLogger(env: MomoEnv): Logger {
   const base = {
     env: env.APP_ENV,
     service: 'momo',
+  }
+  const redact = {
+    censor: '[已隐藏]',
+    paths: LOGGER_REDACT_PATHS,
   }
 
   if (env.APP_ENV === 'test') {
@@ -17,6 +30,7 @@ export function createLogger(env: MomoEnv): Logger {
       base,
       enabled: false,
       level: 'silent',
+      redact,
     })
   }
 
@@ -24,6 +38,7 @@ export function createLogger(env: MomoEnv): Logger {
     return pino({
       base,
       level: env.LOG_LEVEL,
+      redact,
       transport: {
         target: 'pino-pretty',
         options: {
@@ -39,6 +54,7 @@ export function createLogger(env: MomoEnv): Logger {
   return pino({
     base,
     level: env.LOG_LEVEL,
+    redact,
   })
 }
 
@@ -64,7 +80,7 @@ export function createBetterAuthLogger(env: MomoEnv, logger: MomoLogger) {
   } as const
 }
 
-export function createErrorLogFields(error: Error | undefined) {
+export function createErrorLogFields(error: Error | undefined, options: { includeStack?: boolean } = {}) {
   if (!error) {
     return {}
   }
@@ -80,6 +96,7 @@ export function createErrorLogFields(error: Error | undefined) {
     errorCode: code,
     errorMessage: sanitizeErrorMessage(error.message),
     errorName: error.name,
+    errorStack: options.includeStack ? error.stack : undefined,
   }
 }
 

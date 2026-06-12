@@ -3,6 +3,8 @@ import type { HonoEnv } from '#momo/shared/hono-env'
 import type { Hono } from 'hono'
 import { createMiddleware } from 'hono/factory'
 
+export const SLOW_REQUEST_THRESHOLD_MS = 1000
+
 export function createRequestLogMiddleware(logger: MomoLogger) {
   return createMiddleware<HonoEnv>(async (c, next) => {
     await next()
@@ -32,6 +34,11 @@ export function createRequestLogMiddleware(logger: MomoLogger) {
 
     if (status >= 400) {
       logger.warn(payload, '请求参数错误')
+      return
+    }
+
+    if (durationMs >= SLOW_REQUEST_THRESHOLD_MS) {
+      logger.warn(payload, '请求耗时较长')
       return
     }
 

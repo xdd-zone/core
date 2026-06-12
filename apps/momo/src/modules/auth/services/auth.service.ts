@@ -1,3 +1,4 @@
+import type { MomoAuth } from '../auth.config'
 import type { AuthUserView } from '../auth.types'
 import { getDb } from '#momo/infra/db/client'
 import { user } from '#momo/infra/db/schema/index'
@@ -5,13 +6,11 @@ import { AppError } from '#momo/shared/app-error'
 import { BizCode } from '@xdd-zone/contracts'
 import { eq } from 'drizzle-orm'
 
-import { auth } from '../auth.config'
-
-export async function handleAuthRequest(request: Request): Promise<Response> {
+export async function handleAuthRequest(auth: MomoAuth, request: Request): Promise<Response> {
   return auth.handler(request)
 }
 
-export async function getCurrentAuthUser(headers: Headers): Promise<AuthUserView | null> {
+export async function getCurrentAuthUser(auth: MomoAuth, headers: Headers): Promise<AuthUserView | null> {
   let session: Awaited<ReturnType<typeof auth.api.getSession>>
 
   try {

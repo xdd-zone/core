@@ -63,7 +63,7 @@ pnpm seed:owner
 - `apps/momo/.env.development`
   本机开发使用。这个文件被 `.gitignore` 忽略，不提交到仓库。
 
-日志级别用 `LOG_LEVEL` 控制，开发环境默认 `info`。需要看 SQL 时，把 `LOG_SQL` 设成 `true`，日志只会打印参数数量，不打印参数原值。
+日志级别用 `LOG_LEVEL` 控制，开发环境默认 `info`。请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`。2xx 和 3xx 响应耗时达到 1000ms 时会用 warn 记录。开发环境的未处理异常会记录 stack，生产和测试环境不会记录 stack。需要看 SQL 时，把 `LOG_SQL` 设成 `true`，日志只会打印 SQL 和参数数量，不打印参数原值。
 
 ## 运行方式
 

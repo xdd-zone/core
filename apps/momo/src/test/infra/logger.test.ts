@@ -1,5 +1,11 @@
 import type { MomoEnv } from '#momo/shared/env'
-import { createBetterAuthLogger, createChildLogger, createLogger } from '#momo/infra/logger'
+import {
+  createBetterAuthLogger,
+  createChildLogger,
+  createErrorLogFields,
+  createLogger,
+  LOGGER_REDACT_PATHS,
+} from '#momo/infra/logger'
 import { describe, expect, it, vi } from 'vitest'
 
 const baseEnv: MomoEnv = {
@@ -92,5 +98,30 @@ describe('momo logger', () => {
     const logger = createLogger(env)
 
     expect(logger.level).toBe('debug')
+  })
+
+  it('adds stack to error fields only when requested', () => {
+    const error = new Error('boom')
+
+    expect(createErrorLogFields(error)).toEqual(
+      expect.objectContaining({
+        errorMessage: 'boom',
+        errorName: 'Error',
+        errorStack: undefined,
+      }),
+    )
+    expect(createErrorLogFields(error, { includeStack: true })).toEqual(
+      expect.objectContaining({
+        errorMessage: 'boom',
+        errorName: 'Error',
+        errorStack: expect.stringContaining('Error: boom'),
+      }),
+    )
+  })
+
+  it('defines default redacted log fields', () => {
+    expect(LOGGER_REDACT_PATHS).toEqual(
+      expect.arrayContaining(['authorization', 'cookie', 'password', 'secret', 'token', 'clientSecret']),
+    )
   })
 })

@@ -176,6 +176,8 @@ OWNER_DISPLAY_NAME
 
 `LOG_SQL` 只在开发环境生效。设成 `true` 时会打印 SQL 和 `paramsCount`，不会打印参数原值。
 
+请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`。
+
 ## 启动组装
 
 启动组装代码放在：
@@ -579,9 +581,9 @@ apps/momo/src/middleware
 当前文件：
 
 - `request-context.middleware.ts`
-  导出 `requestContextMiddleware` 和 `registerRequestContext()`。这里写入 `c.var.requestId` 和 `c.var.startedAt`。
+  导出 `requestContextMiddleware` 和 `registerRequestContext()`。这里读取 `X-Request-Id`，写入 `c.var.requestId` 和 `c.var.startedAt`，并把最终使用的 requestId 写到响应头。
 - `request-log.middleware.ts`
-  导出 `createRequestLogMiddleware()` 和 `registerRequestLog()`。这里在 `await next()` 之后通过 `runtime.logger` 记录请求方法、路径、响应状态、耗时和 requestId。测试环境使用 silent logger，不打印日志。
+  导出 `createRequestLogMiddleware()` 和 `registerRequestLog()`。这里在 `await next()` 之后通过 `runtime.logger` 记录请求方法、路径、响应状态、耗时和 requestId。2xx 和 3xx 响应耗时达到 1000ms 时用 warn 记录。测试环境使用 silent logger，不打印日志。
 - `cors.middleware.ts`
   导出 `registerCors()`。这里读取 `runtime.env.CORS_ORIGINS`。
 - `index.ts`
@@ -633,7 +635,7 @@ apps/momo/src/infra/db
 apps/momo/src/infra/logger.ts
 ```
 
-这里创建 Pino logger。`createRuntime()` 调用它，把 logger 放进 `runtime`，请求日志和未处理异常日志都从 `runtime.logger` 写出。开发环境默认使用 `info`，需要 SQL 日志时把 `LOG_SQL` 设成 `true`。Better Auth 的日志也走这里，错误只记录名称、消息和 code，不打印 stack 和请求参数。
+这里创建 Pino logger。`createRuntime()` 调用它，把 logger 放进 `runtime`，请求日志和未处理异常日志都从 `runtime.logger` 写出。开发环境默认使用 `info`，未处理异常会记录 stack。生产和测试环境不记录 stack。需要 SQL 日志时把 `LOG_SQL` 设成 `true`，日志只打印 SQL 和参数数量，不打印参数原值。Better Auth 的日志也走这里，错误只记录名称、消息和 code，不打印 stack 和请求参数。
 
 业务模块不能在 route 里直接创建数据库连接。需要读写数据库时，先写 repository，再由 service 调用 repository。
 

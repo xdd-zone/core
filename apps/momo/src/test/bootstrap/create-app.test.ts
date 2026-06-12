@@ -4,9 +4,10 @@ import { createMomoApp } from '#momo/bootstrap'
 import { Hono } from 'hono'
 import { describe, expect, it, vi } from 'vitest'
 
-function createRuntime(): MomoRuntime {
+function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRuntime {
   const mockLogger = {
     child: vi.fn(() => mockLogger),
+    debug: vi.fn(),
     error: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
@@ -14,7 +15,7 @@ function createRuntime(): MomoRuntime {
 
   return {
     env: {
-      APP_ENV: 'test',
+      APP_ENV: appEnv,
       BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       BETTER_AUTH_URL: 'http://localhost:7788',
       CORS_ORIGINS: ['http://localhost:2333'],
@@ -23,7 +24,7 @@ function createRuntime(): MomoRuntime {
       GITHUB_CLIENT_SECRET: 'test-github-client-secret',
       GOOGLE_CLIENT_ID: 'test-google-client-id',
       GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
-      LOG_LEVEL: 'silent',
+      LOG_LEVEL: appEnv === 'test' ? 'silent' : 'info',
       LOG_SQL: false,
       PORT: 7788,
     },
@@ -32,6 +33,16 @@ function createRuntime(): MomoRuntime {
 }
 
 describe('create momo app', () => {
+  it('creates module loggers from runtime logger', () => {
+    const runtime = createRuntime()
+
+    createMomoApp(runtime)
+
+    expect(runtime.logger.child).toHaveBeenCalledWith({ module: 'http' })
+    expect(runtime.logger.child).toHaveBeenCalledWith({ module: 'db' })
+    expect(runtime.logger.child).toHaveBeenCalledWith({ module: 'auth' })
+  })
+
   it('logs unhandled errors with request id', async () => {
     const runtime = createRuntime()
     const app = createMomoApp(runtime)
@@ -52,6 +63,29 @@ describe('create momo app', () => {
         errorName: 'Error',
         event: 'http.request.failed',
         requestId: expect.any(String),
+      }),
+      '请求处理失败',
+    )
+  })
+
+  it('adds stack to unhandled error logs in development', async () => {
+    const runtime = createRuntime('development')
+    const app = createMomoApp(runtime)
+    const boom = new Error('boom')
+
+    app.route(
+      '/',
+      new Hono().get('/boom', () => {
+        throw boom
+      }),
+    )
+
+    await app.request('/boom')
+
+    expect(runtime.logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorMessage: 'boom',
+        errorStack: expect.stringContaining('Error: boom'),
       }),
       '请求处理失败',
     )

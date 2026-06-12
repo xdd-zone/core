@@ -1,4 +1,5 @@
-import { closeDb, getDb } from '#momo/infra/db/client'
+import type { MomoAuth } from '#momo/modules/auth/auth.config'
+import { closeDb, configureDbClient, getDb } from '#momo/infra/db/client'
 import {
   account,
   applicationAuthMethods,
@@ -7,6 +8,9 @@ import {
   user,
   userRoleBindings,
 } from '#momo/infra/db/schema/index'
+import { createChildLogger, createLogger } from '#momo/infra/logger'
+import { createMomoAuth } from '#momo/modules/auth/auth.config'
+import { getMomoEnv } from '#momo/shared/env'
 import { and, eq } from 'drizzle-orm'
 
 const localDefaults: Record<string, string> = {
@@ -50,7 +54,12 @@ const roleRecords = [
 
 async function main() {
   const owner = readOwnerSeedInput()
-  const { auth } = await import('#momo/modules/auth/auth.config')
+  const env = getMomoEnv()
+  const logger = createLogger(env)
+
+  configureDbClient({ env, logger: createChildLogger(logger, 'db') })
+
+  const auth = createMomoAuth({ env, logger })
 
   await ensureApplications()
   await ensureApplicationAuthMethods()
@@ -121,10 +130,7 @@ async function ensureRoles(): Promise<void> {
     })
 }
 
-async function ensureOwnerUser(
-  owner: OwnerSeedInput,
-  auth: typeof import('#momo/modules/auth/auth.config').auth,
-): Promise<{ id: string }> {
+async function ensureOwnerUser(owner: OwnerSeedInput, auth: MomoAuth): Promise<{ id: string }> {
   const existingUser = await findUserByEmail(owner.email)
 
   if (!existingUser) {

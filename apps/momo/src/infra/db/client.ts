@@ -1,3 +1,5 @@
+import type { MomoLogger } from '#momo/infra/logger'
+import type { MomoEnv } from '#momo/shared/env'
 import { createChildLogger, createLogger } from '#momo/infra/logger'
 import { getMomoEnv } from '#momo/shared/env'
 import { drizzle } from 'drizzle-orm/postgres-js'
@@ -10,14 +12,17 @@ export type DbClient = ReturnType<typeof drizzle<typeof schema>>
 
 let sqlClient: SqlClient | undefined
 let dbClient: DbClient | undefined
+let runtimeEnv: MomoEnv | undefined
+let runtimeLogger: MomoLogger | undefined
+
+export function configureDbClient(options: { env: MomoEnv; logger: MomoLogger }): void {
+  runtimeEnv = options.env
+  runtimeLogger = options.logger
+}
 
 export function getDb(): DbClient {
   if (!sqlClient || !dbClient) {
-    const env = getMomoEnv()
-    const baseLogger = createLogger(env)
-
-    // 驱动（连接池）层的日志
-    const pgLogger = createChildLogger(baseLogger, 'db')
+    const { env, logger: pgLogger } = getDbRuntime()
 
     sqlClient = postgres(env.DATABASE_URL, {
       // 监听数据库通知（比如警告等）
@@ -53,4 +58,21 @@ export async function closeDb(): Promise<void> {
   await sqlClient.end()
   sqlClient = undefined
   dbClient = undefined
+}
+
+function getDbRuntime(): { env: MomoEnv; logger: MomoLogger } {
+  if (runtimeEnv && runtimeLogger) {
+    return {
+      env: runtimeEnv,
+      logger: runtimeLogger,
+    }
+  }
+
+  const env = getMomoEnv()
+  const baseLogger = createLogger(env)
+
+  return {
+    env,
+    logger: createChildLogger(baseLogger, 'db'),
+  }
 }

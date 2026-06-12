@@ -6,18 +6,21 @@ import { createSuccessResponse } from '#momo/shared/response'
 import { BizCode } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 
+import { createMomoAuth } from './auth.config'
 import { assertFifaOwner, ensureBoboVisitor, getCurrentAuthUser, handleAuthRequest } from './services'
 
-export function createAuthRoute(_runtime: MomoRuntime) {
+export function createAuthRoute(runtime: MomoRuntime) {
+  const auth = createMomoAuth(runtime)
+
   return new Hono<HonoEnv>()
     .all('/api/auth/sign-up/email', () => {
       throw new AppError(BizCode.AUTH_METHOD_NOT_ALLOWED, '当前不开放邮箱注册', 403)
     })
     .all('/api/auth/*', (c) => {
-      return handleAuthRequest(c.req.raw)
+      return handleAuthRequest(auth, c.req.raw)
     })
     .get('/rpc/fifa/auth/me', async (c) => {
-      const user = await getCurrentAuthUser(c.req.raw.headers)
+      const user = await getCurrentAuthUser(auth, c.req.raw.headers)
 
       if (!user) {
         throw new AppError(BizCode.AUTH_UNAUTHENTICATED, '当前请求未登录', 401)
@@ -28,7 +31,7 @@ export function createAuthRoute(_runtime: MomoRuntime) {
       return c.json(createSuccessResponse({ user }, createMeta(c.var.requestId)))
     })
     .get('/rpc/bobo/auth/me', async (c) => {
-      const user = await getCurrentAuthUser(c.req.raw.headers)
+      const user = await getCurrentAuthUser(auth, c.req.raw.headers)
 
       if (!user) {
         return c.json(createSuccessResponse({ user: null }, createMeta(c.var.requestId)))
