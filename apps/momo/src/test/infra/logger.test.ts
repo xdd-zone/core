@@ -18,9 +18,18 @@ const baseEnv: MomoEnv = {
   GITHUB_CLIENT_SECRET: 'test-github-client-secret',
   GOOGLE_CLIENT_ID: 'test-google-client-id',
   GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
+  COS_BUCKET: undefined,
+  COS_KEY_PREFIX: 'media',
+  COS_PUBLIC_BASE_URL: undefined,
+  COS_REGION: undefined,
+  COS_SECRET_ID: undefined,
+  COS_SECRET_KEY: undefined,
+  COS_SIGNED_URL_EXPIRES: 600,
+  LOCAL_STORAGE_DIR: undefined,
   LOG_LEVEL: 'silent',
   LOG_SQL: false,
   PORT: 7788,
+  STORAGE_PROVIDER: 'local',
 }
 
 describe('momo logger', () => {

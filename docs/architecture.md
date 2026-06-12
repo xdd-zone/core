@@ -62,7 +62,7 @@
 - `apps/momo/src/middleware`
   放 request context、请求日志和 CORS middleware。
 - `apps/momo/src/infra`
-  放 Pino logger、PostgreSQL 连接、Drizzle schema 入口和 migration 目录。
+  放 Pino logger、PostgreSQL 连接、Drizzle schema 入口、migration 目录和文件存储驱动。
 - `apps/momo/src/shared`
   放 Momo 内部共用的错误类型、环境变量读取、Hono 类型和响应 meta 生成函数。
 

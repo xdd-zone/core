@@ -19,6 +19,7 @@ catalog:
   antd: ^6.3.5
   better-auth: ^1.6.16
   clsx: ^2.1.1
+  cos-nodejs-sdk-v5: ^2.15.4
   dayjs: ^1.11.20
   drizzle-kit: ^0.31.10
   drizzle-orm: ^0.45.2

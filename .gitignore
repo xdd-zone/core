@@ -30,6 +30,7 @@ out
 ./logs
 
 # Database
+apps/momo/storage/
 
 # Debug
 npm-debug.log*

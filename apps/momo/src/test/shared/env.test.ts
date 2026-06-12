@@ -30,9 +30,18 @@ describe('momo env', () => {
       GITHUB_CLIENT_SECRET: 'github-client-secret',
       GOOGLE_CLIENT_ID: 'google-client-id',
       GOOGLE_CLIENT_SECRET: 'google-client-secret',
+      COS_BUCKET: undefined,
+      COS_KEY_PREFIX: 'media',
+      COS_PUBLIC_BASE_URL: undefined,
+      COS_REGION: undefined,
+      COS_SECRET_ID: undefined,
+      COS_SECRET_KEY: undefined,
+      COS_SIGNED_URL_EXPIRES: 600,
+      LOCAL_STORAGE_DIR: undefined,
       LOG_LEVEL: 'info',
       LOG_SQL: false,
       PORT: 8080,
+      STORAGE_PROVIDER: 'local',
     })
   })
 
@@ -78,6 +87,36 @@ describe('momo env', () => {
       expect.objectContaining({
         LOG_LEVEL: 'debug',
         LOG_SQL: true,
+      }),
+    )
+  })
+
+  it('parses storage config and treats empty optional values as unset', () => {
+    expect(
+      getMomoEnv({
+        APP_ENV: 'development',
+        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        BETTER_AUTH_URL: 'http://localhost:7788',
+        CORS_ORIGINS: 'http://localhost:2333',
+        COS_PUBLIC_BASE_URL: '',
+        COS_SECRET_ID: '',
+        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
+        GITHUB_CLIENT_ID: 'github-client-id',
+        GITHUB_CLIENT_SECRET: 'github-client-secret',
+        GOOGLE_CLIENT_ID: 'google-client-id',
+        GOOGLE_CLIENT_SECRET: 'google-client-secret',
+        LOCAL_STORAGE_DIR: '',
+        PORT: '7788',
+        STORAGE_PROVIDER: 'cos',
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        COS_KEY_PREFIX: 'media',
+        COS_PUBLIC_BASE_URL: undefined,
+        COS_SECRET_ID: undefined,
+        COS_SIGNED_URL_EXPIRES: 600,
+        LOCAL_STORAGE_DIR: undefined,
+        STORAGE_PROVIDER: 'cos',
       }),
     )
   })

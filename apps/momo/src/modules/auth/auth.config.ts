@@ -4,7 +4,7 @@ import { createBetterAuthLogger, createChildLogger } from '#momo/infra/logger'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 
-export function createMomoAuth(runtime: MomoRuntime) {
+export function createMomoAuth(runtime: Pick<MomoRuntime, 'env' | 'logger'>) {
   const authLogger = createChildLogger(runtime.logger, 'auth')
 
   return betterAuth({

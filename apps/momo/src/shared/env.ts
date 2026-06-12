@@ -2,6 +2,10 @@ import { z } from 'zod'
 
 const logLevelSchema = z.enum(['silent', 'fatal', 'error', 'warn', 'info', 'debug', 'trace'])
 
+const optionalStringSchema = z.preprocess((value) => (value === '' ? undefined : value), z.string().optional())
+
+const optionalUrlSchema = z.preprocess((value) => (value === '' ? undefined : value), z.string().url().optional())
+
 const momoEnvSchema = z
   .object({
     APP_ENV: z.enum(['development', 'test', 'production']),
@@ -39,6 +43,15 @@ const momoEnvSchema = z
       return value
     }, z.boolean()),
     PORT: z.coerce.number().int().min(1).max(65535),
+    STORAGE_PROVIDER: z.enum(['local', 'cos']).default('local'),
+    LOCAL_STORAGE_DIR: optionalStringSchema,
+    COS_SECRET_ID: optionalStringSchema,
+    COS_SECRET_KEY: optionalStringSchema,
+    COS_BUCKET: optionalStringSchema,
+    COS_REGION: optionalStringSchema,
+    COS_PUBLIC_BASE_URL: optionalUrlSchema,
+    COS_KEY_PREFIX: z.string().default('media'),
+    COS_SIGNED_URL_EXPIRES: z.coerce.number().int().min(60).default(600),
   })
   .transform((env) => ({
     ...env,
@@ -61,5 +74,14 @@ export function getMomoEnv(source: NodeJS.ProcessEnv = process.env): MomoEnv {
     LOG_LEVEL: source.LOG_LEVEL,
     LOG_SQL: source.LOG_SQL,
     PORT: source.PORT,
+    STORAGE_PROVIDER: source.STORAGE_PROVIDER,
+    LOCAL_STORAGE_DIR: source.LOCAL_STORAGE_DIR,
+    COS_SECRET_ID: source.COS_SECRET_ID,
+    COS_SECRET_KEY: source.COS_SECRET_KEY,
+    COS_BUCKET: source.COS_BUCKET,
+    COS_REGION: source.COS_REGION,
+    COS_PUBLIC_BASE_URL: source.COS_PUBLIC_BASE_URL,
+    COS_KEY_PREFIX: source.COS_KEY_PREFIX,
+    COS_SIGNED_URL_EXPIRES: source.COS_SIGNED_URL_EXPIRES,
   })
 }

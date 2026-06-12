@@ -1,4 +1,5 @@
 import type { MomoRuntime } from '#momo/bootstrap'
+import type { StorageDriver } from '#momo/infra/storage'
 import type { Logger } from 'pino'
 import { createMomoApp } from '#momo/bootstrap'
 import { Hono } from 'hono'
@@ -24,11 +25,25 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
       GITHUB_CLIENT_SECRET: 'test-github-client-secret',
       GOOGLE_CLIENT_ID: 'test-google-client-id',
       GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
+      COS_BUCKET: undefined,
+      COS_KEY_PREFIX: 'media',
+      COS_PUBLIC_BASE_URL: undefined,
+      COS_REGION: undefined,
+      COS_SECRET_ID: undefined,
+      COS_SECRET_KEY: undefined,
+      COS_SIGNED_URL_EXPIRES: 600,
+      LOCAL_STORAGE_DIR: undefined,
       LOG_LEVEL: appEnv === 'test' ? 'silent' : 'info',
       LOG_SQL: false,
       PORT: 7788,
+      STORAGE_PROVIDER: 'local',
     },
     logger: mockLogger as unknown as Logger,
+    storage: {
+      openFile: vi.fn(),
+      remove: vi.fn(),
+      save: vi.fn(),
+    } as unknown as StorageDriver,
   }
 }
 

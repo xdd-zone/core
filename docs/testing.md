@@ -15,7 +15,9 @@ apps/momo/src/test/
 ├── bootstrap/                  # 对应 src/bootstrap
 │   └── create-app.test.ts
 ├── infra/                      # 对应 src/infra
-│   └── logger.test.ts
+│   ├── local-storage.test.ts
+│   ├── logger.test.ts
+│   └── media-file.test.ts
 ├── middleware/                  # 对应 src/middleware
 │   └── request-log.middleware.test.ts
 ├── modules/                    # 对应 src/modules

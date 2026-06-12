@@ -47,7 +47,7 @@ apps/momo/src/
 - `middleware`
   request context、请求日志、CORS 这类通用 middleware。
 - `infra`
-  数据库、缓存、文件存储和第三方 SDK 的连接代码。
+  数据库、文件存储和第三方 SDK 的连接代码。
 - `shared`
   错误类型、环境变量读取、Hono 类型、响应 meta 和校验辅助函数。
 - `test`
@@ -93,6 +93,15 @@ apps/momo/src/
 │   │   │   ├── access.schema.ts
 │   │   │   └── auth.schema.ts
 │   │   └── migrations/
+│   └── storage/
+│       ├── index.ts
+│       ├── storage.types.ts
+│       ├── media-file.ts
+│       ├── local-storage.ts
+│       └── cos-storage.ts
+├── scripts/
+│   ├── seed-owner.ts
+│   └── test-storage.ts
 ├── shared/
 │   ├── app-error.ts
 │   ├── env.ts
@@ -101,8 +110,11 @@ apps/momo/src/
 │   ├── response.ts
 │   └── validator.ts
 └── test/
-    ├── env.test.ts
-    └── system.test.ts
+    ├── bootstrap/
+    ├── infra/
+    ├── middleware/
+    ├── modules/
+    └── shared/
 ```
 
 ## 入口和 app
@@ -160,6 +172,15 @@ GITHUB_CLIENT_ID
 GITHUB_CLIENT_SECRET
 GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET
+STORAGE_PROVIDER
+LOCAL_STORAGE_DIR
+COS_SECRET_ID
+COS_SECRET_KEY
+COS_BUCKET
+COS_REGION
+COS_PUBLIC_BASE_URL
+COS_KEY_PREFIX
+COS_SIGNED_URL_EXPIRES
 ```
 
 `seed:owner` 还会读取：
@@ -176,6 +197,8 @@ OWNER_DISPLAY_NAME
 
 `LOG_SQL` 只在开发环境生效。设成 `true` 时会打印 SQL 和 `paramsCount`，不会打印参数原值。
 
+`STORAGE_PROVIDER` 控制文件存储驱动。默认值是 `local`，使用 `LOCAL_STORAGE_DIR`，未设置时写到 `storage/media`。设成 `cos` 时，`COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION` 必须配置。`COS_KEY_PREFIX` 默认是 `media`，`COS_SIGNED_URL_EXPIRES` 默认是 `600` 秒。
+
 请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`。
 
 ## 启动组装
@@ -189,13 +212,13 @@ apps/momo/src/bootstrap
 当前文件：
 
 - `create-runtime.ts`
-  读取 `shared/env.ts`，返回 `MomoRuntime`。
+  读取 `shared/env.ts`，创建 logger 和 storage，返回 `MomoRuntime`。
 - `create-app.ts`
   创建 `new Hono<HonoEnv>()`，注册全局中间件、错误处理、404 和一级路由。
 - `index.ts`
   统一导出 `createRuntime()`、`createMomoApp()` 和 `MomoRuntime`。
 
-`MomoRuntime` 当前只有 `env`。后续如果加数据库、缓存或文件存储连接，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
+`MomoRuntime` 当前有 `env`、`logger` 和 `storage`。后续如果加数据库、缓存或其他外部资源，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
 
 不要把 env、db、cache 写进 `c.var`。`c.var` 只放当前请求的数据。
 
@@ -203,7 +226,7 @@ apps/momo/src/bootstrap
 
 ```text
 registerRequestContext(app)
-registerRequestLog(app, runtime.env)
+registerRequestLog(app, httpLogger)
 registerCors(app, runtime.env)
 app.onError(...)
 app.notFound(...)
