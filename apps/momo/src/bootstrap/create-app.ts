@@ -1,5 +1,6 @@
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
+import { createChildLogger, createErrorLogFields } from '#momo/infra/logger'
 import { registerCors, registerRequestContext, registerRequestLog } from '#momo/middleware'
 import { createRoutes } from '#momo/routes'
 import { AppError } from '#momo/shared/app-error'
@@ -10,9 +11,10 @@ import { HTTPException } from 'hono/http-exception'
 
 export function createMomoApp(runtime: MomoRuntime) {
   const app = new Hono<HonoEnv>()
+  const httpLogger = createChildLogger(runtime.logger, 'http')
 
   registerRequestContext(app)
-  registerRequestLog(app, runtime.env)
+  registerRequestLog(app, httpLogger)
   registerCors(app, runtime.env)
 
   app.onError((error, c) => {
@@ -45,7 +47,14 @@ export function createMomoApp(runtime: MomoRuntime) {
       )
     }
 
-    console.error(error)
+    httpLogger.error(
+      {
+        event: 'http.request.failed',
+        requestId: c.var.requestId,
+        ...createErrorLogFields(error instanceof Error ? error : undefined),
+      },
+      '请求处理失败',
+    )
 
     return c.json(
       buildFailure(

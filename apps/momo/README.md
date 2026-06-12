@@ -18,8 +18,8 @@
   放接口模块。系统接口在 `src/modules/system`，认证接口在 `src/modules/auth`。
 - `src/middleware`
   放 request context、请求日志和 CORS middleware。
-- `src/infra/db`
-  放 PostgreSQL 连接、Drizzle schema 入口和 migration 目录。
+- `src/infra`
+  放 Pino logger、PostgreSQL 连接、Drizzle schema 入口和 migration 目录。
 - `src/shared`
   放 Momo 内部共用的错误类型、环境变量读取、Hono 类型和响应 meta 生成函数。
 - `/`
@@ -35,7 +35,7 @@
 - `/rpc/bobo/auth/me`
   读取当前 session。未登录时返回 `user: null`，已登录时补上 `bobo.visitor` 角色。
 
-当前没有文件存储和其他业务模块。认证表和访问表已经放在 `src/infra/db/schema`，migration 放在 `src/infra/db/migrations`。
+当前没有文件存储和其他业务模块。日志封装放在 `src/infra/logger.ts`，认证表和访问表已经放在 `src/infra/db/schema`，migration 放在 `src/infra/db/migrations`。
 
 ## 常用命令
 

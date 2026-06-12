@@ -85,6 +85,7 @@ apps/momo/src/
 │   ├── request-context.middleware.ts
 │   └── request-log.middleware.ts
 ├── infra/
+│   ├── logger.ts
 │   ├── db/
 │   │   ├── client.ts
 │   │   ├── schema/
@@ -574,7 +575,7 @@ apps/momo/src/middleware
 - `request-context.middleware.ts`
   导出 `requestContextMiddleware` 和 `registerRequestContext()`。这里写入 `c.var.requestId` 和 `c.var.startedAt`。
 - `request-log.middleware.ts`
-  导出 `createRequestLogMiddleware()` 和 `registerRequestLog()`。这里在 `await next()` 之后记录请求方法、路径、响应状态、耗时和 requestId。测试环境不打印日志。
+  导出 `createRequestLogMiddleware()` 和 `registerRequestLog()`。这里在 `await next()` 之后通过 `runtime.logger` 记录请求方法、路径、响应状态、耗时和 requestId。测试环境使用 silent logger，不打印日志。
 - `cors.middleware.ts`
   导出 `registerCors()`。这里读取 `runtime.env.CORS_ORIGINS`。
 - `index.ts`
@@ -619,6 +620,14 @@ apps/momo/src/infra/db
 ```
 
 这里放数据库 client、schema 和 migrations。
+
+日志封装放在：
+
+```text
+apps/momo/src/infra/logger.ts
+```
+
+这里创建 Pino logger。`createRuntime()` 调用它，把 logger 放进 `runtime`，请求日志和未处理异常日志都从 `runtime.logger` 写出。Better Auth 的日志也走这里，错误只记录名称、消息和 code，不打印 stack 和请求参数。
 
 业务模块不能在 route 里直接创建数据库连接。需要读写数据库时，先写 repository，再由 service 调用 repository。
 

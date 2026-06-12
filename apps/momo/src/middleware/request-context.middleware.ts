@@ -4,7 +4,7 @@ import { createMiddleware } from 'hono/factory'
 
 export const requestContextMiddleware = createMiddleware<HonoEnv>(async (c, next) => {
   c.set('requestId', crypto.randomUUID())
-  c.set('startedAt', Date.now())
+  c.set('startedAt', performance.now())
 
   await next()
 })

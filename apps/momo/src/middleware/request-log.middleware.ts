@@ -1,23 +1,37 @@
-import type { MomoEnv } from '#momo/shared/env'
+import type { MomoLogger } from '#momo/infra/logger'
 import type { HonoEnv } from '#momo/shared/hono-env'
 import type { Hono } from 'hono'
 import { createMiddleware } from 'hono/factory'
 
-export function createRequestLogMiddleware(env: MomoEnv) {
+export function createRequestLogMiddleware(logger: MomoLogger) {
   return createMiddleware<HonoEnv>(async (c, next) => {
     await next()
 
-    if (env.APP_ENV === 'test') {
+    const durationMs = Math.round((performance.now() - c.var.startedAt) * 100) / 100
+    const pathname = new URL(c.req.url).pathname
+    const payload = {
+      durationMs,
+      event: 'http.request.completed',
+      method: c.req.method,
+      path: pathname,
+      requestId: c.var.requestId,
+      status: c.res.status,
+    }
+
+    if (c.res.status >= 500) {
+      logger.error(payload, '请求返回 500')
       return
     }
 
-    const elapsed = Date.now() - c.var.startedAt
-    const pathname = new URL(c.req.url).pathname
+    if (c.res.status >= 400) {
+      logger.warn(payload, '请求返回 4xx')
+      return
+    }
 
-    console.warn(`${c.req.method} ${pathname} ${c.res.status} ${elapsed}ms requestId=${c.var.requestId}`)
+    logger.info(payload, '请求完成')
   })
 }
 
-export function registerRequestLog(app: Hono<HonoEnv>, env: MomoEnv): void {
-  app.use('*', createRequestLogMiddleware(env))
+export function registerRequestLog(app: Hono<HonoEnv>, logger: MomoLogger): void {
+  app.use('*', createRequestLogMiddleware(logger))
 }

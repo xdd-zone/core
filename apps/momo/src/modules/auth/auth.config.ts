@@ -1,9 +1,12 @@
 import { getDb } from '#momo/infra/db/client'
+import { createBetterAuthLogger, createLogger } from '#momo/infra/logger'
 import { getMomoEnv } from '#momo/shared/env'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 
 const env = getMomoEnv()
+const logger = createLogger(env)
+const authLogger = logger.child({ module: 'auth' })
 
 export const auth = betterAuth({
   appName: 'XDD Zone',
@@ -16,6 +19,7 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
   },
+  logger: createBetterAuthLogger(env, authLogger),
   secret: env.BETTER_AUTH_SECRET,
   socialProviders: {
     github: {

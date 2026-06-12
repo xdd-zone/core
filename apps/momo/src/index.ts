@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url'
 
 import { createMomoApp, createRuntime } from '#momo/bootstrap'
+import { getNumberProperty, getStringProperty } from '#momo/shared/object-utils'
 import { serve } from '@hono/node-server'
 
 const isEntry = process.argv[1] === fileURLToPath(import.meta.url)
@@ -9,10 +10,62 @@ if (isEntry) {
   const runtime = createRuntime()
   const app = createMomoApp(runtime)
 
-  serve({
-    fetch: app.fetch,
-    port: runtime.env.PORT,
+  const server = serve(
+    {
+      fetch: app.fetch,
+      port: runtime.env.PORT,
+    },
+    () => {
+      runtime.logger.info(
+        {
+          event: 'server.started',
+          port: runtime.env.PORT,
+          url: `http://localhost:${runtime.env.PORT}`,
+        },
+        'Momo Hono 服务已启动',
+      )
+    },
+  )
+
+  server.on('error', (error) => {
+    const code = error instanceof Error ? getStringProperty(error, 'code') : undefined
+    const isPortInUse = code === 'EADDRINUSE'
+
+    runtime.logger.error(
+      {
+        address: getStringProperty(error, 'address'),
+        code,
+        event: 'server.start_failed',
+        message: error instanceof Error ? error.message : String(error),
+        port: getNumberProperty(error, 'port') ?? runtime.env.PORT,
+      },
+      isPortInUse ? `Momo Hono 服务启动失败: ${runtime.env.PORT} 端口已被占用` : 'Momo Hono 服务启动失败',
+    )
+
+    runtime.logger.flush()
+    setTimeout(() => {
+      process.exit(1)
+    }, 50)
   })
 
-  console.warn(`Momo Hono 服务已启动: http://localhost:${runtime.env.PORT}`)
+  const shutdown = () => {
+    runtime.logger.info({ event: 'server.shutting_down' }, 'Momo Hono 服务正在关闭...')
+    server.close((err) => {
+      if (err) {
+        runtime.logger.error(
+          {
+            event: 'server.shutdown_failed',
+            message: err instanceof Error ? err.message : String(err),
+          },
+          'Momo Hono 服务关闭异常',
+        )
+        process.exit(1)
+      }
+      runtime.logger.info({ event: 'server.shutdown_complete' }, 'Momo Hono 服务已完全关闭')
+      process.exit(0)
+    })
+  }
+
+  process.on('SIGINT', shutdown)
+  process.on('SIGTERM', shutdown)
 }
