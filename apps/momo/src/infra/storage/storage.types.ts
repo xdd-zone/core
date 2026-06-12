@@ -15,12 +15,22 @@ export interface StorageOpenFileOptions {
   size: number
 }
 
+/** 存储文件状态 */
+export interface StorageFileStat {
+  storagePath: string
+  size: number
+  mimeType?: string
+  lastModified?: Date
+}
+
 /** 存储驱动统一接口 */
 export interface StorageDriver {
   /** 保存文件，返回存储路径和文件名 */
   save: (file: File) => Promise<StorageSaveResult>
-  /** 读取文件，返回 Response（本地返回 200 + body，COS 返回 302 重定向） */
+  /** 打开文件，返回 Response。本地返回 200 和文件内容，COS 返回 302 跳转 */
   openFile: (storagePath: string, options: StorageOpenFileOptions) => Promise<Response>
   /** 删除文件 */
   remove: (storagePath: string) => Promise<void>
+  /** 读取文件状态 */
+  stat: (storagePath: string) => Promise<StorageFileStat>
 }

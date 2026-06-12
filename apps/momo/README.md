@@ -66,7 +66,7 @@ pnpm storage:test
 
 日志级别用 `LOG_LEVEL` 控制，开发环境默认 `info`。请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`。2xx 和 3xx 响应耗时达到 1000ms 时会用 warn 记录。开发环境的未处理异常会记录 stack，生产和测试环境不会记录 stack。需要看 SQL 时，把 `LOG_SQL` 设成 `true`，日志只会打印 SQL 和参数数量，不打印参数原值。
 
-文件存储用 `STORAGE_PROVIDER` 控制。默认值是 `local`，文件写到 `LOCAL_STORAGE_DIR`，未设置时使用 `storage/media`。设成 `cos` 时，需要配置 `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION`。验证当前存储配置时，运行 `pnpm storage:test`。
+文件存储用 `STORAGE_PROVIDER` 控制。默认值是 `local`，文件写到 `LOCAL_STORAGE_DIR`，未设置时使用 `storage/media`。设成 `cos` 时，需要配置 `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION`。`save()` 只保存图片，允许 `image/avif`、`image/gif`、`image/jpeg`、`image/png` 和 `image/webp`，单个文件最大 `10 MiB`。本地 `openFile()` 返回文件内容，COS `openFile()` 返回 `302` 跳转。`stat()` 可以读取文件大小、MIME 和修改时间。验证当前存储配置时，运行 `pnpm storage:test`。
 
 ## 运行方式
 

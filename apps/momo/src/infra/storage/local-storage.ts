@@ -1,13 +1,15 @@
-import type { StorageDriver, StorageOpenFileOptions, StorageSaveResult } from './storage.types'
-import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import type { StorageDriver, StorageFileStat, StorageOpenFileOptions, StorageSaveResult } from './storage.types'
+import { access, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { join, relative, resolve } from 'node:path'
 import { AppError } from '#momo/shared/app-error'
 import { BizCode } from '@xdd-zone/contracts'
 
-import { createMediaFileName } from './media-file'
+import { createMediaFileName, validateMediaFile } from './media-file'
+import { validateStoragePath } from './storage-path'
 
 /** 防止路径遍历：resolve 后必须仍在 rootDir 内 */
 function resolveAndValidatePath(rootDir: string, storagePath: string): string {
+  validateStoragePath(storagePath)
   const resolvedPath = resolve(rootDir, storagePath)
   const relativePath = relative(rootDir, resolvedPath)
 
@@ -23,6 +25,7 @@ export class LocalStorage implements StorageDriver {
   constructor(private readonly rootDir: string) {}
 
   async save(file: File): Promise<StorageSaveResult> {
+    validateMediaFile(file)
     await mkdir(this.rootDir, { recursive: true })
     const fileName = createMediaFileName(file)
     const filePath = join(this.rootDir, fileName)
@@ -53,5 +56,20 @@ export class LocalStorage implements StorageDriver {
   async remove(storagePath: string): Promise<void> {
     const filePath = resolveAndValidatePath(this.rootDir, storagePath)
     await rm(filePath, { force: true })
+  }
+
+  async stat(storagePath: string): Promise<StorageFileStat> {
+    const filePath = resolveAndValidatePath(this.rootDir, storagePath)
+
+    try {
+      const fileStat = await stat(filePath)
+      return {
+        storagePath,
+        size: fileStat.size,
+        lastModified: fileStat.mtime,
+      }
+    } catch {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '文件不存在', 404)
+    }
   }
 }

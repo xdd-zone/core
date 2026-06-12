@@ -1,4 +1,9 @@
-import { createMediaFileName, isAllowedMediaMimeType } from '#momo/infra/storage/media-file'
+import {
+  createMediaFileName,
+  isAllowedMediaMimeType,
+  MAX_MEDIA_FILE_SIZE_BYTES,
+  validateMediaFile,
+} from '#momo/infra/storage/media-file'
 import { describe, expect, it } from 'vitest'
 
 describe('isAllowedMediaMimeType', () => {
@@ -32,5 +37,25 @@ describe('createMediaFileName', () => {
     const name2 = createMediaFileName(file)
 
     expect(name1).not.toBe(name2)
+  })
+})
+
+describe('validateMediaFile', () => {
+  it('允许白名单 MIME 类型和未超限文件', () => {
+    const file = new File([Buffer.from('x')], 'photo.png', { type: 'image/png' })
+
+    expect(() => validateMediaFile(file)).not.toThrow()
+  })
+
+  it('拒绝非白名单 MIME 类型', () => {
+    const file = new File([Buffer.from('x')], 'document.pdf', { type: 'application/pdf' })
+
+    expect(() => validateMediaFile(file)).toThrow('不支持的文件类型')
+  })
+
+  it('拒绝超过 10 MiB 的文件', () => {
+    const file = new File([new Uint8Array(MAX_MEDIA_FILE_SIZE_BYTES + 1)], 'large.png', { type: 'image/png' })
+
+    expect(() => validateMediaFile(file)).toThrow('文件大小不能超过 10 MiB')
   })
 })

@@ -2,6 +2,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { LocalStorage } from '#momo/infra/storage/local-storage'
+import { MAX_MEDIA_FILE_SIZE_BYTES } from '#momo/infra/storage/media-file'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 function createTestFile(name: string, content: string, type: string): File {
@@ -44,6 +45,18 @@ describe('local storage', () => {
       const written = await readFile(join(nestedDir, result.storagePath), 'utf-8')
       expect(written).toBe('jpg-data')
     })
+
+    it('拒绝非法 MIME 类型', async () => {
+      const file = createTestFile('document.pdf', 'pdf-data', 'application/pdf')
+
+      await expect(storage.save(file)).rejects.toThrow('不支持的文件类型')
+    })
+
+    it('拒绝超过 10 MiB 的文件', async () => {
+      const file = new File([new Uint8Array(MAX_MEDIA_FILE_SIZE_BYTES + 1)], 'large.png', { type: 'image/png' })
+
+      await expect(storage.save(file)).rejects.toThrow('文件大小不能超过 10 MiB')
+    })
   })
 
   describe('openFile', () => {
@@ -84,6 +97,16 @@ describe('local storage', () => {
         }),
       ).rejects.toThrow('文件不存在')
     })
+
+    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])('非法路径 %s 时抛错', async (storagePath) => {
+      await expect(
+        storage.openFile(storagePath, {
+          originalName: 'file.png',
+          mimeType: 'image/png',
+          size: 0,
+        }),
+      ).rejects.toThrow('文件不存在')
+    })
   })
 
   describe('remove', () => {
@@ -104,6 +127,32 @@ describe('local storage', () => {
 
     it('删除不存在的文件不报错', async () => {
       await expect(storage.remove('nonexistent-file.png')).resolves.not.toThrow()
+    })
+
+    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])('非法路径 %s 时抛错', async (storagePath) => {
+      await expect(storage.remove(storagePath)).rejects.toThrow('文件不存在')
+    })
+  })
+
+  describe('stat', () => {
+    it('返回文件状态', async () => {
+      const file = createTestFile('hello.png', 'hello-content', 'image/png')
+      const { storagePath } = await storage.save(file)
+
+      const result = await storage.stat(storagePath)
+
+      expect(result.storagePath).toBe(storagePath)
+      expect(result.size).toBe(13)
+      expect(result.mimeType).toBeUndefined()
+      expect(result.lastModified).toBeInstanceOf(Date)
+    })
+
+    it('文件不存在时抛错', async () => {
+      await expect(storage.stat('nonexistent.png')).rejects.toThrow('文件不存在')
+    })
+
+    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])('非法路径 %s 时抛错', async (storagePath) => {
+      await expect(storage.stat(storagePath)).rejects.toThrow('文件不存在')
     })
   })
 })

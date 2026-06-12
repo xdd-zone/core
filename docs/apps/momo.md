@@ -199,6 +199,8 @@ OWNER_DISPLAY_NAME
 
 `STORAGE_PROVIDER` 控制文件存储驱动。默认值是 `local`，使用 `LOCAL_STORAGE_DIR`，未设置时写到 `storage/media`。设成 `cos` 时，`COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION` 必须配置。`COS_KEY_PREFIX` 默认是 `media`，`COS_SIGNED_URL_EXPIRES` 默认是 `600` 秒。
 
+文件存储驱动只保存图片。`save()` 允许 `image/avif`、`image/gif`、`image/jpeg`、`image/png` 和 `image/webp`，单个文件最大 `10 MiB`。`openFile()` 在本地存储时返回 `200` 和文件内容，在 COS 存储时返回 `302` 跳转地址。`stat()` 可以读取文件大小、MIME 和修改时间。
+
 请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`。
 
 ## 启动组装
@@ -728,7 +730,7 @@ apps/momo/src/infra/cache
 apps/momo/src/infra/storage
 ```
 
-如果后续接对象存储，上传、下载和删除文件的 client 放在这里。
+本地存储和 COS 存储都在这里。存储路径会拒绝空路径、绝对路径、反斜杠和 `..` 路径段。当前还没有媒体上传 HTTP 接口，也没有 `modules/media`。
 
 ## 共用代码
 
