@@ -103,7 +103,7 @@ docs/
 
 ## 其他文档
 
-- [testing.md](./testing.md)：当前可跑的检查命令。
+- [testing.md](./testing.md)：测试目录设计、编写规则和检查命令。
 - [packages.md](./packages.md)：共享包目录、包边界和检查命令。
 - [apps/momo.md](./apps/momo.md)：Momo 后端目录和新增接口规则。
 - [apps/bobo.md](./apps/bobo.md)：Bobo 个人站点目录、命令和维护规则。

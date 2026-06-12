@@ -5,7 +5,7 @@ import app from '#momo/app'
 import { BizCode } from '@xdd-zone/contracts'
 import { describe, expect, it } from 'vitest'
 
-const systemRoutePath = fileURLToPath(new URL('../modules/system/system.route.ts', import.meta.url))
+const systemRoutePath = fileURLToPath(new URL('../../../modules/system/system.route.ts', import.meta.url))
 
 describe('system routes', () => {
   it('uses zod validator middleware for ping request validation', async () => {
