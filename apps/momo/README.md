@@ -63,6 +63,8 @@ pnpm seed:owner
 - `apps/momo/.env.development`
   本机开发使用。这个文件被 `.gitignore` 忽略，不提交到仓库。
 
+日志级别用 `LOG_LEVEL` 控制，开发环境默认 `info`。需要看 SQL 时，把 `LOG_SQL` 设成 `true`，日志只会打印参数数量，不打印参数原值。
+
 ## 运行方式
 
 开发模式：

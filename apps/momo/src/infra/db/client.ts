@@ -30,9 +30,9 @@ export function getDb(): DbClient {
       },
       // 驱动层调试日志：包含连接 ID 等底层信息
       debug:
-        env.APP_ENV === 'development'
+        env.APP_ENV === 'development' && env.LOG_SQL
           ? (connection, query, params) => {
-              pgLogger.debug({ connection, params }, query)
+              pgLogger.debug({ connection, paramsCount: params.length }, query)
             }
           : false,
     })

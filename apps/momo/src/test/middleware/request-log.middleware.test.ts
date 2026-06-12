@@ -11,7 +11,7 @@ function createMockLogger() {
   } as unknown as MomoLogger
 }
 
-function createApp(logger: MomoLogger, status: 200 | 404 | 500) {
+function createApp(logger: MomoLogger, status: 200 | 400 | 401 | 403 | 404 | 500) {
   const app = new Hono()
 
   app.use('*', requestContextMiddleware)
@@ -42,13 +42,24 @@ describe('request log middleware', () => {
     )
   })
 
-  it('uses warn level for client errors', async () => {
+  it.each([401, 403, 404] as const)('uses info level for expected %i response', async (status) => {
     const logger = createMockLogger()
-    const app = createApp(logger, 404)
+    const app = createApp(logger, status)
 
     await app.request('/demo')
 
-    expect(logger.warn).toHaveBeenCalledWith(expect.any(Object), '请求返回 4xx')
+    expect(logger.info).toHaveBeenCalledWith(expect.any(Object), '请求未通过')
+    expect(logger.warn).not.toHaveBeenCalled()
+    expect(logger.error).not.toHaveBeenCalled()
+  })
+
+  it('uses warn level for unexpected client errors', async () => {
+    const logger = createMockLogger()
+    const app = createApp(logger, 400)
+
+    await app.request('/demo')
+
+    expect(logger.warn).toHaveBeenCalledWith(expect.any(Object), '请求参数错误')
     expect(logger.info).not.toHaveBeenCalled()
     expect(logger.error).not.toHaveBeenCalled()
   })
@@ -59,7 +70,7 @@ describe('request log middleware', () => {
 
     await app.request('/demo')
 
-    expect(logger.error).toHaveBeenCalledWith(expect.any(Object), '请求返回 500')
+    expect(logger.error).toHaveBeenCalledWith(expect.any(Object), '请求返回 5xx')
     expect(logger.info).not.toHaveBeenCalled()
     expect(logger.warn).not.toHaveBeenCalled()
   })

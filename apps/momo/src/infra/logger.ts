@@ -23,7 +23,7 @@ export function createLogger(env: MomoEnv): Logger {
   if (env.APP_ENV === 'development') {
     return pino({
       base,
-      level: 'debug',
+      level: env.LOG_LEVEL,
       transport: {
         target: 'pino-pretty',
         options: {
@@ -38,7 +38,7 @@ export function createLogger(env: MomoEnv): Logger {
 
   return pino({
     base,
-    level: 'info',
+    level: env.LOG_LEVEL,
   })
 }
 

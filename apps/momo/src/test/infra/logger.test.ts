@@ -12,6 +12,8 @@ const baseEnv: MomoEnv = {
   GITHUB_CLIENT_SECRET: 'test-github-client-secret',
   GOOGLE_CLIENT_ID: 'test-google-client-id',
   GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
+  LOG_LEVEL: 'silent',
+  LOG_SQL: false,
   PORT: 7788,
 }
 
@@ -27,6 +29,7 @@ describe('momo logger', () => {
     const logger = createLogger({
       ...baseEnv,
       APP_ENV: 'production',
+      LOG_LEVEL: 'info',
     })
     const child = createChildLogger(logger, 'http')
 
@@ -47,6 +50,7 @@ describe('momo logger', () => {
       {
         ...baseEnv,
         APP_ENV: 'development',
+        LOG_LEVEL: 'info',
       },
       logger,
     )
@@ -66,5 +70,27 @@ describe('momo logger', () => {
       },
       'Better Auth: INTERNAL_SERVER_ERROR',
     )
+  })
+
+  it('uses info as default development log level', () => {
+    const env = {
+      ...baseEnv,
+      APP_ENV: 'development',
+      LOG_LEVEL: 'info',
+    } as const
+    const logger = createLogger(env)
+
+    expect(logger.level).toBe('info')
+  })
+
+  it('uses configured development log level', () => {
+    const env = {
+      ...baseEnv,
+      APP_ENV: 'development',
+      LOG_LEVEL: 'debug',
+    } as const
+    const logger = createLogger(env)
+
+    expect(logger.level).toBe('debug')
   })
 })

@@ -150,6 +150,8 @@ apps/momo/src/shared/env.ts
 ```text
 APP_ENV
 PORT
+LOG_LEVEL
+LOG_SQL
 CORS_ORIGINS
 DATABASE_URL
 BETTER_AUTH_SECRET
@@ -169,6 +171,10 @@ OWNER_DISPLAY_NAME
 ```
 
 `pnpm dev`、`pnpm auth:generate` 和 `pnpm seed:owner` 会读取 `apps/momo/.env.development`。
+
+`LOG_LEVEL` 控制 Pino 日志级别。未配置时，开发和生产使用 `info`，测试使用 `silent`。
+
+`LOG_SQL` 只在开发环境生效。设成 `true` 时会打印 SQL 和 `paramsCount`，不会打印参数原值。
 
 ## 启动组装
 
@@ -627,7 +633,7 @@ apps/momo/src/infra/db
 apps/momo/src/infra/logger.ts
 ```
 
-这里创建 Pino logger。`createRuntime()` 调用它，把 logger 放进 `runtime`，请求日志和未处理异常日志都从 `runtime.logger` 写出。Better Auth 的日志也走这里，错误只记录名称、消息和 code，不打印 stack 和请求参数。
+这里创建 Pino logger。`createRuntime()` 调用它，把 logger 放进 `runtime`，请求日志和未处理异常日志都从 `runtime.logger` 写出。开发环境默认使用 `info`，需要 SQL 日志时把 `LOG_SQL` 设成 `true`。Better Auth 的日志也走这里，错误只记录名称、消息和 code，不打印 stack 和请求参数。
 
 业务模块不能在 route 里直接创建数据库连接。需要读写数据库时，先写 repository，再由 service 调用 repository。
 

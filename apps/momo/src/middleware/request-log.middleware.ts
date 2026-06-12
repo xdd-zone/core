@@ -18,13 +18,20 @@ export function createRequestLogMiddleware(logger: MomoLogger) {
       status: c.res.status,
     }
 
-    if (c.res.status >= 500) {
-      logger.error(payload, '请求返回 500')
+    const status = c.res.status
+
+    if (status >= 500) {
+      logger.error(payload, '请求返回 5xx')
       return
     }
 
-    if (c.res.status >= 400) {
-      logger.warn(payload, '请求返回 4xx')
+    if (status === 401 || status === 403 || status === 404) {
+      logger.info(payload, '请求未通过')
+      return
+    }
+
+    if (status >= 400) {
+      logger.warn(payload, '请求参数错误')
       return
     }
 

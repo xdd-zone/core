@@ -23,6 +23,8 @@ function createRuntime(): MomoRuntime {
       GITHUB_CLIENT_SECRET: 'test-github-client-secret',
       GOOGLE_CLIENT_ID: 'test-google-client-id',
       GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
+      LOG_LEVEL: 'silent',
+      LOG_SQL: false,
       PORT: 7788,
     },
     logger: mockLogger as unknown as Logger,
