@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url'
 
 import { createMomoApp, createRuntime } from '#momo/bootstrap'
+import { closeDb } from '#momo/infra/db/client'
 import { getNumberProperty, getStringProperty } from '#momo/shared/object-utils'
 import { serve } from '@hono/node-server'
 
@@ -50,7 +51,7 @@ if (isEntry) {
 
   const shutdown = () => {
     runtime.logger.info({ event: 'server.shutting_down' }, 'Momo Hono 服务正在关闭...')
-    server.close((err) => {
+    server.close(async (err) => {
       if (err) {
         runtime.logger.error(
           {
@@ -59,10 +60,19 @@ if (isEntry) {
           },
           'Momo Hono 服务关闭异常',
         )
-        process.exit(1)
+      } else {
+        runtime.logger.info({ event: 'server.http_closed' }, 'HTTP 服务已关闭')
       }
+
+      try {
+        await closeDb()
+        runtime.logger.info({ event: 'server.db_closed' }, '数据库连接已清理')
+      } catch (dbErr) {
+        runtime.logger.error({ event: 'server.db_close_failed', message: String(dbErr) }, '清理数据库连接异常')
+      }
+
       runtime.logger.info({ event: 'server.shutdown_complete' }, 'Momo Hono 服务已完全关闭')
-      process.exit(0)
+      process.exit(err ? 1 : 0)
     })
   }
 
