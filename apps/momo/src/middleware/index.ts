@@ -1,3 +1,7 @@
+export { registerBodyLimit } from './body-limit.middleware'
 export { registerCors } from './cors.middleware'
 export { registerRequestContext, REQUEST_ID_HEADER, requestContextMiddleware } from './request-context.middleware'
 export { createRequestLogMiddleware, registerRequestLog, SLOW_REQUEST_THRESHOLD_MS } from './request-log.middleware'
+export { registerSecureHeaders } from './secure-headers.middleware'
+export { registerTimeout } from './timeout.middleware'
+export { registerTiming } from './timing.middleware'

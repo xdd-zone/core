@@ -2,7 +2,15 @@ import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
 import { configureDbClient } from '#momo/infra/db/client'
 import { createChildLogger, createErrorLogFields } from '#momo/infra/logger'
-import { registerCors, registerRequestContext, registerRequestLog } from '#momo/middleware'
+import {
+  registerBodyLimit,
+  registerCors,
+  registerRequestContext,
+  registerRequestLog,
+  registerSecureHeaders,
+  registerTimeout,
+  registerTiming,
+} from '#momo/middleware'
 import { createRoutes } from '#momo/routes'
 import { AppError } from '#momo/shared/app-error'
 import { createMeta } from '#momo/shared/meta'
@@ -18,8 +26,12 @@ export function createMomoApp(runtime: MomoRuntime) {
   configureDbClient({ env: runtime.env, logger: dbLogger })
 
   registerRequestContext(app)
+  registerSecureHeaders(app, runtime.env)
   registerRequestLog(app, httpLogger)
   registerCors(app, runtime.env)
+  registerBodyLimit(app)
+  registerTiming(app, runtime.env)
+  registerTimeout(app)
 
   app.onError((error, c) => {
     const meta = createMeta(c.var.requestId)
@@ -39,6 +51,19 @@ export function createMomoApp(runtime: MomoRuntime) {
     }
 
     if (error instanceof HTTPException) {
+      if (error.status === 504) {
+        return c.json(
+          buildFailure(
+            {
+              code: BizCode.SYSTEM_UPSTREAM_TIMEOUT,
+              message: error.message,
+            },
+            meta,
+          ),
+          504,
+        )
+      }
+
       return c.json(
         buildFailure(
           {

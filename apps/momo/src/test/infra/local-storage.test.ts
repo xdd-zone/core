@@ -98,15 +98,18 @@ describe('local storage', () => {
       ).rejects.toThrow('文件不存在')
     })
 
-    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])('非法路径 %s 时抛错', async (storagePath) => {
-      await expect(
-        storage.openFile(storagePath, {
-          originalName: 'file.png',
-          mimeType: 'image/png',
-          size: 0,
-        }),
-      ).rejects.toThrow('文件不存在')
-    })
+    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])(
+      '非法路径 %s 时抛错',
+      async (storagePath) => {
+        await expect(
+          storage.openFile(storagePath, {
+            originalName: 'file.png',
+            mimeType: 'image/png',
+            size: 0,
+          }),
+        ).rejects.toThrow('文件不存在')
+      },
+    )
   })
 
   describe('remove', () => {
@@ -129,9 +132,12 @@ describe('local storage', () => {
       await expect(storage.remove('nonexistent-file.png')).resolves.not.toThrow()
     })
 
-    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])('非法路径 %s 时抛错', async (storagePath) => {
-      await expect(storage.remove(storagePath)).rejects.toThrow('文件不存在')
-    })
+    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])(
+      '非法路径 %s 时抛错',
+      async (storagePath) => {
+        await expect(storage.remove(storagePath)).rejects.toThrow('文件不存在')
+      },
+    )
   })
 
   describe('stat', () => {
@@ -151,8 +157,11 @@ describe('local storage', () => {
       await expect(storage.stat('nonexistent.png')).rejects.toThrow('文件不存在')
     })
 
-    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])('非法路径 %s 时抛错', async (storagePath) => {
-      await expect(storage.stat(storagePath)).rejects.toThrow('文件不存在')
-    })
+    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])(
+      '非法路径 %s 时抛错',
+      async (storagePath) => {
+        await expect(storage.stat(storagePath)).rejects.toThrow('文件不存在')
+      },
+    )
   })
 })

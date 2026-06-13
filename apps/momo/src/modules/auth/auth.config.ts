@@ -19,6 +19,22 @@ export function createMomoAuth(runtime: Pick<MomoRuntime, 'env' | 'logger'>) {
       minPasswordLength: 8,
     },
     logger: createBetterAuthLogger(runtime.env, authLogger),
+    rateLimit: {
+      enabled: runtime.env.APP_ENV !== 'test',
+      max: 100,
+      storage: 'database',
+      window: 10,
+      customRules: {
+        '/api/auth/sign-in/email': {
+          max: 5,
+          window: 60,
+        },
+        '/api/auth/sign-up/email': {
+          max: 3,
+          window: 60,
+        },
+      },
+    },
     secret: runtime.env.BETTER_AUTH_SECRET,
     socialProviders: {
       github: {

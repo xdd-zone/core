@@ -60,10 +60,12 @@ export class CosStorage implements StorageDriver {
     private readonly config: CosStorageConfig,
     client?: CosStorageClient,
   ) {
-    this.client = client ?? new COS({
-      SecretId: config.secretId,
-      SecretKey: config.secretKey,
-    })
+    this.client =
+      client ??
+      new COS({
+        SecretId: config.secretId,
+        SecretKey: config.secretKey,
+      })
   }
 
   async save(file: File): Promise<StorageSaveResult> {

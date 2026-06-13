@@ -72,6 +72,7 @@ apps/momo/src/
 │   ├── auth/
 │   │   ├── access.repository.ts
 │   │   ├── auth.config.ts
+│   │   ├── auth.generate.ts
 │   │   ├── auth.route.ts
 │   │   ├── auth.types.ts
 │   │   ├── index.ts
@@ -81,9 +82,13 @@ apps/momo/src/
 │   │       └── index.ts
 ├── middleware/
 │   ├── index.ts
+│   ├── body-limit.middleware.ts
 │   ├── cors.middleware.ts
 │   ├── request-context.middleware.ts
-│   └── request-log.middleware.ts
+│   ├── request-log.middleware.ts
+│   ├── secure-headers.middleware.ts
+│   ├── timeout.middleware.ts
+│   └── timing.middleware.ts
 ├── infra/
 │   ├── logger.ts
 │   ├── db/
@@ -228,19 +233,23 @@ apps/momo/src/bootstrap
 
 ```text
 registerRequestContext(app)
+registerSecureHeaders(app, runtime.env)
 registerRequestLog(app, httpLogger)
 registerCors(app, runtime.env)
+registerBodyLimit(app)
+registerTiming(app, runtime.env)
+registerTimeout(app)
 app.onError(...)
 app.notFound(...)
 app.route('/', createRoutes(runtime))
 ```
 
-改全局 middleware 顺序时，先确认它是否依赖 `c.var.requestId` 或 `c.var.startedAt`。
+改全局 middleware 顺序时，先确认它是否依赖 `c.var.requestId` 或 `c.var.startedAt`。当前 `requestLog` 放在 `cors`、`bodyLimit`、`timing` 和 `timeout` 前面，所以这些 middleware 直接返回响应时也会记录日志。
 
 `app.onError()` 统一处理：
 
 - `AppError`
-- Hono 的 `HTTPException`
+- Hono 的 `HTTPException`。其中 `504` 会返回 `SYSTEM.UPSTREAM_TIMEOUT`
 - 未识别错误
 
 错误响应里的 meta 使用 `c.var.requestId`。
@@ -398,6 +407,8 @@ apps/momo/src/modules/auth
   挂载 `/api/auth/*`、`/rpc/fifa/auth/me` 和 `/rpc/bobo/auth/me`。
 - `auth.config.ts`
   初始化 `better-auth`，配置邮箱密码、GitHub、Google、session cookie 和 Drizzle adapter。
+- `auth.generate.ts`
+  给 `pnpm --filter @xdd-zone/momo auth:generate` 使用。这里创建 Better Auth 实例，让 CLI 能生成 `auth.schema.ts`。
 - `services/auth.service.ts`
   调用 `better-auth` handler，读取当前 session，并从 `user` 表整理当前用户返回值。
 - `services/access.service.ts`
@@ -429,8 +440,17 @@ apps/momo/src/infra/db/schema/auth.schema.ts
 apps/momo/src/infra/db/schema/access.schema.ts
 ```
 
-`auth.schema.ts` 由 `better-auth generate` 生成，当前包含 `user`、`session`、`account` 和 `verification`。
+`auth.schema.ts` 由 `better-auth generate` 生成，当前包含 `user`、`session`、`account`、`verification` 和 `rateLimit`。`rateLimit` 对应数据库表 `rate_limit`，用于 Better Auth 的 database rate limit。
 `access.schema.ts` 是 Momo 自己维护的访问表，当前包含 `applications`、`application_auth_methods`、`roles` 和 `user_role_bindings`。
+
+Better Auth rate limit 当前配置：
+
+- 测试环境关闭。
+- 开发和生产环境开启。
+- 使用 database storage。
+- `/api/auth/sign-in/email` 在 `60s` 内最多请求 `5` 次。
+- `/api/auth/sign-up/email` 在 `60s` 内最多请求 `3` 次。
+- 其他 `/api/auth/*` 走 Better Auth 默认限制。
 
 owner 初始化脚本放在：
 
@@ -600,6 +620,10 @@ apps/momo/src/middleware
 - 请求开始时间写入。
 - 请求日志。
 - CORS。
+- 安全响应头。
+- 请求体大小限制。
+- 请求超时。
+- 开发环境的 `Server-Timing` 响应头。
 
 只被一个 route 使用一次的中间件，可以先放在对应的 `<module>.route.ts`。
 
@@ -610,7 +634,15 @@ apps/momo/src/middleware
 - `request-log.middleware.ts`
   导出 `createRequestLogMiddleware()` 和 `registerRequestLog()`。这里在 `await next()` 之后通过 `runtime.logger` 记录请求方法、路径、响应状态、耗时和 requestId。2xx 和 3xx 响应耗时达到 1000ms 时用 warn 记录。测试环境使用 silent logger，不打印日志。
 - `cors.middleware.ts`
-  导出 `registerCors()`。这里读取 `runtime.env.CORS_ORIGINS`。
+  导出 `registerCors()`。这里读取 `runtime.env.CORS_ORIGINS`。跨域请求允许 `content-type` 和 `x-request-id` 请求头，并暴露 `x-request-id` 响应头。
+- `secure-headers.middleware.ts`
+  导出 `registerSecureHeaders()`。这里注册 `hono/secure-headers`。生产环境会写 `Strict-Transport-Security`，开发和测试环境不写。
+- `body-limit.middleware.ts`
+  导出 `registerBodyLimit()`。这里限制 `/rpc/*` 的非 GET 请求最大 `1 MiB`，限制 `/api/auth/*` 的非 GET 请求最大 `64 KiB`。超过限制时返回 `413 COMMON.PAYLOAD_TOO_LARGE`。
+- `timeout.middleware.ts`
+  导出 `registerTimeout()`。这里限制 `/rpc/*` 最长 `5s`，限制 `/api/auth/*` 最长 `10s`。超时时返回 `504 SYSTEM.UPSTREAM_TIMEOUT`。
+- `timing.middleware.ts`
+  导出 `registerTiming()`。这里只在开发环境写 `Server-Timing` 响应头。
 - `index.ts`
   只做统一导出，不写注册逻辑。
 

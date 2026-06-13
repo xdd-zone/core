@@ -1,0 +1,40 @@
+import type { HonoEnv } from '#momo/shared/hono-env'
+import type { Hono } from 'hono'
+import { createMeta } from '#momo/shared/meta'
+import { BizCode, buildFailure } from '@xdd-zone/contracts'
+import { bodyLimit } from 'hono/body-limit'
+import { createMiddleware } from 'hono/factory'
+
+const RPC_BODY_LIMIT_BYTES = 1024 * 1024
+const AUTH_BODY_LIMIT_BYTES = 64 * 1024
+
+function createBodyLimitMiddleware(maxSize: number) {
+  const limit = bodyLimit({
+    maxSize,
+    onError: (c) => {
+      return c.json(
+        buildFailure(
+          {
+            code: BizCode.COMMON_PAYLOAD_TOO_LARGE,
+            message: '请求体过大',
+          },
+          createMeta(c.var.requestId),
+        ),
+        413,
+      )
+    },
+  })
+
+  return createMiddleware<HonoEnv>((c, next) => {
+    if (c.req.method === 'GET' || c.req.method === 'HEAD') {
+      return next()
+    }
+
+    return limit(c, next)
+  })
+}
+
+export function registerBodyLimit(app: Hono<HonoEnv>): void {
+  app.use('/rpc/*', createBodyLimitMiddleware(RPC_BODY_LIMIT_BYTES))
+  app.use('/api/auth/*', createBodyLimitMiddleware(AUTH_BODY_LIMIT_BYTES))
+}

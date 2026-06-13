@@ -182,10 +182,13 @@ describe('cos storage', () => {
       await expect(storage.stat('media/file.png')).rejects.toThrow('文件存储访问失败')
     })
 
-    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])('非法路径 %s 时抛错', async (storagePath) => {
-      const storage = new CosStorage(createConfig(), client)
+    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])(
+      '非法路径 %s 时抛错',
+      async (storagePath) => {
+        const storage = new CosStorage(createConfig(), client)
 
-      await expect(storage.stat(storagePath)).rejects.toThrow('文件不存在')
-    })
+        await expect(storage.stat(storagePath)).rejects.toThrow('文件不存在')
+      },
+    )
   })
 })

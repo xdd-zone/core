@@ -60,6 +60,8 @@ Momo 自己写的接口返回统一结构。
 
 `/api/auth/*` 交给 `better-auth` 处理，可能返回 `better-auth` 自己的 JSON、重定向响应或 `set-cookie`。不要按下面的统一结构解析 `/api/auth/*`。
 
+响应头会写回当前请求使用的 `X-Request-Id`。浏览器跨域请求可以发送 `X-Request-Id`，也可以读取响应里的 `X-Request-Id`。
+
 成功：
 
 ```json
@@ -88,6 +90,29 @@ Momo 自己写的接口返回统一结构。
   }
 }
 ```
+
+请求体过大时返回：
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "COMMON.PAYLOAD_TOO_LARGE",
+    "message": "请求体过大"
+  },
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": "2026-06-07T00:00:00.000Z"
+  }
+}
+```
+
+当前请求体大小限制：
+
+- `/rpc/*` 的非 GET 请求最大 `1 MiB`。
+- `/api/auth/*` 的非 GET 请求最大 `64 KiB`。
+
+请求处理超时时，Momo 自己写的接口返回 `504 SYSTEM.UPSTREAM_TIMEOUT`。当前 `/rpc/*` 超时时间是 `5s`，`/api/auth/*` 超时时间是 `10s`。
 
 ## 响应示例
 

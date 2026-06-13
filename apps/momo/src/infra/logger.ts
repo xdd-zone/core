@@ -6,14 +6,7 @@ import pino from 'pino'
 export type MomoLogger = Pick<Logger, 'debug' | 'error' | 'info' | 'warn'>
 type BetterAuthLogLevel = 'debug' | 'error' | 'info' | 'warn'
 
-export const LOGGER_REDACT_PATHS = [
-  'authorization',
-  'cookie',
-  'password',
-  'secret',
-  'token',
-  'clientSecret',
-]
+export const LOGGER_REDACT_PATHS = ['authorization', 'cookie', 'password', 'secret', 'token', 'clientSecret']
 
 export function createLogger(env: MomoEnv): Logger {
   const base = {

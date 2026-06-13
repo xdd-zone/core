@@ -60,7 +60,7 @@
 - `apps/momo/src/modules`
   放接口模块。当前系统接口在 `apps/momo/src/modules/system`，认证接口在 `apps/momo/src/modules/auth`。
 - `apps/momo/src/middleware`
-  放 request context、请求日志和 CORS middleware。
+  放 request context、安全响应头、请求日志、CORS、请求耗时、请求体大小和超时 middleware。
 - `apps/momo/src/infra`
   放 Pino logger、PostgreSQL 连接、Drizzle schema 入口、migration 目录和文件存储驱动。
 - `apps/momo/src/shared`

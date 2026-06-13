@@ -17,7 +17,7 @@
 - `src/modules`
   放接口模块。系统接口在 `src/modules/system`，认证接口在 `src/modules/auth`。
 - `src/middleware`
-  放 request context、请求日志和 CORS middleware。
+  放 request context、安全响应头、请求日志、CORS、请求耗时、请求体大小和超时 middleware。
 - `src/infra`
   放 Pino logger、PostgreSQL 连接、Drizzle schema 入口、migration 目录和文件存储驱动。
 - `src/shared`
@@ -35,7 +35,7 @@
 - `/rpc/bobo/auth/me`
   读取当前 session。未登录时返回 `user: null`，已登录时补上 `bobo.visitor` 角色。
 
-当前有本地文件存储和腾讯云 COS 驱动，代码放在 `src/infra/storage`。当前还没有媒体上传接口和其他业务模块。日志封装放在 `src/infra/logger.ts`，认证表和访问表已经放在 `src/infra/db/schema`，migration 放在 `src/infra/db/migrations`。
+当前有本地文件存储和腾讯云 COS 驱动，代码放在 `src/infra/storage`。当前还没有媒体上传接口和其他业务模块。日志封装放在 `src/infra/logger.ts`，认证表、访问表和 Better Auth rate limit 表已经放在 `src/infra/db/schema`，migration 放在 `src/infra/db/migrations`。
 
 ## 常用命令
 
@@ -64,7 +64,13 @@ pnpm storage:test
 - `apps/momo/.env.development`
   本机开发使用。这个文件被 `.gitignore` 忽略，不提交到仓库。
 
-日志级别用 `LOG_LEVEL` 控制，开发环境默认 `info`。请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`。2xx 和 3xx 响应耗时达到 1000ms 时会用 warn 记录。开发环境的未处理异常会记录 stack，生产和测试环境不会记录 stack。需要看 SQL 时，把 `LOG_SQL` 设成 `true`，日志只会打印 SQL 和参数数量，不打印参数原值。
+日志级别用 `LOG_LEVEL` 控制，开发环境默认 `info`。请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`，跨域请求可以发送和读取这个 header。2xx 和 3xx 响应耗时达到 1000ms 时会用 warn 记录。开发环境会写 `Server-Timing`，生产和测试环境不会写。开发环境的未处理异常会记录 stack，生产和测试环境不会记录 stack。需要看 SQL 时，把 `LOG_SQL` 设成 `true`，日志只会打印 SQL 和参数数量，不打印参数原值。
+
+Momo 会给所有响应写常用安全响应头。`APP_ENV=production` 时会写 `Strict-Transport-Security`，开发和测试环境不会写。
+
+`/rpc/*` 的非 GET 请求体最大 `1 MiB`，超过后返回 `413 COMMON.PAYLOAD_TOO_LARGE`。`/api/auth/*` 的非 GET 请求体最大 `64 KiB`。`/rpc/*` 请求超时是 `5s`，`/api/auth/*` 请求超时是 `10s`，超时后返回 `504 SYSTEM.UPSTREAM_TIMEOUT`。
+
+Better Auth rate limit 在测试环境关闭，开发和生产环境开启。`/api/auth/sign-in/email` 在 `60s` 内最多 `5` 次，`/api/auth/sign-up/email` 在 `60s` 内最多 `3` 次，计数写入数据库表 `rate_limit`。
 
 文件存储用 `STORAGE_PROVIDER` 控制。默认值是 `local`，文件写到 `LOCAL_STORAGE_DIR`，未设置时使用 `storage/media`。设成 `cos` 时，需要配置 `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION`。`save()` 只保存图片，允许 `image/avif`、`image/gif`、`image/jpeg`、`image/png` 和 `image/webp`，单个文件最大 `10 MiB`。本地 `openFile()` 返回文件内容，COS `openFile()` 返回 `302` 跳转。`stat()` 可以读取文件大小、MIME 和修改时间。验证当前存储配置时，运行 `pnpm storage:test`。
 

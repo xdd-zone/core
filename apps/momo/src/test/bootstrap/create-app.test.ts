@@ -2,6 +2,7 @@ import type { MomoRuntime } from '#momo/bootstrap'
 import type { StorageDriver } from '#momo/infra/storage'
 import type { Logger } from 'pino'
 import { createMomoApp } from '#momo/bootstrap'
+import { BizCode } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -104,5 +105,43 @@ describe('create momo app', () => {
       }),
       '请求处理失败',
     )
+  })
+
+  it('adds HSTS in production', async () => {
+    const runtime = createRuntime('production')
+    const app = createMomoApp(runtime)
+    const response = await app.request('/health')
+
+    expect(response.headers.get('strict-transport-security')).toBe('max-age=15552000; includeSubDomains')
+  })
+
+  it('returns upstream timeout response for timed out rpc requests', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const runtime = createRuntime()
+      const app = createMomoApp(runtime)
+
+      app.route(
+        '/',
+        new Hono().get('/rpc/slow', async () => {
+          await new Promise(() => undefined)
+          return new Response('never')
+        }),
+      )
+
+      const responsePromise = app.request('/rpc/slow')
+      await vi.advanceTimersByTimeAsync(5000)
+
+      const response = await responsePromise
+      const body = (await response.json()) as { ok: false; error: { code: string; message: string } }
+
+      expect(response.status).toBe(504)
+      expect(body.ok).toBe(false)
+      expect(body.error.code).toBe(BizCode.SYSTEM_UPSTREAM_TIMEOUT)
+      expect(body.error.message).toBe('请求处理超时')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
