@@ -886,9 +886,8 @@ apps/momo/src/test
 按业务模块命名：
 
 ```text
-apps/momo/src/test/system.test.ts
-apps/momo/src/test/auth.test.ts
-apps/momo/src/test/user.test.ts
+apps/momo/src/test/modules/system/system.route.test.ts
+apps/momo/src/test/modules/auth/auth.route.test.ts
 ```
 
 接口测试继续使用 `app.request()`。
@@ -901,6 +900,14 @@ expect(response.status).toBe(200)
 ```
 
 这样测试不需要启动真实端口。
+
+认证接口测试使用独立数据库：
+
+```text
+postgres://momo:momo@localhost:55432/momo_test
+```
+
+先运行 `pnpm --filter @xdd-zone/momo db:up`。测试会自动创建 `momo_test`，执行当前 migration，并清理这个测试库里的表。
 
 ## 运行和检查
 

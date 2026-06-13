@@ -57,6 +57,8 @@ pnpm seed:owner
 pnpm storage:test
 ```
 
+`pnpm test` 会连接 `postgres://momo:momo@localhost:55432/momo_test`。第一次跑认证接口测试前，先运行 `pnpm db:up`。测试会自动创建 `momo_test`，并只清理这个测试库里的表。
+
 ## 环境变量
 
 - `apps/momo/.env.example`

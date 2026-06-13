@@ -50,7 +50,7 @@
     "lint:fix": "eslint --no-error-on-unmatched-pattern . --fix",
     "format": "prettier --config prettier.config.js --write .",
     "format:check": "prettier --config prettier.config.js --check .",
-    "test": "APP_ENV=test PORT=7788 CORS_ORIGINS=http://localhost:2333,http://127.0.0.1:2333 DATABASE_URL=postgres://momo:momo@localhost:55432/momo BETTER_AUTH_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx BETTER_AUTH_URL=http://localhost:7788 GITHUB_CLIENT_ID=test-github-client-id GITHUB_CLIENT_SECRET=test-github-client-secret GOOGLE_CLIENT_ID=test-google-client-id GOOGLE_CLIENT_SECRET=test-google-client-secret vitest run --passWithNoTests",
+    "test": "APP_ENV=test PORT=7788 CORS_ORIGINS=http://localhost:2333,http://127.0.0.1:2333 DATABASE_URL=postgres://momo:momo@localhost:55432/momo_test BETTER_AUTH_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx BETTER_AUTH_URL=http://localhost:7788 GITHUB_CLIENT_ID=test-github-client-id GITHUB_CLIENT_SECRET=test-github-client-secret GOOGLE_CLIENT_ID=test-google-client-id GOOGLE_CLIENT_SECRET=test-google-client-secret vitest run --passWithNoTests",
     "type-check": "tsc --noEmit",
     "auth:generate": "set -a; . ./.env.development; set +a; better-auth generate --config src/modules/auth/auth.generate.ts --output src/infra/db/schema/auth.schema.ts --yes && eslint --fix src/infra/db/schema/auth.schema.ts",
     "seed:owner": "tsx --env-file=.env.development --conditions=development src/scripts/seed-owner.ts",

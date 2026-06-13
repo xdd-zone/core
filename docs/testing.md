@@ -14,6 +14,8 @@
 apps/momo/src/test/
 ├── bootstrap/                  # 对应 src/bootstrap
 │   └── create-app.test.ts
+├── helpers/                    # 多个测试共用的工具
+│   └── auth-test-db.ts
 ├── infra/                      # 对应 src/infra
 │   ├── local-storage.test.ts
 │   ├── logger.test.ts
@@ -21,6 +23,8 @@ apps/momo/src/test/
 ├── middleware/                  # 对应 src/middleware
 │   └── request-log.middleware.test.ts
 ├── modules/                    # 对应 src/modules
+│   ├── auth/
+│   │   └── auth.route.test.ts
 │   └── system/
 │       └── system.route.test.ts
 └── shared/                     # 对应 src/shared
@@ -96,6 +100,7 @@ expect(mockLogger.info).toHaveBeenCalled()
 - `it` 描述用中文或英文都行，和当前文件已有风格保持一致。
 - mock 只 mock 外部依赖（数据库、日志），不 mock 被测模块内部逻辑。
 - 测试之间不共享可变状态。
+- Momo 认证接口测试使用 `momo_test` 数据库。先运行 `pnpm --filter @xdd-zone/momo db:up`，测试会自动创建 `momo_test`、执行 migration，并清理这个测试库里的表。
 
 ## 检查命令
 
