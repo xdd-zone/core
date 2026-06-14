@@ -9,4 +9,3 @@ export function serializeCacheValue(value: unknown): string | undefined {
 export function parseCacheValue<T>(value: string): T {
   return JSON.parse(value) as T
 }
-

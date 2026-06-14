@@ -77,4 +77,3 @@ export class MemoryCache implements CacheDriver {
     return `${this.config.keyPrefix}:${key}`
   }
 }
-
