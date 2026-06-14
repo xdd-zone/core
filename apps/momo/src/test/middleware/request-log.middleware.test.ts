@@ -27,12 +27,12 @@ function createApp(logger: MomoLogger, status: 200 | 301 | 400 | 401 | 403 | 404
   return app
 }
 
-describe('request log middleware', () => {
+describe('request log 中间件', () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
-  it('logs completed request fields', async () => {
+  it('completed 请求字段会被记录', async () => {
     const logger = createMockLogger()
     const app = createApp(logger, 200)
 
@@ -52,7 +52,7 @@ describe('request log middleware', () => {
     )
   })
 
-  it.each([401, 403, 404] as const)('uses info level for expected %i response', async (status) => {
+  it.each([401, 403, 404] as const)('expected %i 响应使用 info 级别', async (status) => {
     const logger = createMockLogger()
     const app = createApp(logger, status)
 
@@ -63,7 +63,7 @@ describe('request log middleware', () => {
     expect(logger.error).not.toHaveBeenCalled()
   })
 
-  it.each([200, 301] as const)('uses warn level for slow %i response', async (status) => {
+  it.each([200, 301] as const)('slow %i 响应使用 warn 级别', async (status) => {
     const logger = createMockLogger()
     const now = vi.spyOn(performance, 'now').mockReturnValue(1000)
     const app = createApp(logger, status, 0)
@@ -76,7 +76,7 @@ describe('request log middleware', () => {
     expect(logger.error).not.toHaveBeenCalled()
   })
 
-  it('uses warn level for unexpected client errors', async () => {
+  it('unexpected 客户端错误使用 warn 级别', async () => {
     const logger = createMockLogger()
     const app = createApp(logger, 400)
 
@@ -87,7 +87,7 @@ describe('request log middleware', () => {
     expect(logger.error).not.toHaveBeenCalled()
   })
 
-  it('uses error level for server errors', async () => {
+  it('server 错误使用 error 级别', async () => {
     const logger = createMockLogger()
     const app = createApp(logger, 500)
 

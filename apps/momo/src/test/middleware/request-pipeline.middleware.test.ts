@@ -4,8 +4,8 @@ import { REQUEST_ID_HEADER } from '#momo/middleware'
 import { BizCode } from '@xdd-zone/contracts'
 import { describe, expect, it } from 'vitest'
 
-describe('request pipeline middleware', () => {
-  it('allows x-request-id in CORS preflight requests', async () => {
+describe('request pipeline 中间件', () => {
+  it('cors 预检请求允许 x-request-id', async () => {
     const response = await app.request('/rpc/system/ping', {
       headers: {
         'access-control-request-headers': 'content-type,x-request-id',
@@ -18,7 +18,7 @@ describe('request pipeline middleware', () => {
     expect(response.headers.get('access-control-allow-headers')).toContain('x-request-id')
   })
 
-  it('exposes x-request-id to browser clients', async () => {
+  it('expose x-request-id 给浏览器客户端', async () => {
     const response = await app.request('/health', {
       headers: {
         origin: 'http://localhost:2333',
@@ -30,14 +30,14 @@ describe('request pipeline middleware', () => {
     expect(response.headers.get('access-control-expose-headers')).toContain('x-request-id')
   })
 
-  it('adds security headers without HSTS outside production', async () => {
+  it('non-production 环境添加安全响应头但不添加 HSTS', async () => {
     const response = await app.request('/health')
 
     expect(response.headers.get('x-content-type-options')).toBe('nosniff')
     expect(response.headers.get('strict-transport-security')).toBeNull()
   })
 
-  it('rejects oversized rpc request bodies', async () => {
+  it('rpc 请求体过大时被拒绝', async () => {
     const response = await app.request('/rpc/system/ping', {
       body: 'a'.repeat(1024 * 1024 + 1),
       headers: {

@@ -36,15 +36,15 @@ const baseEnv: MomoEnv = {
   STORAGE_PROVIDER: 'local',
 }
 
-describe('momo logger', () => {
-  it('disables logging in test environment', () => {
+describe('momo 日志', () => {
+  it('test 环境关闭日志输出', () => {
     const logger = createLogger(baseEnv)
 
     expect(logger.level).toBe('silent')
     expect(logger.isLevelEnabled('info')).toBe(false)
   })
 
-  it('creates child logger with module field', () => {
+  it('child logger 带 module 字段', () => {
     const logger = createLogger({
       ...baseEnv,
       APP_ENV: 'production',
@@ -58,7 +58,7 @@ describe('momo logger', () => {
     expect(bindings).toEqual(expect.objectContaining({ module: 'http' }))
   })
 
-  it('routes better auth logs through momo logger', () => {
+  it('better auth 日志走 momo logger', () => {
     const logger = {
       debug: vi.fn(),
       error: vi.fn(),
@@ -91,7 +91,7 @@ describe('momo logger', () => {
     )
   })
 
-  it('uses info as default development log level', () => {
+  it('development 环境默认使用 info 日志级别', () => {
     const env = {
       ...baseEnv,
       APP_ENV: 'development',
@@ -102,7 +102,7 @@ describe('momo logger', () => {
     expect(logger.level).toBe('info')
   })
 
-  it('uses configured development log level', () => {
+  it('development 环境使用配置的日志级别', () => {
     const env = {
       ...baseEnv,
       APP_ENV: 'development',
@@ -113,7 +113,7 @@ describe('momo logger', () => {
     expect(logger.level).toBe('debug')
   })
 
-  it('adds stack to error fields only when requested', () => {
+  it('includeStack 时给错误字段添加 stack', () => {
     const error = new Error('boom')
 
     expect(createErrorLogFields(error)).toEqual(
@@ -132,7 +132,7 @@ describe('momo logger', () => {
     )
   })
 
-  it('defines default redacted log fields', () => {
+  it('default 脱敏日志字段已定义', () => {
     expect(LOGGER_REDACT_PATHS).toEqual(
       expect.arrayContaining(['authorization', 'cookie', 'password', 'secret', 'token', 'clientSecret']),
     )

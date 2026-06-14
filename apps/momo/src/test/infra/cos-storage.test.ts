@@ -35,15 +35,15 @@ function createTestFile(name = 'photo.png', content = 'png-data', type = 'image/
   return new File([Buffer.from(content)], name, { type })
 }
 
-describe('cos storage', () => {
+describe('cos 存储', () => {
   let client: CosStorageClient
 
   beforeEach(() => {
     client = createMockClient()
   })
 
-  describe('save', () => {
-    it('调用 putObject 并返回 storagePath', async () => {
+  describe('save 文件', () => {
+    it('putObject 调用后返回 storagePath', async () => {
       const storage = new CosStorage(createConfig(), client)
       const file = createTestFile()
 
@@ -62,7 +62,7 @@ describe('cos storage', () => {
       )
     })
 
-    it('有公开域名时返回 publicUrl', async () => {
+    it('publicUrl 存在时返回 publicUrl', async () => {
       const storage = new CosStorage(createConfig({ publicBaseUrl: 'https://cdn.example.com/media/' }), client)
 
       const result = await storage.save(createTestFile())
@@ -70,7 +70,7 @@ describe('cos storage', () => {
       expect(result.publicUrl).toBe(`https://cdn.example.com/media/${result.storagePath}`)
     })
 
-    it('拒绝非法 MIME 类型', async () => {
+    it('mime 非法类型被拒绝', async () => {
       const storage = new CosStorage(createConfig(), client)
 
       await expect(storage.save(createTestFile('document.pdf', 'pdf-data', 'application/pdf'))).rejects.toThrow(
@@ -79,7 +79,7 @@ describe('cos storage', () => {
       expect(client.putObject).not.toHaveBeenCalled()
     })
 
-    it('拒绝超过 10 MiB 的文件', async () => {
+    it('size 超过 10 MiB 的文件被拒绝', async () => {
       const storage = new CosStorage(createConfig(), client)
       const file = new File([new Uint8Array(MAX_MEDIA_FILE_SIZE_BYTES + 1)], 'large.png', { type: 'image/png' })
 
@@ -88,8 +88,8 @@ describe('cos storage', () => {
     })
   })
 
-  describe('openFile', () => {
-    it('有公开域名时返回公开地址', async () => {
+  describe('open 文件', () => {
+    it('publicBaseUrl 存在时返回公开地址', async () => {
       const storage = new CosStorage(createConfig({ publicBaseUrl: 'https://cdn.example.com/media/' }), client)
 
       const response = await storage.openFile('media/file.png', {
@@ -103,7 +103,7 @@ describe('cos storage', () => {
       expect(client.getObjectUrl).not.toHaveBeenCalled()
     })
 
-    it('没有公开域名时返回签名地址', async () => {
+    it('publicBaseUrl 不存在时返回签名地址', async () => {
       const storage = new CosStorage(createConfig(), client)
 
       const response = await storage.openFile('media/file.png', {
@@ -126,8 +126,8 @@ describe('cos storage', () => {
     })
   })
 
-  describe('remove', () => {
-    it('调用 deleteObject', async () => {
+  describe('remove 文件', () => {
+    it('deleteObject 会被调用', async () => {
       const storage = new CosStorage(createConfig(), client)
 
       await storage.remove('media/file.png')
@@ -140,8 +140,8 @@ describe('cos storage', () => {
     })
   })
 
-  describe('stat', () => {
-    it('调用 headObject 并返回文件状态', async () => {
+  describe('stat 文件状态', () => {
+    it('headObject 调用后返回文件状态', async () => {
       const storage = new CosStorage(createConfig(), client)
 
       const result = await storage.stat('media/file.png')
@@ -160,7 +160,7 @@ describe('cos storage', () => {
     })
   })
 
-  describe('error handling', () => {
+  describe('error 处理', () => {
     it('cos 404 转成文件不存在', async () => {
       vi.mocked(client.headObject).mockRejectedValue({ statusCode: 404 })
       const storage = new CosStorage(createConfig(), client)
@@ -175,7 +175,7 @@ describe('cos storage', () => {
       await expect(storage.stat('media/file.png')).rejects.toThrow('文件存储权限不足')
     })
 
-    it('其他 COS 错误转成访问失败', async () => {
+    it('other COS 错误转成访问失败', async () => {
       vi.mocked(client.headObject).mockRejectedValue({ statusCode: 500 })
       const storage = new CosStorage(createConfig(), client)
 
@@ -183,7 +183,7 @@ describe('cos storage', () => {
     })
 
     it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])(
-      '非法路径 %s 时抛错',
+      'invalid path %s 时抛错',
       async (storagePath) => {
         const storage = new CosStorage(createConfig(), client)
 

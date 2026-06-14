@@ -60,8 +60,8 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
   }
 }
 
-describe('create momo app', () => {
-  it('creates module loggers from runtime logger', () => {
+describe('momo 应用创建', () => {
+  it('runtime logger 创建模块 logger', () => {
     const runtime = createRuntime()
 
     createMomoApp(runtime)
@@ -71,7 +71,7 @@ describe('create momo app', () => {
     expect(runtime.logger.child).toHaveBeenCalledWith({ module: 'auth' })
   })
 
-  it('logs unhandled errors with request id', async () => {
+  it('request id 未处理错误会被记录', async () => {
     const runtime = createRuntime()
     const app = createMomoApp(runtime)
     const boom = new Error('boom')
@@ -96,7 +96,7 @@ describe('create momo app', () => {
     )
   })
 
-  it('adds stack to unhandled error logs in development', async () => {
+  it('development 环境的未处理错误日志带 stack', async () => {
     const runtime = createRuntime('development')
     const app = createMomoApp(runtime)
     const boom = new Error('boom')
@@ -119,7 +119,7 @@ describe('create momo app', () => {
     )
   })
 
-  it('adds HSTS in production', async () => {
+  it('production 环境添加 HSTS', async () => {
     const runtime = createRuntime('production')
     const app = createMomoApp(runtime)
     const response = await app.request('/health')
@@ -127,7 +127,7 @@ describe('create momo app', () => {
     expect(response.headers.get('strict-transport-security')).toBe('max-age=15552000; includeSubDomains')
   })
 
-  it('returns upstream timeout response for timed out rpc requests', async () => {
+  it('rpc 请求超时时返回上游超时响应', async () => {
     vi.useFakeTimers()
 
     try {

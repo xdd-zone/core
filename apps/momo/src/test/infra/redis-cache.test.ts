@@ -24,14 +24,14 @@ function createCache(client: RedisCacheClient) {
   )
 }
 
-describe('redis cache', () => {
+describe('redis 缓存', () => {
   let client: RedisCacheClient
 
   beforeEach(() => {
     client = createClient()
   })
 
-  it('读取时懒连接 Redis', async () => {
+  it('get 时懒连接 redis', async () => {
     const cache = createCache(client)
 
     await cache.get('user:1')
@@ -40,7 +40,7 @@ describe('redis cache', () => {
     expect(client.get).toHaveBeenCalledWith('momo:user:1')
   })
 
-  it('写入时使用 setEx 和默认 TTL', async () => {
+  it('set 时使用 setEx 和默认 TTL', async () => {
     const cache = createCache(client)
 
     await cache.set('user:1', { name: 'momo' })
@@ -48,7 +48,7 @@ describe('redis cache', () => {
     expect(client.setEx).toHaveBeenCalledWith('momo:user:1', 300, '{"name":"momo"}')
   })
 
-  it('写入时允许覆盖 TTL', async () => {
+  it('set 时允许覆盖 TTL', async () => {
     const cache = createCache(client)
 
     await cache.set('user:1', 'value', { ttlSeconds: 60 })
@@ -65,7 +65,7 @@ describe('redis cache', () => {
     expect(client.setEx).not.toHaveBeenCalled()
   })
 
-  it('命中时解析 JSON', async () => {
+  it('hit 时解析 JSON', async () => {
     vi.mocked(client.get).mockResolvedValue('{"name":"momo"}')
     const cache = createCache(client)
 

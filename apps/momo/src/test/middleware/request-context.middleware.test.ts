@@ -12,8 +12,8 @@ function createApp() {
   return app
 }
 
-describe('request context middleware', () => {
-  it('generates request id when header is missing', async () => {
+describe('request context 中间件', () => {
+  it('missing 请求头时生成 request id', async () => {
     const app = createApp()
     const response = await app.request('/demo')
     const requestId = response.headers.get(REQUEST_ID_HEADER)
@@ -22,7 +22,7 @@ describe('request context middleware', () => {
     expect(await response.text()).toBe(requestId)
   })
 
-  it('uses valid x-request-id header', async () => {
+  it('valid x-request-id 请求头', async () => {
     const app = createApp()
     const response = await app.request('/demo', {
       headers: {
@@ -34,7 +34,7 @@ describe('request context middleware', () => {
     expect(await response.text()).toBe('fifa.request-1:abc_123')
   })
 
-  it('ignores invalid x-request-id header', async () => {
+  it('invalid x-request-id 请求头被忽略', async () => {
     const app = createApp()
     const response = await app.request('/demo', {
       headers: {

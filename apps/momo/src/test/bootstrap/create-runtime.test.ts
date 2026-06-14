@@ -15,12 +15,12 @@ function stubBaseEnv() {
   vi.stubEnv('PORT', '7788')
 }
 
-describe('create runtime', () => {
+describe('runtime 创建', () => {
   afterEach(() => {
     vi.unstubAllEnvs()
   })
 
-  it('默认创建内存缓存', () => {
+  it('默认创建 memory 缓存', () => {
     stubBaseEnv()
 
     const runtime = createRuntime()

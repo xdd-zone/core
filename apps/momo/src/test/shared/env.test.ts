@@ -1,12 +1,12 @@
 import { getMomoEnv } from '#momo/shared/env'
 import { describe, expect, it } from 'vitest'
 
-describe('momo env', () => {
-  it('throws when required env is missing', () => {
+describe('momo 环境变量', () => {
+  it('required 环境变量缺少时抛错', () => {
     expect(() => getMomoEnv({ APP_ENV: 'development' })).toThrow()
   })
 
-  it('parses comma separated CORS origins', () => {
+  it('comma 分隔的 CORS 来源会被解析', () => {
     expect(
       getMomoEnv({
         APP_ENV: 'production',
@@ -49,7 +49,7 @@ describe('momo env', () => {
     })
   })
 
-  it('uses default log config when log env is missing', () => {
+  it('默认日志配置在缺少日志环境变量时生效', () => {
     expect(
       getMomoEnv({
         APP_ENV: 'development',
@@ -71,7 +71,7 @@ describe('momo env', () => {
     )
   })
 
-  it('parses log level and sql log switch', () => {
+  it('日志级别和 SQL 日志开关会被解析', () => {
     expect(
       getMomoEnv({
         APP_ENV: 'development',
@@ -95,7 +95,7 @@ describe('momo env', () => {
     )
   })
 
-  it('parses cache config and treats empty url as unset', () => {
+  it('缓存配置会把空 URL 当作未设置', () => {
     expect(
       getMomoEnv({
         APP_ENV: 'development',
@@ -123,7 +123,7 @@ describe('momo env', () => {
     )
   })
 
-  it('throws when redis cache has no url', () => {
+  it('redis 缓存缺少 URL 时抛错', () => {
     expect(() =>
       getMomoEnv({
         APP_ENV: 'development',
@@ -141,7 +141,7 @@ describe('momo env', () => {
     ).toThrow()
   })
 
-  it('parses storage config and treats empty optional values as unset', () => {
+  it('存储配置会把空可选值当作未设置', () => {
     expect(
       getMomoEnv({
         APP_ENV: 'development',

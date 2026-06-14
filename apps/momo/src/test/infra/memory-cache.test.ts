@@ -8,12 +8,12 @@ function createCache() {
   })
 }
 
-describe('memory cache', () => {
+describe('memory 缓存', () => {
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  it('写入后可以读取 JSON 数据', async () => {
+  it('set 后可以读取 JSON 数据', async () => {
     const cache = createCache()
 
     await cache.set('user:1', { name: 'momo' })
@@ -21,7 +21,7 @@ describe('memory cache', () => {
     await expect(cache.get('user:1')).resolves.toEqual({ name: 'momo' })
   })
 
-  it('未命中时返回 undefined', async () => {
+  it('miss 时返回 undefined', async () => {
     const cache = createCache()
 
     await expect(cache.get('missing')).resolves.toBeUndefined()

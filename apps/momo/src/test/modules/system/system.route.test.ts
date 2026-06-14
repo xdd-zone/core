@@ -7,8 +7,8 @@ import { describe, expect, it } from 'vitest'
 
 const systemRoutePath = fileURLToPath(new URL('../../../modules/system/system.route.ts', import.meta.url))
 
-describe('system routes', () => {
-  it('uses zod validator middleware for ping request validation', async () => {
+describe('system 路由', () => {
+  it('ping 请求校验使用 zod validator 中间件', async () => {
     const source = await readFile(systemRoutePath, 'utf8')
 
     expect(source).toContain('zValidator')
@@ -16,7 +16,7 @@ describe('system routes', () => {
     expect(source).not.toContain('c.req.json()')
   })
 
-  it('returns root service information', async () => {
+  it('root 路径返回服务信息', async () => {
     const response = await app.request('/')
     const body = (await response.json()) as ApiResponse<RootResponse>
 
@@ -28,7 +28,7 @@ describe('system routes', () => {
     })
   })
 
-  it('returns health status', async () => {
+  it('health 检查返回状态', async () => {
     const response = await app.request('/health')
     const body = (await response.json()) as ApiResponse<HealthResponse>
 
@@ -41,7 +41,7 @@ describe('system routes', () => {
     })
   })
 
-  it('returns CORS header for an allowed origin', async () => {
+  it('cors 允许的来源会返回头', async () => {
     const response = await app.request('/health', {
       headers: {
         origin: 'http://localhost:2333',
@@ -51,7 +51,7 @@ describe('system routes', () => {
     expect(response.headers.get('access-control-allow-origin')).toBe('http://localhost:2333')
   })
 
-  it('returns ping response for a valid request', async () => {
+  it('ping 合法请求会返回响应', async () => {
     const response = await app.request('/rpc/system/ping', {
       body: JSON.stringify({ name: 'fifa' }),
       headers: {
@@ -70,7 +70,7 @@ describe('system routes', () => {
     })
   })
 
-  it('rejects invalid ping request body', async () => {
+  it('invalid ping 请求体被拒绝', async () => {
     const response = await app.request('/rpc/system/ping', {
       body: JSON.stringify({ name: '' }),
       headers: {
@@ -85,7 +85,7 @@ describe('system routes', () => {
     expect(!body.ok && body.error.code).toBe(BizCode.COMMON_INVALID_REQUEST)
   })
 
-  it('returns not found response for unknown route', async () => {
+  it('unknown 路由返回未找到响应', async () => {
     const response = await app.request('/unknown')
     const body = (await response.json()) as ApiResponse<never>
 

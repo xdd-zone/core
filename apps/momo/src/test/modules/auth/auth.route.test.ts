@@ -19,7 +19,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 let momoApp: typeof app
 
-describe('auth routes', () => {
+describe('auth 路由', () => {
   beforeAll(async () => {
     await prepareAuthTestDatabase()
     momoApp = (await import('#momo/app')).default
@@ -33,7 +33,7 @@ describe('auth routes', () => {
     await closeDb()
   })
 
-  it('rejects public email sign-up', async () => {
+  it('public 邮箱注册被拒绝', async () => {
     const response = await momoApp.request('/api/auth/sign-up/email', {
       body: JSON.stringify({
         email: 'new-user@example.com',
@@ -52,7 +52,7 @@ describe('auth routes', () => {
     expect(!body.ok && body.error.code).toBe(BizCode.AUTH_METHOD_NOT_ALLOWED)
   })
 
-  it('rejects unauthenticated fifa current user requests', async () => {
+  it('unauthenticated fifa 当前用户请求被拒绝', async () => {
     const response = await momoApp.request('/rpc/fifa/auth/me')
     const body = (await response.json()) as ApiResponse<never>
 
@@ -61,7 +61,7 @@ describe('auth routes', () => {
     expect(!body.ok && body.error.code).toBe(BizCode.AUTH_UNAUTHENTICATED)
   })
 
-  it('returns null bobo current user without a session', async () => {
+  it('bobo 当前用户在无会话时返回 null', async () => {
     const response = await momoApp.request('/rpc/bobo/auth/me')
     const body = (await response.json()) as ApiResponse<{ user: null }>
 
@@ -70,7 +70,7 @@ describe('auth routes', () => {
     expect(body.ok && body.data.user).toBeNull()
   })
 
-  it('rejects sessions whose user row is missing', async () => {
+  it('session 对应的用户记录缺失时被拒绝', async () => {
     const auth = {
       api: {
         getSession: vi.fn(async () => ({
@@ -87,7 +87,7 @@ describe('auth routes', () => {
     })
   })
 
-  it('rejects disabled fifa users', async () => {
+  it('disabled fifa 用户被拒绝', async () => {
     const testUser = await createCredentialUser({ email: 'disabled-fifa@example.com', name: 'Disabled Fifa' })
     await bindFifaOwner(testUser.id)
     const cookie = await signInByEmail(momoApp, testUser.email)
@@ -106,7 +106,7 @@ describe('auth routes', () => {
     expect(!body.ok && body.error.code).toBe(BizCode.AUTH_USER_DISABLED)
   })
 
-  it('rejects fifa users without a password account', async () => {
+  it('password 账号缺失的 fifa 用户被拒绝', async () => {
     const testUser = await createCredentialUser({ email: 'no-password@example.com', name: 'No Password' })
     await bindFifaOwner(testUser.id)
     const cookie = await signInByEmail(momoApp, testUser.email)
@@ -125,7 +125,7 @@ describe('auth routes', () => {
     expect(!body.ok && body.error.code).toBe(BizCode.AUTH_METHOD_NOT_ALLOWED)
   })
 
-  it('rejects fifa users without owner role', async () => {
+  it('owner 角色缺失的 fifa 用户被拒绝', async () => {
     const testUser = await createCredentialUser({ email: 'not-owner@example.com', name: 'Not Owner' })
     const cookie = await signInByEmail(momoApp, testUser.email)
 
@@ -141,7 +141,7 @@ describe('auth routes', () => {
     expect(!body.ok && body.error.code).toBe(BizCode.AUTH_OWNER_REQUIRED)
   })
 
-  it('returns current fifa owner', async () => {
+  it('current fifa owner 用户被返回', async () => {
     const testUser = await createCredentialUser({ email: 'owner@example.com', name: 'Owner' })
     await bindFifaOwner(testUser.id)
     const cookie = await signInByEmail(momoApp, testUser.email)
@@ -164,7 +164,7 @@ describe('auth routes', () => {
     })
   })
 
-  it('adds bobo visitor role for signed-in users', async () => {
+  it('bobo visitor 角色会添加给已登录用户', async () => {
     const testUser = await createCredentialUser({ email: 'bobo@example.com', name: 'Bobo User' })
     const cookie = await signInByEmail(momoApp, testUser.email)
 
