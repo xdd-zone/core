@@ -73,6 +73,7 @@
     "hono": "catalog:",
     "pino": "catalog:",
     "postgres": "catalog:",
+    "redis": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

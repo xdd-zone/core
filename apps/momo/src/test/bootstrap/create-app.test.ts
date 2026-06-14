@@ -1,4 +1,5 @@
 import type { MomoRuntime } from '#momo/bootstrap'
+import type { CacheDriver } from '#momo/infra/cache'
 import type { StorageDriver } from '#momo/infra/storage'
 import type { Logger } from 'pino'
 import { createMomoApp } from '#momo/bootstrap'
@@ -20,6 +21,10 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
       APP_ENV: appEnv,
       BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       BETTER_AUTH_URL: 'http://localhost:7788',
+      CACHE_DEFAULT_TTL_SECONDS: 300,
+      CACHE_KEY_PREFIX: 'momo',
+      CACHE_PROVIDER: 'memory',
+      CACHE_URL: undefined,
       CORS_ORIGINS: ['http://localhost:2333'],
       DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
       GITHUB_CLIENT_ID: 'test-github-client-id',
@@ -40,6 +45,13 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
       STORAGE_PROVIDER: 'local',
     },
     logger: mockLogger as unknown as Logger,
+    cache: {
+      close: vi.fn(),
+      delete: vi.fn(),
+      get: vi.fn(),
+      set: vi.fn(),
+      wrap: vi.fn(),
+    } as unknown as CacheDriver,
     storage: {
       openFile: vi.fn(),
       remove: vi.fn(),

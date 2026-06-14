@@ -65,6 +65,13 @@ if (isEntry) {
       }
 
       try {
+        await runtime.cache.close()
+        runtime.logger.info({ event: 'server.cache_closed' }, '缓存连接已清理')
+      } catch (cacheErr) {
+        runtime.logger.error({ event: 'server.cache_close_failed', message: String(cacheErr) }, '清理缓存连接异常')
+      }
+
+      try {
         await closeDb()
         runtime.logger.info({ event: 'server.db_closed' }, '数据库连接已清理')
       } catch (dbErr) {

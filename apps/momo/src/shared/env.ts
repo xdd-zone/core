@@ -11,6 +11,10 @@ const momoEnvSchema = z
     APP_ENV: z.enum(['development', 'test', 'production']),
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: z.string().url(),
+    CACHE_DEFAULT_TTL_SECONDS: z.coerce.number().int().positive().default(300),
+    CACHE_KEY_PREFIX: z.string().min(1).default('momo'),
+    CACHE_PROVIDER: z.enum(['memory', 'redis']).default('memory'),
+    CACHE_URL: optionalUrlSchema,
     CORS_ORIGINS: z.preprocess((value) => {
       if (typeof value !== 'string') {
         return value
@@ -53,6 +57,15 @@ const momoEnvSchema = z
     COS_KEY_PREFIX: z.string().default('media'),
     COS_SIGNED_URL_EXPIRES: z.coerce.number().int().min(60).default(600),
   })
+  .superRefine((env, ctx) => {
+    if (env.CACHE_PROVIDER === 'redis' && !env.CACHE_URL) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'CACHE_PROVIDER=redis 时，CACHE_URL 必须配置',
+        path: ['CACHE_URL'],
+      })
+    }
+  })
   .transform((env) => ({
     ...env,
     LOG_LEVEL: env.LOG_LEVEL ?? (env.APP_ENV === 'test' ? 'silent' : 'info'),
@@ -65,6 +78,10 @@ export function getMomoEnv(source: NodeJS.ProcessEnv = process.env): MomoEnv {
     APP_ENV: source.APP_ENV,
     BETTER_AUTH_SECRET: source.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: source.BETTER_AUTH_URL,
+    CACHE_DEFAULT_TTL_SECONDS: source.CACHE_DEFAULT_TTL_SECONDS,
+    CACHE_KEY_PREFIX: source.CACHE_KEY_PREFIX,
+    CACHE_PROVIDER: source.CACHE_PROVIDER,
+    CACHE_URL: source.CACHE_URL,
     CORS_ORIGINS: source.CORS_ORIGINS,
     DATABASE_URL: source.DATABASE_URL,
     GITHUB_CLIENT_ID: source.GITHUB_CLIENT_ID,

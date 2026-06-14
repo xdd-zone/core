@@ -1,16 +1,48 @@
+import type { CacheDriver } from '#momo/infra/cache'
 import type { StorageDriver } from '#momo/infra/storage/storage.types'
 import type { MomoEnv } from '#momo/shared/env'
 import type { Logger } from 'pino'
 import { resolve } from 'node:path'
+import { MemoryCache, RedisCache } from '#momo/infra/cache'
 import { createChildLogger, createLogger } from '#momo/infra/logger'
 import { CosStorage } from '#momo/infra/storage/cos-storage'
 import { LocalStorage } from '#momo/infra/storage/local-storage'
 import { getMomoEnv } from '#momo/shared/env'
 
 export interface MomoRuntime {
+  cache: CacheDriver
   env: ReturnType<typeof getMomoEnv>
   logger: Logger
   storage: StorageDriver
+}
+
+function createCacheDriver(env: MomoEnv, logger: Logger): CacheDriver {
+  const cacheLogger = createChildLogger(logger, 'cache')
+  const config = {
+    defaultTtlSeconds: env.CACHE_DEFAULT_TTL_SECONDS,
+    keyPrefix: env.CACHE_KEY_PREFIX,
+  }
+
+  if (env.CACHE_PROVIDER === 'redis') {
+    if (!env.CACHE_URL) {
+      throw new Error('CACHE_PROVIDER=redis 时，CACHE_URL 必须配置')
+    }
+
+    cacheLogger.info({ provider: 'redis' }, '使用 Redis 缓存')
+
+    return new RedisCache(
+      {
+        ...config,
+        url: env.CACHE_URL,
+      },
+      undefined,
+      cacheLogger,
+    )
+  }
+
+  cacheLogger.info({ provider: 'memory' }, '使用内存缓存')
+
+  return new MemoryCache(config)
 }
 
 function createStorageDriver(env: MomoEnv, logger: Logger): StorageDriver {
@@ -44,6 +76,7 @@ export function createRuntime(): MomoRuntime {
   const logger = createLogger(env)
 
   return {
+    cache: createCacheDriver(env, logger),
     env,
     logger,
     storage: createStorageDriver(env, logger),

@@ -24,6 +24,10 @@ describe('momo env', () => {
       APP_ENV: 'production',
       BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       BETTER_AUTH_URL: 'https://api.xdd.zone',
+      CACHE_DEFAULT_TTL_SECONDS: 300,
+      CACHE_KEY_PREFIX: 'momo',
+      CACHE_PROVIDER: 'memory',
+      CACHE_URL: undefined,
       CORS_ORIGINS: ['https://fifa.xdd.zone', 'https://bobo.xdd.zone'],
       DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
       GITHUB_CLIENT_ID: 'github-client-id',
@@ -89,6 +93,52 @@ describe('momo env', () => {
         LOG_SQL: true,
       }),
     )
+  })
+
+  it('parses cache config and treats empty url as unset', () => {
+    expect(
+      getMomoEnv({
+        APP_ENV: 'development',
+        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        BETTER_AUTH_URL: 'http://localhost:7788',
+        CACHE_DEFAULT_TTL_SECONDS: '60',
+        CACHE_KEY_PREFIX: 'momo-test',
+        CACHE_PROVIDER: 'memory',
+        CACHE_URL: '',
+        CORS_ORIGINS: 'http://localhost:2333',
+        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
+        GITHUB_CLIENT_ID: 'github-client-id',
+        GITHUB_CLIENT_SECRET: 'github-client-secret',
+        GOOGLE_CLIENT_ID: 'google-client-id',
+        GOOGLE_CLIENT_SECRET: 'google-client-secret',
+        PORT: '7788',
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        CACHE_DEFAULT_TTL_SECONDS: 60,
+        CACHE_KEY_PREFIX: 'momo-test',
+        CACHE_PROVIDER: 'memory',
+        CACHE_URL: undefined,
+      }),
+    )
+  })
+
+  it('throws when redis cache has no url', () => {
+    expect(() =>
+      getMomoEnv({
+        APP_ENV: 'development',
+        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        BETTER_AUTH_URL: 'http://localhost:7788',
+        CACHE_PROVIDER: 'redis',
+        CORS_ORIGINS: 'http://localhost:2333',
+        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
+        GITHUB_CLIENT_ID: 'github-client-id',
+        GITHUB_CLIENT_SECRET: 'github-client-secret',
+        GOOGLE_CLIENT_ID: 'google-client-id',
+        GOOGLE_CLIENT_SECRET: 'google-client-secret',
+        PORT: '7788',
+      }),
+    ).toThrow()
   })
 
   it('parses storage config and treats empty optional values as unset', () => {
