@@ -5,6 +5,9 @@
     "customConditions": ["development"],
     "paths": {
       "#momo/bootstrap": ["./src/bootstrap/index.ts"],
+      "#momo/infra/cache": ["./src/infra/cache/index.ts"],
+      "#momo/infra/search": ["./src/infra/search/index.ts"],
+      "#momo/infra/storage": ["./src/infra/storage/index.ts"],
       "#momo/middleware": ["./src/middleware/index.ts"],
       "#momo/routes": ["./src/routes/index.ts"],
       "#momo/*": ["./src/*"]

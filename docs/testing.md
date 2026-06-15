@@ -40,7 +40,7 @@ apps/momo/src/test/
 什么时候新建目录：
 
 - 新增业务模块 `src/modules/post/` 时，对应加 `src/test/modules/post/`。
-- 新增基础设施如 `src/infra/cache.ts` 时，测试放 `src/test/infra/cache.test.ts`。
+- 新增基础设施如 `src/infra/cache/memory-cache.ts` 时，测试放 `src/test/infra/memory-cache.test.ts`。
 - 没有测试的目录不用提前建空目录。
 
 不需要做的：
