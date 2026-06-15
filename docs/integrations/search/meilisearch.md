@@ -20,7 +20,7 @@ apps/momo/compose.yaml
 启动服务：
 
 ```bash
-pnpm --filter @xdd-zone/momo db:up
+pnpm --filter @xdd-zone/momo local:up
 ```
 
 Meilisearch 本地地址：

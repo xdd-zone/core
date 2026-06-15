@@ -21,6 +21,7 @@ catalog:
   clsx: ^2.1.1
   cos-nodejs-sdk-v5: ^2.15.4
   dayjs: ^1.11.20
+  dotenv-cli: ^11.0.0
   drizzle-kit: ^0.31.10
   drizzle-orm: ^0.45.2
   esbuild: ^0.28.0

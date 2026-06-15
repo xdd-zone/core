@@ -173,6 +173,8 @@ apps/momo/src/shared/env.ts
   提交到仓库，记录变量名和示例值。
 - `apps/momo/.env.development`
   本机开发使用。这个文件被 `.gitignore` 忽略，不提交到仓库。
+- `apps/momo/.env.test`
+  测试使用。这个文件只放固定测试假值，提交到仓库。
 
 当前 Momo 使用这些变量：
 
@@ -216,7 +218,7 @@ OWNER_PASSWORD
 OWNER_DISPLAY_NAME
 ```
 
-`pnpm dev`、`pnpm auth:generate` 和 `pnpm seed:owner` 会读取 `apps/momo/.env.development`。
+`pnpm dev`、`pnpm auth:generate`、`pnpm seed:owner`、`pnpm storage:test` 和 `pnpm db:*` 会读取 `apps/momo/.env.development`。`pnpm test` 会读取 `apps/momo/.env.test`。
 
 `LOG_LEVEL` 控制 Pino 日志级别。未配置时，开发和生产使用 `info`，测试使用 `silent`。
 
@@ -761,8 +763,8 @@ MEILI_API_KEY=momo-meilisearch-development-master-key
 常用命令：
 
 ```bash
-pnpm --filter @xdd-zone/momo db:up
-pnpm --filter @xdd-zone/momo db:down
+pnpm --filter @xdd-zone/momo local:up
+pnpm --filter @xdd-zone/momo local:down
 pnpm --filter @xdd-zone/momo db:generate
 pnpm --filter @xdd-zone/momo db:migrate
 pnpm --filter @xdd-zone/momo db:check
@@ -954,7 +956,7 @@ expect(response.status).toBe(200)
 postgres://momo:momo@localhost:55432/momo_test
 ```
 
-先运行 `pnpm --filter @xdd-zone/momo db:up`。测试会自动创建 `momo_test`，执行当前 migration，并清理这个测试库里的表。
+先运行 `pnpm --filter @xdd-zone/momo local:up`。测试会自动创建 `momo_test`，执行当前 migration，并清理这个测试库里的表。
 
 ## 运行和检查
 
