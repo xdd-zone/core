@@ -1,5 +1,5 @@
 import { ErrorStatePage } from '@fifa/components/ui'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import { Button } from 'antd'
 
 import { ArrowLeft, House, Search } from 'lucide-react'
@@ -9,13 +9,14 @@ import { ArrowLeft, House, Search } from 'lucide-react'
  */
 export function NotFound() {
   const navigate = useNavigate()
+  const router = useRouter()
 
   const handleGoHome = () => {
     void navigate({ to: '/' })
   }
 
   const handleGoBack = () => {
-    window.history.back()
+    router.history.back()
   }
 
   return (

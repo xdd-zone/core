@@ -1,16 +1,17 @@
 import { ErrorStatePage } from '@fifa/components/ui'
 
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import { Button } from 'antd'
 import { ArrowLeft, House, Search } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 export function NotFoundExample() {
   const navigate = useNavigate()
+  const router = useRouter()
   const { t } = useTranslation()
 
   const handleGoBack = () => {
-    window.history.back()
+    router.history.back()
   }
 
   const handleGoHome = () => {
