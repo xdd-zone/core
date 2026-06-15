@@ -646,7 +646,7 @@ apps/momo/src/middleware
 - `request-log.middleware.ts`
   导出 `createRequestLogMiddleware()` 和 `registerRequestLog()`。这里在 `await next()` 之后通过 `runtime.logger` 记录请求方法、路径、响应状态、耗时和 requestId。2xx 和 3xx 响应耗时达到 1000ms 时用 warn 记录。测试环境使用 silent logger，不打印日志。
 - `cors.middleware.ts`
-  导出 `registerCors()`。这里读取 `runtime.env.CORS_ORIGINS`。跨域请求允许 `content-type` 和 `x-request-id` 请求头，并暴露 `x-request-id` 响应头。
+  导出 `registerCors()`。这里读取 `runtime.env.CORS_ORIGINS`。跨域请求允许 `content-type` 和 `x-request-id` 请求头，并暴露 `x-request-id` 响应头。跨域认证请求会返回 `Access-Control-Allow-Credentials: true`。
 - `secure-headers.middleware.ts`
   导出 `registerSecureHeaders()`。这里注册 `hono/secure-headers`。生产环境会写 `Strict-Transport-Security`，开发和测试环境不写。
 - `body-limit.middleware.ts`

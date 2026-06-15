@@ -1,8 +1,10 @@
+import type { HonoEnv } from '#momo/shared/hono-env'
 import type { ApiResponse } from '@xdd-zone/contracts'
 import app from '#momo/app'
-import { REQUEST_ID_HEADER } from '#momo/middleware'
+import { registerRequestContext, registerTimeout, REQUEST_ID_HEADER } from '#momo/middleware'
 import { BizCode } from '@xdd-zone/contracts'
-import { describe, expect, it } from 'vitest'
+import { Hono } from 'hono'
+import { describe, expect, it, vi } from 'vitest'
 
 describe('request pipeline 中间件', () => {
   it('cors 预检请求允许 x-request-id', async () => {
@@ -16,6 +18,17 @@ describe('request pipeline 中间件', () => {
     })
 
     expect(response.headers.get('access-control-allow-headers')).toContain('x-request-id')
+  })
+
+  it('cors 响应允许浏览器携带 cookie', async () => {
+    const response = await app.request('/rpc/bobo/auth/me', {
+      headers: {
+        origin: 'http://localhost:2333',
+      },
+    })
+
+    expect(response.headers.get('access-control-allow-origin')).toBe('http://localhost:2333')
+    expect(response.headers.get('access-control-allow-credentials')).toBe('true')
   })
 
   it('expose x-request-id 给浏览器客户端', async () => {
@@ -51,5 +64,45 @@ describe('request pipeline 中间件', () => {
     expect(body.ok).toBe(false)
     expect(!body.ok && body.error.code).toBe(BizCode.COMMON_PAYLOAD_TOO_LARGE)
     expect(!body.ok && body.error.message).toBe('请求体过大')
+  })
+
+  it('auth 请求体过大时被拒绝', async () => {
+    const response = await app.request('/api/auth/sign-in/email', {
+      body: 'a'.repeat(64 * 1024 + 1),
+      headers: {
+        'content-type': 'application/json',
+      },
+      method: 'POST',
+    })
+    const body = (await response.json()) as ApiResponse<never>
+
+    expect(response.status).toBe(413)
+    expect(body.ok).toBe(false)
+    expect(!body.ok && body.error.code).toBe(BizCode.COMMON_PAYLOAD_TOO_LARGE)
+    expect(!body.ok && body.error.message).toBe('请求体过大')
+  })
+
+  it('auth 请求超时时返回 504', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const timeoutApp = new Hono<HonoEnv>()
+
+      registerRequestContext(timeoutApp)
+      registerTimeout(timeoutApp)
+      timeoutApp.get('/api/auth/slow', async () => {
+        await new Promise(() => undefined)
+        return new Response('never')
+      })
+
+      const responsePromise = timeoutApp.request('/api/auth/slow')
+      await vi.advanceTimersByTimeAsync(10_000)
+
+      const response = await responsePromise
+
+      expect(response.status).toBe(504)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

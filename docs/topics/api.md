@@ -60,7 +60,7 @@ Momo 自己写的接口返回统一结构。
 
 `/api/auth/*` 交给 `better-auth` 处理，可能返回 `better-auth` 自己的 JSON、重定向响应或 `set-cookie`。不要按下面的统一结构解析 `/api/auth/*`。
 
-响应头会写回当前请求使用的 `X-Request-Id`。浏览器跨域请求可以发送 `X-Request-Id`，也可以读取响应里的 `X-Request-Id`。
+响应头会写回当前请求使用的 `X-Request-Id`。浏览器跨域请求可以发送 `X-Request-Id`，也可以读取响应里的 `X-Request-Id`。跨域认证请求会返回 `Access-Control-Allow-Credentials: true`，浏览器可以带 session cookie 调用 Momo。
 
 成功：
 

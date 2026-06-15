@@ -66,7 +66,7 @@ pnpm storage:test
 - `apps/momo/.env.development`
   本机开发使用。这个文件被 `.gitignore` 忽略，不提交到仓库。
 
-日志级别用 `LOG_LEVEL` 控制，开发环境默认 `info`。请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`，跨域请求可以发送和读取这个 header。2xx 和 3xx 响应耗时达到 1000ms 时会用 warn 记录。开发环境会写 `Server-Timing`，生产和测试环境不会写。开发环境的未处理异常会记录 stack，生产和测试环境不会记录 stack。需要看 SQL 时，把 `LOG_SQL` 设成 `true`，日志只会打印 SQL 和参数数量，不打印参数原值。
+日志级别用 `LOG_LEVEL` 控制，开发环境默认 `info`。请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`，跨域请求可以发送和读取这个 header。跨域认证请求会返回 `Access-Control-Allow-Credentials: true`，浏览器可以带 session cookie 调用 Momo。2xx 和 3xx 响应耗时达到 1000ms 时会用 warn 记录。开发环境会写 `Server-Timing`，生产和测试环境不会写。开发环境的未处理异常会记录 stack，生产和测试环境不会记录 stack。需要看 SQL 时，把 `LOG_SQL` 设成 `true`，日志只会打印 SQL 和参数数量，不打印参数原值。
 
 Momo 会给所有响应写常用安全响应头。`APP_ENV=production` 时会写 `Strict-Transport-Security`，开发和测试环境不会写。
 
