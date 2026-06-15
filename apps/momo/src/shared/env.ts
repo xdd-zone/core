@@ -30,6 +30,9 @@ const momoEnvSchema = z
     GITHUB_CLIENT_SECRET: z.string().min(1),
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
+    MEILI_API_KEY: optionalStringSchema,
+    MEILI_HOST: optionalUrlSchema,
+    MEILI_INDEX_PREFIX: z.string().min(1).default('momo'),
     LOG_LEVEL: logLevelSchema.optional(),
     LOG_SQL: z.preprocess((value) => {
       if (value === undefined) {
@@ -47,6 +50,7 @@ const momoEnvSchema = z
       return value
     }, z.boolean()),
     PORT: z.coerce.number().int().min(1).max(65535),
+    SEARCH_PROVIDER: z.enum(['none', 'meilisearch']).default('none'),
     STORAGE_PROVIDER: z.enum(['local', 'cos']).default('local'),
     LOCAL_STORAGE_DIR: optionalStringSchema,
     COS_SECRET_ID: optionalStringSchema,
@@ -63,6 +67,22 @@ const momoEnvSchema = z
         code: 'custom',
         message: 'CACHE_PROVIDER=redis 时，CACHE_URL 必须配置',
         path: ['CACHE_URL'],
+      })
+    }
+
+    if (env.SEARCH_PROVIDER === 'meilisearch' && !env.MEILI_HOST) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'SEARCH_PROVIDER=meilisearch 时，MEILI_HOST 必须配置',
+        path: ['MEILI_HOST'],
+      })
+    }
+
+    if (env.SEARCH_PROVIDER === 'meilisearch' && !env.MEILI_API_KEY) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'SEARCH_PROVIDER=meilisearch 时，MEILI_API_KEY 必须配置',
+        path: ['MEILI_API_KEY'],
       })
     }
   })
@@ -88,9 +108,13 @@ export function getMomoEnv(source: NodeJS.ProcessEnv = process.env): MomoEnv {
     GITHUB_CLIENT_SECRET: source.GITHUB_CLIENT_SECRET,
     GOOGLE_CLIENT_ID: source.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: source.GOOGLE_CLIENT_SECRET,
+    MEILI_API_KEY: source.MEILI_API_KEY,
+    MEILI_HOST: source.MEILI_HOST,
+    MEILI_INDEX_PREFIX: source.MEILI_INDEX_PREFIX,
     LOG_LEVEL: source.LOG_LEVEL,
     LOG_SQL: source.LOG_SQL,
     PORT: source.PORT,
+    SEARCH_PROVIDER: source.SEARCH_PROVIDER,
     STORAGE_PROVIDER: source.STORAGE_PROVIDER,
     LOCAL_STORAGE_DIR: source.LOCAL_STORAGE_DIR,
     COS_SECRET_ID: source.COS_SECRET_ID,

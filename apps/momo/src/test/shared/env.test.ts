@@ -34,6 +34,9 @@ describe('momo 环境变量', () => {
       GITHUB_CLIENT_SECRET: 'github-client-secret',
       GOOGLE_CLIENT_ID: 'google-client-id',
       GOOGLE_CLIENT_SECRET: 'google-client-secret',
+      MEILI_API_KEY: undefined,
+      MEILI_HOST: undefined,
+      MEILI_INDEX_PREFIX: 'momo',
       COS_BUCKET: undefined,
       COS_KEY_PREFIX: 'media',
       COS_PUBLIC_BASE_URL: undefined,
@@ -45,6 +48,7 @@ describe('momo 环境变量', () => {
       LOG_LEVEL: 'info',
       LOG_SQL: false,
       PORT: 8080,
+      SEARCH_PROVIDER: 'none',
       STORAGE_PROVIDER: 'local',
     })
   })
@@ -137,6 +141,93 @@ describe('momo 环境变量', () => {
         GOOGLE_CLIENT_ID: 'google-client-id',
         GOOGLE_CLIENT_SECRET: 'google-client-secret',
         PORT: '7788',
+      }),
+    ).toThrow()
+  })
+
+  it('搜索配置默认关闭', () => {
+    expect(
+      getMomoEnv({
+        APP_ENV: 'development',
+        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        BETTER_AUTH_URL: 'http://localhost:7788',
+        CORS_ORIGINS: 'http://localhost:2333',
+        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
+        GITHUB_CLIENT_ID: 'github-client-id',
+        GITHUB_CLIENT_SECRET: 'github-client-secret',
+        GOOGLE_CLIENT_ID: 'google-client-id',
+        GOOGLE_CLIENT_SECRET: 'google-client-secret',
+        PORT: '7788',
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        MEILI_API_KEY: undefined,
+        MEILI_HOST: undefined,
+        MEILI_INDEX_PREFIX: 'momo',
+        SEARCH_PROVIDER: 'none',
+      }),
+    )
+  })
+
+  it('meilisearch 搜索配置会把空可选值当作未设置', () => {
+    expect(
+      getMomoEnv({
+        APP_ENV: 'development',
+        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        BETTER_AUTH_URL: 'http://localhost:7788',
+        CORS_ORIGINS: 'http://localhost:2333',
+        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
+        GITHUB_CLIENT_ID: 'github-client-id',
+        GITHUB_CLIENT_SECRET: 'github-client-secret',
+        GOOGLE_CLIENT_ID: 'google-client-id',
+        GOOGLE_CLIENT_SECRET: 'google-client-secret',
+        MEILI_API_KEY: '',
+        MEILI_HOST: '',
+        PORT: '7788',
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        MEILI_API_KEY: undefined,
+        MEILI_HOST: undefined,
+        MEILI_INDEX_PREFIX: 'momo',
+      }),
+    )
+  })
+
+  it('meilisearch 搜索缺少 host 时抛错', () => {
+    expect(() =>
+      getMomoEnv({
+        APP_ENV: 'development',
+        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        BETTER_AUTH_URL: 'http://localhost:7788',
+        CORS_ORIGINS: 'http://localhost:2333',
+        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
+        GITHUB_CLIENT_ID: 'github-client-id',
+        GITHUB_CLIENT_SECRET: 'github-client-secret',
+        GOOGLE_CLIENT_ID: 'google-client-id',
+        GOOGLE_CLIENT_SECRET: 'google-client-secret',
+        MEILI_API_KEY: 'momo-meilisearch-development-master-key',
+        PORT: '7788',
+        SEARCH_PROVIDER: 'meilisearch',
+      }),
+    ).toThrow()
+  })
+
+  it('meilisearch 搜索缺少 api key 时抛错', () => {
+    expect(() =>
+      getMomoEnv({
+        APP_ENV: 'development',
+        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        BETTER_AUTH_URL: 'http://localhost:7788',
+        CORS_ORIGINS: 'http://localhost:2333',
+        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
+        GITHUB_CLIENT_ID: 'github-client-id',
+        GITHUB_CLIENT_SECRET: 'github-client-secret',
+        GOOGLE_CLIENT_ID: 'google-client-id',
+        GOOGLE_CLIENT_SECRET: 'google-client-secret',
+        MEILI_HOST: 'http://localhost:57700',
+        PORT: '7788',
+        SEARCH_PROVIDER: 'meilisearch',
       }),
     ).toThrow()
   })

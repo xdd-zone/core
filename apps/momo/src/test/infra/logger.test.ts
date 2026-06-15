@@ -22,6 +22,9 @@ const baseEnv: MomoEnv = {
   GITHUB_CLIENT_SECRET: 'test-github-client-secret',
   GOOGLE_CLIENT_ID: 'test-google-client-id',
   GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
+  MEILI_API_KEY: undefined,
+  MEILI_HOST: undefined,
+  MEILI_INDEX_PREFIX: 'momo',
   COS_BUCKET: undefined,
   COS_KEY_PREFIX: 'media',
   COS_PUBLIC_BASE_URL: undefined,
@@ -33,6 +36,7 @@ const baseEnv: MomoEnv = {
   LOG_LEVEL: 'silent',
   LOG_SQL: false,
   PORT: 7788,
+  SEARCH_PROVIDER: 'none',
   STORAGE_PROVIDER: 'local',
 }
 

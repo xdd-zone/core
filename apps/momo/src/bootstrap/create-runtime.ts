@@ -1,10 +1,12 @@
 import type { CacheDriver } from '#momo/infra/cache'
+import type { SearchDriver } from '#momo/infra/search'
 import type { StorageDriver } from '#momo/infra/storage/storage.types'
 import type { MomoEnv } from '#momo/shared/env'
 import type { Logger } from 'pino'
 import { resolve } from 'node:path'
 import { MemoryCache, RedisCache } from '#momo/infra/cache'
 import { createChildLogger, createLogger } from '#momo/infra/logger'
+import { DisabledSearch, MeilisearchSearch } from '#momo/infra/search'
 import { CosStorage } from '#momo/infra/storage/cos-storage'
 import { LocalStorage } from '#momo/infra/storage/local-storage'
 import { getMomoEnv } from '#momo/shared/env'
@@ -13,6 +15,7 @@ export interface MomoRuntime {
   cache: CacheDriver
   env: ReturnType<typeof getMomoEnv>
   logger: Logger
+  search: SearchDriver
   storage: StorageDriver
 }
 
@@ -43,6 +46,31 @@ function createCacheDriver(env: MomoEnv, logger: Logger): CacheDriver {
   cacheLogger.info({ provider: 'memory' }, '使用内存缓存')
 
   return new MemoryCache(config)
+}
+
+function createSearchDriver(env: MomoEnv, logger: Logger): SearchDriver {
+  const searchLogger = createChildLogger(logger, 'search')
+
+  if (env.SEARCH_PROVIDER === 'meilisearch') {
+    if (!env.MEILI_HOST || !env.MEILI_API_KEY) {
+      throw new Error('SEARCH_PROVIDER=meilisearch 时，MEILI_HOST、MEILI_API_KEY 必须配置')
+    }
+
+    searchLogger.info({ provider: 'meilisearch', host: env.MEILI_HOST }, '使用 Meilisearch 搜索')
+
+    return new MeilisearchSearch(
+      {
+        apiKey: env.MEILI_API_KEY,
+        host: env.MEILI_HOST,
+        indexPrefix: env.MEILI_INDEX_PREFIX,
+      },
+      undefined,
+      searchLogger,
+    )
+  }
+
+  searchLogger.info({ provider: 'none' }, '未启用搜索服务')
+  return new DisabledSearch()
 }
 
 function createStorageDriver(env: MomoEnv, logger: Logger): StorageDriver {
@@ -79,6 +107,7 @@ export function createRuntime(): MomoRuntime {
     cache: createCacheDriver(env, logger),
     env,
     logger,
+    search: createSearchDriver(env, logger),
     storage: createStorageDriver(env, logger),
   }
 }

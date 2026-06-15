@@ -27,5 +27,17 @@ services:
       timeout: 5s
       retries: 10
 
+  meilisearch:
+    image: getmeili/meilisearch:v1.46.1
+    container_name: xdd-momo-meilisearch
+    ports:
+      - '57700:7700'
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: momo-meilisearch-development-master-key
+    volumes:
+      - momo-meilisearch-data:/meili_data
+
 volumes:
   momo-postgres-data:
+  momo-meilisearch-data:

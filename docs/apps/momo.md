@@ -92,11 +92,17 @@ apps/momo/src/
 ├── infra/
 │   ├── logger.ts
 │   ├── cache.ts
+│   ├── search.ts
 │   ├── cache/
 │   │   ├── index.ts
 │   │   ├── cache.types.ts
 │   │   ├── memory-cache.ts
 │   │   └── redis-cache.ts
+│   ├── search/
+│   │   ├── index.ts
+│   │   ├── search.types.ts
+│   │   ├── disabled-search.ts
+│   │   └── meilisearch-search.ts
 │   ├── db/
 │   │   ├── client.ts
 │   │   ├── schema/
@@ -187,6 +193,10 @@ CACHE_PROVIDER
 CACHE_URL
 CACHE_KEY_PREFIX
 CACHE_DEFAULT_TTL_SECONDS
+SEARCH_PROVIDER
+MEILI_HOST
+MEILI_API_KEY
+MEILI_INDEX_PREFIX
 STORAGE_PROVIDER
 LOCAL_STORAGE_DIR
 COS_SECRET_ID
@@ -214,6 +224,8 @@ OWNER_DISPLAY_NAME
 
 `CACHE_PROVIDER` 控制缓存驱动。默认值是 `memory`，数据只存在当前 Node.js 进程里。设成 `redis` 时，需要配置 `CACHE_URL`，本地 Valkey 地址是 `redis://localhost:56379`。`CACHE_KEY_PREFIX` 默认是 `momo`，`CACHE_DEFAULT_TTL_SECONDS` 默认是 `300` 秒。
 
+`SEARCH_PROVIDER` 控制搜索驱动。默认值是 `none`，不会连接外部搜索服务。设成 `meilisearch` 时，需要配置 `MEILI_HOST` 和 `MEILI_API_KEY`，本地 Meilisearch 地址是 `http://localhost:57700`。`MEILI_INDEX_PREFIX` 默认是 `momo`，驱动会把逻辑索引名 `posts` 拼成真实索引名 `momo_posts`。当前还没有业务模块调用搜索驱动。
+
 `STORAGE_PROVIDER` 控制文件存储驱动。默认值是 `local`，使用 `LOCAL_STORAGE_DIR`，未设置时写到 `storage/media`。设成 `cos` 时，`COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION` 必须配置。`COS_KEY_PREFIX` 默认是 `media`，`COS_SIGNED_URL_EXPIRES` 默认是 `600` 秒。
 
 文件存储驱动只保存图片。`save()` 允许 `image/avif`、`image/gif`、`image/jpeg`、`image/png` 和 `image/webp`，单个文件最大 `10 MiB`。`openFile()` 在本地存储时返回 `200` 和文件内容，在 COS 存储时返回 `302` 跳转地址。`stat()` 可以读取文件大小、MIME 和修改时间。
@@ -231,13 +243,13 @@ apps/momo/src/bootstrap
 当前文件：
 
 - `create-runtime.ts`
-  读取 `shared/env.ts`，创建 logger、cache 和 storage，返回 `MomoRuntime`。
+  读取 `shared/env.ts`，创建 logger、cache、search 和 storage，返回 `MomoRuntime`。
 - `create-app.ts`
   创建 `new Hono<HonoEnv>()`，注册全局中间件、错误处理、404 和一级路由。
 - `index.ts`
   统一导出 `createRuntime()`、`createMomoApp()` 和 `MomoRuntime`。
 
-`MomoRuntime` 当前有 `env`、`logger`、`cache` 和 `storage`。后续如果加数据库或其他外部资源，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
+`MomoRuntime` 当前有 `env`、`logger`、`cache`、`search` 和 `storage`。后续如果加数据库或其他外部资源，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
 
 不要把 env、db、cache 写进 `c.var`。`c.var` 只放当前请求的数据。
 
@@ -715,7 +727,7 @@ Momo 使用 PostgreSQL 和 Drizzle ORM。
 相关文件：
 
 - `apps/momo/compose.yaml`
-  本地 PostgreSQL 和 Valkey Docker 配置。
+  本地 PostgreSQL、Valkey 和 Meilisearch Docker 配置。
 - `apps/momo/drizzle.config.ts`
   Drizzle Kit 配置。这里指定 schema 入口和 migration 输出目录。
 - `apps/momo/src/infra/db/client.ts`
@@ -736,6 +748,14 @@ DATABASE_URL=postgres://momo:momo@localhost:55432/momo
 ```text
 CACHE_PROVIDER=redis
 CACHE_URL=redis://localhost:56379
+```
+
+本地 Meilisearch 地址：
+
+```text
+SEARCH_PROVIDER=meilisearch
+MEILI_HOST=http://localhost:57700
+MEILI_API_KEY=momo-meilisearch-development-master-key
 ```
 
 常用命令：
@@ -774,6 +794,14 @@ apps/momo/src/infra/cache
 ```
 
 当前有内存缓存和 Redis 协议缓存。Redis 协议缓存使用 `redis` 包连接 Valkey。调用方只传业务键，驱动会加上 `CACHE_KEY_PREFIX`。
+
+搜索相关代码放在：
+
+```text
+apps/momo/src/infra/search
+```
+
+当前有禁用搜索驱动和 Meilisearch 搜索驱动。`SEARCH_PROVIDER=none` 时使用禁用搜索驱动，数据方法会抛出“搜索服务未启用”。`SEARCH_PROVIDER=meilisearch` 时使用 Meilisearch 搜索驱动。调用方只传逻辑索引名，驱动会加上 `MEILI_INDEX_PREFIX`。当前还没有搜索接口，也没有业务索引。
 
 文件存储相关代码放在：
 

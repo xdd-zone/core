@@ -1,5 +1,6 @@
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { CacheDriver } from '#momo/infra/cache'
+import type { SearchDriver } from '#momo/infra/search'
 import type { StorageDriver } from '#momo/infra/storage'
 import type { Logger } from 'pino'
 import { createMomoApp } from '#momo/bootstrap'
@@ -31,6 +32,9 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
       GITHUB_CLIENT_SECRET: 'test-github-client-secret',
       GOOGLE_CLIENT_ID: 'test-google-client-id',
       GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
+      MEILI_API_KEY: undefined,
+      MEILI_HOST: undefined,
+      MEILI_INDEX_PREFIX: 'momo',
       COS_BUCKET: undefined,
       COS_KEY_PREFIX: 'media',
       COS_PUBLIC_BASE_URL: undefined,
@@ -42,6 +46,7 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
       LOG_LEVEL: appEnv === 'test' ? 'silent' : 'info',
       LOG_SQL: false,
       PORT: 7788,
+      SEARCH_PROVIDER: 'none',
       STORAGE_PROVIDER: 'local',
     },
     logger: mockLogger as unknown as Logger,
@@ -52,10 +57,20 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
       set: vi.fn(),
       wrap: vi.fn(),
     } as unknown as CacheDriver,
+    search: {
+      addDocuments: vi.fn(),
+      close: vi.fn(),
+      deleteDocument: vi.fn(),
+      deleteDocuments: vi.fn(),
+      health: vi.fn(),
+      search: vi.fn(),
+      updateSettings: vi.fn(),
+    } as unknown as SearchDriver,
     storage: {
       openFile: vi.fn(),
       remove: vi.fn(),
       save: vi.fn(),
+      stat: vi.fn(),
     } as unknown as StorageDriver,
   }
 }

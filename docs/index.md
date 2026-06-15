@@ -80,6 +80,7 @@
 
 - GitHub OAuth：[integrations/github-oauth.md](./integrations/github-oauth.md)
 - Google OAuth：[integrations/google-oauth.md](./integrations/google-oauth.md)
+- Meilisearch 搜索：[integrations/search/meilisearch.md](./integrations/search/meilisearch.md)
 - 外部服务：[integrations/index.md](./integrations/index.md)
 
 ## 目录结构

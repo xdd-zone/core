@@ -71,6 +71,7 @@
     "cos-nodejs-sdk-v5": "catalog:",
     "drizzle-orm": "catalog:",
     "hono": "catalog:",
+    "meilisearch": "catalog:",
     "pino": "catalog:",
     "postgres": "catalog:",
     "redis": "catalog:",

@@ -1,5 +1,6 @@
 import { createRuntime } from '#momo/bootstrap'
 import { MemoryCache, RedisCache } from '#momo/infra/cache'
+import { DisabledSearch, MeilisearchSearch } from '#momo/infra/search'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 function stubBaseEnv() {
@@ -36,5 +37,24 @@ describe('runtime 创建', () => {
     const runtime = createRuntime()
 
     expect(runtime.cache).toBeInstanceOf(RedisCache)
+  })
+
+  it('默认创建禁用搜索驱动', () => {
+    stubBaseEnv()
+
+    const runtime = createRuntime()
+
+    expect(runtime.search).toBeInstanceOf(DisabledSearch)
+  })
+
+  it('search_provider=meilisearch 时创建 Meilisearch 搜索驱动', () => {
+    stubBaseEnv()
+    vi.stubEnv('SEARCH_PROVIDER', 'meilisearch')
+    vi.stubEnv('MEILI_HOST', 'http://localhost:57700')
+    vi.stubEnv('MEILI_API_KEY', 'momo-meilisearch-development-master-key')
+
+    const runtime = createRuntime()
+
+    expect(runtime.search).toBeInstanceOf(MeilisearchSearch)
   })
 })

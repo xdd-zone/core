@@ -7,12 +7,14 @@
 - `apps/momo` 通过 `better-auth` 配置了 GitHub 登录。
 - `apps/momo` 通过 `better-auth` 配置了 Google 登录。
 - `apps/momo` 有本地文件存储和腾讯云 COS 驱动，当前还没有媒体上传接口。
+- `apps/momo` 有禁用搜索驱动和 Meilisearch 搜索驱动，当前还没有搜索接口和业务索引。
 - 登录、OAuth callback 和 session cookie 由 `/api/auth/*` 处理。
 
 相关文档：
 
 - [GitHub OAuth](./github-oauth.md)
 - [Google OAuth](./google-oauth.md)
+- [Meilisearch 搜索](./search/meilisearch.md)
 - [腾讯云 COS 对象存储](./storage/tencent-cos.md)
 
 ## 当前没有接入的服务

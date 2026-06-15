@@ -19,7 +19,7 @@
 - `src/middleware`
   放 request context、安全响应头、请求日志、CORS、请求耗时、请求体大小和超时 middleware。
 - `src/infra`
-  放 Pino logger、PostgreSQL 连接、Drizzle schema 入口、migration 目录、缓存驱动和文件存储驱动。
+  放 Pino logger、PostgreSQL 连接、Drizzle schema 入口、migration 目录、缓存驱动、搜索驱动和文件存储驱动。
 - `src/shared`
   放 Momo 内部共用的错误类型、环境变量读取、Hono 类型和响应 meta 生成函数。
 - `/`
@@ -35,7 +35,7 @@
 - `/rpc/bobo/auth/me`
   读取当前 session。未登录时返回 `user: null`，已登录时补上 `bobo.visitor` 角色。
 
-当前有内存缓存和 Redis 协议缓存，代码放在 `src/infra/cache`。Redis 协议缓存本地用 Valkey。当前有本地文件存储和腾讯云 COS 驱动，代码放在 `src/infra/storage`。当前还没有媒体上传接口和其他业务模块。日志封装放在 `src/infra/logger.ts`，认证表、访问表和 Better Auth rate limit 表已经放在 `src/infra/db/schema`，migration 放在 `src/infra/db/migrations`。
+当前有内存缓存和 Redis 协议缓存，代码放在 `src/infra/cache`。Redis 协议缓存本地用 Valkey。当前有本地文件存储和腾讯云 COS 驱动，代码放在 `src/infra/storage`。当前有禁用搜索驱动和 Meilisearch 搜索驱动，代码放在 `src/infra/search`。当前还没有媒体上传接口、搜索接口和其他业务模块。日志封装放在 `src/infra/logger.ts`，认证表、访问表和 Better Auth rate limit 表已经放在 `src/infra/db/schema`，migration 放在 `src/infra/db/migrations`。
 
 ## 常用命令
 
@@ -75,6 +75,8 @@ Momo 会给所有响应写常用安全响应头。`APP_ENV=production` 时会写
 Better Auth rate limit 在测试环境关闭，开发和生产环境开启。`/api/auth/sign-in/email` 在 `60s` 内最多 `5` 次，`/api/auth/sign-up/email` 在 `60s` 内最多 `3` 次，计数写入数据库表 `rate_limit`。
 
 缓存用 `CACHE_PROVIDER` 控制。默认值是 `memory`，数据只存在当前 Node.js 进程里。设成 `redis` 时，需要配置 `CACHE_URL`，本地 Valkey 地址是 `redis://localhost:56379`。`CACHE_KEY_PREFIX` 默认是 `momo`，`CACHE_DEFAULT_TTL_SECONDS` 默认是 `300` 秒。缓存代码放在 `src/infra/cache`，`createRuntime()` 会创建 `runtime.cache`。
+
+搜索用 `SEARCH_PROVIDER` 控制。默认值是 `none`，不会连接外部搜索服务。设成 `meilisearch` 时，需要配置 `MEILI_HOST` 和 `MEILI_API_KEY`，本地 Meilisearch 地址是 `http://localhost:57700`。`MEILI_INDEX_PREFIX` 默认是 `momo`，驱动会把逻辑索引名 `posts` 拼成真实索引名 `momo_posts`。搜索代码放在 `src/infra/search`，`createRuntime()` 会创建 `runtime.search`。当前还没有业务模块调用搜索驱动。
 
 文件存储用 `STORAGE_PROVIDER` 控制。默认值是 `local`，文件写到 `LOCAL_STORAGE_DIR`，未设置时使用 `storage/media`。设成 `cos` 时，需要配置 `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION`。`save()` 只保存图片，允许 `image/avif`、`image/gif`、`image/jpeg`、`image/png` 和 `image/webp`，单个文件最大 `10 MiB`。本地 `openFile()` 返回文件内容，COS `openFile()` 返回 `302` 跳转。`stat()` 可以读取文件大小、MIME 和修改时间。验证当前存储配置时，运行 `pnpm storage:test`。
 
