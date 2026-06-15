@@ -1,34 +1,42 @@
 # @xdd-zone/fifa
 
-`@xdd-zone/fifa` 是 XDD Zone Core 的前端控制台包。
+`@xdd-zone/fifa` 是 XDD Zone Core 的前端控制台，代码放在 `apps/fifa`。
 
-## 当前保留内容
+技术栈是 `React + Vite + TanStack Router + TanStack Query + TypeScript`。
 
-- React / Vite 入口
-- TanStack Router 路由
-- TanStack Query 请求状态
-- 基础布局、导航、标签栏和设置抽屉
-- Catppuccin 主题
-- 首页、404 页面和几个示例页
+## 现在能做什么
 
-当前接入了 Momo 的健康检查和 ping 验证接口。当前没有登录、权限和业务模块。
+- 提供 React / Vite 入口。
+- 使用 TanStack Router 生成路由树。
+- 使用 TanStack Query 管理 Momo 请求状态。
+- 有基础布局、侧边菜单、顶部栏、标签栏和设置抽屉。
+- 使用 Catppuccin 主题。
+- 有首页、404 页面和几个示例页。
+- 首页会请求 Momo 的 `GET /health`。
+- 点击 Ping 按钮时会请求 Momo 的 `POST /rpc/system/ping`。
+
+还没接入登录页面、权限页面和业务模块。
 
 ## 常用命令
 
-```bash
-cd apps/fifa
+在 monorepo 根目录执行：
 
-pnpm dev
-pnpm build
-pnpm preview
-pnpm lint
-pnpm lint:fix
-pnpm format
-pnpm format:check
-pnpm type-check
+```bash
+pnpm dev:fifa
+pnpm lint:fifa
+pnpm type-check:fifa
+pnpm build:fifa
 ```
 
-## 目录结构
+只跑子包命令时进入 `apps/fifa`：
+
+```bash
+pnpm dev
+pnpm preview
+pnpm format:check
+```
+
+## 常改位置
 
 ```text
 src/
@@ -40,8 +48,6 @@ src/
 ├── stores/
 └── utils/
 ```
-
-最常改的目录：
 
 - `app/router`
   路由类型、页面记录汇总和路由树。
@@ -56,7 +62,7 @@ src/
 - `stores`
   设置、标签栏等本地状态。
 
-## 当前页面路径
+## 页面路径
 
 - `/`
 - `/env-example`
@@ -69,7 +75,7 @@ src/
 - `/not-found-example`
 - `/404`
 
-## 新增页面时通常要改哪几处
+## 新增页面要改哪里
 
 1. `apps/fifa/src/features/<module>/pages/<Page>.tsx`
 2. `apps/fifa/src/features/<module>/routes.tsx`
@@ -77,7 +83,7 @@ src/
 
 `apps/fifa/src/app/navigation/navigation.ts` 会从页面记录生成菜单。已有菜单组只需要在模块页面记录里写 `menu.group`。
 
-## 新增 Momo 请求时通常要改哪几处
+## 新增 Momo 请求要改哪里
 
 1. `apps/fifa/src/api/<module>/<name>.api.ts`
 2. `apps/fifa/src/api/<module>/<module>.query.ts`
@@ -85,10 +91,19 @@ src/
 
 页面只调用 `*.query.ts` 导出的 hook。不要在页面里直接 import `momoClient`。
 
+## 环境变量
+
+示例文件在 `apps/fifa/.env.example`。
+
+```text
+VITE_APP_ENV=development
+VITE_MOMO_BASE_URL=http://localhost:7788
+```
+
 ## 开发前先看
 
 只要任务涉及页面、布局、导航或展示型组件，先看：
 
 1. `apps/fifa/design-context.md`
-2. `docs/apps/fifa.md`
-3. `docs/topics/theme.md`
+2. [docs/apps/fifa.md](../../docs/apps/fifa.md)
+3. [docs/topics/theme.md](../../docs/topics/theme.md)

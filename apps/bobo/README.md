@@ -1,33 +1,64 @@
-# bobo
+# @xdd-zone/bobo
 
-个人站点项目，放在 monorepo 的 `apps/bobo`。
+`@xdd-zone/bobo` 是 XDD Zone Core 的个人站点，代码放在 `apps/bobo`。
 
-## 位置
+技术栈是 `Next.js 16 + React 19 + Tailwind CSS 4 + TypeScript`。开发服务默认使用 `4399` 端口。
 
-- 页面入口在 `app/page.tsx`
-- 全局布局在 `app/layout.tsx`
-- 全局样式在 `app/globals.css`
+## 现在能做什么
 
-## 用法
+- 首页在 `app/page.tsx`。
+- 样式演示和临时页面放在 `app/lab`。
+- 全局布局、字体、metadata 和主题初始化放在 `app/layout.tsx`。
+- Catppuccin 主题从 `@xdd-zone/catppuccin-theme/styles/bobo.css` 引入。
+- Next 服务端代码通过 `MOMO_BASE_URL` 读取 Momo 地址。
+
+## 常用命令
 
 在 monorepo 根目录执行：
 
 ```bash
 pnpm dev:bobo
+pnpm lint:bobo
+pnpm type-check:bobo
+pnpm build:bobo
 ```
 
-开发环境默认使用 `4399` 端口，打开 [http://localhost:4399](http://localhost:4399) 即可查看页面。
+打开 [http://localhost:4399](http://localhost:4399) 查看页面。
 
-生产模式可用下面两个命令：
+生产服务用子包脚本启动：
 
 ```bash
-pnpm build:bobo
 pnpm --filter @xdd-zone/bobo start
 ```
 
-`@xdd-zone/bobo` 的 `start` 脚本也会使用 `4399` 端口启动服务。
+## 常改位置
 
-## 输入输出
+- `app/page.tsx`
+  首页。
+- `app/layout.tsx`
+  全局布局、字体、metadata 和主题初始化脚本。
+- `app/globals.css`
+  全局样式入口。
+- `app/styles`
+  基础样式、背景纹理和动画工具类。
+- `components`
+  站点组件。
+- `lib`
+  主题函数和工具函数。
 
-- 输入：本地修改 `app/` 下的页面、布局和样式文件
-- 输出：浏览器里实时看到更新后的站点内容
+## 环境变量
+
+示例文件在 `apps/bobo/.env.example`。
+
+```text
+MOMO_BASE_URL=http://localhost:7788
+```
+
+本地开发配置放在 `apps/bobo/.env.development`。`MOMO_BASE_URL` 只给 Next 服务端代码读取。
+
+## 改动前看哪里
+
+详细维护规则看：
+
+- [docs/apps/bobo.md](../../docs/apps/bobo.md)
+- [docs/topics/theme.md](../../docs/topics/theme.md)

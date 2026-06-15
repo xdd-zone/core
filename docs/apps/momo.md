@@ -1,12 +1,12 @@
 # Momo 后端指南
 
-这份文档说明 `apps/momo` 后续怎么组织。
+这份文档说明 `apps/momo` 现在怎么组织。
 
-## 后续保留内容
+## 代码组织约定
 
 `@xdd-zone/momo` 是 Hono API 服务，运行在 Node.js 上。
 
-后续保留这些约定：
+代码按这些约定维护：
 
 - `src/index.ts` 只启动 Node 服务。
 - `src/app.ts` 创建运行时 app，给测试和包导出使用。

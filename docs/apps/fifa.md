@@ -2,9 +2,9 @@
 
 这份文档说明 `apps/fifa` 当前怎么组织。
 
-## 当前保留内容
+## 现在包含什么
 
-`@xdd-zone/fifa` 现在保留基础控制台框架：
+`@xdd-zone/fifa` 现在包含基础控制台框架：
 
 - React / Vite 入口。
 - TanStack Router 路由。
