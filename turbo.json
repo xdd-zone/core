@@ -3,17 +3,52 @@
   "tasks": {
     "dev": {
       "cache": false,
-      "env": ["APP_ENV", "PORT", "DATABASE_URL", "VITE_APP_ENV", "VITE_MOMO_BASE_URL"],
+      "env": [
+        "APP_ENV",
+        "PORT",
+        "DATABASE_URL",
+        "VITE_APP_ENV",
+        "VITE_MOMO_BASE_URL",
+        "VITE_DEV_BASE_PATH",
+        "BOBO_BASE_PATH",
+        "BOBO_ALLOWED_DEV_ORIGINS"
+      ],
+      "persistent": true
+    },
+    "dev:cs": {
+      "cache": false,
+      "env": [
+        "APP_ENV",
+        "PORT",
+        "DATABASE_URL",
+        "VITE_APP_ENV",
+        "VITE_MOMO_BASE_URL",
+        "VITE_DEV_BASE_PATH",
+        "BOBO_BASE_PATH",
+        "BOBO_ALLOWED_DEV_ORIGINS"
+      ],
       "persistent": true
     },
     "build": {
       "dependsOn": ["^build"],
-      "env": ["APP_ENV", "PORT", "DATABASE_URL", "VITE_APP_ENV", "VITE_MOMO_BASE_URL"],
+      "env": [
+        "APP_ENV",
+        "PORT",
+        "DATABASE_URL",
+        "VITE_APP_ENV",
+        "VITE_MOMO_BASE_URL"
+      ],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", "build/**", ".next/**", "!.next/cache/**"]
     },
     "lint": {
-      "env": ["APP_ENV", "PORT", "DATABASE_URL", "VITE_APP_ENV", "VITE_MOMO_BASE_URL"],
+      "env": [
+        "APP_ENV",
+        "PORT",
+        "DATABASE_URL",
+        "VITE_APP_ENV",
+        "VITE_MOMO_BASE_URL"
+      ],
       "outputs": []
     },
     "lint:fix": {
@@ -27,11 +62,23 @@
     },
     "type-check": {
       "dependsOn": ["^build"],
-      "env": ["APP_ENV", "PORT", "DATABASE_URL", "VITE_APP_ENV", "VITE_MOMO_BASE_URL"],
+      "env": [
+        "APP_ENV",
+        "PORT",
+        "DATABASE_URL",
+        "VITE_APP_ENV",
+        "VITE_MOMO_BASE_URL"
+      ],
       "outputs": []
     },
     "test": {
-      "env": ["APP_ENV", "PORT", "DATABASE_URL", "VITE_APP_ENV", "VITE_MOMO_BASE_URL"],
+      "env": [
+        "APP_ENV",
+        "PORT",
+        "DATABASE_URL",
+        "VITE_APP_ENV",
+        "VITE_MOMO_BASE_URL"
+      ],
       "outputs": ["coverage/**"]
     },
     "clean": {

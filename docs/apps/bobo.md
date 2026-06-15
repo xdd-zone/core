@@ -73,6 +73,8 @@ Bobo 通过环境变量读取 Momo 地址：
 
 ```text
 MOMO_BASE_URL=http://localhost:7788
+BOBO_ALLOWED_DEV_ORIGINS=localhost,127.0.0.1
+BOBO_BASE_PATH=
 ```
 
 示例文件在：
@@ -88,6 +90,12 @@ apps/bobo/.env.development
 ```
 
 `MOMO_BASE_URL` 只给 Next 服务端代码读取。只有浏览器代码直接请求 Momo 时，才使用 `NEXT_PUBLIC_` 前缀。
+
+`BOBO_ALLOWED_DEV_ORIGINS` 用来放 Next 开发服务允许访问的 hostname，多个值用英文逗号隔开。
+
+`BOBO_BASE_PATH` 用来改 Next 路由前缀。正常本地开发时留空。通过 code-server 访问时填 `/absproxy/4399`，让页面、站内链接和 `/_next/static` 资源都走同一个前缀。
+
+code-server 的配置放在 `apps/bobo/.env.code-server`，启动命令和访问地址看 [code-server 开发](../development/code-server.md)。
 
 ## 页面规则
 

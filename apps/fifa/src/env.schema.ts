@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 export const fifaEnvSchema = z.object({
   VITE_APP_ENV: z.enum(['development', 'test', 'production']),
+  VITE_DEV_BASE_PATH: z.string().optional(),
   VITE_MOMO_BASE_URL: z.string().url(),
 })
 
@@ -10,6 +11,7 @@ export type FifaEnv = z.infer<typeof fifaEnvSchema>
 export function parseFifaEnv(source: Record<string, unknown>): FifaEnv {
   const result = fifaEnvSchema.safeParse({
     VITE_APP_ENV: source.VITE_APP_ENV,
+    VITE_DEV_BASE_PATH: source.VITE_DEV_BASE_PATH,
     VITE_MOMO_BASE_URL: source.VITE_MOMO_BASE_URL,
   })
 

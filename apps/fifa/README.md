@@ -97,8 +97,11 @@ src/
 
 ```text
 VITE_APP_ENV=development
+VITE_DEV_BASE_PATH=
 VITE_MOMO_BASE_URL=http://localhost:7788
 ```
+
+通过 code-server 访问 Fifa 时，用 `pnpm dev:cs`，地址看 [docs/development/code-server.md](../../docs/development/code-server.md)。
 
 ## 开发前先看
 

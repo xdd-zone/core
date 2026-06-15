@@ -128,6 +128,16 @@ Fifa 当前还会读取运行环境：
 VITE_APP_ENV=development
 ```
 
+code-server 开发时，Fifa 还会读取代理路径：
+
+```text
+VITE_DEV_BASE_PATH=/absproxy/2333
+```
+
+正常本地开发时，这个变量留空。
+
+通过 code-server 访问 Fifa 时，用 `pnpm dev:cs`，访问地址看 [code-server 开发](../development/code-server.md)。
+
 示例文件在：
 
 ```text

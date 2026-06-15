@@ -22,6 +22,7 @@ out
 .env.development.local
 .env.test
 .env.test.local
+.env.code-server
 !apps/momo/.env.test
 .env.production
 .env.production.local

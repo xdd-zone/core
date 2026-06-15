@@ -298,6 +298,9 @@ importers:
       '@xdd-zone/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      dotenv-cli:
+        specifier: 'catalog:'
+        version: 11.0.0
       eslint:
         specifier: catalog:next
         version: 10.4.1(jiti@2.7.0)
@@ -425,6 +428,9 @@ importers:
       '@xdd-zone/momo':
         specifier: workspace:*
         version: link:../momo
+      dotenv-cli:
+        specifier: 'catalog:'
+        version: 11.0.0
       esbuild:
         specifier: 'catalog:'
         version: 0.28.0

@@ -26,6 +26,7 @@
   },
   "scripts": {
     "dev": "next dev -p 4399",
+    "dev:cs": "dotenv -e .env.code-server -- next dev -p 4399",
     "build": "pnpm run type-check && next build",
     "start": "next start -p 4399",
     "lint": "eslint .",
@@ -55,6 +56,7 @@
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
     "@xdd-zone/eslint-config": "workspace:*",
+    "dotenv-cli": "catalog:",
     "eslint": "catalog:next",
     "prettier": "catalog:next",
     "tailwindcss": "catalog:",

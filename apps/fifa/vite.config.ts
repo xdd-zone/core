@@ -28,13 +28,17 @@ function getPackageName(id: string): string | null {
 
 export default defineConfig(({ mode }) => {
   const momoProxyTarget = process.env.MOMO_PROXY_TARGET || 'https://momo.test.xdd.ink'
-
-  parseFifaEnv({
+  const viteEnv = {
     ...loadEnv(mode, __dirname, 'VITE_'),
     ...process.env,
-  })
+  }
+  const devBasePath = typeof viteEnv.VITE_DEV_BASE_PATH === 'string' ? viteEnv.VITE_DEV_BASE_PATH : ''
+  const normalizedDevBasePath = devBasePath === '' ? '/' : `/${devBasePath.replace(/^\/|\/$/g, '')}/`
+
+  parseFifaEnv(viteEnv)
 
   return {
+    base: normalizedDevBasePath,
     build: {
       // 静态资源目录
       assetsDir: 'assets',

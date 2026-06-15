@@ -25,6 +25,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:cs": "dotenv -e .env.code-server -- vite",
     "build": "pnpm run type-check && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -74,6 +75,7 @@
     "@vitejs/plugin-react": "catalog:vite",
     "@xdd-zone/eslint-config": "workspace:*",
     "@xdd-zone/momo": "workspace:*",
+    "dotenv-cli": "catalog:",
     "esbuild": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",

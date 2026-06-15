@@ -117,6 +117,14 @@ pnpm dev:bobo
 - Bobo: `http://localhost:4399`
 - Health: `http://localhost:7788/health`
 
+code-server 里通过代理访问本机服务时，用：
+
+```bash
+pnpm dev:cs
+```
+
+具体地址和环境变量看 [code-server 开发](./development/code-server.md)。
+
 ## 构建命令
 
 ```bash

@@ -5,7 +5,19 @@ import { createRouter } from '@tanstack/react-router'
 import { queryClient } from '../query-client'
 import { routeTree } from './routes'
 
+function getRouterBasepath(): string {
+  const devBasePath = import.meta.env.VITE_DEV_BASE_PATH?.replace(/\/$/, '') || ''
+
+  if (devBasePath === '') return '/'
+  if (typeof window === 'undefined') return devBasePath
+
+  return window.location.pathname === devBasePath || window.location.pathname.startsWith(`${devBasePath}/`)
+    ? devBasePath
+    : '/'
+}
+
 export const router = createRouter({
+  basepath: getRouterBasepath(),
   context: {
     queryClient,
   },
