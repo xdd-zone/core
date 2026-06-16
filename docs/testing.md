@@ -24,7 +24,10 @@ apps/momo/src/test/
 │   └── request-log.middleware.test.ts
 ├── modules/                    # 对应 src/modules
 │   ├── auth/
+│   │   ├── auth.guard.test.ts
 │   │   └── auth.route.test.ts
+│   ├── content/
+│   │   └── content.route.test.ts
 │   └── system/
 │       └── system.route.test.ts
 └── shared/                     # 对应 src/shared
@@ -100,7 +103,8 @@ expect(mockLogger.info).toHaveBeenCalled()
 - `it` 描述用中文或英文都行，和当前文件已有风格保持一致。
 - mock 只 mock 外部依赖（数据库、日志），不 mock 被测模块内部逻辑。
 - 测试之间不共享可变状态。
-- Momo 认证接口测试读取 `apps/momo/.env.test`，使用 `momo_test` 数据库。先运行 `pnpm --filter @xdd-zone/momo local:up`，测试会自动创建 `momo_test`、执行 migration，并清理这个测试库里的表。
+- Momo 认证和内容接口测试读取 `apps/momo/.env.test`，使用 `momo_test` 数据库。先运行 `pnpm --filter @xdd-zone/momo local:up`，测试会自动创建 `momo_test`、执行 migration，并清理这个测试库里的表。
+- Momo 测试通过 `apps/momo/vitest.config.ts` 关闭文件并行，避免多个数据库接口测试同时重建同一个测试库。
 
 ## 检查命令
 

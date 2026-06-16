@@ -1,0 +1,90 @@
+import type { MomoRuntime } from '#momo/bootstrap'
+import type { ContentRepository } from '#momo/modules/content/content.repository'
+import type { ContentPostRecord, ContentPreviewTokenRecord } from '#momo/modules/content/content.types'
+import type { AppError } from '#momo/shared/app-error'
+import { createContentService } from '#momo/modules/content/content.service'
+import { BizCode } from '@xdd-zone/contracts'
+import { describe, expect, it, vi } from 'vitest'
+
+describe('content service', () => {
+  it('预览 token 指向丢失的版本时返回系统错误', async () => {
+    const repository = createRepository({
+      getPostById: vi.fn(async () => createPostRecord()),
+      getPreviewToken: vi.fn(async () => createPreviewTokenRecord()),
+      getRevisionById: vi.fn(async () => undefined),
+    })
+    const service = createContentService(createRuntime(), repository)
+
+    await expect(service.getPreviewPost('preview-token')).rejects.toMatchObject({
+      code: BizCode.SYSTEM_INTERNAL_ERROR,
+      message: '文章预览版本不存在',
+      status: 500,
+    } satisfies Partial<AppError>)
+  })
+})
+
+function createRepository(overrides: Partial<ContentRepository> = {}): ContentRepository {
+  return {
+    createAsset: vi.fn(),
+    createPost: vi.fn(),
+    createPreviewToken: vi.fn(),
+    findPostBySlug: vi.fn(),
+    getAssetById: vi.fn(),
+    getPostById: vi.fn(),
+    getPostBySlug: vi.fn(),
+    getPreviewToken: vi.fn(),
+    getRevisionById: vi.fn(),
+    listPosts: vi.fn(),
+    listPublicPosts: vi.fn(),
+    markPreviewTokenUsed: vi.fn(),
+    publishPost: vi.fn(),
+    saveDraft: vi.fn(),
+    ...overrides,
+  } as ContentRepository
+}
+
+function createRuntime(): MomoRuntime {
+  return {
+    storage: {
+      remove: vi.fn(),
+      save: vi.fn(),
+    },
+  } as unknown as MomoRuntime
+}
+
+function createPostRecord(): ContentPostRecord {
+  const now = new Date()
+
+  return {
+    coverAssetId: null,
+    createdAt: now,
+    createdBy: 'user-id',
+    draftRevisionId: 'revision-id',
+    excerpt: null,
+    format: 'markdown',
+    id: 'post-id',
+    publishedAt: null,
+    publishedBy: null,
+    publishedRevisionId: null,
+    slug: 'post-slug',
+    status: 'draft',
+    title: 'Post title',
+    updatedAt: now,
+    updatedBy: 'user-id',
+  }
+}
+
+function createPreviewTokenRecord(): ContentPreviewTokenRecord {
+  const now = new Date()
+
+  return {
+    createdAt: now,
+    createdBy: 'user-id',
+    expiresAt: new Date(Date.now() + 60_000),
+    id: 'preview-token-id',
+    postId: 'post-id',
+    revisionId: 'missing-revision',
+    tokenHash: 'token-hash',
+    usedAt: null,
+  }
+}

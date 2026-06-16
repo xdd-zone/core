@@ -16,6 +16,7 @@
 ```text
 apps/momo/src/modules/system/system.route.ts
 apps/momo/src/modules/auth/auth.route.ts
+apps/momo/src/modules/content/content.route.ts
 ```
 
 相关入口：
@@ -35,7 +36,7 @@ apps/momo/src/modules/auth/auth.route.ts
 - `packages/contracts/src`
   放接口 schema、类型和统一响应结构。
 
-后续新增接口按 [apps/momo.md](../apps/momo.md) 放到 `apps/momo/src/modules/<module>`。
+后续新增接口按 [apps/momo.md](../apps/momo.md) 放到 `apps/momo/src/modules/<module>`。content 模块的文件职责和类型写法也看这份文档。
 
 ## 当前接口
 
@@ -47,6 +48,17 @@ apps/momo/src/modules/auth/auth.route.ts
 | `GET` | `/rpc/fifa/auth/me` | 当前 fifa 用户 |
 | `GET` | `/rpc/bobo/auth/me` | 当前 bobo 用户，未登录时 `user` 为 `null` |
 | `GET`/`POST` | `/api/auth/*` | `better-auth` 登录、登出、OAuth callback 和 session cookie |
+| `GET` | `/rpc/content/posts` | 后台文章列表 |
+| `POST` | `/rpc/content/posts` | 创建文章草稿 |
+| `GET` | `/rpc/content/posts/:id` | 后台文章详情 |
+| `PATCH` | `/rpc/content/posts/:id/draft` | 保存文章草稿并写入新 revision |
+| `POST` | `/rpc/content/posts/:id/preview-token` | 生成 30 分钟有效的预览 token |
+| `POST` | `/rpc/content/posts/:id/publish` | 发布当前草稿 revision |
+| `GET` | `/rpc/content/mdx-components` | MDX 组件清单 |
+| `POST` | `/rpc/content/assets/images` | 上传图片素材 |
+| `GET` | `/rpc/content/previews/:token` | 使用预览 token 读取文章 revision |
+| `GET` | `/rpc/content/public/posts` | 公开文章列表，只返回已发布文章 |
+| `GET` | `/rpc/content/public/posts/:slug` | 公开文章详情，只返回已发布文章 |
 
 公开邮箱注册被禁用：
 

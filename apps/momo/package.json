@@ -54,7 +54,7 @@
     "lint:fix": "eslint --no-error-on-unmatched-pattern . --fix",
     "format": "prettier --config prettier.config.js --write .",
     "format:check": "prettier --config prettier.config.js --check .",
-    "test": "dotenv -e .env.test -- vitest run --passWithNoTests",
+    "test": "dotenv -e .env.test -- vitest run --config vitest.config.ts --passWithNoTests",
     "type-check": "tsc --noEmit",
     "auth:generate": "dotenv -e .env.development -- better-auth generate --config src/modules/auth/auth.generate.ts --output src/infra/db/schema/auth.schema.ts --yes && eslint --fix src/infra/db/schema/auth.schema.ts",
     "seed:owner": "dotenv -e .env.development -- tsx --conditions=development src/scripts/seed-owner.ts",

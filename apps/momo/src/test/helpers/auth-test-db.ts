@@ -18,7 +18,8 @@ import postgres from 'postgres'
 const TEST_DATABASE_NAME = 'momo_test'
 const TEST_DATABASE_URL = 'postgres://momo:momo@localhost:55432/momo_test'
 const ADMIN_DATABASE_URL = 'postgres://momo:momo@localhost:55432/postgres'
-const migrationFiles = ['0000_watery_praxagora.sql', '0001_plain_cerise.sql']
+const migrationFiles = ['0000_watery_praxagora.sql', '0001_plain_cerise.sql', '0002_open_victor_mancha.sql']
+let prepareDatabaseQueue = Promise.resolve()
 
 export const TEST_USER_PASSWORD = 'test-password-123'
 
@@ -33,14 +34,18 @@ export async function prepareAuthTestDatabase(): Promise<void> {
     throw new Error(`auth 集成测试只能连接 ${TEST_DATABASE_URL}`)
   }
 
-  await closeDb()
-  await ensureTestDatabase()
-  await resetSchema()
+  prepareDatabaseQueue = prepareDatabaseQueue.then(async () => {
+    await closeDb()
+    await ensureTestDatabase()
+    await resetSchema()
+  })
+
+  await prepareDatabaseQueue
 }
 
 export async function resetAuthTestData(): Promise<void> {
   await getDb().execute(
-    'TRUNCATE TABLE "rate_limit", "verification", "session", "account", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
+    'TRUNCATE TABLE "content_preview_tokens", "content_post_revisions", "content_posts", "content_assets", "rate_limit", "verification", "session", "account", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
   )
 
   await seedAccessRecords()

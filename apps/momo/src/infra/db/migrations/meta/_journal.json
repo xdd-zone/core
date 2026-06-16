@@ -15,6 +15,13 @@
       "when": 1781323626069,
       "tag": "0001_plain_cerise",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781580556738,
+      "tag": "0002_open_victor_mancha",
+      "breakpoints": true
     }
   ]
 }
