@@ -76,6 +76,10 @@ apps/momo/src/
 │   │   ├── auth.route.ts
 │   │   ├── auth.types.ts
 │   │   ├── index.ts
+│   │   ├── guards/
+│   │   │   ├── auth.guard.ts
+│   │   │   ├── index.ts
+│   │   │   └── permission.guard.ts
 │   │   └── services/
 │   │       ├── access.service.ts
 │   │       ├── auth.service.ts
@@ -439,12 +443,16 @@ apps/momo/src/modules/auth
   调用 `better-auth` handler，读取当前 session，并从 `user` 表整理当前用户返回值。
 - `services/access.service.ts`
   判断当前用户能不能进入 `fifa`，以及给已登录的 `bobo` 用户补 `bobo.visitor`。
+- `guards/auth.guard.ts`
+  提供 `createRequireAuth()` 和 `createRequireFifaOwner()`，给业务路由检查登录状态和 `fifa.owner`。
+- `guards/permission.guard.ts`
+  提供 `createRequirePermission()`。当前 `content.*` 权限先要求 `fifa.owner`。
 - `access.repository.ts`
   读取 `account`、`applications`、`application_auth_methods`、`roles` 和 `user_role_bindings`。
 - `auth.types.ts`
-  放认证模块内部使用的应用、登录方式、角色和用户返回类型。
+  放认证模块内部使用的应用、登录方式、角色、权限码和用户返回类型。
 - `index.ts`
-  只导出 `createAuthRoute()`。
+  导出 `createAuthRoute()` 和业务模块可用的 auth guard。
 - `services/index.ts`
   只导出认证模块里的 service 函数。
 
@@ -937,6 +945,7 @@ apps/momo/src/test
 ```text
 apps/momo/src/test/modules/system/system.route.test.ts
 apps/momo/src/test/modules/auth/auth.route.test.ts
+apps/momo/src/test/modules/auth/auth.guard.test.ts
 ```
 
 接口测试继续使用 `app.request()`。
