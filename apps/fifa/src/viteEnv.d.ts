@@ -2,6 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_APP_ENV: 'development' | 'test' | 'production'
+  readonly VITE_BOBO_BASE_URL: string
   readonly VITE_DEV_BASE_PATH?: string
   readonly VITE_MOMO_BASE_URL: string
 }

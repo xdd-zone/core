@@ -202,6 +202,7 @@ export default {
     brand: 'XDD Fifa',
   },
   menu: {
+    content: '内容',
     envExample: '环境变量',
     errorExample: '错误状态',
     examples: '示例',
@@ -210,6 +211,8 @@ export default {
     imageCrop: '图片裁剪',
     markdownExample: 'Markdown 演示',
     notFoundExample: '404 示例',
+    postEdit: '编辑文章',
+    posts: '文章',
     tiptapExample: 'Tiptap 演示',
     uiShowcase: '组件与主题',
   },

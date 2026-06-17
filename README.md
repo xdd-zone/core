@@ -224,6 +224,26 @@ pnpm dev:bobo
   返回当前 `fifa` 用户，要求当前用户有 `fifa.owner`。
 - `/rpc/bobo/auth/me`
   返回当前 `bobo` 用户，未登录时返回 `user: null`。
+- `/rpc/content/posts`
+  后台文章列表和创建文章草稿。
+- `/rpc/content/posts/:id`
+  后台文章详情。
+- `/rpc/content/posts/:id/draft`
+  保存文章草稿。
+- `/rpc/content/posts/:id/preview-token`
+  生成文章预览 token。
+- `/rpc/content/posts/:id/publish`
+  发布文章。
+- `/rpc/content/mdx-components`
+  返回 MDX 组件清单。
+- `/rpc/content/assets/images`
+  上传图片素材。
+- `/rpc/content/previews/:token`
+  使用预览 token 读取文章 revision。
+- `/rpc/content/public/posts`
+  公开文章列表。
+- `/rpc/content/public/posts/:slug`
+  公开文章详情。
 
 ## 文档入口
 

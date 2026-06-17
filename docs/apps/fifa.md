@@ -11,8 +11,9 @@
 - 基础布局、侧边菜单、顶部栏、标签栏和设置抽屉。
 - Catppuccin 主题。
 - 登录页、首页、404 页面和几个示例页。
+- 内容模块，当前提供文章列表、创建和编辑页。
 
-当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前没有权限和业务模块。
+当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章管理接口。
 
 ## 开始改 UI 前先看
 
@@ -56,6 +57,8 @@ apps/fifa/src/
 
 - `/login`
 - `/`
+- `/content/posts`
+- `/content/posts/$postId`
 - `/env-example`
 - `/ui-showcase`
 - `/markdown-example`
@@ -106,6 +109,9 @@ apps/fifa/src/api/system/health.api.ts
 apps/fifa/src/api/system/ping.api.ts
 apps/fifa/src/api/system/system.query.ts
 apps/fifa/src/api/system/index.ts
+apps/fifa/src/api/content/posts.api.ts
+apps/fifa/src/api/content/content.query.ts
+apps/fifa/src/api/content/index.ts
 ```
 
 文件分工：
@@ -120,6 +126,10 @@ apps/fifa/src/api/system/index.ts
   调 Momo RPC。页面不要直接 import `momoClient`。
 - `api/system/system.query.ts`
   放 system 模块的 query key 和 hooks。页面不要手写 system query key。
+- `api/content/*.api.ts`
+  调 Momo content RPC。页面不要直接 import `momoClient`。
+- `api/content/content.query.ts`
+  放 content 模块的 query key 和 hooks。页面不要手写 content query key。
 
 Fifa 通过环境变量读取 Momo 地址：
 
@@ -128,6 +138,12 @@ VITE_MOMO_BASE_URL=http://localhost:7788
 ```
 
 通过 code-server 访问时，这里填 `https://code.example.com/proxy/7788`。
+
+Fifa 通过环境变量读取 Bobo 地址，用来拼文章预览 iframe 地址：
+
+```text
+VITE_BOBO_BASE_URL=http://localhost:3000
+```
 
 Fifa 当前还会读取运行环境：
 
@@ -158,6 +174,14 @@ POST /api/auth/sign-in/email
 GET /rpc/fifa/auth/me
 GET /health
 POST /rpc/system/ping
+GET /rpc/content/posts
+POST /rpc/content/posts
+GET /rpc/content/posts/:id
+PATCH /rpc/content/posts/:id/draft
+POST /rpc/content/posts/:id/preview-token
+POST /rpc/content/posts/:id/publish
+GET /rpc/content/mdx-components
+POST /rpc/content/assets/images
 ```
 
 当前写法：
@@ -170,6 +194,8 @@ POST /rpc/system/ping
   用 `useSystemHealthQuery()`，页面打开后自动请求，也可以点刷新按钮重新请求。
 - `POST /rpc/system/ping`
   用 `usePingSystemMutation()`，只在点击 Ping 按钮时发送。
+- content 文章接口
+  页面通过 `apps/fifa/src/api/content/content.query.ts` 里的 hooks 调用。
 
 新增 Fifa 请求时按这个顺序写：
 

@@ -16,8 +16,9 @@
 - 点击 Ping 按钮时会请求 Momo 的 `POST /rpc/system/ping`。
 - 登录页会请求 Momo 的 `POST /api/auth/sign-in/email`。
 - 登录成功后会请求 Momo 的 `GET /rpc/fifa/auth/me`。
+- 内容模块会请求 Momo 的文章管理、预览 token、MDX 组件和图片上传接口。
 
-还没接入权限页面和业务模块。
+还没接入权限页面。
 
 ## 常用命令
 
@@ -68,6 +69,8 @@ src/
 
 - `/login`
 - `/`
+- `/content/posts`
+- `/content/posts/$postId`
 - `/env-example`
 - `/ui-showcase`
 - `/markdown-example`
@@ -102,9 +105,12 @@ src/
 
 ```text
 VITE_APP_ENV=development
+VITE_BOBO_BASE_URL=http://localhost:3000
 VITE_DEV_BASE_PATH=
 VITE_MOMO_BASE_URL=http://localhost:7788
 ```
+
+`VITE_BOBO_BASE_URL` 用来拼文章预览地址，格式是 `${VITE_BOBO_BASE_URL}/preview/posts/${postId}?token=${token}`。
 
 通过 code-server 访问 Fifa 时，用 `pnpm dev:cs`，地址看 [docs/development/code-server.md](../../docs/development/code-server.md)。
 

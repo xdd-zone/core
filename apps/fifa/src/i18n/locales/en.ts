@@ -202,6 +202,7 @@ export default {
     brand: 'XDD Fifa',
   },
   menu: {
+    content: 'Content',
     envExample: 'Environment',
     errorExample: 'Error State',
     examples: 'Examples',
@@ -210,6 +211,8 @@ export default {
     imageCrop: 'Image Crop',
     markdownExample: 'Markdown',
     notFoundExample: '404 Example',
+    postEdit: 'Edit Post',
+    posts: 'Posts',
     tiptapExample: 'Tiptap',
     uiShowcase: 'Components And Theme',
   },

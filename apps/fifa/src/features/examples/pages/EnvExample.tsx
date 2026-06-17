@@ -30,6 +30,11 @@ export function EnvExample() {
       scope: t('example.env.scope.browser'),
       value: fifaEnv.VITE_MOMO_BASE_URL,
     },
+    {
+      key: 'VITE_BOBO_BASE_URL',
+      scope: t('example.env.scope.browser'),
+      value: fifaEnv.VITE_BOBO_BASE_URL,
+    },
   ]
 
   const momoRows = [
