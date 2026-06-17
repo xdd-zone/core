@@ -56,6 +56,12 @@ describe('content 工具函数', () => {
     expect(buildBoboPreviewUrl('post-1', 'token-1')).toBe('http://localhost:3000/preview/posts/post-1?token=token-1')
   })
 
+  it('bobo 地址带 code-server 路径时保留代理前缀', () => {
+    expect(buildBoboPreviewUrl('post-1', 'token-1', 'https://code.xdd.ink/absproxy/4399')).toBe(
+      'https://code.xdd.ink/absproxy/4399/preview/posts/post-1?token=token-1',
+    )
+  })
+
   it('把 MDX 片段插入 textarea 当前光标位置', () => {
     expect(insertTextAtSelection('hello world', '<Callout />', { end: 5, start: 5 })).toBe('hello<Callout /> world')
   })

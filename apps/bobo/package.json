@@ -33,14 +33,17 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --config prettier.config.mjs --write .",
     "format:check": "prettier --config prettier.config.mjs --check .",
+    "test": "vitest run --config vitest.config.ts --passWithNoTests",
     "type-check": "next typegen && tsc --noEmit",
     "clean": "rm -rf .next"
   },
   "dependencies": {
     "@xdd-zone/catppuccin-theme": "workspace:*",
+    "@xdd-zone/contracts": "workspace:*",
     "class-variance-authority": "catalog:next",
     "clsx": "catalog:",
     "lucide-react": "catalog:next",
+    "markdown-to-jsx": "catalog:",
     "next": "catalog:next",
     "radix-ui": "catalog:next",
     "react": "catalog:react",
@@ -60,6 +63,7 @@
     "eslint": "catalog:next",
     "prettier": "catalog:next",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

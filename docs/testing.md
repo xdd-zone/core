@@ -159,6 +159,7 @@ cd apps/momo && pnpm test
 pnpm lint:bobo
 pnpm type-check:bobo
 pnpm build:bobo
+pnpm --filter @xdd-zone/bobo test
 ```
 
 只改 `apps/bobo` 的 Markdown 时，可以只跑：

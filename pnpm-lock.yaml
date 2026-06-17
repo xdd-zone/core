@@ -249,6 +249,9 @@ importers:
       '@xdd-zone/catppuccin-theme':
         specifier: workspace:*
         version: link:../../packages/catppuccin-theme
+      '@xdd-zone/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       class-variance-authority:
         specifier: catalog:next
         version: 0.7.1
@@ -258,6 +261,9 @@ importers:
       lucide-react:
         specifier: catalog:next
         version: 1.17.0(react@19.2.7)
+      markdown-to-jsx:
+        specifier: 'catalog:'
+        version: 9.8.1(react@19.2.7)
       next:
         specifier: catalog:next
         version: 16.2.4(@babel/core@7.29.7)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -313,6 +319,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.8(@types/node@22.19.20)(msw@2.14.6(@types/node@22.19.20)(typescript@5.9.3))(vite@8.0.16(@types/node@22.19.20)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
 
   apps/fifa:
     dependencies:

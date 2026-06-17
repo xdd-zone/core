@@ -25,6 +25,8 @@
   管全局布局、字体、metadata、主题初始化脚本和页面背景。
 - `apps/bobo/app/page.tsx`
   首页。
+- `apps/bobo/app/preview/posts/[postId]/page.tsx`
+  文章预览页，读取 `MOMO_BASE_URL` 指向的 Momo 预览接口。
 - `apps/bobo/app/lab`
   放样式演示、主题验证和临时页面。
 - `apps/bobo/app/globals.css`
@@ -53,6 +55,7 @@ pnpm dev:bobo
 pnpm lint:bobo
 pnpm type-check:bobo
 pnpm build:bobo
+pnpm --filter @xdd-zone/bobo test
 ```
 
 生产预览服务：
