@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 
+import { resolveFifaRouteAccess, throwFifaRouteRedirect } from '@fifa/app/router/auth-guard'
 import { appRouteRecords, authRouteRecords } from '@fifa/app/router/records'
 import { ErrorBoundary } from '@fifa/components/ui'
 import { NotFound } from '@fifa/features/errors/pages/NotFound'
@@ -20,6 +21,9 @@ const appLayoutRoute = createRoute({
   component: RootLayout,
   getParentRoute: () => rootRoute,
   id: 'app-layout',
+  async beforeLoad() {
+    throwFifaRouteRedirect(await resolveFifaRouteAccess())
+  },
 })
 
 function toRoutePath(path: string) {

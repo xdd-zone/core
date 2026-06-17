@@ -24,6 +24,7 @@ out
 .env.test.local
 .env.code-server
 !apps/momo/.env.test
+!apps/fifa/.env.test
 .env.production
 .env.production.local
 

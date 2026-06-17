@@ -8,10 +8,11 @@
     "paths": {
       "@fifa/*": ["./src/*"]
     },
+    "types": ["vitest/globals"],
     "allowImportingTsExtensions": true,
     "noFallthroughCasesInSwitch": true,
     "noEmit": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "src/viteEnv.d.ts"]
+  "include": ["src", "src/test", "src/viteEnv.d.ts"]
 }

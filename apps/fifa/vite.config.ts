@@ -138,6 +138,11 @@ export default defineConfig(({ mode }) => {
         '@fifa': path.resolve(__dirname, './src'),
       },
     },
+    test: {
+      environment: 'node',
+      globals: true,
+      fileParallelism: false,
+    },
     server: {
       // 允许通过域名访问（用于反向代理）
       allowedHosts: ['fifa.test.xdd.ink', '.xdd.ink'],

@@ -6,7 +6,7 @@
 
 测试文件统一放在各应用的 `src/test/` 下，目录结构和 `src/` 的一级目录一一对应。
 
-当前只有 Momo 有单元测试。其他应用暂时没有测试，后续新增时按同样的结构放。
+当前 Momo 和 Fifa 有单元测试。其他应用后续新增时按同样的结构放。
 
 ### Momo 测试目录
 
@@ -34,6 +34,18 @@ apps/momo/src/test/
     └── env.test.ts
 ```
 
+### Fifa 测试目录
+
+```text
+apps/fifa/src/test/
+├── api/
+│   └── auth/
+│       └── me.api.test.ts
+└── app/
+    └── router/
+        └── auth-guard.test.ts
+```
+
 分目录的原则：
 
 - 一级目录和 `src/` 下的一级目录保持一致：`bootstrap/`、`infra/`、`middleware/`、`modules/`、`shared/`。
@@ -53,7 +65,7 @@ apps/momo/src/test/
 
 ### 为什么放 `src/test/` 而不是 `apps/momo/test/`
 
-- `#momo/` 路径别名直接可用，和源码 import 方式一致。
+- `#momo/` 和 `@fifa/` 路径别名直接可用，和源码 import 方式一致。
 - `tsup` 只编译指定入口文件，`test/` 目录天然不会被打包。
 - Vitest 默认匹配 `**/*.test.ts`，在 `src/` 下直接识别，不用额外配。
 
@@ -105,6 +117,8 @@ expect(mockLogger.info).toHaveBeenCalled()
 - 测试之间不共享可变状态。
 - Momo 认证和内容接口测试读取 `apps/momo/.env.test`，使用 `momo_test` 数据库。先运行 `pnpm --filter @xdd-zone/momo local:up`，测试会自动创建 `momo_test`、执行 migration，并清理这个测试库里的表。
 - Momo 测试通过 `apps/momo/vitest.config.ts` 关闭文件并行，避免多个数据库接口测试同时重建同一个测试库。
+- Fifa 测试读取 `apps/fifa/.env.test`。当前只测前端请求解析和路由权限判断，不需要启动 Momo。
+- Fifa 测试通过 `apps/fifa/vitest.config.ts` 配置 `@fifa` 路径别名和 Vitest 运行环境。
 
 ## 检查命令
 
@@ -127,6 +141,7 @@ pnpm format
 ```bash
 pnpm lint:fifa
 pnpm type-check:fifa
+cd apps/fifa && pnpm test
 pnpm build:fifa
 ```
 
