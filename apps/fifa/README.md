@@ -11,11 +11,13 @@
 - 使用 TanStack Query 管理 Momo 请求状态。
 - 有基础布局、侧边菜单、顶部栏、标签栏和设置抽屉。
 - 使用 Catppuccin 主题。
-- 有首页、404 页面和几个示例页。
+- 有登录页、首页、404 页面和几个示例页。
 - 首页会请求 Momo 的 `GET /health`。
 - 点击 Ping 按钮时会请求 Momo 的 `POST /rpc/system/ping`。
+- 登录页会请求 Momo 的 `POST /api/auth/sign-in/email`。
+- 登录成功后会请求 Momo 的 `GET /rpc/fifa/auth/me`。
 
-还没接入登录页面、权限页面和业务模块。
+还没接入权限页面和业务模块。
 
 ## 常用命令
 
@@ -58,12 +60,13 @@ src/
 - `layout`
   控制台整体布局。
 - `api`
-  调 Momo 的 Hono RPC 请求和 TanStack Query hooks。
+  调 Momo 的请求和 TanStack Query hooks。
 - `stores`
   设置、标签栏等本地状态。
 
 ## 页面路径
 
+- `/login`
 - `/`
 - `/env-example`
 - `/ui-showcase`
@@ -90,6 +93,8 @@ src/
 3. 使用接口的页面文件
 
 页面只调用 `*.query.ts` 导出的 hook。不要在页面里直接 import `momoClient`。
+
+`/rpc/*` 接口使用 Hono RPC。`/api/auth/*` 由 Better Auth 处理，按原始 HTTP 响应和 cookie 处理。
 
 ## 环境变量
 

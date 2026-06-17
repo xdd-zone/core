@@ -6,10 +6,6 @@ import { AppError } from '#momo/shared/app-error'
 import { BizCode } from '@xdd-zone/contracts'
 import { eq } from 'drizzle-orm'
 
-export async function handleAuthRequest(auth: MomoAuth, request: Request): Promise<Response> {
-  return auth.handler(request)
-}
-
 export async function getCurrentAuthUser(auth: MomoAuth, headers: Headers): Promise<AuthUserView | null> {
   let session: Awaited<ReturnType<typeof auth.api.getSession>>
 

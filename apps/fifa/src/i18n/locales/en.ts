@@ -20,6 +20,23 @@ export default {
       title: 'Page Not Found',
     },
   },
+  auth: {
+    email: 'Email',
+    emailInvalid: 'Enter a valid email',
+    emailPlaceholder: 'Enter email',
+    emailRequired: 'Enter email',
+    login: 'Sign In',
+    loginAction: 'Sign In To Fifa',
+    loginDescription: 'Sign in with an admin account.',
+    loginErrorTitle: 'Sign In Failed',
+    loginFailed: 'Sign in failed',
+    loginSuccess: 'Signed in',
+    loginTitle: 'Sign In To Fifa',
+    password: 'Password',
+    passwordOnly: 'Email and password sign-in only.',
+    passwordPlaceholder: 'Enter password',
+    passwordRequired: 'Enter password',
+  },
   home: {
     description: 'The frontend shell is kept, with one Momo validation endpoint connected.',
     momo: {

@@ -10,9 +10,9 @@
 - TanStack Router 路由。
 - 基础布局、侧边菜单、顶部栏、标签栏和设置抽屉。
 - Catppuccin 主题。
-- 首页、404 页面和几个示例页。
+- 登录页、首页、404 页面和几个示例页。
 
-当前首页接入了 Momo 的健康检查和 ping 验证接口。当前没有登录、权限和业务模块。
+当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前没有权限和业务模块。
 
 ## 开始改 UI 前先看
 
@@ -54,6 +54,7 @@ apps/fifa/src/
 
 ## 当前页面路径
 
+- `/login`
 - `/`
 - `/env-example`
 - `/ui-showcase`
@@ -92,13 +93,15 @@ apps/fifa/src/app/navigation/navigation.ts
 
 ## Momo 请求
 
-Fifa 使用 Hono RPC 调 Momo。
+Fifa 使用 Hono RPC 调 Momo 的 `/rpc/*` 接口。`/api/auth/*` 由 Better Auth 处理，按原始 HTTP 响应和 cookie 处理。
 
 相关文件：
 
 ```text
 apps/fifa/src/api/client.ts
 apps/fifa/src/api/rpc.ts
+apps/fifa/src/api/auth/sign-in.api.ts
+apps/fifa/src/api/auth/auth.query.ts
 apps/fifa/src/api/system/health.api.ts
 apps/fifa/src/api/system/ping.api.ts
 apps/fifa/src/api/system/system.query.ts
@@ -111,6 +114,8 @@ apps/fifa/src/api/system/index.ts
   创建 `momoClient`，读取 `VITE_MOMO_BASE_URL`。
 - `api/rpc.ts`
   读取 Momo 返回的 JSON。网络请求失败时返回 `ApiResponse` 失败结构。
+- `api/auth/*.api.ts`
+  调 Momo 的 Better Auth 接口。这里直接处理 HTTP 响应和 cookie。
 - `api/system/*.api.ts`
   调 Momo RPC。页面不要直接 import `momoClient`。
 - `api/system/system.query.ts`
@@ -121,6 +126,8 @@ Fifa 通过环境变量读取 Momo 地址：
 ```text
 VITE_MOMO_BASE_URL=http://localhost:7788
 ```
+
+通过 code-server 访问时，这里填 `https://code.example.com/proxy/7788`。
 
 Fifa 当前还会读取运行环境：
 
@@ -144,15 +151,21 @@ VITE_DEV_BASE_PATH=/absproxy/2333
 apps/fifa/.env.example
 ```
 
-当前首页会请求：
+当前登录页和首页会请求：
 
 ```text
+POST /api/auth/sign-in/email
+GET /rpc/fifa/auth/me
 GET /health
 POST /rpc/system/ping
 ```
 
 当前写法：
 
+- `POST /api/auth/sign-in/email`
+  用 `useSignInEmailMutation()`，只在登录页提交表单时发送。
+- `GET /rpc/fifa/auth/me`
+  登录成功后请求一次。当前只看接口是否返回成功，不保存用户信息。
 - `GET /health`
   用 `useSystemHealthQuery()`，页面打开后自动请求，也可以点刷新按钮重新请求。
 - `POST /rpc/system/ping`

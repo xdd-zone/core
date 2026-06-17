@@ -3,6 +3,7 @@ import type { MomoAuth } from '#momo/modules/auth/auth.config'
 import type { ApiResponse } from '@xdd-zone/contracts'
 import { closeDb, getDb } from '#momo/infra/db/client'
 import { userRoleBindings } from '#momo/infra/db/schema/index'
+import { resolveBetterAuthBaseUrl, rewriteBetterAuthRequestUrl } from '#momo/modules/auth/better-auth-url'
 import { getCurrentAuthUser } from '#momo/modules/auth/services/index'
 import {
   bindFifaOwner,
@@ -85,6 +86,41 @@ describe('auth 路由', () => {
       code: BizCode.AUTH_SESSION_INVALID,
       status: 401,
     })
+  })
+
+  it('code-server auth 代理路径会补给 better-auth 请求 URL', async () => {
+    const request = new Request('http://localhost:7788/api/auth/sign-in/email', {
+      body: JSON.stringify({
+        email: 'owner@example.com',
+        password: 'test-password-123',
+      }),
+      headers: {
+        'content-type': 'application/json',
+      },
+      method: 'POST',
+    })
+    const publicBaseUrl = resolveBetterAuthBaseUrl('https://code.xdd.ink/proxy/7788')
+    const rewrittenRequest = rewriteBetterAuthRequestUrl(request, publicBaseUrl)
+
+    expect(publicBaseUrl).toBe('https://code.xdd.ink/proxy/7788/api/auth')
+    expect(rewrittenRequest.url).toBe('https://code.xdd.ink/proxy/7788/api/auth/sign-in/email')
+    expect(rewrittenRequest.method).toBe('POST')
+    expect(rewrittenRequest.headers.get('content-type')).toBe('application/json')
+  })
+
+  it('普通 auth 请求 URL 不会被改写', () => {
+    const request = new Request('http://localhost:7788/api/auth/sign-in/email', {
+      method: 'POST',
+    })
+    const rewrittenRequest = rewriteBetterAuthRequestUrl(request, 'http://localhost:7788')
+
+    expect(rewrittenRequest).toBe(request)
+  })
+
+  it('已包含 auth 路径的 better-auth URL 不会重复追加', () => {
+    expect(resolveBetterAuthBaseUrl('https://code.xdd.ink/proxy/7788/api/auth')).toBe(
+      'https://code.xdd.ink/proxy/7788/api/auth',
+    )
   })
 
   it('disabled fifa 用户被拒绝', async () => {

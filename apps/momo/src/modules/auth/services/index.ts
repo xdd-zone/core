@@ -1,2 +1,2 @@
 export { assertFifaOwner, ensureBoboVisitor } from './access.service'
-export { getCurrentAuthUser, handleAuthRequest } from './auth.service'
+export { getCurrentAuthUser } from './auth.service'

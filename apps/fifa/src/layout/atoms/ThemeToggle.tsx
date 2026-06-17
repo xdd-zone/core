@@ -1,5 +1,5 @@
 import { ResponsiveTooltip } from '@fifa/components/ui'
-import { useSettingStore } from '@fifa/stores'
+import { useSettingStore } from '@fifa/stores/modules/setting'
 
 import { Moon, Sun } from 'lucide-react'
 import { useTranslation } from 'react-i18next'

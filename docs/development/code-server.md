@@ -20,6 +20,10 @@ Fifa: https://code.example.com/absproxy/2333/
 Bobo: https://code.example.com/absproxy/4399/
 ```
 
+Momo 的 `BETTER_AUTH_URL` 要填它的对外地址。code-server 里可以写成 `https://code.example.com/proxy/7788` 这种带代理前缀的值，Momo 会按这个地址拼 `/api/auth`。
+
+Fifa 的 `VITE_MOMO_BASE_URL` 也要填 Momo 的对外地址。登录请求会按这个地址拼 `/api/auth/sign-in/email`。
+
 ## 配置文件
 
 本地配置放在：

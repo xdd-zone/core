@@ -20,6 +20,23 @@ export default {
       title: '页面不存在',
     },
   },
+  auth: {
+    email: '邮箱',
+    emailInvalid: '请输入正确的邮箱',
+    emailPlaceholder: '输入邮箱',
+    emailRequired: '请输入邮箱',
+    login: '登录',
+    loginAction: '登录 Fifa',
+    loginDescription: '使用后台账号登录。',
+    loginErrorTitle: '登录失败',
+    loginFailed: '登录失败',
+    loginSuccess: '登录成功',
+    loginTitle: '登录 Fifa',
+    password: '密码',
+    passwordOnly: '当前只支持邮箱密码登录。',
+    passwordPlaceholder: '输入密码',
+    passwordRequired: '请输入密码',
+  },
   home: {
     description: '当前保留前端基础框架，并接入 Momo 的最小验证接口。',
     momo: {

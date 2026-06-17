@@ -235,6 +235,8 @@ OWNER_DISPLAY_NAME
 
 `LOG_SQL` 只在开发环境生效。设成 `true` 时会打印 SQL 和 `paramsCount`，不会打印参数原值。
 
+`BETTER_AUTH_URL` 填 Momo 的对外地址。正常本地开发时用 `http://localhost:7788`。通过 code-server 访问时，填 `https://code.example.com/proxy/7788` 这种带代理前缀的地址，Momo 会按这个地址拼 `/api/auth`。
+
 `CACHE_PROVIDER` 控制缓存驱动。默认值是 `memory`，数据只存在当前 Node.js 进程里。设成 `redis` 时，需要配置 `CACHE_URL`，本地 Valkey 地址是 `redis://localhost:56379`。`CACHE_KEY_PREFIX` 默认是 `momo`，`CACHE_DEFAULT_TTL_SECONDS` 默认是 `300` 秒。
 
 `SEARCH_PROVIDER` 控制搜索驱动。默认值是 `none`，不会连接外部搜索服务。设成 `meilisearch` 时，需要配置 `MEILI_HOST` 和 `MEILI_API_KEY`，本地 Meilisearch 地址是 `http://localhost:57700`。`MEILI_INDEX_PREFIX` 默认是 `momo`，驱动会把逻辑索引名 `posts` 拼成真实索引名 `momo_posts`。当前还没有业务模块调用搜索驱动。

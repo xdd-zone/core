@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 
-import { fifaRouteRecords } from '@fifa/app/router/records'
+import { appRouteRecords, authRouteRecords } from '@fifa/app/router/records'
 import { ErrorBoundary } from '@fifa/components/ui'
 import { NotFound } from '@fifa/features/errors/pages/NotFound'
 import { RootLayout } from '@fifa/layout'
@@ -26,7 +26,7 @@ function toRoutePath(path: string) {
   return path === '/' ? path : path.replace(/^\//, '')
 }
 
-const appRoutes = fifaRouteRecords.map((record) =>
+const appRoutes = appRouteRecords.map((record) =>
   createRoute({
     component: record.component,
     getParentRoute: () => appLayoutRoute,
@@ -41,4 +41,19 @@ const appRoutes = fifaRouteRecords.map((record) =>
   }),
 )
 
-export const routeTree = rootRoute.addChildren([appLayoutRoute.addChildren(appRoutes)])
+const authRoutes = authRouteRecords.map((record) =>
+  createRoute({
+    component: record.component,
+    getParentRoute: () => rootRoute,
+    path: toRoutePath(record.path),
+    staticData: {
+      icon: record.icon,
+      id: record.id,
+      layout: record.layout,
+      tab: record.tab,
+      title: record.title,
+    },
+  }),
+)
+
+export const routeTree = rootRoute.addChildren([...authRoutes, appLayoutRoute.addChildren(appRoutes)])

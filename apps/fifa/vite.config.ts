@@ -145,6 +145,11 @@ export default defineConfig(({ mode }) => {
       open: true,
       port: 2333,
       proxy: {
+        '/api/auth': {
+          changeOrigin: true,
+          secure: true,
+          target: momoProxyTarget,
+        },
         '/health': {
           changeOrigin: true,
           secure: true,
