@@ -8,8 +8,15 @@ import { Dropdown } from 'antd'
 import { clsx } from 'clsx'
 import { ArrowLeftToLine, ArrowRightToLine, RefreshCw, Trash2, X, XCircle } from 'lucide-react'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+
+const scrollContainerStyle = {
+  msOverflowStyle: 'none',
+  scrollbarWidth: 'none',
+} as const
+
+const contextMenuTrigger: Array<'contextMenu'> = ['contextMenu']
 
 /**
  * 标签栏组件
@@ -21,152 +28,188 @@ export function TabBar() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
-  const { activeTabId, closeAllTabs, closeLeftTabs, closeOtherTabs, closeRightTabs, closeTab, setActiveTab, tabs } =
-    useTabBarStore()
+  const activeTabId = useTabBarStore((state) => state.activeTabId)
+  const closeAllTabs = useTabBarStore((state) => state.closeAllTabs)
+  const closeLeftTabs = useTabBarStore((state) => state.closeLeftTabs)
+  const closeOtherTabs = useTabBarStore((state) => state.closeOtherTabs)
+  const closeRightTabs = useTabBarStore((state) => state.closeRightTabs)
+  const closeTab = useTabBarStore((state) => state.closeTab)
+  const setActiveTab = useTabBarStore((state) => state.setActiveTab)
+  const tabs = useTabBarStore((state) => state.tabs)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isMobile = useMobile()
 
-  const navigateToPath = (path: null | string) => {
-    if (!path) {
-      return
-    }
+  const navigateToPath = useCallback(
+    (path: null | string) => {
+      if (!path) {
+        return
+      }
 
-    void navigate({ to: path })
-  }
+      void navigate({ to: path })
+    },
+    [navigate],
+  )
 
-  const handleTabClick = (tabId: string, path: string) => {
-    setActiveTab(tabId)
-    void navigate({ to: path })
-  }
+  const handleTabClick = useCallback(
+    (tabId: string, path: string) => {
+      setActiveTab(tabId)
+      void navigate({ to: path })
+    },
+    [navigate, setActiveTab],
+  )
 
-  const handleCloseTab = (tabId: string) => {
-    navigateToPath(closeTab(tabId).nextPath)
-  }
+  const handleCloseTab = useCallback(
+    (tabId: string) => {
+      navigateToPath(closeTab(tabId).nextPath)
+    },
+    [closeTab, navigateToPath],
+  )
 
-  const handleCloseOthers = (tab: Tab) => {
-    navigateToPath(closeOtherTabs(tab.id).nextPath)
-  }
+  const handleCloseOthers = useCallback(
+    (tab: Tab) => {
+      navigateToPath(closeOtherTabs(tab.id).nextPath)
+    },
+    [closeOtherTabs, navigateToPath],
+  )
 
-  const handleCloseAll = () => {
+  const handleCloseAll = useCallback(() => {
     navigateToPath(closeAllTabs().nextPath)
-  }
+  }, [closeAllTabs, navigateToPath])
 
-  const handleCloseLeft = (tab: Tab) => {
-    navigateToPath(closeLeftTabs(tab.id).nextPath)
-  }
+  const handleCloseLeft = useCallback(
+    (tab: Tab) => {
+      navigateToPath(closeLeftTabs(tab.id).nextPath)
+    },
+    [closeLeftTabs, navigateToPath],
+  )
 
-  const handleCloseRight = (tab: Tab) => {
-    navigateToPath(closeRightTabs(tab.id).nextPath)
-  }
+  const handleCloseRight = useCallback(
+    (tab: Tab) => {
+      navigateToPath(closeRightTabs(tab.id).nextPath)
+    },
+    [closeRightTabs, navigateToPath],
+  )
 
-  const handleRefreshTab = async (tab: Tab) => {
-    setActiveTab(tab.id)
-    await navigate({ replace: true, to: tab.path })
-    await router.invalidate({ sync: true })
-    await queryClient.resetQueries({ type: 'active' })
-  }
+  const handleRefreshTab = useCallback(
+    async (tab: Tab) => {
+      setActiveTab(tab.id)
+      await navigate({ replace: true, to: tab.path })
+      await router.invalidate({ sync: true })
+      await queryClient.resetQueries({ type: 'active' })
+    },
+    [navigate, queryClient, router, setActiveTab],
+  )
 
-  const getContextMenuItems = (tab: Tab): MenuProps['items'] => {
-    const targetIndex = tabs.findIndex((item) => item.id === tab.id)
-    const hasClosableLeftTabs = tabs.some((item, index) => index < targetIndex && item.closable !== false)
-    const hasClosableRightTabs = tabs.some((item, index) => index > targetIndex && item.closable !== false)
-    const hasClosableOtherTabs = tabs.some((item) => item.id !== tab.id && item.closable !== false)
-    const hasClosableTabs = tabs.some((item) => item.closable !== false)
+  const getContextMenuItems = useCallback(
+    (tab: Tab): MenuProps['items'] => {
+      const targetIndex = tabs.findIndex((item) => item.id === tab.id)
+      const hasClosableLeftTabs = tabs.some((item, index) => index < targetIndex && item.closable !== false)
+      const hasClosableRightTabs = tabs.some((item, index) => index > targetIndex && item.closable !== false)
+      const hasClosableOtherTabs = tabs.some((item) => item.id !== tab.id && item.closable !== false)
+      const hasClosableTabs = tabs.some((item) => item.closable !== false)
 
-    return [
-      {
-        disabled: tab.closable === false,
-        icon: <X size={14} />,
-        key: 'close-current',
-        label: t('tabBar.closeCurrent'),
-        onClick: () => handleCloseTab(tab.id),
-      },
-      {
-        disabled: !hasClosableOtherTabs,
-        icon: <XCircle size={14} />,
-        key: 'close-others',
-        label: t('tabBar.closeOthers'),
-        onClick: () => handleCloseOthers(tab),
-      },
-      {
-        disabled: !hasClosableLeftTabs,
-        icon: <ArrowLeftToLine size={14} />,
-        key: 'close-left',
-        label: t('tabBar.closeLeft'),
-        onClick: () => handleCloseLeft(tab),
-      },
-      {
-        disabled: !hasClosableRightTabs,
-        icon: <ArrowRightToLine size={14} />,
-        key: 'close-right',
-        label: t('tabBar.closeRight'),
-        onClick: () => handleCloseRight(tab),
-      },
-      {
-        disabled: !hasClosableTabs,
-        icon: <Trash2 size={14} />,
-        key: 'close-all',
-        label: t('tabBar.closeAll'),
-        onClick: () => handleCloseAll(),
-      },
-      {
-        type: 'divider' as const,
-      },
-      {
-        icon: <RefreshCw size={14} />,
-        key: 'refresh-current',
-        label: t('tabBar.refreshCurrent'),
-        onClick: () => {
-          void handleRefreshTab(tab)
+      return [
+        {
+          disabled: tab.closable === false,
+          icon: <X size={14} />,
+          key: 'close-current',
+          label: t('tabBar.closeCurrent'),
+          onClick: () => handleCloseTab(tab.id),
         },
-      },
-    ]
-  }
+        {
+          disabled: !hasClosableOtherTabs,
+          icon: <XCircle size={14} />,
+          key: 'close-others',
+          label: t('tabBar.closeOthers'),
+          onClick: () => handleCloseOthers(tab),
+        },
+        {
+          disabled: !hasClosableLeftTabs,
+          icon: <ArrowLeftToLine size={14} />,
+          key: 'close-left',
+          label: t('tabBar.closeLeft'),
+          onClick: () => handleCloseLeft(tab),
+        },
+        {
+          disabled: !hasClosableRightTabs,
+          icon: <ArrowRightToLine size={14} />,
+          key: 'close-right',
+          label: t('tabBar.closeRight'),
+          onClick: () => handleCloseRight(tab),
+        },
+        {
+          disabled: !hasClosableTabs,
+          icon: <Trash2 size={14} />,
+          key: 'close-all',
+          label: t('tabBar.closeAll'),
+          onClick: () => handleCloseAll(),
+        },
+        {
+          type: 'divider' as const,
+        },
+        {
+          icon: <RefreshCw size={14} />,
+          key: 'refresh-current',
+          label: t('tabBar.refreshCurrent'),
+          onClick: () => {
+            void handleRefreshTab(tab)
+          },
+        },
+      ]
+    },
+    [handleCloseAll, handleCloseLeft, handleCloseOthers, handleCloseRight, handleCloseTab, handleRefreshTab, t, tabs],
+  )
 
-  const handleWheel = (e: WheelEvent) => {
+  const contextMenuByTabId = useMemo(
+    () => new Map(tabs.map((tab) => [tab.id, { items: getContextMenuItems(tab) }])),
+    [getContextMenuItems, tabs],
+  )
+
+  const handleWheel = useCallback((e: WheelEvent) => {
     if (!scrollContainerRef.current) return
 
     e.preventDefault()
     const container = scrollContainerRef.current
     const scrollAmount = e.deltaY || e.deltaX
     container.scrollLeft += scrollAmount
-  }
+  }, [])
 
   const touchStartX = useRef(0)
   const touchStartScrollLeft = useRef(0)
   const isDragging = useRef(false)
 
-  const handleTouchStart = (e: TouchEvent) => {
+  const handleTouchStart = useCallback((e: TouchEvent) => {
     if (!scrollContainerRef.current) return
 
     const touch = e.touches[0]
     touchStartX.current = touch.clientX
     touchStartScrollLeft.current = scrollContainerRef.current.scrollLeft
     isDragging.current = true
-  }
+  }, [])
 
-  const handleTouchMove = (e: TouchEvent) => {
+  const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!scrollContainerRef.current || !isDragging.current) return
 
     e.preventDefault()
     const touch = e.touches[0]
     const deltaX = touchStartX.current - touch.clientX
     scrollContainerRef.current.scrollLeft = touchStartScrollLeft.current + deltaX
-  }
+  }, [])
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     isDragging.current = false
-  }
+  }, [])
 
   useEffect(() => {
     const container = scrollContainerRef.current
     if (!container || !activeTabId) return
 
-    // 等 DOM 渲染完成后再定位，避免新增 tab 时元素还没挂载
-    requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       const activeEl = container.querySelector<HTMLElement>(`[data-tab-id="${activeTabId}"]`)
       activeEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
     })
+
+    return () => cancelAnimationFrame(rafId)
   }, [activeTabId, tabs.length])
 
   useEffect(() => {
@@ -193,7 +236,7 @@ export function TabBar() {
         container.removeEventListener('touchend', handleTouchEnd)
       }
     }
-  }, [isMobile])
+  }, [handleTouchEnd, handleTouchMove, handleTouchStart, handleWheel, isMobile])
 
   return (
     <div className="guide-tab-bar p-1 md:p-2">
@@ -201,13 +244,10 @@ export function TabBar() {
         <div
           ref={scrollContainerRef}
           className="scrollbar-hide flex flex-1 items-center gap-x-1 overflow-x-auto"
-          style={{
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-          }}
+          style={scrollContainerStyle}
         >
           {tabs.map((tab) => (
-            <Dropdown key={tab.id} menu={{ items: getContextMenuItems(tab) }} trigger={['contextMenu']}>
+            <Dropdown key={tab.id} menu={contextMenuByTabId.get(tab.id)} trigger={contextMenuTrigger}>
               <div
                 data-tab-id={tab.id}
                 onClick={() => handleTabClick(tab.id, tab.path)}

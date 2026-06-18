@@ -2,9 +2,29 @@ import { buildNavigationMenuItems } from '@fifa/app/navigation/navigation'
 import { useSettingStore } from '@fifa/stores'
 
 import { Drawer } from 'antd'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { NavigationMenu } from '../menu/NavigationMenu'
+
+const drawerClassNames = {
+  body: 'bg-surface',
+  header: 'bg-surface-muted border-border text-fg',
+  wrapper: 'text-fg',
+}
+
+const drawerStyles = {
+  body: {
+    padding: '0px',
+  },
+  header: {
+    borderBottom: '1px solid var(--color-border)',
+    color: 'var(--color-fg)',
+  },
+  mask: {
+    backgroundColor: 'color-mix(in oklab, var(--color-surface-subtle) 52%, transparent)',
+  },
+}
 
 /**
  * 移动端左侧菜单抽屉
@@ -12,8 +32,9 @@ import { NavigationMenu } from '../menu/NavigationMenu'
  */
 export function MobileDrawer() {
   const { t } = useTranslation()
-  const { isMobileMenuOpen, setMobileMenuOpen } = useSettingStore()
-  const menuItems = buildNavigationMenuItems(t)
+  const isMobileMenuOpen = useSettingStore((state) => state.isMobileMenuOpen)
+  const setMobileMenuOpen = useSettingStore((state) => state.setMobileMenuOpen)
+  const menuItems = useMemo(() => buildNavigationMenuItems(t), [t])
 
   const onClose = () => setMobileMenuOpen(false)
 
@@ -24,23 +45,8 @@ export function MobileDrawer() {
       onClose={onClose}
       size="default"
       mask={{ closable: true }}
-      classNames={{
-        body: 'bg-surface',
-        header: 'bg-surface-muted border-border text-fg',
-        wrapper: 'text-fg',
-      }}
-      styles={{
-        body: {
-          padding: '0px',
-        },
-        header: {
-          borderBottom: '1px solid var(--color-border)',
-          color: 'var(--color-fg)',
-        },
-        mask: {
-          backgroundColor: 'color-mix(in oklab, var(--color-surface-subtle) 52%, transparent)',
-        },
-      }}
+      classNames={drawerClassNames}
+      styles={drawerStyles}
     >
       <NavigationMenu mode="inline" items={menuItems} />
     </Drawer>

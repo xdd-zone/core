@@ -13,7 +13,7 @@ interface SettingButtonProps {
  */
 export function SettingButton({ className }: SettingButtonProps) {
   const { t } = useTranslation()
-  const { setSettingDrawerOpen } = useSettingStore()
+  const setSettingDrawerOpen = useSettingStore((state) => state.setSettingDrawerOpen)
 
   const handleOpenSettingDrawer = () => {
     setSettingDrawerOpen(true)

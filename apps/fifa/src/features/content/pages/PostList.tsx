@@ -1,4 +1,5 @@
 import type { CreatePostRequest, PostStatus, PostSummary } from '@xdd-zone/contracts'
+import type { TableProps } from 'antd'
 
 import { useContentPostsQuery, useCreateContentPostMutation } from '@fifa/api/content'
 import { FifaPageHeader } from '@fifa/components/common'
@@ -6,13 +7,29 @@ import { filterContentPosts } from '@fifa/features/content/utils/post-list'
 import { useNavigate } from '@tanstack/react-router'
 import { App, Button, Form, Input, Modal, Select, Table, Tag } from 'antd'
 import { FilePlus2, Pencil, RefreshCw, Search } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 const statusOptions: Array<{ label: string; value: PostStatus }> = [
   { label: '草稿', value: 'draft' },
   { label: '已发布', value: 'published' },
   { label: '已归档', value: 'archived' },
 ]
+
+const statusFilterOptions: Array<{ label: string; value: PostStatus | 'all' }> = [
+  { label: '全部状态', value: 'all' },
+  ...statusOptions,
+]
+
+const tableLocale = {
+  emptyText: '暂无文章',
+}
+
+const tablePagination = {
+  pageSize: 10,
+  showSizeChanger: false,
+}
+
+const tableScroll = { x: 1040 }
 
 interface CreatePostFormValue {
   slug: string
@@ -67,7 +84,79 @@ export function PostList() {
     return filterContentPosts(posts, { keyword, status })
   }, [keyword, posts, status])
 
-  const handleCreate = async () => {
+  const summaryItems = useMemo(
+    () => [
+      {
+        label: '文章',
+        value: posts.length,
+      },
+      {
+        label: '当前结果',
+        value: filteredPosts.length,
+      },
+    ],
+    [filteredPosts.length, posts.length],
+  )
+
+  const columns = useMemo<TableProps<PostSummary>['columns']>(
+    () => [
+      {
+        dataIndex: 'title',
+        title: '标题',
+        render: (title: string, post) => (
+          <div className="min-w-0">
+            <div className="truncate font-medium text-fg">{title}</div>
+            <div className="mt-1 truncate text-xs text-fg-muted">{post.id}</div>
+          </div>
+        ),
+      },
+      {
+        dataIndex: 'slug',
+        title: 'Slug',
+        render: (slug: string) => <span className="font-mono text-xs">{slug}</span>,
+      },
+      {
+        dataIndex: 'status',
+        title: '状态',
+        width: 110,
+        render: (value: PostStatus) => <Tag color={getStatusColor(value)}>{getStatusLabel(value)}</Tag>,
+      },
+      {
+        dataIndex: 'updatedAt',
+        title: '更新时间',
+        width: 180,
+        render: formatDateTime,
+      },
+      {
+        dataIndex: 'publishedAt',
+        title: '发布时间',
+        width: 180,
+        render: formatDateTime,
+      },
+      {
+        key: 'actions',
+        title: '操作',
+        width: 110,
+        render: (_, post) => (
+          <Button
+            icon={<Pencil className="size-4" />}
+            onClick={() =>
+              void navigate({
+                to: `/content/posts/${post.id}` as never,
+              })
+            }
+            size="small"
+            type="link"
+          >
+            编辑
+          </Button>
+        ),
+      },
+    ],
+    [navigate],
+  )
+
+  const handleCreate = useCallback(async () => {
     const values = await form.validateFields()
     const payload: CreatePostRequest = {
       slug: values.slug,
@@ -87,7 +176,7 @@ export function PostList() {
     await navigate({
       to: `/content/posts/${response.data.post.id}` as never,
     })
-  }
+  }, [createPostMutation, form, message, navigate])
 
   return (
     <div className="space-y-5">
@@ -108,16 +197,7 @@ export function PostList() {
             </Button>
           </>
         }
-        summaryItems={[
-          {
-            label: '文章',
-            value: posts.length,
-          },
-          {
-            label: '当前结果',
-            value: filteredPosts.length,
-          },
-        ]}
+        summaryItems={summaryItems}
       />
 
       <section className="rounded-lg border border-border-subtle bg-surface">
@@ -129,11 +209,7 @@ export function PostList() {
             placeholder="搜索标题或 slug"
             value={keyword}
           />
-          <Select
-            options={[{ label: '全部状态', value: 'all' }, ...statusOptions]}
-            onChange={setStatus}
-            value={status}
-          />
+          <Select options={statusFilterOptions} onChange={setStatus} value={status} />
         </div>
 
         {loadError ? (
@@ -141,71 +217,13 @@ export function PostList() {
         ) : null}
 
         <Table<PostSummary>
-          columns={[
-            {
-              dataIndex: 'title',
-              title: '标题',
-              render: (title: string, post) => (
-                <div className="min-w-0">
-                  <div className="truncate font-medium text-fg">{title}</div>
-                  <div className="mt-1 truncate text-xs text-fg-muted">{post.id}</div>
-                </div>
-              ),
-            },
-            {
-              dataIndex: 'slug',
-              title: 'Slug',
-              render: (slug: string) => <span className="font-mono text-xs">{slug}</span>,
-            },
-            {
-              dataIndex: 'status',
-              title: '状态',
-              width: 110,
-              render: (value: PostStatus) => <Tag color={getStatusColor(value)}>{getStatusLabel(value)}</Tag>,
-            },
-            {
-              dataIndex: 'updatedAt',
-              title: '更新时间',
-              width: 180,
-              render: formatDateTime,
-            },
-            {
-              dataIndex: 'publishedAt',
-              title: '发布时间',
-              width: 180,
-              render: formatDateTime,
-            },
-            {
-              key: 'actions',
-              title: '操作',
-              width: 110,
-              render: (_, post) => (
-                <Button
-                  icon={<Pencil className="size-4" />}
-                  onClick={() =>
-                    void navigate({
-                      to: `/content/posts/${post.id}` as never,
-                    })
-                  }
-                  size="small"
-                  type="link"
-                >
-                  编辑
-                </Button>
-              ),
-            },
-          ]}
+          columns={columns}
           dataSource={filteredPosts}
           loading={postsQuery.isLoading}
-          locale={{
-            emptyText: '暂无文章',
-          }}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: false,
-          }}
+          locale={tableLocale}
+          pagination={tablePagination}
           rowKey="id"
-          scroll={{ x: 1040 }}
+          scroll={tableScroll}
         />
       </section>
 

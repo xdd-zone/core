@@ -120,7 +120,7 @@ pnpm -C apps/admin dev
  * Markdown 示例页面
  */
 export function MarkdownExample() {
-  const { catppuccinTheme } = useSettingStore()
+  const catppuccinTheme = useSettingStore((state) => state.catppuccinTheme)
   const primaryColor = getPrimaryColorByTheme(catppuccinTheme)
   return (
     <div className="p-4">

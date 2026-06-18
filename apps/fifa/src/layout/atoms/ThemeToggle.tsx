@@ -14,7 +14,8 @@ interface ThemeToggleProps {
  */
 export function ThemeToggle({ className = '' }: ThemeToggleProps) {
   const { t } = useTranslation()
-  const { isDark, toggleDarkMode } = useSettingStore()
+  const isDark = useSettingStore((state) => state.isDark)
+  const toggleDarkMode = useSettingStore((state) => state.toggleDarkMode)
 
   return (
     <ResponsiveTooltip title={isDark ? t('theme.switchToLightMode') : t('theme.switchToDarkMode')}>

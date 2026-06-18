@@ -4,6 +4,7 @@ import { useSettingStore } from '@fifa/stores/modules/setting'
 
 import { Drawer, Space, Typography } from 'antd'
 import { Lightbulb, Monitor, Moon, Palette, Sun } from 'lucide-react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
 const { Text, Title } = Typography
@@ -19,15 +20,17 @@ interface SettingDrawerProps {
  */
 export function SettingDrawer({ onClose, open }: SettingDrawerProps) {
   const { t } = useTranslation()
-  const { catppuccinTheme, setCatppuccinTheme, setThemeMode, themeMode } = useSettingStore()
+  const catppuccinTheme = useSettingStore((state) => state.catppuccinTheme)
+  const setCatppuccinTheme = useSettingStore((state) => state.setCatppuccinTheme)
+  const setThemeMode = useSettingStore((state) => state.setThemeMode)
+  const themeMode = useSettingStore((state) => state.themeMode)
 
-  const handleThemeChange = (mode: 'light' | 'dark' | 'system') => {
-    setThemeMode(mode)
-  }
+  const handleThemeChange = useCallback((mode: 'light' | 'dark' | 'system') => setThemeMode(mode), [setThemeMode])
 
-  const handleThemeSelect = (themeId: typeof catppuccinTheme) => {
-    setCatppuccinTheme(themeId)
-  }
+  const handleThemeSelect = useCallback(
+    (themeId: typeof catppuccinTheme) => setCatppuccinTheme(themeId),
+    [setCatppuccinTheme],
+  )
 
   return (
     <Drawer

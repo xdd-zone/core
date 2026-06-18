@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
  */
 export function MobileMenuButton() {
   const { t } = useTranslation()
-  const { setMobileMenuOpen } = useSettingStore()
+  const setMobileMenuOpen = useSettingStore((state) => state.setMobileMenuOpen)
 
   const openDrawer = () => setMobileMenuOpen(true)
 

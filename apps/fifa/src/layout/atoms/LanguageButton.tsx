@@ -14,7 +14,7 @@ interface LanguageButtonProps {
  */
 export function LanguageButton({ className, onClick }: LanguageButtonProps) {
   const { t } = useTranslation()
-  const { toggleLanguage } = useSettingStore()
+  const toggleLanguage = useSettingStore((state) => state.toggleLanguage)
 
   const handleClick = () => {
     toggleLanguage()

@@ -8,7 +8,9 @@ export function useMobile(): boolean {
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
-    const checkMobile = () => {
+    let rafId = 0
+
+    const getIsMobile = () => {
       // 检测屏幕宽度
       const screenWidth = window.innerWidth <= 768
 
@@ -21,19 +23,28 @@ export function useMobile(): boolean {
       const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0
 
       // 综合判断：屏幕宽度小于768px 或者 是移动设备用户代理 或者 支持触摸且屏幕较小
-      const mobile = screenWidth || isMobileUA || (hasTouchSupport && window.innerWidth <= 1024)
+      return screenWidth || isMobileUA || (hasTouchSupport && window.innerWidth <= 1024)
+    }
 
-      setIsMobile(mobile)
+    const checkMobile = () => {
+      const mobile = getIsMobile()
+      setIsMobile((current) => (current === mobile ? current : mobile))
     }
 
     // 初始检测
     checkMobile()
 
+    const requestCheckMobile = () => {
+      cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(checkMobile)
+    }
+
     // 监听窗口大小变化
-    window.addEventListener('resize', checkMobile)
+    window.addEventListener('resize', requestCheckMobile)
 
     return () => {
-      window.removeEventListener('resize', checkMobile)
+      window.removeEventListener('resize', requestCheckMobile)
+      cancelAnimationFrame(rafId)
     }
   }, [])
 

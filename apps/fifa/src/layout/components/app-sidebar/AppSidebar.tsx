@@ -8,7 +8,7 @@ import { SidebarFooter } from './SidebarFooter'
  * 包含导航内容和侧边栏操作区
  */
 export function AppSidebar() {
-  const { isSidebarCollapsed } = useSettingStore()
+  const isSidebarCollapsed = useSettingStore((state) => state.isSidebarCollapsed)
 
   return (
     <aside

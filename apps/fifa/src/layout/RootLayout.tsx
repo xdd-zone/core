@@ -12,7 +12,8 @@ import { TopBottomLayout } from './layouts/TopBottomLayout'
  * 提供应用的基本布局结构，包括背景模式和内容渲染区域
  */
 export function RootLayout() {
-  const { isSettingDrawerOpen, setSettingDrawerOpen } = useSettingStore()
+  const isSettingDrawerOpen = useSettingStore((state) => state.isSettingDrawerOpen)
+  const setSettingDrawerOpen = useSettingStore((state) => state.setSettingDrawerOpen)
 
   // 启用路由监听，自动记录访问的页面到TabBar
   useRouteListener()

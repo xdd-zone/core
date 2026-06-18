@@ -7,7 +7,8 @@ import { PanelLeftClose } from 'lucide-react'
  * 用于控制侧边栏的折叠和展开
  */
 export function CollapseButton() {
-  const { isSidebarCollapsed, toggleSidebarCollapsed } = useSettingStore()
+  const isSidebarCollapsed = useSettingStore((state) => state.isSidebarCollapsed)
+  const toggleSidebarCollapsed = useSettingStore((state) => state.toggleSidebarCollapsed)
 
   return (
     <button

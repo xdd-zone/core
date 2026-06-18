@@ -11,7 +11,7 @@ import { getAntdThemeConfig } from './utils/catppuccin.antd'
 import './i18n' // 初始化 i18n
 
 export function App() {
-  const { catppuccinTheme } = useSettingStore()
+  const catppuccinTheme = useSettingStore((state) => state.catppuccinTheme)
 
   // 获取 Catppuccin 主题配置
   const themeConfig = getAntdThemeConfig(catppuccinTheme)

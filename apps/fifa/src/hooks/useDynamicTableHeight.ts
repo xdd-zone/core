@@ -29,18 +29,24 @@ export function useDynamicTableHeight(loading: boolean) {
       const scrollY =
         availableHeight - cardBodyPadding - buttonContainerHeight - tableHeaderHeight - tablePaginationHeight
 
-      setTableScrollY(scrollY > 0 ? scrollY : 0)
+      const nextTableScrollY = scrollY > 0 ? scrollY : 0
+      setTableScrollY((current) => (current === nextTableScrollY ? current : nextTableScrollY))
     }
   }, [])
 
   useEffect(() => {
-    // 使用 requestAnimationFrame 避免同步 setState 导致的级联渲染
-    const rafId = requestAnimationFrame(() => {
+    let rafId = requestAnimationFrame(() => {
       calculateTableScrollY()
     })
-    window.addEventListener('resize', calculateTableScrollY)
+
+    const requestCalculateTableScrollY = () => {
+      cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(calculateTableScrollY)
+    }
+
+    window.addEventListener('resize', requestCalculateTableScrollY)
     return () => {
-      window.removeEventListener('resize', calculateTableScrollY)
+      window.removeEventListener('resize', requestCalculateTableScrollY)
       cancelAnimationFrame(rafId)
     }
   }, [loading, calculateTableScrollY])

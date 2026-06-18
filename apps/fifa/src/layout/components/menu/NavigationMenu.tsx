@@ -8,7 +8,10 @@ import { getPrimaryColorByTheme, hexToRgba } from '@fifa/utils/theme'
 import { useLocation, useNavigate } from '@tanstack/react-router'
 import { ConfigProvider, Menu } from 'antd'
 import { clsx } from 'clsx'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
+
+const EMPTY_SELECTED_KEYS: string[] = []
+const EMPTY_MENU_ITEMS: MenuItem[] = []
 
 interface NavigationMenuProps {
   /** 自定义类名 */
@@ -33,14 +36,15 @@ interface NavigationMenuProps {
  */
 export function NavigationMenu({
   className,
-  defaultSelectedKeys = [],
+  defaultSelectedKeys = EMPTY_SELECTED_KEYS,
   inlineCollapsed = false,
-  items = [],
+  items = EMPTY_MENU_ITEMS,
   mode = 'inline',
   onMenuClick,
   style,
 }: NavigationMenuProps) {
-  const { catppuccinTheme, isDark } = useSettingStore()
+  const catppuccinTheme = useSettingStore((state) => state.catppuccinTheme)
+  const isDark = useSettingStore((state) => state.isDark)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -49,16 +53,47 @@ export function NavigationMenu({
   const menuSelectedBg = useMemo(() => hexToRgba(primaryColor, isDark ? 0.18 : 0.12), [isDark, primaryColor])
   const popupBg = themeConfig.token?.colorBgElevated
 
-  const handleMenuClick: MenuProps['onClick'] = (e) => {
-    // 如果有自定义点击事件，先执行
-    onMenuClick?.(e.key)
+  const antdTheme = useMemo(
+    () => ({
+      ...themeConfig,
+      components: {
+        ...themeConfig.components,
+        Menu: {
+          ...(themeConfig.components?.Menu ?? {}),
+          activeBarBorderWidth: 0,
+          darkItemBg: 'transparent',
+          darkItemSelectedBg: menuSelectedBg,
+          darkPopupBg: popupBg,
+          darkSubMenuItemBg: 'transparent',
+          itemBg: 'transparent',
+          itemSelectedBg: menuSelectedBg,
+          popupBg,
+          subMenuItemBg: 'transparent',
+        },
+      },
+      token: {
+        ...themeConfig.token,
+        colorPrimary: primaryColor,
+      },
+    }),
+    [menuSelectedBg, popupBg, primaryColor, themeConfig],
+  )
 
-    // 执行路由跳转
-    const path = e.key
-    if (path && typeof path === 'string' && path.startsWith('/')) {
-      void navigate({ to: path })
-    }
-  }
+  const menuStyle = useMemo(() => ({ width: '100%', ...style }), [style])
+
+  const handleMenuClick = useCallback<NonNullable<MenuProps['onClick']>>(
+    (e) => {
+      // 如果有自定义点击事件，先执行
+      onMenuClick?.(e.key)
+
+      // 执行路由跳转
+      const path = e.key
+      if (path && typeof path === 'string' && path.startsWith('/')) {
+        void navigate({ to: path })
+      }
+    },
+    [navigate, onMenuClick],
+  )
 
   // 根据当前路由确定选中的菜单项
   const currentPath = location.pathname
@@ -70,30 +105,7 @@ export function NavigationMenu({
   const menuKey = useMemo(() => `${mode}:${routeOpenKeys.join('|')}`, [mode, routeOpenKeys])
 
   return (
-    <ConfigProvider
-      theme={{
-        ...themeConfig,
-        components: {
-          ...themeConfig.components,
-          Menu: {
-            ...(themeConfig.components?.Menu ?? {}),
-            activeBarBorderWidth: 0,
-            darkItemBg: 'transparent',
-            darkItemSelectedBg: menuSelectedBg,
-            darkPopupBg: popupBg,
-            darkSubMenuItemBg: 'transparent',
-            itemBg: 'transparent',
-            itemSelectedBg: menuSelectedBg,
-            popupBg,
-            subMenuItemBg: 'transparent',
-          },
-        },
-        token: {
-          ...themeConfig.token,
-          colorPrimary: primaryColor,
-        },
-      }}
-    >
+    <ConfigProvider theme={antdTheme}>
       <Menu
         key={menuKey}
         theme={isDark ? 'dark' : 'light'}
@@ -103,7 +115,7 @@ export function NavigationMenu({
         inlineCollapsed={inlineCollapsed}
         defaultOpenKeys={mode === 'inline' && !inlineCollapsed ? routeOpenKeys : undefined}
         onClick={handleMenuClick}
-        style={{ width: '100%', ...style }}
+        style={menuStyle}
         className={clsx('guide-menu', className)}
       />
     </ConfigProvider>

@@ -39,7 +39,7 @@ function getSelection(update: ViewUpdate): TextSelection {
 export const MdxSourceEditor = forwardRef<MdxSourceEditorHandle, MdxSourceEditorProps>(
   ({ className, onChange, onSelectionChange, placeholder = '输入 MDX 源码', readOnly = false, value = '' }, ref) => {
     const editorRef = useRef<ReactCodeMirrorRef>(null)
-    const { isDark } = useSettingStore()
+    const isDark = useSettingStore((state) => state.isDark)
 
     const extensions = useMemo(
       () => [markdown(), EditorView.lineWrapping, createFifaFoldGutter(), ...createFifaCodeMirrorTheme(isDark)],
