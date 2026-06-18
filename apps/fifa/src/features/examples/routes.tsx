@@ -1,6 +1,6 @@
 import type { FifaRouteRecord } from '@fifa/app/router/types'
 import { lazyRouteComponent } from '@tanstack/react-router'
-import { AlertTriangle, Crop, FileTextIcon, LayoutTemplate, Lock, Search, Settings2, SquarePen } from 'lucide-react'
+import { AlertTriangle, Crop, FileTextIcon, LayoutTemplate, Lock, Search, Settings2 } from 'lucide-react'
 
 export const exampleRoutes: FifaRouteRecord[] = [
   {
@@ -38,20 +38,6 @@ export const exampleRoutes: FifaRouteRecord[] = [
     },
     path: '/markdown-example',
     title: 'menu.markdownExample',
-  },
-  {
-    component: lazyRouteComponent(() => import('./pages/TiptapExample'), 'TiptapExample'),
-    icon: SquarePen,
-    id: 'examples.tiptap',
-    layout: {
-      contentWidth: 'full',
-    },
-    menu: {
-      group: 'examples',
-      order: 30,
-    },
-    path: '/tiptap-example',
-    title: 'menu.tiptapExample',
   },
   {
     component: lazyRouteComponent(() => import('./pages/ImageCropExample'), 'ImageCropExample'),

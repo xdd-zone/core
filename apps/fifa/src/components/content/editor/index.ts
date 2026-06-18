@@ -1,1 +1,1 @@
-export { TiptapMarkdownEditor } from './TiptapMarkdownEditor'
+export { MdxSourceEditor, type MdxSourceEditorHandle } from './MdxSourceEditor'

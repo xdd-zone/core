@@ -1,6 +1,6 @@
+import type { MdxSourceEditorHandle } from '@fifa/components/content/editor'
 import type { TextSelection } from '@fifa/features/content/utils/editor'
 import type { MdxComponent, PostDetail, PostStatus, SavePostDraftRequest } from '@xdd-zone/contracts'
-import type { TextAreaRef } from 'antd/es/input/TextArea'
 
 import {
   useContentPostQuery,
@@ -11,6 +11,7 @@ import {
   useUploadContentImageMutation,
 } from '@fifa/api/content'
 import { FifaPageHeader } from '@fifa/components/common'
+import { MdxSourceEditor } from '@fifa/components/content/editor'
 import { buildImageSnippet, insertTextAtSelection } from '@fifa/features/content/utils/editor'
 import { buildBoboPreviewUrl } from '@fifa/features/content/utils/preview-url'
 import { ignoreAntdUploadRequest } from '@fifa/features/content/utils/upload'
@@ -76,19 +77,6 @@ function toDraftPayload(values: PostEditFormValue): SavePostDraftRequest {
   }
 }
 
-function focusTextArea(ref: TextAreaRef | null, position: number) {
-  const textarea = ref?.resizableTextArea?.textArea
-
-  if (!textarea) {
-    return
-  }
-
-  requestAnimationFrame(() => {
-    textarea.focus()
-    textarea.setSelectionRange(position, position)
-  })
-}
-
 export function PostEdit() {
   const params = useParams({ strict: false }) as { postId?: string }
   const postId = params.postId ?? ''
@@ -105,7 +93,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
   const navigate = useNavigate()
   const [form] = Form.useForm<PostEditFormValue>()
   const loadedPostIdRef = useRef<string | null>(null)
-  const textAreaRef = useRef<TextAreaRef>(null)
+  const editorRef = useRef<MdxSourceEditorHandle>(null)
   const [dirty, setDirty] = useState(false)
   const [previewUrl, setPreviewUrl] = useState('')
   const [selection, setSelection] = useState<TextSelection>({ end: 0, start: 0 })
@@ -232,7 +220,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
     const nextSource = insertTextAtSelection(source, snippet, selection)
     const nextPosition = selection.start + snippet.length
     updateSource(nextSource)
-    focusTextArea(textAreaRef.current, nextPosition)
+    editorRef.current?.focusAt(nextPosition)
     setSelection({ end: nextPosition, start: nextPosition })
   }
 
@@ -365,60 +353,49 @@ function PostEditContent({ postId }: PostEditContentProps) {
         </section>
 
         <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)]">
-          <section className="overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle bg-surface-muted/45 px-5 py-4">
+          <section className="flex h-[600px] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm xl:h-[calc(100vh-200px)]">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border-subtle bg-surface-muted/45 px-5 py-4">
               <div>
                 <div className="text-sm font-medium text-fg">正文编辑</div>
                 <div className="mt-1 text-xs text-fg-muted">{dirty ? '有未保存内容' : '当前内容已保存'}</div>
               </div>
             </div>
 
-            <div className="bg-surface/90">
-              <Form.Item className="mb-0" name="source" rules={[{ required: true, message: '请输入正文' }]}>
-                <Input.TextArea
-                  ref={textAreaRef}
-                  autoSize={{ minRows: 24 }}
-                  className="!rounded-none border-0 font-mono text-sm leading-6 shadow-none focus:shadow-none"
-                  onClick={(event) =>
-                    setSelection({
-                      end: event.currentTarget.selectionEnd,
-                      start: event.currentTarget.selectionStart,
-                    })
-                  }
-                  onKeyUp={(event) =>
-                    setSelection({
-                      end: event.currentTarget.selectionEnd,
-                      start: event.currentTarget.selectionStart,
-                    })
-                  }
-                  onSelect={(event) =>
-                    setSelection({
-                      end: event.currentTarget.selectionEnd,
-                      start: event.currentTarget.selectionStart,
-                    })
-                  }
+            <div className="relative flex-1 bg-surface/90">
+              <Form.Item
+                className="absolute inset-0 mb-0! [&_.ant-form-item-control-input-content]:h-full [&_.ant-form-item-control-input]:h-full [&_.ant-form-item-control]:h-full [&_.ant-form-item-row]:h-full"
+                name="source"
+                rules={[{ required: true, message: '请输入正文' }]}
+              >
+                <MdxSourceEditor
+                  ref={editorRef}
+                  onChange={updateSource}
+                  onSelectionChange={setSelection}
                   placeholder="输入 MDX 源码"
+                  readOnly={postQuery.isLoading}
+                  value={source}
                 />
               </Form.Item>
             </div>
           </section>
 
-          <aside className="overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm xl:sticky xl:top-5">
-            <div className="border-b border-border-subtle bg-surface-muted/45 px-5 py-4">
+          <aside className="flex h-[600px] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm xl:sticky xl:top-5 xl:h-[calc(100vh-200px)]">
+            <div className="shrink-0 border-b border-border-subtle bg-surface-muted/45 px-5 py-4">
               <div className="text-sm font-medium text-fg">预览和素材</div>
               <div className="mt-1 text-xs text-fg-muted">预览会先保存草稿，再生成页面链接。</div>
             </div>
 
             <Tabs
+              className="flex flex-1 flex-col overflow-hidden [&_.ant-tabs-content-holder]:flex-1 [&_.ant-tabs-content-holder]:overflow-hidden [&_.ant-tabs-content]:h-full [&_.ant-tabs-tabpane]:h-full"
               tabBarStyle={{ padding: '0 20px', marginBottom: 0 }}
               items={[
                 {
                   key: 'preview',
                   label: '预览',
                   children: (
-                    <div className="space-y-3 px-5 py-5">
+                    <div className="flex h-full flex-col space-y-3 p-5">
                       {previewUrl ? (
-                        <div className="flex items-center justify-between gap-3">
+                        <div className="flex shrink-0 items-center justify-between gap-3">
                           <span className="flex items-center gap-1.5 text-xs text-fg-muted">
                             <span className="relative flex size-2">
                               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/40"></span>
@@ -436,7 +413,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                           </Button>
                         </div>
                       ) : null}
-                      <div className="h-[620px] overflow-hidden rounded-xl border border-border-subtle bg-surface-subtle shadow-inner">
+                      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border-subtle bg-surface-subtle shadow-inner">
                         {previewUrl ? (
                           <iframe className="h-full w-full border-0 bg-surface" src={previewUrl} title="文章预览" />
                         ) : (
@@ -466,7 +443,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                   key: 'assets',
                   label: '素材',
                   children: (
-                    <div className="px-5 py-5">
+                    <div className="h-full overflow-y-auto p-5">
                       <Upload
                         className="block w-full [&_.ant-upload]:block [&_.ant-upload]:w-full"
                         beforeUpload={handleBeforeUpload}
@@ -506,8 +483,8 @@ function PostEditContent({ postId }: PostEditContentProps) {
                   key: 'components',
                   label: '组件',
                   children: (
-                    <div className="space-y-4 px-5 py-5">
-                      <div className="space-y-3">
+                    <div className="h-full overflow-y-auto p-5">
+                      <div className="space-y-4">
                         {mdxComponents.map((component) => (
                           <div
                             key={component.name}

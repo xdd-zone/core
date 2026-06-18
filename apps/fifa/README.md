@@ -74,7 +74,6 @@ src/
 - `/env-example`
 - `/ui-showcase`
 - `/markdown-example`
-- `/tiptap-example`
 - `/image-crop`
 - `/error-example`
 - `/forbidden-example`
