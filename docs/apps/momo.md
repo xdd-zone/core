@@ -475,13 +475,13 @@ contract request
 - route 负责把 service 返回值包成接口 data，比如 `{ post }`、`{ posts }`，再传给 `createSuccessResponse(...)`。
 - presenter 入参类型用 `Pick<ContentPostRecord, ...>` 这类类型从 repository record 派生。
 - presenter 返回对象先赋给局部变量，用 `satisfies` 检查 contract 类型，再调用 contract schema 的 `parse()`。
-- `format`、`status` 这类枚举值从 contract 常量传到 Drizzle `pgEnum`，再由 Drizzle record 类型往上返回。
+- `status` 这类枚举值从 contract 常量传到 Drizzle `pgEnum`，再由 Drizzle record 类型往上返回。
 - PATCH 接口里，`undefined` 表示不改字段，`null` 表示清空可空字段。repository 更新可空字段时用 `input.field === undefined ? current.field : input.field`。
 
 不要写这些代码：
 
 - 不要用 `as PostSummary`、`as PostDetail` 这类整体强转把对象当成响应类型。
-- 不要用 `as 'markdown' | 'mdx'` 或 `as 'draft' | 'published' | 'archived'` 修数据库字段类型。
+- 不要用 `as 'draft' | 'published' | 'archived'` 修数据库字段类型。
 - 不要把数据库字段先写成宽松的 `string`，再在 repository 或 service 里手动当枚举用。
 - 不要在 route 里直接拼复杂响应 DTO。
 - 不要在 service 里返回 `c.json()`，也不要接收 Hono `Context`。
@@ -582,13 +582,15 @@ apps/momo/src/modules/content
 - `mdx-components.ts`
   放第一版允许插入的 MDX 组件清单，并检查源码里的组件名。
 
+文章正文统一保存为 MDX 源码。普通 Markdown 语法可以直接写在源码里，不再单独保存正文格式字段。
+
 接口 schema 和响应类型放在：
 
 ```text
 packages/contracts/src/content/content.contract.ts
 ```
 
-这里导出 `POST_FORMAT_VALUES`、`POST_STATUS_VALUES`、请求 schema、响应 schema 和对应 TypeScript 类型。Momo route 用这里的请求 schema 校验入参，presenter 用这里的响应 schema 校验出参。
+这里导出 `POST_STATUS_VALUES`、请求 schema、响应 schema 和对应 TypeScript 类型。Momo route 用这里的请求 schema 校验入参，presenter 用这里的响应 schema 校验出参。
 
 后台接口使用 `createRequirePermission()`。当前 `content.*` 权限都要求当前用户是 `fifa.owner`。
 
@@ -614,14 +616,14 @@ packages/contracts/src/content/content.contract.ts
 apps/momo/src/infra/db/schema/content.schema.ts
 ```
 
-`content.schema.ts` 从 `@xdd-zone/contracts` 读取 `POST_FORMAT_VALUES` 和 `POST_STATUS_VALUES`，再用 Drizzle `pgEnum` 创建 `content_post_format` 和 `content_post_status`。不要把 `format` 和 `status` 写成普通 `text()`。
+`content.schema.ts` 从 `@xdd-zone/contracts` 读取 `POST_STATUS_VALUES`，再用 Drizzle `pgEnum` 创建 `content_post_status`。不要把 `status` 写成普通 `text()`。
 
 当前包含：
 
 - `content_posts`
   文章主记录，保存 slug、标题、状态、当前草稿版本和当前发布版本。
 - `content_post_revisions`
-  保存 Markdown 或 MDX 源码快照。
+  保存 MDX 源码快照。
 - `content_preview_tokens`
   保存预览 token 的 SHA-256 hash、文章 id、版本 id 和过期时间。
 - `content_assets`
@@ -646,7 +648,7 @@ content.contract.ts
 - route 用 `CreatePostRequestSchema`、`SavePostDraftRequestSchema` 校验请求体。
 - service 只接收 contract 请求类型、用户 id、文章 id、token 这类明确参数。
 - service 需要文章版本时，如果指针存在但版本记录查不到，按数据错误抛 `SYSTEM.INTERNAL_ERROR`。
-- repository 的 `ContentPostRecord`、`ContentRevisionRecord` 从 Drizzle schema 推导，不手写 `format/status` 的窄类型。
+- repository 的 `ContentPostRecord`、`ContentRevisionRecord` 从 Drizzle schema 推导，不手写 `status` 的窄类型。
 - repository 保存草稿时，`excerpt: null` 和 `coverAssetId: null` 必须能清空字段。
 - presenter 统一处理 `Date#toISOString()`。content service 不直接把日期拼进 API 响应。
 - route 只包响应 data。列表接口包 `{ posts }`，详情接口包 `{ post }`，上传接口包 `{ asset }`。

@@ -95,7 +95,6 @@ function createBasePost() {
     createdAt: '2026-06-17T00:00:00.000Z',
     draftRevisionId: 'revision-1',
     excerpt: '草稿摘要',
-    format: 'markdown',
     id: 'post-1',
     publishedAt: null,
     publishedRevisionId: null,
@@ -118,7 +117,6 @@ function createBaseRevision() {
   return {
     createdAt: '2026-06-17T00:00:00.000Z',
     excerpt: '草稿摘要',
-    format: 'markdown',
     id: 'revision-1',
     postId: 'post-1',
     revisionNo: 1,

@@ -4,7 +4,6 @@ import type {
   contentPosts,
   contentPreviewTokens,
 } from '#momo/infra/db/schema/index'
-import type { PostFormat } from '@xdd-zone/contracts'
 import type { InferSelectModel } from 'drizzle-orm'
 
 export type ContentPostRecord = InferSelectModel<typeof contentPosts>
@@ -21,7 +20,6 @@ export type ContentAssetReferenceRecord = Pick<InferSelectModel<typeof contentAs
 export interface CreateContentPostInput {
   coverAssetId?: string | null
   excerpt?: string | null
-  format: PostFormat
   id: string
   revisionId: string
   slug: string
@@ -33,7 +31,6 @@ export interface CreateContentPostInput {
 export interface SaveContentDraftInput {
   coverAssetId?: string | null
   excerpt?: string | null
-  format?: PostFormat
   id: string
   revisionId: string
   slug?: string

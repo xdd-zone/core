@@ -78,7 +78,6 @@ describe('content 路由', () => {
 
   it('创建文章后可以保存草稿、生成预览 token、读取预览、发布和公开读取', async () => {
     const created = await createPost({
-      format: 'mdx',
       slug: 'hello-content',
       source: '# Hello\n\n<Callout tone="info">Hi</Callout>',
       title: 'Hello Content',
@@ -166,7 +165,6 @@ describe('content 路由', () => {
     const created = await createPost({
       coverAssetId: imageData.asset.id,
       excerpt: 'initial excerpt',
-      format: 'markdown',
       slug: 'clear-null-fields',
       source: '# Clear',
       title: 'Clear Fields',
@@ -194,7 +192,6 @@ describe('content 路由', () => {
   it('创建文章时 coverAssetId 不存在会返回 404', async () => {
     const response = await createPost({
       coverAssetId: 'missing-asset',
-      format: 'markdown',
       slug: 'missing-cover-asset',
       source: '# Missing asset',
       title: 'Missing Asset',
@@ -207,7 +204,6 @@ describe('content 路由', () => {
 
   it('保存草稿时 coverAssetId 不存在会返回 404', async () => {
     const created = await createPost({
-      format: 'markdown',
       slug: 'missing-draft-cover-asset',
       source: '# Missing draft asset',
       title: 'Missing Draft Asset',
@@ -230,14 +226,12 @@ describe('content 路由', () => {
 
   it('slug 冲突会被拒绝', async () => {
     await createPost({
-      format: 'markdown',
       slug: 'same-slug',
       source: '# One',
       title: 'One',
     })
 
     const response = await createPost({
-      format: 'markdown',
       slug: 'same-slug',
       source: '# Two',
       title: 'Two',
@@ -250,7 +244,6 @@ describe('content 路由', () => {
 
   it('未知 MDX 组件会被拒绝', async () => {
     const response = await createPost({
-      format: 'mdx',
       slug: 'bad-mdx',
       source: '<UnknownBlock />',
       title: 'Bad MDX',
@@ -261,22 +254,20 @@ describe('content 路由', () => {
     expect(!response.body.ok && response.body.error.code).toBe(BizCode.CONTENT_UNKNOWN_MDX_COMPONENT)
   })
 
-  it('markdown 正文里的 JSX 写法不会触发 MDX 组件检查', async () => {
+  it('普通正文里的未知组件会被拒绝', async () => {
     const response = await createPost({
-      format: 'markdown',
-      slug: 'markdown-with-jsx-text',
-      source: '# Markdown\n\n<UnknownBlock />',
-      title: 'Markdown JSX Text',
+      slug: 'unknown-component-in-body',
+      source: '# Body\n\n<UnknownBlock />',
+      title: 'Unknown Component Body',
     })
 
-    expect(response.status).toBe(201)
-    const data = expectOkData(response.body)
-    expect(data.post.slug).toBe('markdown-with-jsx-text')
+    expect(response.status).toBe(422)
+    expect(response.body.ok).toBe(false)
+    expect(!response.body.ok && response.body.error.code).toBe(BizCode.CONTENT_UNKNOWN_MDX_COMPONENT)
   })
 
   it('文章指向的草稿版本丢失时返回系统错误', async () => {
     const created = await createPost({
-      format: 'markdown',
       slug: 'missing-draft-revision',
       source: '# Missing draft revision',
       title: 'Missing Draft Revision',
@@ -299,7 +290,6 @@ describe('content 路由', () => {
 
   it('过期预览 token 会被拒绝', async () => {
     const created = await createPost({
-      format: 'markdown',
       slug: 'expired-token',
       source: '# Expired',
       title: 'Expired',

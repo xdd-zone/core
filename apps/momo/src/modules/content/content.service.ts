@@ -53,7 +53,7 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
     }
 
     await ensureCoverAssetExists(input.coverAssetId)
-    assertKnownMdxComponents(input.format, input.source)
+    assertKnownMdxComponents(input.source)
 
     const id = randomUUID()
     const revisionId = randomUUID()
@@ -62,7 +62,6 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
       repository.createPost({
         coverAssetId: input.coverAssetId,
         excerpt: input.excerpt,
-        format: input.format,
         id,
         revisionId,
         slug: input.slug,
@@ -92,10 +91,8 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
     }
 
     const source = input.source ?? (await getDraftSource(current))
-    const format = input.format ?? current.format
-
     await ensureCoverAssetExists(input.coverAssetId)
-    assertKnownMdxComponents(format, source)
+    assertKnownMdxComponents(source)
 
     const revisionId = randomUUID()
 
@@ -103,7 +100,6 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
       repository.saveDraft({
         coverAssetId: input.coverAssetId,
         excerpt: input.excerpt,
-        format: input.format,
         id,
         revisionId,
         slug: input.slug,
@@ -289,11 +285,7 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
   }
 }
 
-function assertKnownMdxComponents(format: CreatePostRequest['format'], source: string): void {
-  if (format !== 'mdx') {
-    return
-  }
-
+function assertKnownMdxComponents(source: string): void {
   const unknownComponents = findUnknownMdxComponents(source)
 
   if (unknownComponents.length > 0) {

@@ -1,4 +1,4 @@
-import type { ImageAsset, PostFormat } from '@xdd-zone/contracts'
+import type { ImageAsset } from '@xdd-zone/contracts'
 
 export interface TextSelection {
   end: number
@@ -9,13 +9,9 @@ export function insertTextAtSelection(value: string, snippet: string, selection:
   return `${value.slice(0, selection.start)}${snippet}${value.slice(selection.end)}`
 }
 
-export function buildImageSnippet(format: PostFormat, asset: ImageAsset) {
+export function buildImageSnippet(asset: ImageAsset) {
   const alt = asset.alt ?? asset.fileName
   const src = asset.url ?? asset.storagePath
 
-  if (format === 'mdx') {
-    return `\n<Figure src="${src}" alt="${alt}" />\n`
-  }
-
-  return `\n![${alt}](${src})\n`
+  return `\n<Figure src="${src}" alt="${alt}" />\n`
 }

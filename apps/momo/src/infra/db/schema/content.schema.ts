@@ -1,10 +1,9 @@
-import { POST_FORMAT_VALUES, POST_STATUS_VALUES } from '@xdd-zone/contracts'
+import { POST_STATUS_VALUES } from '@xdd-zone/contracts'
 import { relations } from 'drizzle-orm'
 import { index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { user } from './auth.schema'
 
-export const contentPostFormatEnum = pgEnum('content_post_format', POST_FORMAT_VALUES)
 export const contentPostStatusEnum = pgEnum('content_post_status', POST_STATUS_VALUES)
 
 export const contentAssets = pgTable('content_assets', {
@@ -41,8 +40,6 @@ export const contentPosts = pgTable(
     title: text('title').notNull(),
     /** 文章摘要。 */
     excerpt: text('excerpt'),
-    /** 正文格式，markdown 或 mdx。 */
-    format: contentPostFormatEnum('format').notNull(),
     /** 文章状态，draft、published 或 archived。 */
     status: contentPostStatusEnum('status').notNull().default('draft'),
     /** 封面素材 id。 */
@@ -85,9 +82,7 @@ export const contentPostRevisions = pgTable(
     title: text('title').notNull(),
     /** 版本里的摘要快照。 */
     excerpt: text('excerpt'),
-    /** 版本里的正文格式。 */
-    format: contentPostFormatEnum('format').notNull(),
-    /** Markdown 或 MDX 源码。 */
+    /** MDX 源码。 */
     source: text('source').notNull(),
     /** 创建人 id。 */
     createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),

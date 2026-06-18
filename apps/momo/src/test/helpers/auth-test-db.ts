@@ -18,7 +18,12 @@ import postgres from 'postgres'
 const TEST_DATABASE_NAME = 'momo_test'
 const TEST_DATABASE_URL = 'postgres://momo:momo@localhost:55432/momo_test'
 const ADMIN_DATABASE_URL = 'postgres://momo:momo@localhost:55432/postgres'
-const migrationFiles = ['0000_watery_praxagora.sql', '0001_plain_cerise.sql', '0002_open_victor_mancha.sql']
+const migrationFiles = [
+  '0000_watery_praxagora.sql',
+  '0001_plain_cerise.sql',
+  '0002_open_victor_mancha.sql',
+  '0003_daffy_miek.sql',
+]
 let prepareDatabaseQueue = Promise.resolve()
 
 export const TEST_USER_PASSWORD = 'test-password-123'

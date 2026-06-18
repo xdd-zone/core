@@ -54,13 +54,11 @@ export default async function PreviewPostPage({ params, searchParams }: PreviewP
             <p className="text-xs font-medium tracking-[0.24em] text-fg-muted uppercase">preview</p>
             <h1 className="mt-4 text-4xl font-semibold tracking-tight text-fg md:text-5xl">{preview.revision.title}</h1>
             {preview.revision.excerpt ? (
-              <p className="mt-5 text-base leading-7 text-fg-muted md:text-lg md:leading-8">{preview.revision.excerpt}</p>
+              <p className="mt-5 text-base leading-7 text-fg-muted md:text-lg md:leading-8">
+                {preview.revision.excerpt}
+              </p>
             ) : null}
             <dl className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-fg-muted">
-              <div className="flex gap-2">
-                <dt>格式</dt>
-                <dd className="font-medium text-fg">{preview.revision.format}</dd>
-              </div>
               <div className="flex gap-2">
                 <dt>版本</dt>
                 <dd className="font-medium text-fg">#{preview.revision.revisionNo}</dd>

@@ -1,5 +1,5 @@
 import type { TextSelection } from '@fifa/features/content/utils/editor'
-import type { MdxComponent, PostDetail, PostFormat, PostStatus, SavePostDraftRequest } from '@xdd-zone/contracts'
+import type { MdxComponent, PostDetail, PostStatus, SavePostDraftRequest } from '@xdd-zone/contracts'
 import type { TextAreaRef } from 'antd/es/input/TextArea'
 
 import {
@@ -11,7 +11,6 @@ import {
   useUploadContentImageMutation,
 } from '@fifa/api/content'
 import { FifaPageHeader } from '@fifa/components/common'
-import { TiptapMarkdownEditor } from '@fifa/components/content/editor'
 import { buildImageSnippet, insertTextAtSelection } from '@fifa/features/content/utils/editor'
 import { buildBoboPreviewUrl } from '@fifa/features/content/utils/preview-url'
 import { ignoreAntdUploadRequest } from '@fifa/features/content/utils/upload'
@@ -32,11 +31,6 @@ const statusLabels: Record<PostStatus, string> = {
   archived: '已归档',
   draft: '草稿',
   published: '已发布',
-}
-
-const formatLabels: Record<PostFormat, string> = {
-  markdown: 'Markdown',
-  mdx: 'MDX',
 }
 
 function formatDateTime(value: string | null) {
@@ -72,11 +66,10 @@ function toFormValue(post: PostDetail): PostEditFormValue {
   }
 }
 
-function toDraftPayload(format: PostFormat, values: PostEditFormValue): SavePostDraftRequest {
+function toDraftPayload(values: PostEditFormValue): SavePostDraftRequest {
   return {
     coverAssetId: values.coverAssetId?.trim() ? values.coverAssetId.trim() : null,
     excerpt: values.excerpt?.trim() ? values.excerpt.trim() : null,
-    format,
     slug: values.slug.trim(),
     source: values.source,
     title: values.title.trim(),
@@ -160,7 +153,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
     }
 
     const values = await form.validateFields()
-    const response = await saveDraftMutation.mutateAsync(toDraftPayload(post.format, values))
+    const response = await saveDraftMutation.mutateAsync(toDraftPayload(values))
 
     if (!response.ok) {
       message.error(response.error.message)
@@ -236,16 +229,11 @@ function PostEditContent({ postId }: PostEditContentProps) {
       return
     }
 
-    if (post.format === 'mdx') {
-      const nextSource = insertTextAtSelection(source, snippet, selection)
-      const nextPosition = selection.start + snippet.length
-      updateSource(nextSource)
-      focusTextArea(textAreaRef.current, nextPosition)
-      setSelection({ end: nextPosition, start: nextPosition })
-      return
-    }
-
-    updateSource(`${source.trimEnd()}\n${snippet}`)
+    const nextSource = insertTextAtSelection(source, snippet, selection)
+    const nextPosition = selection.start + snippet.length
+    updateSource(nextSource)
+    focusTextArea(textAreaRef.current, nextPosition)
+    setSelection({ end: nextPosition, start: nextPosition })
   }
 
   const handleInsertComponent = (component: MdxComponent) => {
@@ -264,7 +252,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
       return
     }
 
-    insertSnippet(buildImageSnippet(post.format, response.data.asset))
+    insertSnippet(buildImageSnippet(response.data.asset))
     message.success('图片已插入')
   }
 
@@ -329,10 +317,6 @@ function PostEditContent({ postId }: PostEditContentProps) {
           post
             ? [
                 {
-                  label: '格式',
-                  value: formatLabels[post.format],
-                },
-                {
                   label: '状态',
                   value: <Tag color={getStatusColor(post.status)}>{statusLabels[post.status]}</Tag>,
                 },
@@ -387,43 +371,34 @@ function PostEditContent({ postId }: PostEditContentProps) {
                 <div className="text-sm font-medium text-fg">正文编辑</div>
                 <div className="mt-1 text-xs text-fg-muted">{dirty ? '有未保存内容' : '当前内容已保存'}</div>
               </div>
-              {post ? <Tag>{formatLabels[post.format]}</Tag> : null}
             </div>
 
             <div className="bg-surface/90">
               <Form.Item className="mb-0" name="source" rules={[{ required: true, message: '请输入正文' }]}>
-                {post?.format === 'mdx' ? (
-                  <Input.TextArea
-                    ref={textAreaRef}
-                    autoSize={{ minRows: 24 }}
-                    className="!rounded-none border-0 font-mono text-sm leading-6 shadow-none focus:shadow-none"
-                    onClick={(event) =>
-                      setSelection({
-                        end: event.currentTarget.selectionEnd,
-                        start: event.currentTarget.selectionStart,
-                      })
-                    }
-                    onKeyUp={(event) =>
-                      setSelection({
-                        end: event.currentTarget.selectionEnd,
-                        start: event.currentTarget.selectionStart,
-                      })
-                    }
-                    onSelect={(event) =>
-                      setSelection({
-                        end: event.currentTarget.selectionEnd,
-                        start: event.currentTarget.selectionStart,
-                      })
-                    }
-                    placeholder="输入 MDX 源码"
-                  />
-                ) : (
-                  <TiptapMarkdownEditor
-                    className="rounded-none border-0 shadow-none [&_.ProseMirror]:min-h-[560px]"
-                    value={source}
-                    onChange={updateSource}
-                  />
-                )}
+                <Input.TextArea
+                  ref={textAreaRef}
+                  autoSize={{ minRows: 24 }}
+                  className="!rounded-none border-0 font-mono text-sm leading-6 shadow-none focus:shadow-none"
+                  onClick={(event) =>
+                    setSelection({
+                      end: event.currentTarget.selectionEnd,
+                      start: event.currentTarget.selectionStart,
+                    })
+                  }
+                  onKeyUp={(event) =>
+                    setSelection({
+                      end: event.currentTarget.selectionEnd,
+                      start: event.currentTarget.selectionStart,
+                    })
+                  }
+                  onSelect={(event) =>
+                    setSelection({
+                      end: event.currentTarget.selectionEnd,
+                      start: event.currentTarget.selectionStart,
+                    })
+                  }
+                  placeholder="输入 MDX 源码"
+                />
               </Form.Item>
             </div>
           </section>
@@ -492,10 +467,10 @@ function PostEditContent({ postId }: PostEditContentProps) {
                   label: '素材',
                   children: (
                     <div className="px-5 py-5">
-                      <Upload 
-                        className="block w-full [&_.ant-upload]:block [&_.ant-upload]:w-full" 
-                        beforeUpload={handleBeforeUpload} 
-                        maxCount={1} 
+                      <Upload
+                        className="block w-full [&_.ant-upload]:block [&_.ant-upload]:w-full"
+                        beforeUpload={handleBeforeUpload}
+                        maxCount={1}
                         showUploadList={false}
                       >
                         <div className="group relative flex cursor-pointer flex-col items-center justify-center gap-5 rounded-2xl border-2 border-dashed border-border-subtle bg-surface/40 px-6 py-10 transition-all hover:border-primary/40 hover:bg-surface-muted/30">
@@ -517,7 +492,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                               <div className="text-center">
                                 <div className="text-sm font-medium text-fg">选择或拖放图片至此处</div>
                                 <div className="mt-2 px-2 text-[11px] leading-relaxed text-fg-muted/80">
-                                  上传后，将自动根据当前文章格式，在编辑器光标位置生成图片代码。
+                                  上传后，将自动在编辑器光标位置生成图片组件。
                                 </div>
                               </div>
                             </>
@@ -532,12 +507,6 @@ function PostEditContent({ postId }: PostEditContentProps) {
                   label: '组件',
                   children: (
                     <div className="space-y-4 px-5 py-5">
-                      {post?.format !== 'mdx' ? (
-                        <div className="rounded-xl border border-border-subtle bg-surface-muted/30 px-4 py-3 text-xs text-fg-muted">
-                          当前格式不支持插入 MDX 组件。
-                        </div>
-                      ) : null}
-
                       <div className="space-y-3">
                         {mdxComponents.map((component) => (
                           <div
@@ -551,7 +520,6 @@ function PostEditContent({ postId }: PostEditContentProps) {
                               </div>
                               <Button
                                 className="shrink-0 opacity-100 transition-opacity xl:opacity-0 xl:group-hover:opacity-100"
-                                disabled={post?.format !== 'mdx'}
                                 icon={<PackagePlus className="size-3.5" />}
                                 onClick={() => handleInsertComponent(component)}
                                 size="small"

@@ -10,7 +10,6 @@ const posts: PostSummary[] = [
     coverAssetId: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     excerpt: null,
-    format: 'markdown',
     id: 'post-1',
     publishedAt: null,
     slug: 'hello-world',
@@ -22,7 +21,6 @@ const posts: PostSummary[] = [
     coverAssetId: null,
     createdAt: '2026-01-02T00:00:00.000Z',
     excerpt: null,
-    format: 'mdx',
     id: 'post-2',
     publishedAt: '2026-01-03T00:00:00.000Z',
     slug: 'theme-preview',
@@ -43,13 +41,9 @@ const imageAsset: ImageAsset = {
 }
 
 describe('content 工具函数', () => {
-  it('按关键词、状态和格式筛选文章列表', () => {
-    expect(
-      filterContentPosts(posts, { format: 'all', keyword: 'hello', status: 'all' }).map((post) => post.id),
-    ).toEqual(['post-1'])
-    expect(
-      filterContentPosts(posts, { format: 'mdx', keyword: '', status: 'published' }).map((post) => post.id),
-    ).toEqual(['post-2'])
+  it('按关键词和状态筛选文章列表', () => {
+    expect(filterContentPosts(posts, { keyword: 'hello', status: 'all' }).map((post) => post.id)).toEqual(['post-1'])
+    expect(filterContentPosts(posts, { keyword: '', status: 'published' }).map((post) => post.id)).toEqual(['post-2'])
   })
 
   it('按 Bobo 地址、文章 ID 和 token 拼预览地址', () => {
@@ -66,11 +60,8 @@ describe('content 工具函数', () => {
     expect(insertTextAtSelection('hello world', '<Callout />', { end: 5, start: 5 })).toBe('hello<Callout /> world')
   })
 
-  it('按文章格式生成图片片段', () => {
-    expect(buildImageSnippet('markdown', imageAsset)).toBe('\n![cover.png](https://cdn.example.com/cover.png)\n')
-    expect(buildImageSnippet('mdx', imageAsset)).toBe(
-      '\n<Figure src="https://cdn.example.com/cover.png" alt="cover.png" />\n',
-    )
+  it('生成图片组件片段', () => {
+    expect(buildImageSnippet(imageAsset)).toBe('\n<Figure src="https://cdn.example.com/cover.png" alt="cover.png" />\n')
   })
 
   it('上传图片后返回 antd 的忽略标记，阻断默认上传请求', async () => {

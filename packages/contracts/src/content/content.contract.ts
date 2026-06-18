@@ -1,15 +1,12 @@
 import { z } from 'zod'
 
-export const POST_FORMAT_VALUES = ['markdown', 'mdx'] as const
 export const POST_STATUS_VALUES = ['draft', 'published', 'archived'] as const
 
-export const PostFormatSchema = z.enum(POST_FORMAT_VALUES)
 export const PostStatusSchema = z.enum(POST_STATUS_VALUES)
 
 export const ContentPostBaseSchema = z.object({
   coverAssetId: z.string().trim().min(1).nullable().optional(),
   excerpt: z.string().trim().max(500).nullable().optional(),
-  format: PostFormatSchema,
   slug: z.string().trim().min(1).max(160),
   source: z.string().min(1),
   title: z.string().trim().min(1).max(160),
@@ -24,7 +21,6 @@ export const PostSummarySchema = z.object({
   coverAssetId: z.string().nullable(),
   createdAt: z.string(),
   excerpt: z.string().nullable(),
-  format: PostFormatSchema,
   id: z.string(),
   publishedAt: z.string().nullable(),
   slug: z.string(),
@@ -42,7 +38,6 @@ export const PostDetailSchema = PostSummarySchema.extend({
 export const PostRevisionSchema = z.object({
   createdAt: z.string(),
   excerpt: z.string().nullable(),
-  format: PostFormatSchema,
   id: z.string(),
   postId: z.string(),
   revisionNo: z.number().int().positive(),
@@ -105,7 +100,6 @@ export type MdxComponent = z.infer<typeof MdxComponentSchema>
 export type MdxComponentsResponse = z.infer<typeof MdxComponentsResponseSchema>
 export type PostDetail = z.infer<typeof PostDetailSchema>
 export type PostDetailResponse = z.infer<typeof PostDetailResponseSchema>
-export type PostFormat = z.infer<typeof PostFormatSchema>
 export type PostListResponse = z.infer<typeof PostListResponseSchema>
 export type PostRevision = z.infer<typeof PostRevisionSchema>
 export type PostStatus = z.infer<typeof PostStatusSchema>

@@ -22,6 +22,13 @@
       "when": 1781580556738,
       "tag": "0002_open_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781690340540,
+      "tag": "0003_daffy_miek",
+      "breakpoints": true
     }
   ]
 }

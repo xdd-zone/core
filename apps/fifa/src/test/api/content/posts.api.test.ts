@@ -59,7 +59,6 @@ describe('content api 封装', () => {
           createdAt: '2026-01-01T00:00:00.000Z',
           draftRevisionId: 'revision-1',
           excerpt: null,
-          format: 'markdown',
           id: 'post-1',
           publishedAt: null,
           publishedRevisionId: null,
@@ -76,7 +75,6 @@ describe('content api 封装', () => {
       },
     }
     const payload = {
-      format: 'markdown' as const,
       slug: 'hello-world',
       source: '# Hello World\n',
       title: 'Hello World',

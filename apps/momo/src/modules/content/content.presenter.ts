@@ -10,7 +10,7 @@ import {
 
 export type PostSummarySource = Pick<
   ContentPostRecord,
-  'coverAssetId' | 'createdAt' | 'excerpt' | 'format' | 'id' | 'publishedAt' | 'slug' | 'status' | 'title' | 'updatedAt'
+  'coverAssetId' | 'createdAt' | 'excerpt' | 'id' | 'publishedAt' | 'slug' | 'status' | 'title' | 'updatedAt'
 >
 
 export type PostDetailSource = Pick<
@@ -19,7 +19,6 @@ export type PostDetailSource = Pick<
   | 'createdAt'
   | 'draftRevisionId'
   | 'excerpt'
-  | 'format'
   | 'id'
   | 'publishedAt'
   | 'publishedRevisionId'
@@ -31,7 +30,7 @@ export type PostDetailSource = Pick<
 
 export type PostRevisionSource = Pick<
   ContentRevisionRecord,
-  'createdAt' | 'excerpt' | 'format' | 'id' | 'postId' | 'revisionNo' | 'source' | 'title'
+  'createdAt' | 'excerpt' | 'id' | 'postId' | 'revisionNo' | 'source' | 'title'
 >
 
 export interface PreviewTokenSource {
@@ -46,7 +45,6 @@ export function toPostSummary(post: PostSummarySource): PostSummary {
     coverAssetId: post.coverAssetId,
     createdAt: toIsoString(post.createdAt),
     excerpt: post.excerpt,
-    format: post.format,
     id: post.id,
     publishedAt: toNullableIsoString(post.publishedAt),
     slug: post.slug,
@@ -73,7 +71,6 @@ export function toPostRevision(revision: PostRevisionSource): PostRevision {
   const postRevision = {
     createdAt: toIsoString(revision.createdAt),
     excerpt: revision.excerpt,
-    format: revision.format,
     id: revision.id,
     postId: revision.postId,
     revisionNo: revision.revisionNo,

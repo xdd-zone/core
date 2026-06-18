@@ -61,7 +61,6 @@ function createPostRecord(): ContentPostRecord {
     createdBy: 'user-id',
     draftRevisionId: 'revision-id',
     excerpt: null,
-    format: 'markdown',
     id: 'post-id',
     publishedAt: null,
     publishedBy: null,

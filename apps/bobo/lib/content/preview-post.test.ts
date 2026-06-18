@@ -22,7 +22,6 @@ describe('preview-post', () => {
               createdAt: '2026-06-17T00:00:00.000Z',
               draftRevisionId: null,
               excerpt: null,
-              format: 'markdown',
               id: 'post-2',
               publishedAt: null,
               publishedRevisionId: null,
@@ -35,7 +34,6 @@ describe('preview-post', () => {
             revision: {
               createdAt: '2026-06-17T00:00:00.000Z',
               excerpt: null,
-              format: 'markdown',
               id: 'revision-1',
               postId: 'post-2',
               revisionNo: 1,

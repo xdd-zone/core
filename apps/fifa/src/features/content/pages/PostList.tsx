@@ -1,4 +1,4 @@
-import type { CreatePostRequest, PostFormat, PostStatus, PostSummary } from '@xdd-zone/contracts'
+import type { CreatePostRequest, PostStatus, PostSummary } from '@xdd-zone/contracts'
 
 import { useContentPostsQuery, useCreateContentPostMutation } from '@fifa/api/content'
 import { FifaPageHeader } from '@fifa/components/common'
@@ -14,13 +14,7 @@ const statusOptions: Array<{ label: string; value: PostStatus }> = [
   { label: '已归档', value: 'archived' },
 ]
 
-const formatOptions: Array<{ label: string; value: PostFormat }> = [
-  { label: 'Markdown', value: 'markdown' },
-  { label: 'MDX', value: 'mdx' },
-]
-
 interface CreatePostFormValue {
-  format: PostFormat
   slug: string
   title: string
 }
@@ -52,15 +46,7 @@ function getStatusLabel(status: PostStatus) {
   return statusOptions.find((option) => option.value === status)?.label ?? status
 }
 
-function getFormatLabel(format: PostFormat) {
-  return formatOptions.find((option) => option.value === format)?.label ?? format
-}
-
-function toInitialSource(format: PostFormat, title: string) {
-  if (format === 'mdx') {
-    return `# ${title}\n\n`
-  }
-
+function toInitialSource(title: string) {
   return `# ${title}\n\n`
 }
 
@@ -73,21 +59,19 @@ export function PostList() {
   const [createOpen, setCreateOpen] = useState(false)
   const [keyword, setKeyword] = useState('')
   const [status, setStatus] = useState<PostStatus | 'all'>('all')
-  const [format, setFormat] = useState<PostFormat | 'all'>('all')
 
   const posts = useMemo(() => (postsQuery.data?.ok ? postsQuery.data.data.posts : []), [postsQuery.data])
   const loadError = postsQuery.data && !postsQuery.data.ok ? postsQuery.data.error.message : undefined
 
   const filteredPosts = useMemo(() => {
-    return filterContentPosts(posts, { format, keyword, status })
-  }, [format, keyword, posts, status])
+    return filterContentPosts(posts, { keyword, status })
+  }, [keyword, posts, status])
 
   const handleCreate = async () => {
     const values = await form.validateFields()
     const payload: CreatePostRequest = {
-      format: values.format,
       slug: values.slug,
-      source: toInitialSource(values.format, values.title),
+      source: toInitialSource(values.title),
       title: values.title,
     }
     const response = await createPostMutation.mutateAsync(payload)
@@ -137,7 +121,7 @@ export function PostList() {
       />
 
       <section className="rounded-lg border border-border-subtle bg-surface">
-        <div className="grid gap-3 border-b border-border-subtle px-4 py-4 md:grid-cols-[minmax(240px,1fr)_180px_160px]">
+        <div className="grid gap-3 border-b border-border-subtle px-4 py-4 md:grid-cols-[minmax(240px,1fr)_180px]">
           <Input
             allowClear
             prefix={<Search className="text-fg-muted size-4" />}
@@ -149,11 +133,6 @@ export function PostList() {
             options={[{ label: '全部状态', value: 'all' }, ...statusOptions]}
             onChange={setStatus}
             value={status}
-          />
-          <Select
-            options={[{ label: '全部格式', value: 'all' }, ...formatOptions]}
-            onChange={setFormat}
-            value={format}
           />
         </div>
 
@@ -177,12 +156,6 @@ export function PostList() {
               dataIndex: 'slug',
               title: 'Slug',
               render: (slug: string) => <span className="font-mono text-xs">{slug}</span>,
-            },
-            {
-              dataIndex: 'format',
-              title: '格式',
-              width: 110,
-              render: (value: PostFormat) => <Tag>{getFormatLabel(value)}</Tag>,
             },
             {
               dataIndex: 'status',
@@ -245,21 +218,12 @@ export function PostList() {
         open={createOpen}
         title="新建文章"
       >
-        <Form<CreatePostFormValue>
-          form={form}
-          initialValues={{
-            format: 'markdown',
-          }}
-          layout="vertical"
-        >
+        <Form<CreatePostFormValue> form={form} layout="vertical">
           <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
             <Input placeholder="输入文章标题" />
           </Form.Item>
           <Form.Item name="slug" label="Slug" rules={[{ required: true, message: '请输入 slug' }]}>
             <Input placeholder="例如 hello-world" />
-          </Form.Item>
-          <Form.Item name="format" label="格式" rules={[{ required: true, message: '请选择格式' }]}>
-            <Select options={formatOptions} />
           </Form.Item>
         </Form>
       </Modal>
