@@ -1,7 +1,7 @@
 import type { HonoEnv } from '#momo/shared/hono-env'
-import { REQUEST_ID_HEADER, requestContextMiddleware } from '#momo/middleware'
 import { Hono } from 'hono'
 import { describe, expect, it } from 'vitest'
+import { REQUEST_ID_HEADER, requestContextMiddleware } from '#momo/middleware'
 
 function createApp() {
   const app = new Hono<HonoEnv>()

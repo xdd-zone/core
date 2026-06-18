@@ -6,8 +6,8 @@ import type {
   SearchTask,
   SearchWaitOptions,
 } from './search.types'
-import { AppError } from '#momo/shared/app-error'
 import { BizCode } from '@xdd-zone/contracts'
+import { AppError } from '#momo/shared/app-error'
 
 function createDisabledSearchError(): AppError {
   return new AppError(BizCode.SYSTEM_INTERNAL_ERROR, '搜索服务未启用', 500)

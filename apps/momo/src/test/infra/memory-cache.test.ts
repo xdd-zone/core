@@ -1,5 +1,5 @@
-import { MemoryCache } from '#momo/infra/cache'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MemoryCache } from '#momo/infra/cache'
 
 function createCache() {
   return new MemoryCache({

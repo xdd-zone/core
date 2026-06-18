@@ -1,5 +1,5 @@
-import { getMomoEnv } from '#momo/shared/env'
 import { describe, expect, it } from 'vitest'
+import { getMomoEnv } from '#momo/shared/env'
 
 describe('momo 环境变量', () => {
   it('required 环境变量缺少时抛错', () => {

@@ -1,10 +1,10 @@
+import { describe, expect, it } from 'vitest'
 import {
   createMediaFileName,
   isAllowedMediaMimeType,
   MAX_MEDIA_FILE_SIZE_BYTES,
   validateMediaFile,
 } from '#momo/infra/storage/media-file'
-import { describe, expect, it } from 'vitest'
 
 describe('mime 类型白名单判断', () => {
   it.each(['image/avif', 'image/gif', 'image/jpeg', 'image/png', 'image/webp'])('%s 在白名单内', (mimeType) => {

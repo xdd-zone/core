@@ -1,6 +1,6 @@
+import { describe, expect, it } from 'vitest'
 import { DisabledSearch } from '#momo/infra/search'
 import { AppError } from '#momo/shared/app-error'
-import { describe, expect, it } from 'vitest'
 
 describe('禁用搜索驱动', () => {
   it('health 返回 disabled', async () => {

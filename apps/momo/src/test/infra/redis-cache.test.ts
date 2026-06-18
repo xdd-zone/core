@@ -1,6 +1,6 @@
 import type { RedisCacheClient } from '#momo/infra/cache'
-import { RedisCache } from '#momo/infra/cache'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { RedisCache } from '#momo/infra/cache'
 
 function createClient(): RedisCacheClient {
   return {

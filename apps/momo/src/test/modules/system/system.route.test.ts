@@ -1,9 +1,9 @@
 import type { ApiResponse, HealthResponse, PingResponse, RootResponse } from '@xdd-zone/contracts'
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import app from '#momo/app'
 import { BizCode } from '@xdd-zone/contracts'
 import { describe, expect, it } from 'vitest'
+import app from '#momo/app'
 
 const systemRoutePath = fileURLToPath(new URL('../../../modules/system/system.route.ts', import.meta.url))
 

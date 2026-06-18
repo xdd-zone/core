@@ -1,5 +1,6 @@
 import type { ApplicationCode, AuthProvider, RoleCode } from './auth.types'
 import { randomUUID } from 'node:crypto'
+import { and, eq } from 'drizzle-orm'
 import { getDb } from '#momo/infra/db/client'
 import {
   account,
@@ -9,7 +10,6 @@ import {
   user,
   userRoleBindings,
 } from '#momo/infra/db/schema/index'
-import { and, eq } from 'drizzle-orm'
 
 export async function hasPasswordAccount(userId: string): Promise<boolean> {
   const rows = await getDb()

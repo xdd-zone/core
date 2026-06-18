@@ -1,7 +1,7 @@
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createRuntime } from '#momo/bootstrap'
 import { MemoryCache, RedisCache } from '#momo/infra/cache'
 import { DisabledSearch, MeilisearchSearch } from '#momo/infra/search'
-import { afterEach, describe, expect, it, vi } from 'vitest'
 
 function stubBaseEnv() {
   vi.stubEnv('APP_ENV', 'test')

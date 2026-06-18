@@ -1,10 +1,10 @@
+import type { InferSelectModel } from 'drizzle-orm'
 import type {
   contentAssets,
   contentPostRevisions,
   contentPosts,
   contentPreviewTokens,
 } from '#momo/infra/db/schema/index'
-import type { InferSelectModel } from 'drizzle-orm'
 
 export type ContentPostRecord = InferSelectModel<typeof contentPosts>
 export type ContentRevisionRecord = InferSelectModel<typeof contentPostRevisions>

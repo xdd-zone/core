@@ -1,9 +1,9 @@
 import type { MomoLogger } from '#momo/infra/logger'
 import type { MomoEnv } from '#momo/shared/env'
-import { createChildLogger, createLogger } from '#momo/infra/logger'
-import { getMomoEnv } from '#momo/shared/env'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
+import { createChildLogger, createLogger } from '#momo/infra/logger'
+import { getMomoEnv } from '#momo/shared/env'
 
 import * as schema from './schema/index'
 

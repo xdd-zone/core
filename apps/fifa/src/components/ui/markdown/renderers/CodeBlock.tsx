@@ -73,7 +73,7 @@ export const CodeBlock: FC<PreProps> = ({ children, className }) => {
 
   useEffect(() => {
     if (!copied) return
-    const t = setTimeout(() => setCopied(false), 1500)
+    const t = setTimeout(setCopied, 1500, false)
     return () => clearTimeout(t)
   }, [copied])
 

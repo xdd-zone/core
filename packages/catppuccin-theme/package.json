@@ -68,6 +68,8 @@
   "devDependencies": {
     "@xdd-zone/eslint-config": "workspace:*",
     "antd": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:"
   }

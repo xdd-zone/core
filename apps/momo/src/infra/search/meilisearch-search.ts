@@ -7,9 +7,9 @@ import type {
   SearchTask,
   SearchWaitOptions,
 } from './search.types'
-import { AppError } from '#momo/shared/app-error'
 import { BizCode } from '@xdd-zone/contracts'
 import { Meilisearch } from 'meilisearch'
+import { AppError } from '#momo/shared/app-error'
 
 export interface MeilisearchSearchConfig {
   apiKey: string

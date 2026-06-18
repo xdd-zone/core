@@ -1,7 +1,7 @@
 import type { CosStorageClient, CosStorageConfig } from '#momo/infra/storage/cos-storage'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CosStorage } from '#momo/infra/storage/cos-storage'
 import { MAX_MEDIA_FILE_SIZE_BYTES } from '#momo/infra/storage/media-file'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 function createConfig(config: Partial<CosStorageConfig> = {}): CosStorageConfig {
   return {

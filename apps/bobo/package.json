@@ -53,15 +53,14 @@
     "tw-animate-css": "catalog:next"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "catalog:next",
     "@tailwindcss/postcss": "catalog:next",
     "@types/node": "catalog:next",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
     "@xdd-zone/eslint-config": "workspace:*",
     "dotenv-cli": "catalog:",
-    "eslint": "catalog:next",
-    "prettier": "catalog:next",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

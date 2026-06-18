@@ -1,8 +1,8 @@
 import type { MomoLogger } from '#momo/infra/logger'
 import type { HonoEnv } from '#momo/shared/hono-env'
-import { createRequestLogMiddleware } from '#momo/middleware'
 import { Hono } from 'hono'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createRequestLogMiddleware } from '#momo/middleware'
 
 function createMockLogger() {
   return {

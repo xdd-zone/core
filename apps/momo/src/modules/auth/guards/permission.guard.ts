@@ -1,9 +1,9 @@
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
 import type { ContentPermissionCode } from '../auth.types'
-import { AppError } from '#momo/shared/app-error'
 import { BizCode } from '@xdd-zone/contracts'
 import { createMiddleware } from 'hono/factory'
+import { AppError } from '#momo/shared/app-error'
 
 import { createMomoAuth } from '../auth.config'
 import { CONTENT_PERMISSION_CODES } from '../auth.types'

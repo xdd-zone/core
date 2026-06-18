@@ -1,4 +1,5 @@
 import type { MomoEnv } from '#momo/shared/env'
+import { describe, expect, it, vi } from 'vitest'
 import {
   createBetterAuthLogger,
   createChildLogger,
@@ -6,7 +7,6 @@ import {
   createLogger,
   LOGGER_REDACT_PATHS,
 } from '#momo/infra/logger'
-import { describe, expect, it, vi } from 'vitest'
 
 const baseEnv: MomoEnv = {
   APP_ENV: 'test',

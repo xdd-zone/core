@@ -1,5 +1,5 @@
-import { AppError } from '#momo/shared/app-error'
 import { BizCode } from '@xdd-zone/contracts'
+import { AppError } from '#momo/shared/app-error'
 
 import {
   ensureBoboVisitorRole,

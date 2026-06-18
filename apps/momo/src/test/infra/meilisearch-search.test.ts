@@ -1,7 +1,7 @@
 import type { MeilisearchClient, MeilisearchIndex, MeilisearchTask } from '#momo/infra/search'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MeilisearchSearch } from '#momo/infra/search'
 import { AppError } from '#momo/shared/app-error'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 function createTask(overrides: Partial<MeilisearchTask> = {}): MeilisearchTask {
   return {

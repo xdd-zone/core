@@ -1,10 +1,10 @@
-import type { HonoEnv } from '#momo/shared/hono-env'
 import type { ApiResponse } from '@xdd-zone/contracts'
-import app from '#momo/app'
-import { registerRequestContext, registerTimeout, REQUEST_ID_HEADER } from '#momo/middleware'
+import type { HonoEnv } from '#momo/shared/hono-env'
 import { BizCode } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 import { describe, expect, it, vi } from 'vitest'
+import app from '#momo/app'
+import { registerRequestContext, registerTimeout, REQUEST_ID_HEADER } from '#momo/middleware'
 
 describe('request pipeline 中间件', () => {
   it('cors 预检请求允许 x-request-id', async () => {

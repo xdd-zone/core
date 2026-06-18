@@ -16,6 +16,7 @@ out
 *.generated.ts
 *.generated.js
 src/infra/database/prisma/generated
+src/infra/db/migrations/meta/*.json
 
 # Environment files
 .env

@@ -1,6 +1,6 @@
+import type { Hono } from 'hono'
 import type { MomoEnv } from '#momo/shared/env'
 import type { HonoEnv } from '#momo/shared/hono-env'
-import type { Hono } from 'hono'
 import { timing } from 'hono/timing'
 
 export function registerTiming(app: Hono<HonoEnv>, env: MomoEnv): void {

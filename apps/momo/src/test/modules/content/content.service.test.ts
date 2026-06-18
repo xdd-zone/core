@@ -2,9 +2,9 @@ import type { MomoRuntime } from '#momo/bootstrap'
 import type { ContentRepository } from '#momo/modules/content/content.repository'
 import type { ContentPostRecord, ContentPreviewTokenRecord } from '#momo/modules/content/content.types'
 import type { AppError } from '#momo/shared/app-error'
-import { createContentService } from '#momo/modules/content/content.service'
 import { BizCode } from '@xdd-zone/contracts'
 import { describe, expect, it, vi } from 'vitest'
+import { createContentService } from '#momo/modules/content/content.service'
 
 describe('content service', () => {
   it('预览 token 指向丢失的版本时返回系统错误', async () => {

@@ -82,8 +82,8 @@
     "@xdd-zone/momo": "workspace:*",
     "dotenv-cli": "catalog:",
     "esbuild": "catalog:",
-    "eslint-plugin-react-hooks": "catalog:",
-    "eslint-plugin-react-refresh": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

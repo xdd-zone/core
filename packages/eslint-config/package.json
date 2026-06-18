@@ -22,9 +22,12 @@
   },
   "dependencies": {
     "@antfu/eslint-config": "catalog:",
+    "@eslint-react/eslint-plugin": "catalog:",
+    "@next/eslint-plugin-next": "catalog:next",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
     "eslint-plugin-format": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
     "prettier": "catalog:"
   }
 }

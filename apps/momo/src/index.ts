@@ -1,9 +1,9 @@
 import { fileURLToPath } from 'node:url'
 
+import { serve } from '@hono/node-server'
 import { createMomoApp, createRuntime } from '#momo/bootstrap'
 import { closeDb } from '#momo/infra/db/client'
 import { getNumberProperty, getStringProperty } from '#momo/shared/object-utils'
-import { serve } from '@hono/node-server'
 
 const isEntry = process.argv[1] === fileURLToPath(import.meta.url)
 

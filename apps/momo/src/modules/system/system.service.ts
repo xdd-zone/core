@@ -1,5 +1,5 @@
-import type { MomoEnv } from '#momo/shared/env'
 import type { HealthResponse, PingResponse, RootResponse } from '@xdd-zone/contracts'
+import type { MomoEnv } from '#momo/shared/env'
 
 export function getRootInfo(): RootResponse {
   return {

@@ -141,7 +141,7 @@ code-server 的配置放在 `apps/bobo/.env.code-server`，启动命令和访问
 ## 依赖维护
 
 - Bobo 依赖写在 `apps/bobo/package.json`。
-- ESLint 配置从 `@xdd-zone/eslint-config` 继承，再在 `apps/bobo/eslint.config.mjs` 里补 Next.js 规则。
+- ESLint 配置从 `@xdd-zone/eslint-config` 继承，再在 `apps/bobo/eslint.config.mjs` 里补 React 和 Next.js 规则。
 - Prettier 配置直接导出 `@xdd-zone/eslint-config/prettier`。
 - TypeScript 配置从根目录 `tsconfig.browser.json` 继承，Next.js 专用配置继续留在 `apps/bobo/tsconfig.json`。
 - Next 相关版本写在根目录 `pnpm-workspace.yaml` 的 `catalogs.next`。

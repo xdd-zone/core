@@ -70,7 +70,7 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 - Next.js 16
 - Hono 4
 - TypeScript 5
-- ESLint 9 + Prettier 3
+- ESLint 10 + Prettier 3
 
 ## Monorepo 管理
 

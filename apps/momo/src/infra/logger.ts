@@ -1,7 +1,7 @@
-import type { MomoEnv } from '#momo/shared/env'
 import type { Logger } from 'pino'
-import { getStringProperty } from '#momo/shared/object-utils'
+import type { MomoEnv } from '#momo/shared/env'
 import pino from 'pino'
+import { getStringProperty } from '#momo/shared/object-utils'
 
 export type MomoLogger = Pick<Logger, 'debug' | 'error' | 'info' | 'warn'>
 type BetterAuthLogLevel = 'debug' | 'error' | 'info' | 'warn'

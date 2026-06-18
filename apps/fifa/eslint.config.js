@@ -1,6 +1,4 @@
-import baseConfig from '@xdd-zone/eslint-config'
-import pluginReactHooks from 'eslint-plugin-react-hooks'
-import pluginReactRefresh from 'eslint-plugin-react-refresh'
+import { createEslintConfig } from '@xdd-zone/eslint-config'
 
 const fifaBoundaryPlugin = {
   rules: {
@@ -27,20 +25,23 @@ const fifaBoundaryPlugin = {
   },
 }
 
-export default baseConfig.append({
+export default createEslintConfig({ react: true }).append({
   files: ['**/*.{js,jsx,ts,tsx}'],
   ignores: ['dist', 'docs/**', '*.md', '*.tsbuildinfo'],
   plugins: {
     'fifa-boundary': fifaBoundaryPlugin,
-    'react-hooks': pluginReactHooks,
-    'react-refresh': pluginReactRefresh,
   },
   rules: {
-    ...pluginReactHooks.configs.recommended.rules,
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-non-null-assertion': 'off',
     'fifa-boundary/momo-rpc-type-only': 'error',
     'no-console': ['off', { allow: ['warn', 'error', 'info'] }],
-    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    'react/dom-no-dangerously-set-innerhtml': 'off',
+    'react/naming-convention-ref-name': 'off',
+    'react/no-array-index-key': 'off',
+    'react/no-context-provider': 'off',
+    'react/no-forward-ref': 'off',
+    'react/no-use-context': 'off',
+    'react/set-state-in-effect': 'off',
   },
 })

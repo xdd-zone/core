@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { eq } from 'drizzle-orm'
+import postgres from 'postgres'
 import { closeDb, getDb } from '#momo/infra/db/client'
 import {
   account,
@@ -12,8 +14,6 @@ import {
 import { createLogger } from '#momo/infra/logger'
 import { createMomoAuth } from '#momo/modules/auth/auth.config'
 import { getMomoEnv } from '#momo/shared/env'
-import { eq } from 'drizzle-orm'
-import postgres from 'postgres'
 
 const TEST_DATABASE_NAME = 'momo_test'
 const TEST_DATABASE_URL = 'postgres://momo:momo@localhost:55432/momo_test'

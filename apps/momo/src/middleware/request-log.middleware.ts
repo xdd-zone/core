@@ -1,6 +1,6 @@
+import type { Hono } from 'hono'
 import type { MomoLogger } from '#momo/infra/logger'
 import type { HonoEnv } from '#momo/shared/hono-env'
-import type { Hono } from 'hono'
 import { createMiddleware } from 'hono/factory'
 
 export const SLOW_REQUEST_THRESHOLD_MS = 1000

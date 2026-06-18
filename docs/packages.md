@@ -122,7 +122,7 @@ pnpm --filter @xdd-zone/catppuccin-theme format:check
 主要文件：
 
 - `packages/eslint-config/index.js`
-  导出 ESLint 配置。
+  导出默认 ESLint 配置和 `createEslintConfig()`。
 - `packages/eslint-config/prettier.config.js`
   导出 Prettier 配置。
 - `packages/eslint-config/package.json`
@@ -134,6 +134,14 @@ pnpm --filter @xdd-zone/catppuccin-theme format:check
 import config from '@xdd-zone/eslint-config'
 
 export default config
+```
+
+需要给 app 补 React 或 Next.js 规则时，用 `createEslintConfig()`：
+
+```js
+import { createEslintConfig } from '@xdd-zone/eslint-config'
+
+export default createEslintConfig({ react: true, nextjs: true })
 ```
 
 子包使用 Prettier 配置：

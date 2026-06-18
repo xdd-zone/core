@@ -24,8 +24,7 @@ type PostSegment =
 
 type AllowedMdxComponent = 'Callout' | 'Figure' | 'LinkCard' | 'ThemePreview'
 
-const mdxBlockPattern =
-  /<(Callout)\b([^>]*)>([\s\S]*?)<\/\1>|<(Figure|LinkCard|ThemePreview)\b([^>]*)\/>/g
+const mdxBlockPattern = /<(Callout)\b([^>]*)>([\s\S]*?)<\/\1>|<(Figure|LinkCard|ThemePreview)\b([^>]*)\/>/g
 
 const markdownOverrides = {
   a: {
@@ -93,7 +92,7 @@ export function PostRenderer({ source }: PostRendererProps) {
   )
 }
 
-export function parsePostSegments(source: string): PostSegment[] {
+function parsePostSegments(source: string): PostSegment[] {
   const segments: PostSegment[] = []
   let lastIndex = 0
 
@@ -157,9 +156,7 @@ function MdxSegment({ segment }: { segment: Extract<PostSegment, { kind: 'mdx' }
   }
 
   if (segment.component === 'LinkCard') {
-    return (
-      <LinkCard description={segment.props.description} href={segment.props.href} title={segment.props.title} />
-    )
+    return <LinkCard description={segment.props.description} href={segment.props.href} title={segment.props.title} />
   }
 
   return <ThemePreview theme={segment.props.theme} />
@@ -170,7 +167,9 @@ function HeadingOne({ children }: { children: ReactNode }) {
 }
 
 function HeadingTwo({ children }: { children: ReactNode }) {
-  return <h2 className="mt-10 border-t border-border/70 pt-6 text-2xl font-semibold tracking-tight text-fg">{children}</h2>
+  return (
+    <h2 className="mt-10 border-t border-border/70 pt-6 text-2xl font-semibold tracking-tight text-fg">{children}</h2>
+  )
 }
 
 function HeadingThree({ children }: { children: ReactNode }) {
@@ -262,7 +261,9 @@ function Figure({ alt = '', caption, src = '' }: { alt?: string; caption?: strin
   return (
     <figure className="my-8 overflow-hidden rounded-lg border border-border/70 bg-surface/80">
       <img alt={alt} className="h-auto w-full" loading="lazy" src={src} />
-      {caption ? <figcaption className="border-t border-border/70 px-4 py-3 text-sm text-fg-muted">{caption}</figcaption> : null}
+      {caption ? (
+        <figcaption className="border-t border-border/70 px-4 py-3 text-sm text-fg-muted">{caption}</figcaption>
+      ) : null}
     </figure>
   )
 }
