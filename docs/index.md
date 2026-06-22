@@ -53,7 +53,7 @@
 代码入口：
 
 - `apps/bobo/app/layout.tsx`
-- `apps/bobo/app/page.tsx`
+- `apps/bobo/app/(site)/page.tsx`
 - `apps/bobo/app/globals.css`
 - `apps/bobo/app/styles`
 

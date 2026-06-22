@@ -23,11 +23,13 @@
 
 - `apps/bobo/app/layout.tsx`
   管全局布局、字体、metadata、主题初始化脚本和页面背景。
-- `apps/bobo/app/page.tsx`
+- `apps/bobo/app/(site)/page.tsx`
   首页。
-- `apps/bobo/app/preview/posts/[postId]/page.tsx`
+- `apps/bobo/app/(site)/layout.tsx`
+  只给公开站点分区引入首页样式，不改 URL。
+- `apps/bobo/app/(preview)/preview/posts/[postId]/page.tsx`
   文章预览页，读取 `MOMO_BASE_URL` 指向的 Momo 预览接口。
-- `apps/bobo/app/lab`
+- `apps/bobo/app/(lab)/lab`
   放样式演示、主题验证和临时页面。
 - `apps/bobo/app/globals.css`
   全局样式入口，只负责导入 Tailwind、shadcn 样式、共享主题入口和本地样式文件。
@@ -102,12 +104,12 @@ code-server 的配置放在 `apps/bobo/.env.code-server`，启动命令和访问
 
 ## 页面规则
 
-- 新页面放在 `apps/bobo/app/<route>/page.tsx`。
+- 公开站点页面放在 `apps/bobo/app/(site)/<route>/page.tsx`。
+- 临时演示内容放到 `apps/bobo/app/(lab)/lab`，不要放在首页。
 - 页面 metadata 优先写在对应 `page.tsx` 或 `layout.tsx`。
 - 全局 metadata 放在 `apps/bobo/app/layout.tsx`。
 - App Router 默认写服务端组件。
 - 只有需要浏览器 API、交互状态或事件处理时，才加 `'use client'`。
-- 临时演示内容放到 `apps/bobo/app/lab`，不要放在首页。
 
 ## 组件规则
 

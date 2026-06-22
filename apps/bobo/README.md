@@ -6,9 +6,9 @@
 
 ## 现在能做什么
 
-- 首页在 `app/page.tsx`。
-- 样式演示和临时页面放在 `app/lab`。
-- 文章预览页在 `app/preview/posts/[postId]/page.tsx`。
+- 首页在 `app/(site)/page.tsx`，URL 仍然是 `/`。
+- 样式演示和临时页面放在 `app/(lab)/lab`，URL 仍然是 `/lab`。
+- 文章预览页在 `app/(preview)/preview/posts/[postId]/page.tsx`。
 - 全局布局、字体、metadata 和主题初始化放在 `app/layout.tsx`。
 - Catppuccin 主题从 `@xdd-zone/catppuccin-theme/styles/bobo.css` 引入。
 - Next 服务端代码通过 `MOMO_BASE_URL` 读取 Momo 地址。
@@ -35,9 +35,11 @@ pnpm --filter @xdd-zone/bobo start
 
 ## 常改位置
 
-- `app/page.tsx`
+- `app/(site)/page.tsx`
   首页。
-- `app/preview/posts/[postId]/page.tsx`
+- `app/(site)/_components/home`
+  首页专用组件和样式。
+- `app/(preview)/preview/posts/[postId]/page.tsx`
   文章预览页，读取 `MOMO_BASE_URL` 指向的 Momo 预览接口。
 - `app/layout.tsx`
   全局布局、字体、metadata 和主题初始化脚本。

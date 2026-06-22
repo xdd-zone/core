@@ -226,8 +226,8 @@ pnpm build:fifa
 常改文件：
 
 - `apps/bobo/app/layout.tsx`
-- `apps/bobo/app/page.tsx`
-- `apps/bobo/app/lab/page.tsx`
+- `apps/bobo/app/(site)/page.tsx`
+- `apps/bobo/app/(lab)/lab/page.tsx`
 - `apps/bobo/app/globals.css`
 - `apps/bobo/app/styles`
 - `apps/bobo/components`

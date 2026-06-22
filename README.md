@@ -201,7 +201,7 @@ Fifa 通过 `@xdd-zone/momo/rpc` 引入 Momo 的 RPC 类型，再用 `hono/clien
 
 - [docs/apps/bobo.md](./docs/apps/bobo.md)
 - `apps/bobo/app/layout.tsx`
-- `apps/bobo/app/page.tsx`
+- `apps/bobo/app/(site)/page.tsx`
 - `apps/bobo/app/globals.css`
 
 开发时运行：

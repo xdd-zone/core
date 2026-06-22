@@ -136,9 +136,9 @@ Fifa 从 `@xdd-zone/momo/rpc` 通过 `import type` 引入 `AppType`，再用 `ho
 
 - `apps/bobo/app/layout.tsx`
   全局布局、字体、metadata 和主题初始化。
-- `apps/bobo/app/page.tsx`
+- `apps/bobo/app/(site)/page.tsx`
   首页。
-- `apps/bobo/app/lab`
+- `apps/bobo/app/(lab)/lab`
   样式演示、主题验证和临时页面。
 - `apps/bobo/app/globals.css`
   全局样式入口。

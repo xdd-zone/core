@@ -179,8 +179,8 @@ pnpm exec prettier --check <改过的 md 文件>
 - 包名是 `@xdd-zone/bobo`，目录是 `apps/bobo`。
 - 页面入口放在 `apps/bobo/app`，使用 App Router。
 - `apps/bobo/app/layout.tsx` 管全局布局、字体、metadata 和主题初始化。
-- `apps/bobo/app/page.tsx` 是首页。
-- `apps/bobo/app/lab` 放样式演示、主题验证和临时页面。
+- `apps/bobo/app/(site)/page.tsx` 是首页，URL 仍然是 `/`。
+- `apps/bobo/app/(lab)/lab` 放样式演示、主题验证和临时页面，URL 仍然是 `/lab`。
 - 全局样式入口是 `apps/bobo/app/globals.css`。
 - Catppuccin 主题变量从 `@xdd-zone/catppuccin-theme/styles/bobo.css` 引入。
 - 组件优先放在 `apps/bobo/components`，通用函数放在 `apps/bobo/lib`。
