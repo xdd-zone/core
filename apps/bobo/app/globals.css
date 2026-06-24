@@ -9,8 +9,5 @@
 /* 基础 */
 @import './styles/base/reset.css';
 
-/* 装饰 */
-@import './styles/patterns/bobo-pattern.css';
-
 /* 动画 */
 @import './styles/utilities/animations.css';

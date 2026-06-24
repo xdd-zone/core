@@ -22,7 +22,7 @@
 ## 目录
 
 - `apps/bobo/app/layout.tsx`
-  管全局布局、字体、metadata、主题初始化脚本和页面背景。
+  管全局布局、字体、metadata 和主题初始化脚本。
 - `apps/bobo/app/(site)/page.tsx`
   首页。
 - `apps/bobo/app/(site)/layout.tsx`
@@ -35,8 +35,6 @@
   全局样式入口，只负责导入 Tailwind、shadcn 样式、共享主题入口和本地样式文件。
 - `apps/bobo/app/styles/base/reset.css`
   放基础样式。
-- `apps/bobo/app/styles/patterns/bobo-pattern.css`
-  放页面背景纹理。
 - `apps/bobo/app/styles/utilities/animations.css`
   放动画工具类。
 - `apps/bobo/components`

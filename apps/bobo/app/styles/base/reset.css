@@ -9,11 +9,8 @@
 
   body {
     @apply min-h-full bg-surface text-fg;
-    background-image: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--theme-base) 97%, white 3%),
-      color-mix(in srgb, var(--theme-base) 94%, var(--theme-base-muted))
-    );
+    background: radial-gradient(ellipse at 30% 20%, #16243a 0%, #060810 55%, #020308 100%), var(--theme-base);
+    background-attachment: fixed;
     transition:
       background-color 180ms ease,
       color 180ms ease,

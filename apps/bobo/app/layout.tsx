@@ -87,8 +87,7 @@ export default function RootLayout({
     >
       <body className="relative min-h-full">
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <div aria-hidden="true" className="bobo-pattern-bg" />
-        <div className="relative z-10">{children}</div>
+        {children}
       </body>
     </html>
   )
