@@ -50,7 +50,8 @@
     "react-dom": "catalog:react",
     "shadcn": "catalog:next",
     "tailwind-merge": "catalog:next",
-    "tw-animate-css": "catalog:next"
+    "tw-animate-css": "catalog:next",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:next",

@@ -46,7 +46,15 @@
 - `apps/bobo/hooks`
   放浏览器交互相关 hook。
 - `apps/bobo/lib`
-  放主题函数和工具函数。
+  放主题函数、工具函数、环境变量校验、Momo HTTP 请求封装和 Bobo 公开内容 API 调用。
+- `apps/bobo/lib/env.server.ts`
+  校验服务端环境变量，当前读取 `MOMO_BASE_URL`、`BOBO_ALLOWED_DEV_ORIGINS` 和 `BOBO_BASE_PATH`。
+- `apps/bobo/lib/env.client.ts`
+  校验浏览器环境变量。当前没有 `NEXT_PUBLIC_` 变量，所以结构为空。
+- `apps/bobo/lib/http.ts`
+  用 `MOMO_BASE_URL` 拼 Momo 请求地址，统一返回 `ApiResponse`。
+- `apps/bobo/lib/api`
+  放 Bobo 页面读取 Momo 公开内容时用的 API 函数。
 - `apps/bobo/public`
   放静态资源。
 
@@ -96,7 +104,7 @@ apps/bobo/.env.example
 apps/bobo/.env.development
 ```
 
-`MOMO_BASE_URL` 只给 Next 服务端代码读取。只有浏览器代码直接请求 Momo 时，才使用 `NEXT_PUBLIC_` 前缀。
+`MOMO_BASE_URL` 只给 Next 服务端代码读取，启动配置和服务端请求都会校验它。只有浏览器代码直接请求 Momo 时，才使用 `NEXT_PUBLIC_` 前缀。
 
 `BOBO_ALLOWED_DEV_ORIGINS` 用来放 Next 开发服务允许访问的 hostname，多个值用英文逗号隔开。
 

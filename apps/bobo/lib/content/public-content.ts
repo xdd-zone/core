@@ -1,10 +1,13 @@
-import type { ApiResponse, PublicCategory, PublicPostSummary, PublicTag } from '@xdd-zone/contracts'
+import type { PublicCategory, PublicPostSummary, PublicTag } from '@xdd-zone/contracts'
 import {
   PublicCategoryListResponseSchema,
   PublicPostListResponseSchema,
   PublicPostResponseSchema,
   PublicTagListResponseSchema,
 } from '@xdd-zone/contracts'
+import { getPublicCategories as requestPublicCategories } from '@/lib/api/category.api'
+import { getPublicPost as requestPublicPost, getPublicPosts as requestPublicPosts } from '@/lib/api/post.api'
+import { getPublicTags as requestPublicTags } from '@/lib/api/tag.api'
 
 export interface PublicContentFilters {
   categorySlug?: string
@@ -32,74 +35,70 @@ export async function getPublicWritingData(filters: PublicContentFilters = {}): 
 }
 
 export async function getPublicPost(slug: string) {
-  const data = await fetchMomoData(
-    buildMomoUrl(`/rpc/bobo/content/posts/${encodeURIComponent(slug)}`),
-    PublicPostResponseSchema,
-    'Momo 返回的公开文章详情格式不正确。',
-  )
+  const body = await requestPublicPost(slug)
 
-  return data.post
-}
-
-async function fetchPublicPosts(filters: PublicContentFilters): Promise<PublicPostSummary[]> {
-  const url = buildMomoUrl('/rpc/bobo/content/posts')
-  url.searchParams.set('pageSize', '50')
-  if (filters.categorySlug) url.searchParams.set('categorySlug', filters.categorySlug)
-  if (filters.tagSlug) url.searchParams.set('tagSlug', filters.tagSlug)
-
-  const data = await fetchMomoData(url, PublicPostListResponseSchema, 'Momo 返回的公开文章列表格式不正确。')
-  return data.posts
-}
-
-async function fetchPublicCategories(): Promise<PublicCategory[]> {
-  const data = await fetchMomoData(
-    buildMomoUrl('/rpc/bobo/content/categories'),
-    PublicCategoryListResponseSchema,
-    'Momo 返回的文章分类格式不正确。',
-  )
-  return data.categories
-}
-
-async function fetchPublicTags(): Promise<PublicTag[]> {
-  const data = await fetchMomoData(
-    buildMomoUrl('/rpc/bobo/content/tags'),
-    PublicTagListResponseSchema,
-    'Momo 返回的文章标签格式不正确。',
-  )
-  return data.tags
-}
-
-async function fetchMomoData<T>(
-  url: URL,
-  schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false } },
-  invalidMessage: string,
-): Promise<T> {
-  const response = await fetch(url, {
-    next: {
-      revalidate: 60,
-    },
-  })
-
-  if (!response.ok) {
-    throw new PublicContentError('request-failed', 'Momo 公开文章接口暂时不可用。')
-  }
-
-  const body = (await response.json()) as ApiResponse<unknown>
   if (!body.ok) {
     throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。')
   }
 
-  const parsed = schema.safeParse(body.data)
+  const parsed = PublicPostResponseSchema.safeParse(body.data)
+
   if (!parsed.success) {
-    throw new PublicContentError('invalid-response', invalidMessage)
+    throw new PublicContentError('invalid-response', 'Momo 返回的公开文章详情格式不正确。')
   }
 
-  return parsed.data
+  return parsed.data.post
 }
 
-function buildMomoUrl(pathname: string) {
-  const baseUrl = process.env.MOMO_BASE_URL || 'http://localhost:7788'
-  return new URL(pathname, baseUrl)
+async function fetchPublicPosts(filters: PublicContentFilters): Promise<PublicPostSummary[]> {
+  const body = await requestPublicPosts({
+    ...filters,
+    pageSize: 50,
+  })
+
+  if (!body.ok) {
+    throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。')
+  }
+
+  const parsed = PublicPostListResponseSchema.safeParse(body.data)
+
+  if (!parsed.success) {
+    throw new PublicContentError('invalid-response', 'Momo 返回的公开文章列表格式不正确。')
+  }
+
+  return parsed.data.posts
+}
+
+async function fetchPublicCategories(): Promise<PublicCategory[]> {
+  const body = await requestPublicCategories()
+
+  if (!body.ok) {
+    throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。')
+  }
+
+  const parsed = PublicCategoryListResponseSchema.safeParse(body.data)
+
+  if (!parsed.success) {
+    throw new PublicContentError('invalid-response', 'Momo 返回的文章分类格式不正确。')
+  }
+
+  return parsed.data.categories
+}
+
+async function fetchPublicTags(): Promise<PublicTag[]> {
+  const body = await requestPublicTags()
+
+  if (!body.ok) {
+    throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。')
+  }
+
+  const parsed = PublicTagListResponseSchema.safeParse(body.data)
+
+  if (!parsed.success) {
+    throw new PublicContentError('invalid-response', 'Momo 返回的文章标签格式不正确。')
+  }
+
+  return parsed.data.tags
 }
 
 export type PublicContentErrorReason = 'request-failed' | 'invalid-response'

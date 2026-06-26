@@ -92,6 +92,7 @@ function createPost(overrides: Partial<ReturnType<typeof createBasePost>> = {}) 
 function createBasePost() {
   return {
     coverAssetId: null,
+    category: null,
     createdAt: '2026-06-17T00:00:00.000Z',
     draftRevisionId: 'revision-1',
     excerpt: '草稿摘要',
@@ -101,6 +102,7 @@ function createBasePost() {
     slug: 'hello',
     source: '# Draft Body',
     status: 'draft',
+    tags: [],
     title: '草稿标题',
     updatedAt: '2026-06-17T00:00:00.000Z',
   } as const

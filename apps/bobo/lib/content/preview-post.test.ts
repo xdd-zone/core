@@ -19,6 +19,7 @@ describe('preview-post', () => {
           data: {
             post: {
               coverAssetId: null,
+              category: null,
               createdAt: '2026-06-17T00:00:00.000Z',
               draftRevisionId: null,
               excerpt: null,
@@ -30,6 +31,7 @@ describe('preview-post', () => {
               status: 'draft',
               title: 'Hello',
               updatedAt: '2026-06-17T00:00:00.000Z',
+              tags: [],
             },
             revision: {
               createdAt: '2026-06-17T00:00:00.000Z',
