@@ -5,7 +5,10 @@ export const CONTENT_PERMISSION_CODES = [
   'content.post.create',
   'content.post.edit',
   'content.post.publish',
+  'content.asset.read',
   'content.asset.upload',
+  'content.asset.edit',
+  'content.asset.delete',
   'content.preview.generate',
 ] as const
 

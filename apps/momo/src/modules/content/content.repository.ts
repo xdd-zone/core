@@ -1,3 +1,4 @@
+import type { SQL } from 'drizzle-orm'
 import type { DbClient } from '#momo/infra/db/client'
 import type {
   ContentAssetRecord,
@@ -11,8 +12,9 @@ import type {
   PublishContentPostInput,
   PublishContentPostResult,
   SaveContentDraftInput,
+  UpdateContentAssetInput,
 } from './content.types'
-import { and, desc, eq, ne } from 'drizzle-orm'
+import { and, desc, eq, ilike, ne, or, sql } from 'drizzle-orm'
 import { contentAssets, contentPostRevisions, contentPosts, contentPreviewTokens } from '#momo/infra/db/schema/index'
 
 const CONTENT_POSTS_SLUG_UNIQUE = 'content_posts_slug_unique'
@@ -80,12 +82,8 @@ export function createContentRepository(db: DbClient) {
     return getPostById(input.id)
   }
 
-  async function getAssetById(id: string): Promise<ContentAssetReferenceRecord | undefined> {
-    const [asset] = await db
-      .select({ id: contentAssets.id })
-      .from(contentAssets)
-      .where(eq(contentAssets.id, id))
-      .limit(1)
+  async function getAssetById(id: string): Promise<ContentAssetRecord | undefined> {
+    const [asset] = await db.select().from(contentAssets).where(eq(contentAssets.id, id)).limit(1)
     return asset
   }
 
@@ -117,6 +115,30 @@ export function createContentRepository(db: DbClient) {
   async function listPosts(): Promise<ContentPostRecord[]> {
     const posts = await db.select().from(contentPosts).orderBy(desc(contentPosts.updatedAt))
     return posts
+  }
+
+  async function listAssets(options: {
+    keyword?: string
+    mimeType?: string
+    offset: number
+    limit: number
+  }): Promise<ContentAssetRecord[]> {
+    const whereClause = buildAssetWhereClause(options)
+    const query = db
+      .select()
+      .from(contentAssets)
+      .orderBy(desc(contentAssets.createdAt), desc(contentAssets.id))
+      .limit(options.limit)
+      .offset(options.offset)
+
+    return whereClause ? query.where(whereClause) : query
+  }
+
+  async function countAssets(options: { keyword?: string; mimeType?: string }): Promise<number> {
+    const whereClause = buildAssetWhereClause(options)
+    const query = db.select({ count: sql<number>`count(*)::int` }).from(contentAssets)
+    const [result] = whereClause ? await query.where(whereClause) : await query
+    return result?.count ?? 0
   }
 
   async function listPublicPosts(): Promise<ContentPostRecord[]> {
@@ -217,6 +239,53 @@ export function createContentRepository(db: DbClient) {
     return revision
   }
 
+  async function findAssetReferences(id: string): Promise<ContentAssetReferenceRecord[]> {
+    const asset = await getAssetById(id)
+    if (!asset) {
+      return []
+    }
+
+    const coverRefs = await db
+      .select({
+        postId: contentPosts.id,
+        postSlug: contentPosts.slug,
+        postTitle: contentPosts.title,
+        relation: sql<'cover'>`'cover'`.as('relation'),
+      })
+      .from(contentPosts)
+      .where(eq(contentPosts.coverAssetId, id))
+
+    if (!asset.url) {
+      return coverRefs
+    }
+
+    const sourceClause = ilike(contentPostRevisions.source, `%${asset.url}%`)
+
+    const draftRefs = await db
+      .select({
+        postId: contentPosts.id,
+        postSlug: contentPosts.slug,
+        postTitle: contentPosts.title,
+        relation: sql<'draft-source'>`'draft-source'`.as('relation'),
+      })
+      .from(contentPosts)
+      .innerJoin(contentPostRevisions, eq(contentPosts.draftRevisionId, contentPostRevisions.id))
+      .where(and(eq(contentPosts.status, 'draft'), sourceClause))
+
+    const publishedRefs = await db
+      .select({
+        postId: contentPosts.id,
+        postSlug: contentPosts.slug,
+        postTitle: contentPosts.title,
+        relation: sql<'published-source'>`'published-source'`.as('relation'),
+      })
+      .from(contentPosts)
+      .innerJoin(contentPostRevisions, eq(contentPosts.publishedRevisionId, contentPostRevisions.id))
+      .where(and(eq(contentPosts.status, 'published'), sourceClause))
+
+    return [...coverRefs, ...draftRefs, ...publishedRefs]
+  }
+
   async function publishPost(input: PublishContentPostInput): Promise<PublishContentPostResult> {
     return db.transaction(async (tx) => {
       const now = new Date()
@@ -292,37 +361,62 @@ export function createContentRepository(db: DbClient) {
   }
 
   async function createAsset(input: CreateContentAssetInput): Promise<ContentAssetRecord> {
+    const now = new Date()
     await db.insert(contentAssets).values({
-      alt: input.alt,
-      createdAt: new Date(),
+      alt: input.alt ?? null,
+      createdAt: now,
       createdBy: input.createdBy,
       fileName: input.fileName,
       id: input.id,
       mimeType: input.mimeType,
       size: input.size,
       storagePath: input.storagePath,
-      updatedAt: new Date(),
-      url: input.url,
+      updatedAt: now,
+      url: input.url ?? null,
     })
 
-    return input
+    const [asset] = await db.select().from(contentAssets).where(eq(contentAssets.id, input.id)).limit(1)
+    return asset as ContentAssetRecord
+  }
+
+  async function updateAsset(input: UpdateContentAssetInput): Promise<ContentAssetRecord | undefined> {
+    const [asset] = await db
+      .update(contentAssets)
+      .set({
+        alt: input.alt,
+        updatedAt: input.updatedAt,
+      })
+      .where(eq(contentAssets.id, input.id))
+      .returning()
+
+    return asset
+  }
+
+  async function deleteAsset(id: string): Promise<ContentAssetRecord | undefined> {
+    const [asset] = await db.delete(contentAssets).where(eq(contentAssets.id, id)).returning()
+    return asset
   }
 
   return {
+    countAssets,
     createAsset,
     createPost,
     createPreviewToken,
+    deleteAsset,
+    findAssetReferences,
     findPostBySlug,
     getAssetById,
     getPostById,
     getPostBySlug,
     getPreviewToken,
     getRevisionById,
+    listAssets,
     listPosts,
     listPublicPosts,
     markPreviewTokenUsed,
     publishPost,
     saveDraft,
+    updateAsset,
   }
 }
 
@@ -334,6 +428,27 @@ function isUniqueConstraintError(error: unknown, constraintName: string): boolea
 
 function isForeignKeyConstraintError(error: unknown, constraintName: string): boolean {
   return isConstraintError(error, FOREIGN_KEY_VIOLATION_CODE, constraintName)
+}
+
+function buildAssetWhereClause(options: { keyword?: string; mimeType?: string }): SQL<unknown> | undefined {
+  const conditions: SQL<unknown>[] = []
+
+  if (options.keyword) {
+    const keyword = `%${options.keyword}%`
+    conditions.push(
+      or(
+        ilike(contentAssets.fileName, keyword),
+        ilike(contentAssets.storagePath, keyword),
+        ilike(contentAssets.alt, keyword),
+      )!,
+    )
+  }
+
+  if (options.mimeType) {
+    conditions.push(eq(contentAssets.mimeType, options.mimeType))
+  }
+
+  return conditions.length > 0 ? and(...conditions) : undefined
 }
 
 function isConstraintError(error: unknown, code: string, constraintName: string): boolean {

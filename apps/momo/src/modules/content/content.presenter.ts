@@ -95,11 +95,13 @@ export function toPreviewTokenResponse(input: PreviewTokenSource): PreviewTokenR
 export function toImageAsset(asset: ContentAssetRecord): ImageAsset {
   const imageAsset = {
     alt: asset.alt,
+    createdAt: toIsoString(asset.createdAt),
     fileName: asset.fileName,
     id: asset.id,
     mimeType: asset.mimeType,
     size: asset.size,
     storagePath: asset.storagePath,
+    updatedAt: toIsoString(asset.updatedAt),
     url: asset.url,
   } satisfies ImageAsset
 

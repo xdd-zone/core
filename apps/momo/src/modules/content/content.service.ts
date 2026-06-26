@@ -1,4 +1,7 @@
 import type {
+  AssetDetailResponse,
+  AssetListResponse,
+  AssetReference,
   CreatePostRequest,
   ImageAsset,
   PostDetail,
@@ -6,10 +9,11 @@ import type {
   PostSummary,
   PreviewTokenResponse,
   SavePostDraftRequest,
+  UpdateAssetRequest,
 } from '@xdd-zone/contracts'
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { ContentRepository } from './content.repository'
-import type { ContentAssetRecord, ContentPostRecord } from './content.types'
+import type { ContentAssetRecord, ContentAssetReferenceRecord, ContentPostRecord } from './content.types'
 import { createHash, randomUUID } from 'node:crypto'
 import { BizCode } from '@xdd-zone/contracts'
 import { validateMediaFile } from '#momo/infra/storage'
@@ -20,11 +24,37 @@ import { ContentAssetNotFoundError, ContentSlugConflictError } from './content.r
 import { findUnknownMdxComponents, MDX_COMPONENTS } from './mdx-components'
 
 const PREVIEW_TOKEN_TTL_MS = 30 * 60 * 1000
+const ASSET_LIST_DEFAULT_PAGE_SIZE = 24
+const ASSET_LIST_MAX_PAGE_SIZE = 100
 
 export function createContentService(runtime: MomoRuntime, repository: ContentRepository) {
   async function listPosts(): Promise<PostSummary[]> {
     const posts = await repository.listPosts()
     return posts.map((post) => toPostSummary(post))
+  }
+
+  async function listAssets(params: {
+    keyword?: string
+    mimeType?: string
+    page?: number
+    pageSize?: number
+  }): Promise<AssetListResponse> {
+    const page = normalizePage(params.page)
+    const pageSize = normalizePageSize(params.pageSize)
+    const keyword = normalizeText(params.keyword)
+    const mimeType = normalizeText(params.mimeType)
+    const offset = (page - 1) * pageSize
+    const [assets, total] = await Promise.all([
+      repository.listAssets({ keyword, limit: pageSize, mimeType, offset }),
+      repository.countAssets({ keyword, mimeType }),
+    ])
+
+    return {
+      assets: assets.map((asset) => toImageAsset(asset)),
+      page,
+      pageSize,
+      total,
+    }
   }
 
   async function listPublicPosts(): Promise<PostSummary[]> {
@@ -210,6 +240,34 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
     return toPostDetail(post, revision.source)
   }
 
+  async function getAssetById(id: string): Promise<AssetDetailResponse> {
+    const asset = await repository.getAssetById(id)
+
+    if (!asset) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '素材不存在', 404)
+    }
+
+    const references = await repository.findAssetReferences(id)
+    return {
+      asset: toImageAsset(asset),
+      references: references.map((reference) => toAssetReference(reference)),
+    }
+  }
+
+  async function openAssetFile(id: string): Promise<Response> {
+    const asset = await repository.getAssetById(id)
+
+    if (!asset) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '素材不存在', 404)
+    }
+
+    return runtime.storage.openFile(asset.storagePath, {
+      originalName: asset.fileName,
+      mimeType: asset.mimeType,
+      size: asset.size,
+    })
+  }
+
   function getMdxComponents() {
     return { components: MDX_COMPONENTS }
   }
@@ -237,6 +295,39 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
     }
 
     return toImageAsset(asset)
+  }
+
+  async function updateAsset(id: string, input: UpdateAssetRequest): Promise<ImageAsset> {
+    const updated = await repository.updateAsset({
+      alt: input.alt,
+      id,
+      updatedAt: new Date(),
+    })
+
+    if (!updated) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '素材不存在', 404)
+    }
+
+    return toImageAsset(updated)
+  }
+
+  async function deleteAsset(id: string): Promise<{ assetId: string }> {
+    const references = await repository.findAssetReferences(id)
+
+    if (references.length > 0) {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, '素材正在被文章使用，先移除引用再删除', 409, {
+        references,
+      })
+    }
+
+    const asset = await repository.deleteAsset(id)
+
+    if (!asset) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '素材不存在', 404)
+    }
+
+    await runtime.storage.remove(asset.storagePath).catch(() => undefined)
+    return { assetId: id }
   }
 
   async function getDraftSource(post: ContentPostRecord): Promise<string> {
@@ -273,14 +364,19 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
   return {
     createPost,
     createPreviewToken,
+    deleteAsset,
+    getAssetById,
     getMdxComponents,
     getPostById,
     getPreviewPost,
     getPublicPostBySlug,
+    listAssets,
     listPosts,
     listPublicPosts,
+    openAssetFile,
     publishPost,
     saveDraft,
+    updateAsset,
     uploadImage,
   }
 }
@@ -311,6 +407,35 @@ async function runContentRepositoryAction<T>(action: () => Promise<T>): Promise<
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex')
+}
+
+function normalizePage(value: number | undefined): number {
+  if (!value || Number.isNaN(value)) {
+    return 1
+  }
+
+  return Math.max(1, Math.floor(value))
+}
+
+function normalizePageSize(value: number | undefined): number {
+  if (!value || Number.isNaN(value)) {
+    return ASSET_LIST_DEFAULT_PAGE_SIZE
+  }
+
+  return Math.min(ASSET_LIST_MAX_PAGE_SIZE, Math.max(1, Math.floor(value)))
+}
+
+function normalizeText(value: string | undefined): string | undefined {
+  return value?.trim() || undefined
+}
+
+function toAssetReference(reference: ContentAssetReferenceRecord): AssetReference {
+  return {
+    postId: reference.postId,
+    postSlug: reference.postSlug,
+    postTitle: reference.postTitle,
+    relation: reference.relation,
+  }
 }
 
 export type ContentService = ReturnType<typeof createContentService>

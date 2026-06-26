@@ -54,6 +54,11 @@ apps/momo/src/modules/content/content.route.ts
 | `PATCH` | `/rpc/content/posts/:id/draft` | 保存文章草稿并写入新 revision |
 | `POST` | `/rpc/content/posts/:id/preview-token` | 生成 30 分钟有效的预览 token |
 | `POST` | `/rpc/content/posts/:id/publish` | 发布当前草稿 revision |
+| `GET` | `/rpc/content/assets` | 素材列表 |
+| `GET` | `/rpc/content/assets/:id` | 素材详情和引用信息 |
+| `GET` | `/rpc/content/assets/:id/file` | 读取素材文件 |
+| `PATCH` | `/rpc/content/assets/:id` | 更新素材说明 |
+| `DELETE` | `/rpc/content/assets/:id` | 删除素材 |
 | `GET` | `/rpc/content/mdx-components` | MDX 组件清单 |
 | `POST` | `/rpc/content/assets/images` | 上传图片素材 |
 | `GET` | `/rpc/content/previews/:token` | 使用预览 token 读取文章 revision |

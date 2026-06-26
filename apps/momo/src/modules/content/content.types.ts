@@ -12,10 +12,15 @@ export type ContentPreviewTokenRecord = InferSelectModel<typeof contentPreviewTo
 
 export type ContentAssetRecord = Pick<
   InferSelectModel<typeof contentAssets>,
-  'alt' | 'fileName' | 'id' | 'mimeType' | 'size' | 'storagePath' | 'url'
+  'alt' | 'createdAt' | 'fileName' | 'id' | 'mimeType' | 'size' | 'storagePath' | 'updatedAt' | 'url'
 >
 
-export type ContentAssetReferenceRecord = Pick<InferSelectModel<typeof contentAssets>, 'id'>
+export interface ContentAssetReferenceRecord {
+  postId: string
+  postSlug: string
+  postTitle: string
+  relation: 'cover' | 'draft-source' | 'published-source'
+}
 
 export interface CreateContentPostInput {
   coverAssetId?: string | null
@@ -69,6 +74,16 @@ export interface CreateContentPreviewTokenInput {
   tokenHash: string
 }
 
-export type CreateContentAssetInput = ContentAssetRecord & {
+export type CreateContentAssetInput = Pick<
+  ContentAssetRecord,
+  'alt' | 'fileName' | 'mimeType' | 'size' | 'storagePath' | 'url'
+> & {
   createdBy: string
+  id: string
+}
+
+export interface UpdateContentAssetInput {
+  alt: string | null
+  id: string
+  updatedAt: Date
 }

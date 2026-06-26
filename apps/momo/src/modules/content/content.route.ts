@@ -1,7 +1,13 @@
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
 import { zValidator } from '@hono/zod-validator'
-import { BizCode, CreatePostRequestSchema, SavePostDraftRequestSchema } from '@xdd-zone/contracts'
+import {
+  AssetListQuerySchema,
+  BizCode,
+  CreatePostRequestSchema,
+  SavePostDraftRequestSchema,
+  UpdateAssetRequestSchema,
+} from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 import { getDb } from '#momo/infra/db/client'
 import { createRequirePermission } from '#momo/modules/auth/index'
@@ -22,6 +28,22 @@ export function createContentRoute(runtime: MomoRuntime) {
       const posts = await service.listPosts()
       return c.json(createSuccessResponse({ posts }, createMeta(c.var.requestId)))
     })
+    .get(
+      '/rpc/content/assets',
+      createRequirePermission(runtime, 'content.asset.read'),
+      zValidator('query', AssetListQuerySchema, (result) => {
+        if (result.success) {
+          return
+        }
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) => {
+        const query = c.req.valid('query')
+        const result = await service.listAssets(query)
+        return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
+      },
+    )
     .post(
       '/rpc/content/posts',
       createRequirePermission(runtime, 'content.post.create'),
@@ -41,6 +63,14 @@ export function createContentRoute(runtime: MomoRuntime) {
     .get('/rpc/content/posts/:id', createRequirePermission(runtime, 'content.post.read'), async (c) => {
       const post = await service.getPostById(c.req.param('id'))
       return c.json(createSuccessResponse({ post }, createMeta(c.var.requestId)))
+    })
+    .get('/rpc/content/assets/:id', createRequirePermission(runtime, 'content.asset.read'), async (c) => {
+      const result = await service.getAssetById(c.req.param('id'))
+      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
+    })
+    .get('/rpc/content/assets/:id/file', async (c) => {
+      const response = await service.openAssetFile(c.req.param('id'))
+      return response
     })
     .patch(
       '/rpc/content/posts/:id/draft',
@@ -71,6 +101,25 @@ export function createContentRoute(runtime: MomoRuntime) {
     })
     .get('/rpc/content/mdx-components', createRequirePermission(runtime, 'content.post.read'), async (c) => {
       return c.json(createSuccessResponse(service.getMdxComponents(), createMeta(c.var.requestId)))
+    })
+    .patch(
+      '/rpc/content/assets/:id',
+      createRequirePermission(runtime, 'content.asset.edit'),
+      zValidator('json', UpdateAssetRequestSchema, (result) => {
+        if (result.success) {
+          return
+        }
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) => {
+        const asset = await service.updateAsset(c.req.param('id'), c.req.valid('json'))
+        return c.json(createSuccessResponse({ asset }, createMeta(c.var.requestId)))
+      },
+    )
+    .delete('/rpc/content/assets/:id', createRequirePermission(runtime, 'content.asset.delete'), async (c) => {
+      const result = await service.deleteAsset(c.req.param('id'))
+      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
     })
     .post('/rpc/content/assets/images', createRequirePermission(runtime, 'content.asset.upload'), async (c) => {
       const form = await c.req.formData()

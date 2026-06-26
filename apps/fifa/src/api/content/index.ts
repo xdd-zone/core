@@ -1,11 +1,15 @@
 export {
   contentQueryKeys,
+  useContentAssetQuery,
+  useContentAssetsQuery,
   useContentPostQuery,
   useContentPostsQuery,
   useCreateContentPostMutation,
   useCreateContentPreviewTokenMutation,
+  useDeleteContentAssetMutation,
   useMdxComponentsQuery,
   usePublishContentPostMutation,
   useSaveContentPostDraftMutation,
+  useUpdateContentAssetMutation,
   useUploadContentImageMutation,
 } from './content.query'

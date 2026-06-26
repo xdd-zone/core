@@ -32,11 +32,13 @@ const posts: PostSummary[] = [
 
 const imageAsset: ImageAsset = {
   alt: null,
+  createdAt: '2026-01-01T00:00:00.000Z',
   fileName: 'cover.png',
   id: 'asset-1',
   mimeType: 'image/png',
   size: 1024,
   storagePath: 'content/images/cover.png',
+  updatedAt: '2026-01-01T00:00:00.000Z',
   url: 'https://cdn.example.com/cover.png',
 }
 

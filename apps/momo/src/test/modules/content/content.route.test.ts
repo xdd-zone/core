@@ -10,7 +10,10 @@ import type {
 } from '@xdd-zone/contracts'
 import type app from '#momo/app'
 import {
+  AssetDetailResponseSchema,
+  AssetListResponseSchema,
   BizCode,
+  DeleteAssetResponseSchema,
   ImageAssetResponseSchema,
   MdxComponentsResponseSchema,
   PostDetailResponseSchema,
@@ -159,7 +162,7 @@ describe('content 路由', () => {
   })
 
   it('保存草稿时 null 会清空可空字段', async () => {
-    const image = await uploadImage()
+    const image = await uploadImage('photo.png')
     const imageData = expectOkData(image.body)
 
     const created = await createPost({
@@ -316,21 +319,142 @@ describe('content 路由', () => {
     expect(!body.ok && body.error.code).toBe(BizCode.CONTENT_PREVIEW_TOKEN_EXPIRED)
   })
 
-  it('上传图片会保存素材记录', async () => {
-    const form = new FormData()
-    form.set('file', new File([Buffer.from('png-data')], 'photo.png', { type: 'image/png' }))
+  it('素材可以列表、读取详情、读取文件、更新说明和删除', async () => {
+    const firstAsset = await uploadImage('first.png')
+    const secondAsset = await uploadImage('second.png')
+    const firstAssetData = expectOkData(firstAsset.body)
+    const secondAssetData = expectOkData(secondAsset.body)
 
-    const response = await momoApp.request('/rpc/content/assets/images', {
-      body: form,
+    const listResponse = await momoApp.request('/rpc/content/assets?page=1&pageSize=10', {
       headers: {
         cookie: ownerCookie,
       },
-      method: 'POST',
     })
-    const body = (await response.json()) as ApiResponse<ImageAssetResponse>
+    const listBody = (await listResponse.json()) as ApiResponse<unknown>
 
-    expect(response.status).toBe(201)
-    const data = expectOkData(body)
+    expect(listResponse.status).toBe(200)
+    const listData = expectOkData(listBody)
+    AssetListResponseSchema.parse(listData)
+    expect(
+      (listData as { assets: Array<{ id: string }> }).assets.some((asset) => asset.id === firstAssetData.asset.id),
+    ).toBe(true)
+
+    const detailResponse = await momoApp.request(`/rpc/content/assets/${firstAssetData.asset.id}`, {
+      headers: {
+        cookie: ownerCookie,
+      },
+    })
+    const detailBody = (await detailResponse.json()) as ApiResponse<unknown>
+
+    expect(detailResponse.status).toBe(200)
+    const detailData = expectOkData(detailBody)
+    AssetDetailResponseSchema.parse(detailData)
+    expect((detailData as { asset: { id: string } }).asset.id).toBe(firstAssetData.asset.id)
+
+    const fileResponse = await momoApp.request(`/rpc/content/assets/${firstAssetData.asset.id}/file`)
+    expect(fileResponse.status).toBe(200)
+    expect(fileResponse.headers.get('content-type')).toBe('image/png')
+
+    const updateResponse = await momoApp.request(`/rpc/content/assets/${firstAssetData.asset.id}`, {
+      body: JSON.stringify({ alt: 'cover alt' }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'PATCH',
+    })
+    const updateBody = (await updateResponse.json()) as ApiResponse<ImageAssetResponse>
+
+    expect(updateResponse.status).toBe(200)
+    const updateData = expectOkData(updateBody)
+    ImageAssetResponseSchema.parse(updateData)
+    expect(updateData.asset.alt).toBe('cover alt')
+
+    const post = await createPost({
+      coverAssetId: firstAssetData.asset.id,
+      slug: 'cover-asset-in-use',
+      source: '# Cover asset in use',
+      title: 'Cover Asset In Use',
+    })
+    expect(post.status).toBe(201)
+
+    const rejectDeleteResponse = await momoApp.request(`/rpc/content/assets/${firstAssetData.asset.id}`, {
+      headers: {
+        cookie: ownerCookie,
+      },
+      method: 'DELETE',
+    })
+    const rejectDeleteBody = (await rejectDeleteResponse.json()) as ApiResponse<never>
+
+    expect(rejectDeleteResponse.status).toBe(409)
+    expect(rejectDeleteBody.ok).toBe(false)
+    expect(!rejectDeleteBody.ok && rejectDeleteBody.error.code).toBe(BizCode.BIZ_RULE_VIOLATION)
+
+    const deleteResponse = await momoApp.request(`/rpc/content/assets/${secondAssetData.asset.id}`, {
+      headers: {
+        cookie: ownerCookie,
+      },
+      method: 'DELETE',
+    })
+    const deleteBody = (await deleteResponse.json()) as ApiResponse<unknown>
+
+    expect(deleteResponse.status).toBe(200)
+    const deleteData = expectOkData(deleteBody)
+    DeleteAssetResponseSchema.parse(deleteData)
+    expect((deleteData as { assetId: string }).assetId).toBe(secondAssetData.asset.id)
+
+    const afterDeleteResponse = await momoApp.request(`/rpc/content/assets/${secondAssetData.asset.id}`, {
+      headers: { cookie: ownerCookie },
+    })
+    expect(afterDeleteResponse.status).toBe(404)
+  })
+
+  it('未登录请求素材接口被拒绝', async () => {
+    const response = await momoApp.request('/rpc/content/assets')
+    const body = (await response.json()) as ApiResponse<never>
+
+    expect(response.status).toBe(401)
+    expect(!body.ok && body.error.code).toBe(BizCode.AUTH_UNAUTHENTICATED)
+  })
+
+  it('非 fifa owner 请求素材接口被拒绝', async () => {
+    const user = await createCredentialUser({ email: 'asset-normal@example.com', name: 'Normal User' })
+    const cookie = await signInByEmail(momoApp, user.email)
+
+    const response = await momoApp.request('/rpc/content/assets', { headers: { cookie } })
+    const body = (await response.json()) as ApiResponse<never>
+
+    expect(response.status).toBe(403)
+    expect(!body.ok && body.error.code).toBe(BizCode.AUTH_OWNER_REQUIRED)
+  })
+
+  it('素材被草稿正文引用时不能删除', async () => {
+    const uploaded = await uploadImage('referenced.png')
+    const assetData = expectOkData(uploaded.body)
+    const assetUrl = assetData.asset.url
+
+    if (!assetUrl) {
+      return
+    }
+
+    await createPost({
+      slug: 'url-in-draft',
+      source: `<Figure src="${assetUrl}" alt="test" />`,
+      title: 'URL In Draft',
+    })
+
+    const response = await momoApp.request(`/rpc/content/assets/${assetData.asset.id}`, {
+      headers: { cookie: ownerCookie },
+      method: 'DELETE',
+    })
+    const body = (await response.json()) as ApiResponse<never>
+
+    expect(response.status).toBe(409)
+    expect(!body.ok && body.error.code).toBe(BizCode.BIZ_RULE_VIOLATION)
+  })
+
+  it('上传图片会保存素材记录', async () => {
+    const result = await uploadImage('photo.png')
+
+    expect(result.status).toBe(201)
+    const data = expectOkData(result.body)
     ImageAssetResponseSchema.parse(data)
     expect(data.asset.mimeType).toBe('image/png')
     expect(data.asset.size).toBe(8)
@@ -370,9 +494,9 @@ async function createPost(input: CreatePostRequest) {
   }
 }
 
-async function uploadImage() {
+async function uploadImage(fileName: string) {
   const form = new FormData()
-  form.set('file', new File([Buffer.from('png-data')], 'photo.png', { type: 'image/png' }))
+  form.set('file', new File([Buffer.from('png-data')], fileName, { type: 'image/png' }))
 
   const response = await momoApp.request('/rpc/content/assets/images', {
     body: form,

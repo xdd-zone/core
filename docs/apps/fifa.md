@@ -183,6 +183,11 @@ POST /rpc/content/posts/:id/preview-token
 POST /rpc/content/posts/:id/publish
 GET /rpc/content/mdx-components
 POST /rpc/content/assets/images
+GET /rpc/content/assets
+GET /rpc/content/assets/:id
+GET /rpc/content/assets/:id/file
+PATCH /rpc/content/assets/:id
+DELETE /rpc/content/assets/:id
 ```
 
 当前写法：

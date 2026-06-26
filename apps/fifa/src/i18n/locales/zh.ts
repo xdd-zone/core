@@ -213,6 +213,7 @@ export default {
     notFoundExample: '404 示例',
     postEdit: '编辑文章',
     posts: '文章',
+    assets: '媒体库',
     uiShowcase: '组件与主题',
   },
   setting: {

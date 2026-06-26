@@ -592,9 +592,9 @@ packages/contracts/src/content/content.contract.ts
 
 这里导出 `POST_STATUS_VALUES`、请求 schema、响应 schema 和对应 TypeScript 类型。Momo route 用这里的请求 schema 校验入参，presenter 用这里的响应 schema 校验出参。
 
-后台接口使用 `createRequirePermission()`。当前 `content.*` 权限都要求当前用户是 `fifa.owner`。
+后台接口使用 `createRequirePermission()`。当前 `content.*` 权限都要求当前用户是 `fifa.owner`。素材管理新增 `content.asset.read`、`content.asset.edit` 和 `content.asset.delete`。
 
-公开文章接口不检查登录态，只返回已发布文章。预览接口只检查 token，不检查 Fifa 登录态。
+公开文章接口不检查登录态，只返回已发布文章。预览接口只检查 token，不检查 Fifa 登录态。`GET /rpc/content/assets/:id/file` 也不检查后台登录态，给文章正文和本地预览读取素材文件用。
 
 当前接口：
 
@@ -604,6 +604,11 @@ packages/contracts/src/content/content.contract.ts
 - `PATCH /rpc/content/posts/:id/draft`
 - `POST /rpc/content/posts/:id/preview-token`
 - `POST /rpc/content/posts/:id/publish`
+- `GET /rpc/content/assets`
+- `GET /rpc/content/assets/:id`
+- `GET /rpc/content/assets/:id/file`
+- `PATCH /rpc/content/assets/:id`
+- `DELETE /rpc/content/assets/:id`
 - `GET /rpc/content/mdx-components`
 - `POST /rpc/content/assets/images`
 - `GET /rpc/content/previews/:token`
@@ -627,7 +632,7 @@ apps/momo/src/infra/db/schema/content.schema.ts
 - `content_preview_tokens`
   保存预览 token 的 SHA-256 hash、文章 id、版本 id 和过期时间。
 - `content_assets`
-  保存图片素材的存储路径、文件名、MIME 和大小。
+  保存图片素材的存储路径、文件名、MIME、大小、说明和时间戳。
 
 content 模块的数据按这个顺序走：
 
