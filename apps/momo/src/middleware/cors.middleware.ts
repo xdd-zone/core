@@ -8,7 +8,7 @@ export function registerCors(app: Hono<HonoEnv>, env: MomoEnv): void {
     '*',
     cors({
       allowHeaders: ['content-type', 'x-request-id'],
-      allowMethods: ['GET', 'POST', 'OPTIONS'],
+      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       credentials: true,
       exposeHeaders: ['x-request-id'],
       origin: env.CORS_ORIGINS,
