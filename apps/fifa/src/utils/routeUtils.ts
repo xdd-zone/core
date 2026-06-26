@@ -24,8 +24,9 @@ export function getTabFromMatch(match: RouteMatchSnapshot): Tab | null {
   return {
     closable: meta.tab?.closable ?? path !== '/',
     icon: meta.icon?.name,
-    id: meta.id ?? generateTabId(path),
+    id: generateTabId(path),
     label: meta.title,
     path,
+    routeId: meta.id,
   }
 }

@@ -1,5 +1,6 @@
 import type { BaseStore } from '../types'
 import { homeRouteRecord } from '@fifa/app/router/records'
+import { generateTabId } from '@fifa/utils/pathUtils'
 import { create } from 'zustand'
 
 import { persist } from 'zustand/middleware'
@@ -10,6 +11,8 @@ import { persist } from 'zustand/middleware'
 export interface Tab {
   /** 是否可关闭 */
   closable?: boolean
+  /** 辅助说明 */
+  description?: string
   /** 图标 */
   icon?: string
   /** 标签页唯一标识 */
@@ -18,7 +21,13 @@ export interface Tab {
   label: string
   /** 路由路径 */
   path: string
+  /** 路由记录 ID */
+  routeId?: string
+  /** 是否按 i18n key 翻译标题 */
+  translateLabel?: boolean
 }
+
+export type TabUpdate = Partial<Pick<Tab, 'description' | 'label' | 'translateLabel'>>
 
 /**
  * 标签页关闭结果
@@ -61,14 +70,17 @@ export interface TabBarState extends BaseStore {
   setActiveTab: (tabId: string) => void
   /** 标签页列表 */
   tabs: Tab[]
+  /** 根据路径更新标签页 */
+  updateTabByPath: (path: string, update: TabUpdate) => void
 }
 
 const DEFAULT_HOME_TAB: Tab = {
   closable: homeRouteRecord.tab === false ? false : (homeRouteRecord.tab?.closable ?? false),
   icon: homeRouteRecord.icon?.name,
-  id: homeRouteRecord.id,
+  id: generateTabId(homeRouteRecord.path),
   label: homeRouteRecord.title,
   path: homeRouteRecord.path,
+  routeId: homeRouteRecord.id,
 }
 
 const LEGACY_HOME_TAB_IDS = new Set(['dashboard', DEFAULT_HOME_TAB.id])
@@ -84,9 +96,13 @@ function normalizeTab(tab: Tab): Tab {
     return DEFAULT_HOME_TAB
   }
 
+  const id = generateTabId(tab.path)
+
   return {
     ...tab,
     closable: tab.path === '/' ? false : tab.closable,
+    id,
+    routeId: tab.routeId ?? (tab.id === id ? undefined : tab.id),
   }
 }
 
@@ -146,6 +162,19 @@ function buildCloseState(nextTabs: Tab[], fallbackTabId?: string, closingPath: n
   }
 }
 
+function isTabSame(a: Tab, b: Tab) {
+  return (
+    a.closable === b.closable &&
+    a.description === b.description &&
+    a.icon === b.icon &&
+    a.id === b.id &&
+    a.label === b.label &&
+    a.path === b.path &&
+    a.routeId === b.routeId &&
+    a.translateLabel === b.translateLabel
+  )
+}
+
 function normalizePersistedState(state: unknown): Pick<TabBarState, 'activeTabId' | 'closingPath' | 'tabs'> {
   if (!state || typeof state !== 'object') {
     return {
@@ -156,11 +185,15 @@ function normalizePersistedState(state: unknown): Pick<TabBarState, 'activeTabId
   }
 
   const persistedState = state as Partial<Pick<TabBarState, 'activeTabId' | 'tabs'>>
-  const tabs = normalizeTabs(Array.isArray(persistedState.tabs) ? persistedState.tabs : [DEFAULT_HOME_TAB])
+  const persistedTabs = Array.isArray(persistedState.tabs) ? persistedState.tabs : [DEFAULT_HOME_TAB]
+  const activeTabPath = persistedTabs.find((tab) => tab.id === persistedState.activeTabId)?.path
+  const tabs = normalizeTabs(persistedTabs)
   const activeTabId =
     persistedState.activeTabId && LEGACY_HOME_TAB_IDS.has(persistedState.activeTabId)
       ? DEFAULT_HOME_TAB.id
-      : persistedState.activeTabId
+      : activeTabPath
+        ? generateTabId(activeTabPath)
+        : persistedState.activeTabId
   const resolvedActiveTabId = resolveActiveTabId(tabs, activeTabId)
 
   return {
@@ -333,6 +366,31 @@ export const useTabBarStore = create<TabBarState>()(
       },
 
       tabs: [DEFAULT_HOME_TAB],
+
+      updateTabByPath: (path: string, update: TabUpdate) => {
+        const { tabs } = get()
+        let changed = false
+        const nextTabs = tabs.map((tab) => {
+          if (tab.path !== path) {
+            return tab
+          }
+
+          const nextTab = normalizeTab({
+            ...tab,
+            ...update,
+          })
+
+          if (!isTabSame(tab, nextTab)) {
+            changed = true
+          }
+
+          return nextTab
+        })
+
+        if (changed) {
+          set({ tabs: nextTabs })
+        }
+      },
     }),
     {
       migrate: (persistedState) => {
@@ -349,7 +407,7 @@ export const useTabBarStore = create<TabBarState>()(
         activeTabId: state.activeTabId,
         tabs: state.tabs,
       }),
-      version: 2,
+      version: 3,
     },
   ),
 )

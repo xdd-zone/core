@@ -246,43 +246,49 @@ export function TabBar() {
           className="scrollbar-hide flex flex-1 items-center gap-x-1 overflow-x-auto"
           style={scrollContainerStyle}
         >
-          {tabs.map((tab) => (
-            <Dropdown key={tab.id} menu={contextMenuByTabId.get(tab.id)} trigger={contextMenuTrigger}>
-              <div
-                data-tab-id={tab.id}
-                onClick={() => handleTabClick(tab.id, tab.path)}
-                className={clsx(
-                  'group relative flex cursor-pointer items-center gap-x-2 px-3 py-1.5 text-sm whitespace-nowrap transition-colors select-none',
-                  activeTabId === tab.id ? 'text-primary' : 'text-fg-muted hover:text-fg',
-                )}
-              >
-                <span>{t(tab.label)}</span>
-                {tab.closable !== false && (
-                  <button
-                    type="button"
-                    aria-label={t('tabBar.closeCurrent')}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleCloseTab(tab.id)
-                    }}
-                    className={clsx(
-                      'relative z-10 cursor-pointer rounded-sm p-0.5 transition-colors',
-                      activeTabId === tab.id ? 'hover:bg-primary/10' : 'hover:bg-surface-muted hover:text-fg',
-                    )}
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-                {/* 底部动画下划线 */}
-                <span
+          {tabs.map((tab) => {
+            const label = tab.translateLabel === false ? tab.label : t(tab.label)
+            const title = tab.description ? `${label}\n${tab.description}` : label
+
+            return (
+              <Dropdown key={tab.id} menu={contextMenuByTabId.get(tab.id)} trigger={contextMenuTrigger}>
+                <div
+                  data-tab-id={tab.id}
+                  onClick={() => handleTabClick(tab.id, tab.path)}
+                  title={title}
                   className={clsx(
-                    'absolute bottom-0 left-1/2 h-[2px] -translate-x-1/2 rounded-full transition-all duration-300 ease-out',
-                    activeTabId === tab.id ? 'w-full bg-primary' : 'w-0 bg-border group-hover:w-full',
+                    'group relative flex max-w-[220px] cursor-pointer items-center gap-x-2 px-3 py-1.5 text-sm whitespace-nowrap transition-colors select-none',
+                    activeTabId === tab.id ? 'text-primary' : 'text-fg-muted hover:text-fg',
                   )}
-                />
-              </div>
-            </Dropdown>
-          ))}
+                >
+                  <span className="min-w-0 truncate">{label}</span>
+                  {tab.closable !== false && (
+                    <button
+                      type="button"
+                      aria-label={t('tabBar.closeCurrent')}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleCloseTab(tab.id)
+                      }}
+                      className={clsx(
+                        'relative z-10 shrink-0 cursor-pointer rounded-sm p-0.5 transition-colors',
+                        activeTabId === tab.id ? 'hover:bg-primary/10' : 'hover:bg-surface-muted hover:text-fg',
+                      )}
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                  {/* 底部动画下划线 */}
+                  <span
+                    className={clsx(
+                      'absolute bottom-0 left-1/2 h-[2px] -translate-x-1/2 rounded-full transition-all duration-300 ease-out',
+                      activeTabId === tab.id ? 'w-full bg-primary' : 'w-0 bg-border group-hover:w-full',
+                    )}
+                  />
+                </div>
+              </Dropdown>
+            )
+          })}
         </div>
       </div>
     </div>

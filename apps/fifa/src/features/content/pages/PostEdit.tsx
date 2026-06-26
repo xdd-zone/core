@@ -16,7 +16,8 @@ import { FifaPageHeader } from '@fifa/components/common'
 import { buildImageSnippet, insertTextAtSelection } from '@fifa/features/content/utils/editor'
 import { buildBoboPreviewUrl } from '@fifa/features/content/utils/preview-url'
 import { ignoreAntdUploadRequest } from '@fifa/features/content/utils/upload'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useTabBarStore } from '@fifa/stores'
+import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
 import { App, Button, Form, Input, Modal, Tabs, Tag, Upload } from 'antd'
 import { ExternalLink, ImagePlus, PackagePlus, Save, Send, SquareArrowOutUpRight } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -106,10 +107,16 @@ interface PostEditContentProps {
 function PostEditContent({ postId }: PostEditContentProps) {
   const { message, modal } = App.useApp()
   const navigate = useNavigate()
+  const pathname = useLocation({
+    select: (location) => location.pathname,
+  })
+  const updateTabByPath = useTabBarStore((state) => state.updateTabByPath)
   const [form] = Form.useForm<PostEditFormValue>()
   const loadedPostIdRef = useRef<string | null>(null)
   const editorRef = useRef<MdxSourceEditorHandle>(null)
+  const saveDraftPromiseRef = useRef<Promise<PostDetail | undefined> | null>(null)
   const [dirty, setDirty] = useState(false)
+  const [draftSaving, setDraftSaving] = useState(false)
   const [previewUrl, setPreviewUrl] = useState('')
   const [selection, setSelection] = useState<TextSelection>({ end: 0, start: 0 })
   const postQuery = useContentPostQuery(postId)
@@ -140,6 +147,21 @@ function PostEditContent({ postId }: PostEditContentProps) {
     loadedPostIdRef.current = post.id
   }, [form, post])
 
+  const postSlug = post?.slug ?? ''
+  const postTitle = post?.title ?? ''
+
+  useEffect(() => {
+    if (!postTitle) {
+      return
+    }
+
+    updateTabByPath(pathname, {
+      description: `${postSlug} / ${postId}`,
+      label: postTitle,
+      translateLabel: false,
+    })
+  }, [pathname, postId, postSlug, postTitle, updateTabByPath])
+
   useEffect(() => {
     if (!dirty) {
       return
@@ -162,17 +184,35 @@ function PostEditContent({ postId }: PostEditContentProps) {
       return undefined
     }
 
-    const values = await form.validateFields()
-    const response = await saveDraftMutation.mutateAsync(toDraftPayload(values))
-
-    if (!response.ok) {
-      message.error(response.error.message)
-      return undefined
+    if (saveDraftPromiseRef.current) {
+      return saveDraftPromiseRef.current
     }
 
-    setDirty(false)
-    message.success('草稿已保存')
-    return response.data.post
+    setDraftSaving(true)
+
+    const savePromise = (async () => {
+      const values = await form.validateFields()
+      const response = await saveDraftMutation.mutateAsync(toDraftPayload(values))
+
+      if (!response.ok) {
+        message.error(response.error.message)
+        return undefined
+      }
+
+      setDirty(false)
+      message.success('草稿已保存')
+      return response.data.post
+    })()
+
+    const guardedSavePromise = savePromise.finally(() => {
+      if (saveDraftPromiseRef.current === guardedSavePromise) {
+        saveDraftPromiseRef.current = null
+        setDraftSaving(false)
+      }
+    })
+
+    saveDraftPromiseRef.current = guardedSavePromise
+    return guardedSavePromise
   }, [form, message, post, saveDraftMutation])
 
   const handlePreview = useCallback(async () => {
@@ -328,7 +368,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                 </span>
                 <Button
                   icon={<SquareArrowOutUpRight className="size-3.5" />}
-                  loading={previewTokenMutation.isPending || saveDraftMutation.isPending}
+                  loading={previewTokenMutation.isPending || draftSaving}
                   onClick={() => void handlePreview()}
                   size="small"
                 >
@@ -351,7 +391,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                   <Button
                     className="mt-2"
                     icon={<SquareArrowOutUpRight className="size-4" />}
-                    loading={previewTokenMutation.isPending || saveDraftMutation.isPending}
+                    loading={previewTokenMutation.isPending || draftSaving}
                     onClick={() => void handlePreview()}
                   >
                     生成预览
@@ -478,7 +518,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
       mdxComponents,
       previewTokenMutation.isPending,
       previewUrl,
-      saveDraftMutation.isPending,
+      draftSaving,
       uploadImageMutation.isPending,
     ],
   )
@@ -509,15 +549,16 @@ function PostEditContent({ postId }: PostEditContentProps) {
           post ? (
             <>
               <Button
+                disabled={draftSaving}
                 icon={<Save className="size-4" />}
-                loading={saveDraftMutation.isPending}
+                loading={draftSaving}
                 onClick={() => void saveDraft()}
               >
                 保存草稿
               </Button>
               <Button
                 icon={<SquareArrowOutUpRight className="size-4" />}
-                loading={previewTokenMutation.isPending || saveDraftMutation.isPending}
+                loading={previewTokenMutation.isPending || draftSaving}
                 onClick={() => void handlePreview()}
               >
                 预览
