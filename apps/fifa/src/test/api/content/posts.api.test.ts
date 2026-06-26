@@ -55,6 +55,7 @@ describe('content api 封装', () => {
       ok: true,
       data: {
         post: {
+          category: null,
           coverAssetId: null,
           createdAt: '2026-01-01T00:00:00.000Z',
           draftRevisionId: 'revision-1',
@@ -65,6 +66,7 @@ describe('content api 封装', () => {
           slug: 'hello-world',
           source: '# Hello World\n',
           status: 'draft',
+          tags: [],
           title: 'Hello World',
           updatedAt: '2026-01-01T00:00:00.000Z',
         },

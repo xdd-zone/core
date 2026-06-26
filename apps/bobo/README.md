@@ -7,6 +7,8 @@
 ## 现在能做什么
 
 - 首页在 `app/(site)/page.tsx`，URL 仍然是 `/`。
+- 文稿列表在 `app/(site)/writing/page.tsx`，URL 是 `/writing`。
+- 文稿详情在 `app/(site)/writing/[slug]/page.tsx`，URL 是 `/writing/<slug>`。
 - 样式演示和临时页面放在 `app/(lab)/lab`，URL 仍然是 `/lab`。
 - 文章预览页在 `app/(preview)/preview/posts/[postId]/page.tsx`。
 - 全局布局、字体、metadata 和主题初始化放在 `app/layout.tsx`。
@@ -37,8 +39,16 @@ pnpm --filter @xdd-zone/bobo start
 
 - `app/(site)/page.tsx`
   首页。
+- `app/(site)/writing/page.tsx`
+  文稿列表页，读取 `MOMO_BASE_URL` 指向的 Momo 公开文章接口。
+- `app/(site)/writing/[slug]/page.tsx`
+  文稿详情页，按 slug 读取已发布文章。
 - `app/(site)/_components/home`
   首页专用组件和样式。
+- `app/(site)/_components/site`
+  公开站点共用导航、容器和深色页面样式。
+- `app/(site)/_components/writing`
+  文稿页专用样式。
 - `app/(preview)/preview/posts/[postId]/page.tsx`
   文章预览页，读取 `MOMO_BASE_URL` 指向的 Momo 预览接口。
 - `app/layout.tsx`

@@ -1,7 +1,12 @@
 import type { CreatePostRequest, PostStatus, PostSummary } from '@xdd-zone/contracts'
 import type { TableProps } from 'antd'
 
-import { useContentPostsQuery, useCreateContentPostMutation } from '@fifa/api/content'
+import {
+  useContentCategoriesQuery,
+  useContentPostsQuery,
+  useContentTagsQuery,
+  useCreateContentPostMutation,
+} from '@fifa/api/content'
 import { FifaPageHeader } from '@fifa/components/common'
 import { filterContentPosts } from '@fifa/features/content/utils/post-list'
 import { useNavigate } from '@tanstack/react-router'
@@ -29,10 +34,12 @@ const tablePagination = {
   showSizeChanger: false,
 }
 
-const tableScroll = { x: 1040 }
+const tableScroll = { x: 1280 }
 
 interface CreatePostFormValue {
+  categoryId?: string
   slug: string
+  tagIds?: string[]
   title: string
 }
 
@@ -71,6 +78,8 @@ export function PostList() {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const postsQuery = useContentPostsQuery()
+  const categoriesQuery = useContentCategoriesQuery()
+  const tagsQuery = useContentTagsQuery()
   const createPostMutation = useCreateContentPostMutation()
   const [form] = Form.useForm<CreatePostFormValue>()
   const [createOpen, setCreateOpen] = useState(false)
@@ -78,7 +87,17 @@ export function PostList() {
   const [status, setStatus] = useState<PostStatus | 'all'>('all')
 
   const posts = useMemo(() => (postsQuery.data?.ok ? postsQuery.data.data.posts : []), [postsQuery.data])
+  const categories = useMemo(
+    () => (categoriesQuery.data?.ok ? categoriesQuery.data.data.categories : []),
+    [categoriesQuery.data],
+  )
+  const tags = useMemo(() => (tagsQuery.data?.ok ? tagsQuery.data.data.tags : []), [tagsQuery.data])
   const loadError = postsQuery.data && !postsQuery.data.ok ? postsQuery.data.error.message : undefined
+  const categoryOptions = useMemo(
+    () => categories.map((category) => ({ label: category.name, value: category.id })),
+    [categories],
+  )
+  const tagOptions = useMemo(() => tags.map((tag) => ({ label: tag.name, value: tag.id })), [tags])
 
   const filteredPosts = useMemo(() => {
     return filterContentPosts(posts, { keyword, status })
@@ -122,6 +141,22 @@ export function PostList() {
         render: (value: PostStatus) => <Tag color={getStatusColor(value)}>{getStatusLabel(value)}</Tag>,
       },
       {
+        dataIndex: 'category',
+        title: '分类',
+        width: 160,
+        render: (category: PostSummary['category']) => (category ? <Tag>{category.name}</Tag> : '-'),
+      },
+      {
+        dataIndex: 'tags',
+        title: '标签',
+        width: 220,
+        render: (tags: PostSummary['tags']) => (
+          <div className="flex flex-wrap gap-1">
+            {tags.length > 0 ? tags.map((tag) => <Tag key={tag.id}>{tag.name}</Tag>) : '-'}
+          </div>
+        ),
+      },
+      {
         dataIndex: 'updatedAt',
         title: '更新时间',
         width: 180,
@@ -159,8 +194,10 @@ export function PostList() {
   const handleCreate = useCallback(async () => {
     const values = await form.validateFields()
     const payload: CreatePostRequest = {
+      categoryId: values.categoryId || null,
       slug: values.slug,
       source: toInitialSource(values.title),
+      tagIds: values.tagIds ?? [],
       title: values.title,
     }
     const response = await createPostMutation.mutateAsync(payload)
@@ -206,7 +243,7 @@ export function PostList() {
             allowClear
             prefix={<Search className="text-fg-muted size-4" />}
             onChange={(event) => setKeyword(event.target.value)}
-            placeholder="搜索标题或 slug"
+            placeholder="搜索标题、slug、分类或标签"
             value={keyword}
           />
           <Select options={statusFilterOptions} onChange={setStatus} value={status} />
@@ -242,6 +279,23 @@ export function PostList() {
           </Form.Item>
           <Form.Item name="slug" label="Slug" rules={[{ required: true, message: '请输入 slug' }]}>
             <Input placeholder="例如 hello-world" />
+          </Form.Item>
+          <Form.Item name="categoryId" label="分类">
+            <Select
+              allowClear
+              loading={categoriesQuery.isLoading}
+              options={categoryOptions}
+              placeholder="选择分类，可留空"
+            />
+          </Form.Item>
+          <Form.Item name="tagIds" label="标签">
+            <Select
+              allowClear
+              loading={tagsQuery.isLoading}
+              mode="multiple"
+              options={tagOptions}
+              placeholder="选择标签，可留空"
+            />
           </Form.Item>
         </Form>
       </Modal>

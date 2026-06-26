@@ -213,6 +213,8 @@ export default {
     notFoundExample: '404 Example',
     postEdit: 'Edit Post',
     posts: 'Posts',
+    assets: 'Media Library',
+    taxonomy: 'Taxonomy',
     uiShowcase: 'Components And Theme',
   },
   setting: {

@@ -5,7 +5,9 @@ import type { TabsProps } from 'antd'
 
 import {
   useContentAssetsQuery,
+  useContentCategoriesQuery,
   useContentPostQuery,
+  useContentTagsQuery,
   useCreateContentPreviewTokenMutation,
   useMdxComponentsQuery,
   usePublishContentPostMutation,
@@ -18,7 +20,7 @@ import { buildBoboPreviewUrl } from '@fifa/features/content/utils/preview-url'
 import { ignoreAntdUploadRequest } from '@fifa/features/content/utils/upload'
 import { useTabBarStore } from '@fifa/stores'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
-import { App, Button, Form, Input, Modal, Tabs, Tag, Upload } from 'antd'
+import { App, Button, Form, Input, Modal, Select, Tabs, Tag, Upload } from 'antd'
 import { ExternalLink, ImagePlus, PackagePlus, Save, Send, SquareArrowOutUpRight } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -29,10 +31,12 @@ const MdxSourceEditor = lazy(() =>
 const EMPTY_MDX_COMPONENTS: MdxComponent[] = []
 
 interface PostEditFormValue {
+  categoryId?: string
   coverAssetId?: string
   excerpt?: string
   slug: string
   source: string
+  tagIds?: string[]
   title: string
 }
 
@@ -69,20 +73,24 @@ function getStatusColor(status: PostStatus) {
 
 function toFormValue(post: PostDetail): PostEditFormValue {
   return {
+    categoryId: post.category?.id ?? undefined,
     coverAssetId: post.coverAssetId ?? '',
     excerpt: post.excerpt ?? '',
     slug: post.slug,
     source: post.source,
+    tagIds: post.tags.map((tag) => tag.id),
     title: post.title,
   }
 }
 
 function toDraftPayload(values: PostEditFormValue): SavePostDraftRequest {
   return {
+    categoryId: values.categoryId || null,
     coverAssetId: values.coverAssetId?.trim() ? values.coverAssetId.trim() : null,
     excerpt: values.excerpt?.trim() ? values.excerpt.trim() : null,
     slug: values.slug.trim(),
     source: values.source,
+    tagIds: values.tagIds ?? [],
     title: values.title.trim(),
   }
 }
@@ -120,6 +128,8 @@ function PostEditContent({ postId }: PostEditContentProps) {
   const [previewUrl, setPreviewUrl] = useState('')
   const [selection, setSelection] = useState<TextSelection>({ end: 0, start: 0 })
   const postQuery = useContentPostQuery(postId)
+  const categoriesQuery = useContentCategoriesQuery()
+  const tagsQuery = useContentTagsQuery()
   const mdxComponentsQuery = useMdxComponentsQuery()
   const saveDraftMutation = useSaveContentPostDraftMutation(postId)
   const previewTokenMutation = useCreateContentPreviewTokenMutation(postId)
@@ -128,12 +138,26 @@ function PostEditContent({ postId }: PostEditContentProps) {
   const [assetPickerOpen, setAssetPickerOpen] = useState(false)
   const [pickerKeyword, setPickerKeyword] = useState('')
   const sidebarQuery = useContentAssetsQuery({ page: 1, pageSize: 12 })
-  const pickerQuery = useContentAssetsQuery({ keyword: pickerKeyword, page: 1, pageSize: 24 }, { enabled: assetPickerOpen })
+  const pickerQuery = useContentAssetsQuery(
+    { keyword: pickerKeyword, page: 1, pageSize: 24 },
+    { enabled: assetPickerOpen },
+  )
 
   const post = postQuery.data?.ok ? postQuery.data.data.post : undefined
   const loadError = postQuery.data && !postQuery.data.ok ? postQuery.data.error.message : undefined
   const mdxComponents = mdxComponentsQuery.data?.ok ? mdxComponentsQuery.data.data.components : EMPTY_MDX_COMPONENTS
   const source = Form.useWatch('source', form) ?? ''
+  const categoryOptions = useMemo(
+    () =>
+      categoriesQuery.data?.ok
+        ? categoriesQuery.data.data.categories.map((category) => ({ label: category.name, value: category.id }))
+        : [],
+    [categoriesQuery.data],
+  )
+  const tagOptions = useMemo(
+    () => (tagsQuery.data?.ok ? tagsQuery.data.data.tags.map((tag) => ({ label: tag.name, value: tag.id })) : []),
+    [tagsQuery.data],
+  )
   const sidebarAssets = useMemo(() => (sidebarQuery.data?.ok ? sidebarQuery.data.data.assets : []), [sidebarQuery.data])
   const pickerAssets = useMemo(() => (pickerQuery.data?.ok ? pickerQuery.data.data.assets : []), [pickerQuery.data])
   const currentCoverAssetId = Form.useWatch('coverAssetId', form)
@@ -408,7 +432,12 @@ function PostEditContent({ postId }: PostEditContentProps) {
         children: (
           <div className="h-full overflow-y-auto p-5">
             <div className="space-y-4">
-              <Upload className="block w-full [&_.ant-upload]:block [&_.ant-upload]:w-full" beforeUpload={handleBeforeUpload} maxCount={1} showUploadList={false}>
+              <Upload
+                className="block w-full [&_.ant-upload]:block [&_.ant-upload]:w-full"
+                beforeUpload={handleBeforeUpload}
+                maxCount={1}
+                showUploadList={false}
+              >
                 <div className="group relative flex cursor-pointer flex-col items-center justify-center gap-5 rounded-2xl border-2 border-dashed border-border-subtle bg-surface/40 px-6 py-10 transition-all hover:border-primary/40 hover:bg-surface-muted/30">
                   {uploadImageMutation.isPending ? (
                     <div className="flex flex-col items-center gap-4">
@@ -427,7 +456,9 @@ function PostEditContent({ postId }: PostEditContentProps) {
                       </div>
                       <div className="text-center">
                         <div className="text-sm font-medium text-fg">选择或拖放图片至此处</div>
-                        <div className="mt-2 px-2 text-[11px] leading-relaxed text-fg-muted/80">上传后，将自动在编辑器光标位置生成图片组件。</div>
+                        <div className="mt-2 px-2 text-[11px] leading-relaxed text-fg-muted/80">
+                          上传后，将自动在编辑器光标位置生成图片组件。
+                        </div>
                       </div>
                     </>
                   )}
@@ -452,14 +483,22 @@ function PostEditContent({ postId }: PostEditContentProps) {
                       onClick={() => insertSnippet(buildImageSnippet(asset))}
                       type="button"
                     >
-                      <img alt={asset.alt ?? asset.fileName} className="size-12 rounded-lg object-cover" src={asset.url ?? ''} />
+                      <img
+                        alt={asset.alt ?? asset.fileName}
+                        className="size-12 rounded-lg object-cover"
+                        src={asset.url ?? ''}
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium text-fg">{asset.fileName}</div>
                         <div className="truncate text-xs text-fg-muted">{asset.alt ?? '未填写说明'}</div>
                       </div>
                     </button>
                   ))}
-                  {sidebarAssets.length === 0 ? <div className="rounded-xl border border-dashed border-border-subtle py-8 text-center text-xs text-fg-muted">暂无素材</div> : null}
+                  {sidebarAssets.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-border-subtle py-8 text-center text-xs text-fg-muted">
+                      暂无素材
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -609,6 +648,26 @@ function PostEditContent({ postId }: PostEditContentProps) {
               <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder="输入摘要，可留空" />
             </Form.Item>
 
+            <div className="grid gap-x-4 md:grid-cols-2">
+              <Form.Item name="categoryId" label="分类">
+                <Select
+                  allowClear
+                  loading={categoriesQuery.isLoading}
+                  options={categoryOptions}
+                  placeholder="选择分类，可留空"
+                />
+              </Form.Item>
+              <Form.Item name="tagIds" label="标签">
+                <Select
+                  allowClear
+                  loading={tagsQuery.isLoading}
+                  mode="multiple"
+                  options={tagOptions}
+                  placeholder="选择标签，可留空"
+                />
+              </Form.Item>
+            </div>
+
             <Form.Item className="mb-0" name="coverAssetId" label="封面素材 ID">
               <Input
                 addonAfter={
@@ -619,7 +678,9 @@ function PostEditContent({ postId }: PostEditContentProps) {
                 placeholder="输入素材 ID，可留空"
               />
             </Form.Item>
-            {currentCoverAssetId ? <div className="mt-3 text-xs text-fg-muted">当前封面 ID：{currentCoverAssetId}</div> : null}
+            {currentCoverAssetId ? (
+              <div className="mt-3 text-xs text-fg-muted">当前封面 ID：{currentCoverAssetId}</div>
+            ) : null}
           </div>
         </section>
 
@@ -669,7 +730,10 @@ function PostEditContent({ postId }: PostEditContentProps) {
         <Modal
           destroyOnHidden
           footer={null}
-          onCancel={() => { setAssetPickerOpen(false); setPickerKeyword('') }}
+          onCancel={() => {
+            setAssetPickerOpen(false)
+            setPickerKeyword('')
+          }}
           open={assetPickerOpen}
           title="选择封面素材"
           width={960}
@@ -690,7 +754,11 @@ function PostEditContent({ postId }: PostEditContentProps) {
                   type="button"
                 >
                   <div className="aspect-square overflow-hidden bg-surface-subtle">
-                    <img alt={asset.alt ?? asset.fileName} className="h-full w-full object-cover" src={asset.url ?? ''} />
+                    <img
+                      alt={asset.alt ?? asset.fileName}
+                      className="h-full w-full object-cover"
+                      src={asset.url ?? ''}
+                    />
                   </div>
                   <div className="space-y-1 px-3 py-2.5">
                     <div className="truncate text-sm font-medium text-fg">{asset.fileName}</div>
@@ -698,7 +766,11 @@ function PostEditContent({ postId }: PostEditContentProps) {
                   </div>
                 </button>
               ))}
-              {pickerAssets.length === 0 ? <div className="rounded-xl border border-dashed border-border-subtle py-8 text-center text-xs text-fg-muted">暂无素材</div> : null}
+              {pickerAssets.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border-subtle py-8 text-center text-xs text-fg-muted">
+                  暂无素材
+                </div>
+              ) : null}
             </div>
           </div>
         </Modal>

@@ -17,6 +17,7 @@
 apps/momo/src/modules/system/system.route.ts
 apps/momo/src/modules/auth/auth.route.ts
 apps/momo/src/modules/content/content.route.ts
+apps/momo/src/modules/content/public-content.route.ts
 ```
 
 相关入口：
@@ -61,9 +62,21 @@ apps/momo/src/modules/content/content.route.ts
 | `DELETE` | `/rpc/content/assets/:id` | 删除素材 |
 | `GET` | `/rpc/content/mdx-components` | MDX 组件清单 |
 | `POST` | `/rpc/content/assets/images` | 上传图片素材 |
+| `GET` | `/rpc/content/categories` | 后台分类列表 |
+| `POST` | `/rpc/content/categories` | 创建分类 |
+| `GET` | `/rpc/content/categories/:id` | 后台分类详情 |
+| `PATCH` | `/rpc/content/categories/:id` | 更新分类 |
+| `DELETE` | `/rpc/content/categories/:id` | 删除分类 |
+| `GET` | `/rpc/content/tags` | 后台标签列表 |
+| `POST` | `/rpc/content/tags` | 创建标签 |
+| `GET` | `/rpc/content/tags/:id` | 后台标签详情 |
+| `PATCH` | `/rpc/content/tags/:id` | 更新标签 |
+| `DELETE` | `/rpc/content/tags/:id` | 删除标签 |
 | `GET` | `/rpc/content/previews/:token` | 使用预览 token 读取文章 revision |
-| `GET` | `/rpc/content/public/posts` | 公开文章列表，只返回已发布文章 |
-| `GET` | `/rpc/content/public/posts/:slug` | 公开文章详情，只返回已发布文章 |
+| `GET` | `/rpc/bobo/content/posts` | 个人站文章列表，可按分类和标签筛选 |
+| `GET` | `/rpc/bobo/content/posts/:slug` | 个人站文章详情，只返回已发布文章 |
+| `GET` | `/rpc/bobo/content/categories` | 个人站分类列表 |
+| `GET` | `/rpc/bobo/content/tags` | 个人站标签列表 |
 
 公开邮箱注册被禁用：
 

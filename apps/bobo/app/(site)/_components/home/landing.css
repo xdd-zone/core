@@ -51,137 +51,6 @@
     z-index: 1;
   }
 
-  /* 导航 */
-  .landing-navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    display: flex;
-    justify-content: center;
-    padding: 24px 16px;
-  }
-  .landing-nav-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    border-radius: 999px;
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: hsl(var(--ld-surface));
-    padding: 8px;
-    transition:
-      box-shadow 0.36s cubic-bezier(0.23, 1, 0.32, 1),
-      transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
-  }
-  .landing-nav-pill.scrolled {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-    transform: translateY(-2px);
-  }
-
-  /* Logo */
-  .landing-logo {
-    position: relative;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    transition: transform 0.3s ease;
-  }
-  .landing-logo::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    padding: 2px;
-    background: linear-gradient(90deg, var(--ld-accent-1), var(--ld-accent-2));
-    -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    transition: transform 0.5s ease;
-  }
-  .landing-logo:hover {
-    transform: scale(1.06);
-  }
-  .landing-logo:hover::before {
-    transform: rotate(180deg);
-  }
-  .landing-logo span {
-    position: relative;
-    z-index: 1;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: hsl(var(--ld-bg));
-    display: grid;
-    place-items: center;
-    font-size: 13px;
-    font-style: italic;
-  }
-
-  .landing-nav-divider {
-    width: 1px;
-    height: 20px;
-    background: hsl(var(--ld-stroke));
-    margin: 0 4px;
-  }
-  .landing-nav-link,
-  .landing-say-hi {
-    font-size: 0.85rem;
-    border-radius: 999px;
-    padding: 8px 16px;
-    transition:
-      color 0.18s ease,
-      background-color 0.18s ease,
-      transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
-  }
-  .landing-nav-link.active {
-    color: hsl(var(--ld-text));
-    background: hsl(var(--ld-stroke) / 0.5);
-  }
-  .landing-nav-link:not(.active) {
-    color: hsl(var(--ld-muted));
-  }
-  .landing-nav-link:not(.active):hover {
-    color: hsl(var(--ld-text));
-    background: hsl(var(--ld-stroke) / 0.5);
-    transform: translateY(-1px);
-  }
-
-  /* 联系按钮 */
-  .landing-say-hi {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .landing-say-hi .ring {
-    position: absolute;
-    inset: -2px;
-    border-radius: 999px;
-    opacity: 0;
-    background: linear-gradient(90deg, var(--ld-accent-1), var(--ld-accent-2));
-    transition: opacity 0.3s ease;
-  }
-  .landing-say-hi:hover .ring {
-    opacity: 1;
-  }
-  .landing-say-hi .inner {
-    position: relative;
-    z-index: 1;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: hsl(var(--ld-surface));
-    backdrop-filter: blur(12px);
-    border-radius: 999px;
-    padding: 8px 16px;
-  }
-
   /* Hero 内容 */
   .landing-hero-content {
     position: relative;
@@ -302,8 +171,6 @@
     color: hsl(var(--ld-text));
   }
   .landing-btn:focus-visible,
-  .landing-nav-link:focus-visible,
-  .landing-say-hi:focus-visible,
   .landing-view-all:focus-visible,
   .landing-email-btn:focus-visible,
   .landing-pcard:focus-visible {
@@ -905,13 +772,6 @@
     transform: scale(1);
   }
 
-  /* 容器 */
-  .landing-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-
   /* 响应式 */
   @media (min-width: 768px) {
     .landing-proj:nth-child(1) {
@@ -960,14 +820,6 @@
     }
     .landing-hero-name {
       font-size: clamp(4.4rem, 20vw, 6rem);
-    }
-    .landing-nav-link,
-    .landing-say-hi {
-      padding: 8px 10px;
-      font-size: 0.78rem;
-    }
-    .landing-say-hi .inner {
-      padding: 8px 10px;
     }
   }
   @media (prefers-reduced-motion: reduce) {

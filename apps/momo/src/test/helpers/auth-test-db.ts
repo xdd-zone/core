@@ -23,6 +23,7 @@ const migrationFiles = [
   '0001_plain_cerise.sql',
   '0002_open_victor_mancha.sql',
   '0003_daffy_miek.sql',
+  '0004_high_vapor.sql',
 ]
 let prepareDatabaseQueue = Promise.resolve()
 
@@ -50,7 +51,7 @@ export async function prepareAuthTestDatabase(): Promise<void> {
 
 export async function resetAuthTestData(): Promise<void> {
   await getDb().execute(
-    'TRUNCATE TABLE "content_preview_tokens", "content_post_revisions", "content_posts", "content_assets", "rate_limit", "verification", "session", "account", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
+    'TRUNCATE TABLE "content_preview_tokens", "content_post_revisions", "content_post_tags", "content_posts", "content_tags", "content_categories", "content_assets", "rate_limit", "verification", "session", "account", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
   )
 
   await seedAccessRecords()

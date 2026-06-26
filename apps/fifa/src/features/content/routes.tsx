@@ -1,6 +1,6 @@
 import type { FifaRouteRecord } from '@fifa/app/router/types'
 import { lazyRouteComponent } from '@tanstack/react-router'
-import { FileImage, FileText, Pencil } from 'lucide-react'
+import { FileImage, FileText, Pencil, Tags } from 'lucide-react'
 
 export const contentRoutes: FifaRouteRecord[] = [
   {
@@ -30,6 +30,20 @@ export const contentRoutes: FifaRouteRecord[] = [
     },
     path: '/content/assets',
     title: 'menu.assets',
+  },
+  {
+    component: lazyRouteComponent(() => import('./pages/TaxonomyList'), 'TaxonomyList'),
+    icon: Tags,
+    id: 'content.taxonomy',
+    layout: {
+      contentWidth: 'full',
+    },
+    menu: {
+      group: 'content',
+      order: 20,
+    },
+    path: '/content/taxonomy',
+    title: 'menu.taxonomy',
   },
   {
     component: lazyRouteComponent(() => import('./pages/PostEdit'), 'PostEdit'),

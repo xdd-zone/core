@@ -12,25 +12,30 @@ import type {
   UpdateAssetRequest,
 } from '@xdd-zone/contracts'
 import type { MomoRuntime } from '#momo/bootstrap'
-import type { ContentRepository } from './content.repository'
-import type { ContentAssetRecord, ContentAssetReferenceRecord, ContentPostRecord } from './content.types'
+import type { ContentRepository } from '../repositories/content.repository'
+import type { TaxonomyRepository } from '../repositories/taxonomy.repository'
+import type { ContentAssetRecord, ContentAssetReferenceRecord, ContentPostRecord } from '../types/content.types'
 import { createHash, randomUUID } from 'node:crypto'
 import { BizCode } from '@xdd-zone/contracts'
 import { validateMediaFile } from '#momo/infra/storage'
 import { AppError } from '#momo/shared/app-error'
 
-import { toImageAsset, toPostDetail, toPostRevision, toPostSummary, toPreviewTokenResponse } from './content.presenter'
-import { ContentAssetNotFoundError, ContentSlugConflictError } from './content.repository'
-import { findUnknownMdxComponents, MDX_COMPONENTS } from './mdx-components'
+import { toImageAsset, toPostDetail, toPostRevision, toPostSummary, toPreviewTokenResponse } from '../content.presenter'
+import { ContentAssetNotFoundError, ContentSlugConflictError } from '../repositories/content.repository'
+import { findUnknownMdxComponents, MDX_COMPONENTS } from '../mdx-components'
 
 const PREVIEW_TOKEN_TTL_MS = 30 * 60 * 1000
 const ASSET_LIST_DEFAULT_PAGE_SIZE = 24
 const ASSET_LIST_MAX_PAGE_SIZE = 100
 
-export function createContentService(runtime: MomoRuntime, repository: ContentRepository) {
+export function createContentService(
+  runtime: MomoRuntime,
+  repository: ContentRepository,
+  taxonomyRepository: TaxonomyRepository,
+) {
   async function listPosts(): Promise<PostSummary[]> {
     const posts = await repository.listPosts()
-    return posts.map((post) => toPostSummary(post))
+    return enrichPostsWithTaxonomy(posts)
   }
 
   async function listAssets(params: {
@@ -57,11 +62,6 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
     }
   }
 
-  async function listPublicPosts(): Promise<PostSummary[]> {
-    const posts = await repository.listPublicPosts()
-    return posts.map((post) => toPostSummary(post))
-  }
-
   async function getPostById(id: string): Promise<PostDetail> {
     const post = await repository.getPostById(id)
 
@@ -73,7 +73,12 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
       ? (await getRequiredRevisionById(post.draftRevisionId, '文章草稿版本不存在')).source
       : ''
 
-    return toPostDetail(post, source)
+    const [category, tags] = await Promise.all([
+      post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
+      taxonomyRepository.getPostTags(id),
+    ])
+
+    return toPostDetail(post, source, category ?? null, tags)
   }
 
   async function createPost(input: CreatePostRequest, userId: string): Promise<PostDetail> {
@@ -83,6 +88,8 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
     }
 
     await ensureCoverAssetExists(input.coverAssetId)
+    await ensureCategoryExists(input.categoryId)
+    await ensureTagsExist(input.tagIds)
     assertKnownMdxComponents(input.source)
 
     const id = randomUUID()
@@ -90,12 +97,14 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
 
     const post = await runContentRepositoryAction(() =>
       repository.createPost({
+        categoryId: input.categoryId,
         coverAssetId: input.coverAssetId,
         excerpt: input.excerpt,
         id,
         revisionId,
         slug: input.slug,
         source: input.source,
+        tagIds: input.tagIds,
         title: input.title,
         userId,
       }),
@@ -105,7 +114,17 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
       throw new AppError(BizCode.SYSTEM_INTERNAL_ERROR, '保存文章失败', 500)
     }
 
-    return toPostDetail(post, input.source)
+    const tagIds = input.tagIds ?? []
+    if (tagIds.length > 0) {
+      await taxonomyRepository.setPostTags(id, tagIds)
+    }
+
+    const [category, tags] = await Promise.all([
+      post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
+      taxonomyRepository.getPostTags(id),
+    ])
+
+    return toPostDetail(post, input.source, category ?? null, tags)
   }
 
   async function saveDraft(id: string, input: SavePostDraftRequest, userId: string): Promise<PostDetail> {
@@ -122,18 +141,22 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
 
     const source = input.source ?? (await getDraftSource(current))
     await ensureCoverAssetExists(input.coverAssetId)
+    await ensureCategoryExists(input.categoryId)
+    await ensureTagsExist(input.tagIds)
     assertKnownMdxComponents(source)
 
     const revisionId = randomUUID()
 
     const post = await runContentRepositoryAction(() =>
       repository.saveDraft({
+        categoryId: input.categoryId,
         coverAssetId: input.coverAssetId,
         excerpt: input.excerpt,
         id,
         revisionId,
         slug: input.slug,
         source,
+        tagIds: input.tagIds,
         title: input.title,
         userId,
       }),
@@ -143,7 +166,16 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
       throw new AppError(BizCode.COMMON_NOT_FOUND, '文章不存在', 404)
     }
 
-    return toPostDetail(post, source)
+    if (input.tagIds !== undefined) {
+      await taxonomyRepository.setPostTags(id, input.tagIds)
+    }
+
+    const [category, tags] = await Promise.all([
+      post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
+      taxonomyRepository.getPostTags(id),
+    ])
+
+    return toPostDetail(post, source, category ?? null, tags)
   }
 
   async function publishPost(id: string, userId: string): Promise<PostDetail> {
@@ -164,7 +196,12 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
       throw new AppError(BizCode.SYSTEM_INTERNAL_ERROR, '文章草稿版本不存在', 500)
     }
 
-    return toPostDetail(result.post, result.revision.source)
+    const [category, tags] = await Promise.all([
+      result.post.categoryId ? taxonomyRepository.getCategoryById(result.post.categoryId) : Promise.resolve(null),
+      taxonomyRepository.getPostTags(id),
+    ])
+
+    return toPostDetail(result.post, result.revision.source, category ?? null, tags)
   }
 
   async function createPreviewToken(id: string, userId: string): Promise<PreviewTokenResponse> {
@@ -219,25 +256,15 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
 
     await repository.markPreviewTokenUsed(previewToken.id)
 
+    const [category, tags] = await Promise.all([
+      post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
+      taxonomyRepository.getPostTags(previewToken.postId),
+    ])
+
     return {
-      post: toPostDetail(post, revision.source),
+      post: toPostDetail(post, revision.source, category ?? null, tags),
       revision: toPostRevision(revision),
     }
-  }
-
-  async function getPublicPostBySlug(slug: string): Promise<PostDetail> {
-    const post = await repository.getPostBySlug(slug)
-    if (!post || post.status !== 'published') {
-      throw new AppError(BizCode.COMMON_NOT_FOUND, '文章不存在', 404)
-    }
-
-    if (!post.publishedRevisionId) {
-      throw new AppError(BizCode.SYSTEM_INTERNAL_ERROR, '文章发布版本不存在', 500)
-    }
-
-    const revision = await getRequiredRevisionById(post.publishedRevisionId, '文章发布版本不存在')
-
-    return toPostDetail(post, revision.source)
   }
 
   async function getAssetById(id: string): Promise<AssetDetailResponse> {
@@ -361,6 +388,59 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
     }
   }
 
+  async function ensureCategoryExists(categoryId: string | null | undefined): Promise<void> {
+    if (!categoryId) {
+      return
+    }
+
+    const category = await taxonomyRepository.getCategoryById(categoryId)
+
+    if (!category) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '分类不存在', 404)
+    }
+  }
+
+  async function ensureTagsExist(tagIds: string[] | undefined): Promise<void> {
+    if (!tagIds || tagIds.length === 0) {
+      return
+    }
+
+    const uniqueTagIds = [...new Set(tagIds)]
+
+    const tags = await Promise.all(uniqueTagIds.map((id) => taxonomyRepository.getTagById(id)))
+
+    const missing = uniqueTagIds.filter((_id, index) => !tags[index])
+
+    if (missing.length > 0) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '标签不存在', 404, { missingTagIds: missing })
+    }
+  }
+
+  async function enrichPostsWithTaxonomy(posts: ContentPostRecord[]): Promise<PostSummary[]> {
+    if (posts.length === 0) {
+      return []
+    }
+
+    const postIds = posts.map((p) => p.id)
+    const categoryIdMap = await repository.getCategoriesByPostIds(postIds)
+    const uniqueCategoryIds = [...new Set(categoryIdMap.values())]
+
+    const [categories, tagsMap] = await Promise.all([
+      Promise.all(uniqueCategoryIds.map((id) => taxonomyRepository.getCategoryById(id))),
+      taxonomyRepository.getPostTagsByPostIds(postIds),
+    ])
+
+    const categoryMap = new Map(categories.filter((c): c is NonNullable<typeof c> => !!c).map((c) => [c.id, c]))
+
+    return posts.map((post) => {
+      const categoryId = categoryIdMap.get(post.id)
+      const category = categoryId ? categoryMap.get(categoryId) ?? null : null
+      const tags = tagsMap.get(post.id) ?? []
+
+      return toPostSummary(post, category, tags)
+    })
+  }
+
   return {
     createPost,
     createPreviewToken,
@@ -369,10 +449,8 @@ export function createContentService(runtime: MomoRuntime, repository: ContentRe
     getMdxComponents,
     getPostById,
     getPreviewPost,
-    getPublicPostBySlug,
     listAssets,
     listPosts,
-    listPublicPosts,
     openAssetFile,
     publishPost,
     saveDraft,

@@ -125,7 +125,7 @@ Fifa 从 `@xdd-zone/momo/rpc` 通过 `import type` 引入 `AppType`，再用 `ho
   放 content 模块的 query key 和 hooks。
 
 当前前端首页会自动请求 Momo 的 `GET /health`。点击 Ping 按钮时才请求 `POST /rpc/system/ping`。
-内容模块会请求 Momo 的文章管理、预览 token、MDX 组件和图片上传接口。
+内容模块会请求 Momo 的文章、素材、分类和标签接口。
 页面不直接 import `momoClient`，也不手写 query key。
 
 ## `apps/bobo`

@@ -4,9 +4,13 @@ import { zValidator } from '@hono/zod-validator'
 import {
   AssetListQuerySchema,
   BizCode,
+  CreateCategoryRequestSchema,
   CreatePostRequestSchema,
+  CreateTagRequestSchema,
   SavePostDraftRequestSchema,
   UpdateAssetRequestSchema,
+  UpdateCategoryRequestSchema,
+  UpdateTagRequestSchema,
 } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 import { getDb } from '#momo/infra/db/client'
@@ -16,12 +20,16 @@ import { createMeta } from '#momo/shared/meta'
 import { createSuccessResponse } from '#momo/shared/response'
 import { createValidationFailure } from '#momo/shared/validator'
 
-import { createContentRepository } from './content.repository'
-import { createContentService } from './content.service'
+import { createContentRepository } from './repositories/content.repository'
+import { createTaxonomyRepository } from './repositories/taxonomy.repository'
+import { createContentService } from './services/content.service'
+import { createTaxonomyService } from './services/taxonomy.service'
 
 export function createContentRoute(runtime: MomoRuntime) {
   const repository = createContentRepository(getDb())
-  const service = createContentService(runtime, repository)
+  const taxonomyRepository = createTaxonomyRepository(getDb())
+  const service = createContentService(runtime, repository, taxonomyRepository)
+  const taxonomyService = createTaxonomyService(taxonomyRepository)
 
   return new Hono<HonoEnv>()
     .get('/rpc/content/posts', createRequirePermission(runtime, 'content.post.read'), async (c) => {
@@ -136,12 +144,88 @@ export function createContentRoute(runtime: MomoRuntime) {
       const result = await service.getPreviewPost(c.req.param('token'))
       return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
     })
-    .get('/rpc/content/public/posts', async (c) => {
-      const posts = await service.listPublicPosts()
-      return c.json(createSuccessResponse({ posts }, createMeta(c.var.requestId)))
+    .get('/rpc/content/categories', createRequirePermission(runtime, 'content.category.read'), async (c) => {
+      const categories = await taxonomyService.listCategories()
+      return c.json(createSuccessResponse({ categories }, createMeta(c.var.requestId)))
     })
-    .get('/rpc/content/public/posts/:slug', async (c) => {
-      const post = await service.getPublicPostBySlug(c.req.param('slug'))
-      return c.json(createSuccessResponse({ post }, createMeta(c.var.requestId)))
+    .post(
+      '/rpc/content/categories',
+      createRequirePermission(runtime, 'content.category.create'),
+      zValidator('json', CreateCategoryRequestSchema, (result) => {
+        if (result.success) {
+          return
+        }
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) => {
+        const category = await taxonomyService.createCategory(c.req.valid('json'), c.var.user!.id)
+        return c.json(createSuccessResponse({ category }, createMeta(c.var.requestId)), 201)
+      },
+    )
+    .get('/rpc/content/categories/:id', createRequirePermission(runtime, 'content.category.read'), async (c) => {
+      const category = await taxonomyService.getCategoryById(c.req.param('id'))
+      return c.json(createSuccessResponse({ category }, createMeta(c.var.requestId)))
+    })
+    .patch(
+      '/rpc/content/categories/:id',
+      createRequirePermission(runtime, 'content.category.edit'),
+      zValidator('json', UpdateCategoryRequestSchema, (result) => {
+        if (result.success) {
+          return
+        }
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) => {
+        const category = await taxonomyService.updateCategory(c.req.param('id'), c.req.valid('json'))
+        return c.json(createSuccessResponse({ category }, createMeta(c.var.requestId)))
+      },
+    )
+    .delete('/rpc/content/categories/:id', createRequirePermission(runtime, 'content.category.delete'), async (c) => {
+      const result = await taxonomyService.deleteCategory(c.req.param('id'))
+      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
+    })
+    .get('/rpc/content/tags', createRequirePermission(runtime, 'content.tag.read'), async (c) => {
+      const tags = await taxonomyService.listTags()
+      return c.json(createSuccessResponse({ tags }, createMeta(c.var.requestId)))
+    })
+    .post(
+      '/rpc/content/tags',
+      createRequirePermission(runtime, 'content.tag.create'),
+      zValidator('json', CreateTagRequestSchema, (result) => {
+        if (result.success) {
+          return
+        }
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) => {
+        const tag = await taxonomyService.createTag(c.req.valid('json'), c.var.user!.id)
+        return c.json(createSuccessResponse({ tag }, createMeta(c.var.requestId)), 201)
+      },
+    )
+    .get('/rpc/content/tags/:id', createRequirePermission(runtime, 'content.tag.read'), async (c) => {
+      const tag = await taxonomyService.getTagById(c.req.param('id'))
+      return c.json(createSuccessResponse({ tag }, createMeta(c.var.requestId)))
+    })
+    .patch(
+      '/rpc/content/tags/:id',
+      createRequirePermission(runtime, 'content.tag.edit'),
+      zValidator('json', UpdateTagRequestSchema, (result) => {
+        if (result.success) {
+          return
+        }
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) => {
+        const tag = await taxonomyService.updateTag(c.req.param('id'), c.req.valid('json'))
+        return c.json(createSuccessResponse({ tag }, createMeta(c.var.requestId)))
+      },
+    )
+    .delete('/rpc/content/tags/:id', createRequirePermission(runtime, 'content.tag.delete'), async (c) => {
+      const result = await taxonomyService.deleteTag(c.req.param('id'))
+      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
     })
 }

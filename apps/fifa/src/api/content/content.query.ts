@@ -1,18 +1,35 @@
-import type { AssetListQuery, CreatePostRequest, SavePostDraftRequest, UpdateAssetRequest } from '@xdd-zone/contracts'
+import type {
+  AssetListQuery,
+  CreateCategoryRequest,
+  CreatePostRequest,
+  CreateTagRequest,
+  SavePostDraftRequest,
+  UpdateAssetRequest,
+  UpdateCategoryRequest,
+  UpdateTagRequest,
+} from '@xdd-zone/contracts'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
+  createContentCategory,
   createContentPost,
+  createContentTag,
   createContentPreviewToken,
   deleteContentAsset,
+  deleteContentCategory,
+  deleteContentTag,
   getContentAsset,
   getContentPost,
   listContentAssets,
+  listContentCategories,
   listContentPosts,
+  listContentTags,
   listMdxComponents,
   publishContentPost,
   saveContentPostDraft,
   updateContentAsset,
+  updateContentCategory,
+  updateContentTag,
   uploadContentImage,
 } from './posts.api'
 
@@ -20,15 +37,31 @@ export const contentQueryKeys = {
   all: ['content'] as const,
   asset: (id: string) => [...contentQueryKeys.assets(), id] as const,
   assets: () => [...contentQueryKeys.all, 'assets'] as const,
+  categories: () => [...contentQueryKeys.all, 'categories'] as const,
   mdxComponents: () => [...contentQueryKeys.all, 'mdx-components'] as const,
   post: (id: string) => [...contentQueryKeys.posts(), id] as const,
   posts: () => [...contentQueryKeys.all, 'posts'] as const,
+  tags: () => [...contentQueryKeys.all, 'tags'] as const,
 }
 
 export function useContentPostsQuery() {
   return useQuery({
     queryKey: contentQueryKeys.posts(),
     queryFn: listContentPosts,
+  })
+}
+
+export function useContentCategoriesQuery() {
+  return useQuery({
+    queryKey: contentQueryKeys.categories(),
+    queryFn: listContentCategories,
+  })
+}
+
+export function useContentTagsQuery() {
+  return useQuery({
+    queryKey: contentQueryKeys.tags(),
+    queryFn: listContentTags,
   })
 }
 
@@ -78,6 +111,77 @@ export function useCreateContentPostMutation() {
           queryKey: contentQueryKeys.post(response.data.post.id),
         })
       }
+    },
+  })
+}
+
+export function useCreateContentCategoryMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: CreateCategoryRequest) => createContentCategory(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: contentQueryKeys.categories() })
+    },
+  })
+}
+
+export function useUpdateContentCategoryMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: { id: string; payload: UpdateCategoryRequest }) =>
+      updateContentCategory(input.id, input.payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: contentQueryKeys.categories() })
+      await queryClient.invalidateQueries({ queryKey: contentQueryKeys.posts() })
+    },
+  })
+}
+
+export function useDeleteContentCategoryMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => deleteContentCategory(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: contentQueryKeys.categories() })
+      await queryClient.invalidateQueries({ queryKey: contentQueryKeys.posts() })
+    },
+  })
+}
+
+export function useCreateContentTagMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: CreateTagRequest) => createContentTag(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: contentQueryKeys.tags() })
+    },
+  })
+}
+
+export function useUpdateContentTagMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: { id: string; payload: UpdateTagRequest }) => updateContentTag(input.id, input.payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: contentQueryKeys.tags() })
+      await queryClient.invalidateQueries({ queryKey: contentQueryKeys.posts() })
+    },
+  })
+}
+
+export function useDeleteContentTagMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => deleteContentTag(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: contentQueryKeys.tags() })
+      await queryClient.invalidateQueries({ queryKey: contentQueryKeys.posts() })
     },
   })
 }

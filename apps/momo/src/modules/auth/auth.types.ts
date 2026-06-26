@@ -10,6 +10,14 @@ export const CONTENT_PERMISSION_CODES = [
   'content.asset.edit',
   'content.asset.delete',
   'content.preview.generate',
+  'content.category.read',
+  'content.category.create',
+  'content.category.edit',
+  'content.category.delete',
+  'content.tag.read',
+  'content.tag.create',
+  'content.tag.edit',
+  'content.tag.delete',
 ] as const
 
 export type ContentPermissionCode = (typeof CONTENT_PERMISSION_CODES)[number]

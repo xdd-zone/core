@@ -16,7 +16,7 @@
 - 点击 Ping 按钮时会请求 Momo 的 `POST /rpc/system/ping`。
 - 登录页会请求 Momo 的 `POST /api/auth/sign-in/email`。
 - 登录成功后会请求 Momo 的 `GET /rpc/fifa/auth/me`。
-- 内容模块会请求 Momo 的文章管理、预览 token、MDX 组件和图片上传接口。
+- 内容模块会请求 Momo 的文章、素材、分类和标签接口。
 
 还没接入权限页面。
 
@@ -71,6 +71,8 @@ src/
 - `/`
 - `/content/posts`
 - `/content/posts/$postId`
+- `/content/assets`
+- `/content/taxonomy`
 - `/env-example`
 - `/ui-showcase`
 - `/markdown-example`

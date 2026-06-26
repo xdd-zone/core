@@ -4,7 +4,6 @@ import type {
   ImageAssetResponse,
   MdxComponentsResponse,
   PostDetailResponse,
-  PostListResponse,
   PreviewPostResponse,
   PreviewTokenResponse,
 } from '@xdd-zone/contracts'
@@ -17,9 +16,12 @@ import {
   ImageAssetResponseSchema,
   MdxComponentsResponseSchema,
   PostDetailResponseSchema,
-  PostListResponseSchema,
   PreviewPostResponseSchema,
   PreviewTokenResponseSchema,
+  PublicCategoryListResponseSchema,
+  PublicPostListResponseSchema,
+  PublicPostResponseSchema,
+  PublicTagListResponseSchema,
 } from '@xdd-zone/contracts'
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
@@ -144,21 +146,80 @@ describe('content 路由', () => {
     PostDetailResponseSchema.parse(publishData)
     expect(publishData.post.status).toBe('published')
 
-    const publicListResponse = await momoApp.request('/rpc/content/public/posts')
-    const publicListBody = (await publicListResponse.json()) as ApiResponse<PostListResponse>
+    const publicListResponse = await momoApp.request('/rpc/bobo/content/posts')
+    const publicListBody = (await publicListResponse.json()) as ApiResponse<unknown>
 
     expect(publicListResponse.status).toBe(200)
     const publicListData = expectOkData(publicListBody)
-    PostListResponseSchema.parse(publicListData)
-    expect(publicListData.posts).toHaveLength(1)
+    const parsedPublicList = PublicPostListResponseSchema.parse(publicListData)
+    expect(parsedPublicList.posts).toHaveLength(1)
+    expect(parsedPublicList.posts[0]).not.toHaveProperty('status')
 
-    const publicResponse = await momoApp.request('/rpc/content/public/posts/hello-content')
-    const publicBody = (await publicResponse.json()) as ApiResponse<PostDetailResponse>
+    const publicResponse = await momoApp.request('/rpc/bobo/content/posts/hello-content')
+    const publicBody = (await publicResponse.json()) as ApiResponse<unknown>
 
     expect(publicResponse.status).toBe(200)
     const publicData = expectOkData(publicBody)
-    PostDetailResponseSchema.parse(publicData)
-    expect(publicData.post.source).toBe('# Hello draft')
+    const parsedPublicData = PublicPostResponseSchema.parse(publicData)
+    expect(parsedPublicData.post.source).toBe('# Hello draft')
+    expect(parsedPublicData.post).not.toHaveProperty('draftRevisionId')
+    expect(parsedPublicData.post).not.toHaveProperty('publishedRevisionId')
+  })
+
+  it('个人站公开接口可以读取文章、分类和标签', async () => {
+    const categoryResponse = await momoApp.request('/rpc/content/categories', {
+      body: JSON.stringify({
+        description: '分类说明',
+        name: '随笔',
+        slug: 'notes',
+      }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'POST',
+    })
+    const category = expectOkData((await categoryResponse.json()) as ApiResponse<{ category: { id: string } }>).category
+
+    const tagResponse = await momoApp.request('/rpc/content/tags', {
+      body: JSON.stringify({
+        name: 'TypeScript',
+        slug: 'typescript',
+      }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'POST',
+    })
+    const tag = expectOkData((await tagResponse.json()) as ApiResponse<{ tag: { id: string } }>).tag
+
+    const created = await createPost({
+      categoryId: category.id,
+      slug: 'public-filtered-post',
+      source: '# Public filtered post',
+      tagIds: [tag.id],
+      title: 'Public Filtered Post',
+    })
+    const postId = expectOkData(created.body).post.id
+
+    const publishResponse = await momoApp.request(`/rpc/content/posts/${postId}/publish`, {
+      headers: { cookie: ownerCookie },
+      method: 'POST',
+    })
+    expect(publishResponse.status).toBe(200)
+
+    const listResponse = await momoApp.request('/rpc/bobo/content/posts?categorySlug=notes&tagSlug=typescript')
+    const listData = expectOkData((await listResponse.json()) as ApiResponse<unknown>)
+    const parsedList = PublicPostListResponseSchema.parse(listData)
+
+    expect(parsedList.posts.map((post) => post.slug)).toEqual(['public-filtered-post'])
+    expect(parsedList.posts[0].category?.slug).toBe('notes')
+    expect(parsedList.posts[0].tags.map((item) => item.slug)).toEqual(['typescript'])
+
+    const categoriesResponse = await momoApp.request('/rpc/bobo/content/categories')
+    const categoriesData = expectOkData((await categoriesResponse.json()) as ApiResponse<unknown>)
+    const categories = PublicCategoryListResponseSchema.parse(categoriesData)
+    expect(categories.categories.some((item) => item.slug === 'notes')).toBe(true)
+
+    const tagsResponse = await momoApp.request('/rpc/bobo/content/tags')
+    const tagsData = expectOkData((await tagsResponse.json()) as ApiResponse<unknown>)
+    const tags = PublicTagListResponseSchema.parse(tagsData)
+    expect(tags.tags.some((item) => item.slug === 'typescript')).toBe(true)
   })
 
   it('保存草稿时 null 会清空可空字段', async () => {

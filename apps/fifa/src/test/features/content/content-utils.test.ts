@@ -7,6 +7,12 @@ import { ignoreAntdUploadRequest } from '@fifa/features/content/utils/upload'
 
 const posts: PostSummary[] = [
   {
+    category: {
+      description: null,
+      id: 'category-1',
+      name: 'Notes',
+      slug: 'notes',
+    },
     coverAssetId: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     excerpt: null,
@@ -14,10 +20,12 @@ const posts: PostSummary[] = [
     publishedAt: null,
     slug: 'hello-world',
     status: 'draft',
+    tags: [],
     title: 'Hello World',
     updatedAt: '2026-01-01T00:00:00.000Z',
   },
   {
+    category: null,
     coverAssetId: null,
     createdAt: '2026-01-02T00:00:00.000Z',
     excerpt: null,
@@ -25,6 +33,13 @@ const posts: PostSummary[] = [
     publishedAt: '2026-01-03T00:00:00.000Z',
     slug: 'theme-preview',
     status: 'published',
+    tags: [
+      {
+        id: 'tag-1',
+        name: 'Theme',
+        slug: 'theme',
+      },
+    ],
     title: 'Theme Preview',
     updatedAt: '2026-01-03T00:00:00.000Z',
   },

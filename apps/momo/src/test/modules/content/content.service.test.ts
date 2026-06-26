@@ -1,14 +1,15 @@
 import type { MomoRuntime } from '#momo/bootstrap'
-import type { ContentRepository } from '#momo/modules/content/content.repository'
+import type { ContentRepository } from '#momo/modules/content/repositories/content.repository'
+import type { TaxonomyRepository } from '#momo/modules/content/repositories/taxonomy.repository'
 import type {
   ContentAssetReferenceRecord,
   ContentPostRecord,
   ContentPreviewTokenRecord,
-} from '#momo/modules/content/content.types'
+} from '#momo/modules/content/types/content.types'
 import type { AppError } from '#momo/shared/app-error'
 import { BizCode } from '@xdd-zone/contracts'
 import { describe, expect, it, vi } from 'vitest'
-import { createContentService } from '#momo/modules/content/content.service'
+import { createContentService } from '#momo/modules/content/services/content.service'
 
 describe('content service', () => {
   it('预览 token 指向丢失的版本时返回系统错误', async () => {
@@ -17,7 +18,7 @@ describe('content service', () => {
       getPreviewToken: vi.fn(async () => createPreviewTokenRecord()),
       getRevisionById: vi.fn(async () => undefined),
     })
-    const service = createContentService(createRuntime(), repository)
+    const service = createContentService(createRuntime(), repository, createTaxonomyRepository())
 
     await expect(service.getPreviewPost('preview-token')).rejects.toMatchObject({
       code: BizCode.SYSTEM_INTERNAL_ERROR,
@@ -32,7 +33,7 @@ describe('content service', () => {
       findAssetReferences: vi.fn(async () => [createAssetReferenceRecord()]),
       getAssetById: vi.fn(async () => createAssetRecord()),
     })
-    const service = createContentService(createRuntime(), repository)
+    const service = createContentService(createRuntime(), repository, createTaxonomyRepository())
 
     await expect(service.deleteAsset('asset-id')).rejects.toMatchObject({
       code: BizCode.BIZ_RULE_VIOLATION,
@@ -52,6 +53,7 @@ function createRepository(overrides: Partial<ContentRepository> = {}): ContentRe
     findAssetReferences: vi.fn(),
     findPostBySlug: vi.fn(),
     getAssetById: vi.fn(),
+    getCategoriesByPostIds: vi.fn(),
     getPostById: vi.fn(),
     getPostBySlug: vi.fn(),
     getPreviewToken: vi.fn(),
@@ -67,6 +69,33 @@ function createRepository(overrides: Partial<ContentRepository> = {}): ContentRe
   } as ContentRepository
 }
 
+function createTaxonomyRepository(overrides: Partial<TaxonomyRepository> = {}): TaxonomyRepository {
+  return {
+    countPostsByCategory: vi.fn(),
+    countPostsByTag: vi.fn(),
+    createCategory: vi.fn(),
+    createTag: vi.fn(),
+    deleteCategory: vi.fn(),
+    deleteTag: vi.fn(),
+    findCategoryBySlug: vi.fn(),
+    findTagBySlug: vi.fn(),
+    getCategoryById: vi.fn(),
+    getCategoryBySlug: vi.fn(),
+    getPostTags: vi.fn(async () => []),
+    getPostTagsByPostIds: vi.fn(),
+    getTagById: vi.fn(),
+    getTagBySlug: vi.fn(),
+    listCategories: vi.fn(),
+    listCategoriesWithCount: vi.fn(),
+    listTags: vi.fn(),
+    listTagsWithCount: vi.fn(),
+    setPostTags: vi.fn(),
+    updateCategory: vi.fn(),
+    updateTag: vi.fn(),
+    ...overrides,
+  } as TaxonomyRepository
+}
+
 function createRuntime(): MomoRuntime {
   return {
     storage: {
@@ -80,6 +109,7 @@ function createPostRecord(): ContentPostRecord {
   const now = new Date()
 
   return {
+    categoryId: null,
     coverAssetId: null,
     createdAt: now,
     createdBy: 'user-id',

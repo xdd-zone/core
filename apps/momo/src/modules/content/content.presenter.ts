@@ -1,11 +1,22 @@
-import type { ImageAsset, PostDetail, PostRevision, PostSummary, PreviewTokenResponse } from '@xdd-zone/contracts'
-import type { ContentAssetRecord, ContentPostRecord, ContentRevisionRecord } from './content.types'
+import type {
+  CategorySummary,
+  ImageAsset,
+  PostDetail,
+  PostRevision,
+  PostSummary,
+  PreviewTokenResponse,
+  TagSummary,
+} from '@xdd-zone/contracts'
+import type { ContentAssetRecord, ContentPostRecord, ContentRevisionRecord } from './types/content.types'
+import type { ContentCategoryRecord, ContentTagRecord } from './types/taxonomy.types'
 import {
+  CategorySummarySchema,
   ImageAssetSchema,
   PostDetailSchema,
   PostRevisionSchema,
   PostSummarySchema,
   PreviewTokenResponseSchema,
+  TagSummarySchema,
 } from '@xdd-zone/contracts'
 
 export type PostSummarySource = Pick<
@@ -40,8 +51,13 @@ export interface PreviewTokenSource {
   token: string
 }
 
-export function toPostSummary(post: PostSummarySource): PostSummary {
+export function toPostSummary(
+  post: PostSummarySource,
+  category: ContentCategoryRecord | null,
+  tags: ContentTagRecord[],
+): PostSummary {
   const summary = {
+    category: category ? toCategorySummary(category) : null,
     coverAssetId: post.coverAssetId,
     createdAt: toIsoString(post.createdAt),
     excerpt: post.excerpt,
@@ -49,6 +65,7 @@ export function toPostSummary(post: PostSummarySource): PostSummary {
     publishedAt: toNullableIsoString(post.publishedAt),
     slug: post.slug,
     status: post.status,
+    tags: tags.map((tag) => toTagSummary(tag)),
     title: post.title,
     updatedAt: toIsoString(post.updatedAt),
   } satisfies PostSummary
@@ -56,9 +73,14 @@ export function toPostSummary(post: PostSummarySource): PostSummary {
   return PostSummarySchema.parse(summary)
 }
 
-export function toPostDetail(post: PostDetailSource, source: string): PostDetail {
+export function toPostDetail(
+  post: PostDetailSource,
+  source: string,
+  category: ContentCategoryRecord | null,
+  tags: ContentTagRecord[],
+): PostDetail {
   const detail = {
-    ...toPostSummary(post),
+    ...toPostSummary(post, category, tags),
     draftRevisionId: post.draftRevisionId,
     publishedRevisionId: post.publishedRevisionId,
     source,
@@ -114,4 +136,25 @@ function toIsoString(date: Date): string {
 
 function toNullableIsoString(date: Date | null): string | null {
   return date?.toISOString() ?? null
+}
+
+function toCategorySummary(category: ContentCategoryRecord): CategorySummary {
+  const summary = {
+    description: category.description,
+    id: category.id,
+    name: category.name,
+    slug: category.slug,
+  } satisfies CategorySummary
+
+  return CategorySummarySchema.parse(summary)
+}
+
+function toTagSummary(tag: ContentTagRecord): TagSummary {
+  const summary = {
+    id: tag.id,
+    name: tag.name,
+    slug: tag.slug,
+  } satisfies TagSummary
+
+  return TagSummarySchema.parse(summary)
 }

@@ -11,9 +11,9 @@
 - 基础布局、侧边菜单、顶部栏、标签栏和设置抽屉。
 - Catppuccin 主题。
 - 登录页、首页、404 页面和几个示例页。
-- 内容模块，当前提供文章列表、创建和编辑页。
+- 内容模块，当前提供文章列表、创建、编辑、媒体库、分类和标签管理页。
 
-当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章管理接口。
+当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。
 
 ## 开始改 UI 前先看
 
@@ -59,6 +59,8 @@ apps/fifa/src/
 - `/`
 - `/content/posts`
 - `/content/posts/$postId`
+- `/content/assets`
+- `/content/taxonomy`
 - `/env-example`
 - `/ui-showcase`
 - `/markdown-example`
@@ -188,6 +190,16 @@ GET /rpc/content/assets/:id
 GET /rpc/content/assets/:id/file
 PATCH /rpc/content/assets/:id
 DELETE /rpc/content/assets/:id
+GET /rpc/content/categories
+POST /rpc/content/categories
+GET /rpc/content/categories/:id
+PATCH /rpc/content/categories/:id
+DELETE /rpc/content/categories/:id
+GET /rpc/content/tags
+POST /rpc/content/tags
+GET /rpc/content/tags/:id
+PATCH /rpc/content/tags/:id
+DELETE /rpc/content/tags/:id
 ```
 
 当前写法：
@@ -200,7 +212,7 @@ DELETE /rpc/content/assets/:id
   用 `useSystemHealthQuery()`，页面打开后自动请求，也可以点刷新按钮重新请求。
 - `POST /rpc/system/ping`
   用 `usePingSystemMutation()`，只在点击 Ping 按钮时发送。
-- content 文章接口
+- content 文章、素材、分类和标签接口
   页面通过 `apps/fifa/src/api/content/content.query.ts` 里的 hooks 调用。
 
 新增 Fifa 请求时按这个顺序写：

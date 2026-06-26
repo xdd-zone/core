@@ -43,7 +43,7 @@ apps/momo/src/
 - `bootstrap`
   创建 runtime，组装 Hono app，注册全局中间件、错误处理和路由。
 - `modules`
-  业务模块。当前有 `system`、`auth` 和 `content`。模块先按当前需要放 route、service、repository 和内部类型，文件变多后再迁到目录里。
+  业务模块。当前有 `system`、`auth` 和 `content`。文件较少的模块可以先平铺；文件变多后，把 service、repository 和内部类型分别放到 `services`、`repositories` 和 `types` 目录。
 - `middleware`
   request context、请求日志、CORS 这类通用 middleware。
 - `infra`
@@ -85,11 +85,22 @@ apps/momo/src/
 │   │       ├── auth.service.ts
 │   │       └── index.ts
 │   ├── content/
-│   │   ├── content.repository.ts
 │   │   ├── content.route.ts
-│   │   ├── content.service.ts
-│   │   ├── content.types.ts
-│   │   └── mdx-components.ts
+│   │   ├── content.presenter.ts
+│   │   ├── index.ts
+│   │   ├── mdx-components.ts
+│   │   ├── public-content.presenter.ts
+│   │   ├── public-content.route.ts
+│   │   ├── repositories/
+│   │   │   ├── content.repository.ts
+│   │   │   └── taxonomy.repository.ts
+│   │   ├── services/
+│   │   │   ├── content.service.ts
+│   │   │   ├── public-content.service.ts
+│   │   │   └── taxonomy.service.ts
+│   │   └── types/
+│   │       ├── content.types.ts
+│   │       └── taxonomy.types.ts
 ├── middleware/
 │   ├── index.ts
 │   ├── body-limit.middleware.ts
@@ -594,7 +605,7 @@ packages/contracts/src/content/content.contract.ts
 
 后台接口使用 `createRequirePermission()`。当前 `content.*` 权限都要求当前用户是 `fifa.owner`。素材管理新增 `content.asset.read`、`content.asset.edit` 和 `content.asset.delete`。
 
-公开文章接口不检查登录态，只返回已发布文章。预览接口只检查 token，不检查 Fifa 登录态。`GET /rpc/content/assets/:id/file` 也不检查后台登录态，给文章正文和本地预览读取素材文件用。
+个人站公开接口不检查登录态，只返回已发布文章。预览接口只检查 token，不检查 Fifa 登录态。`GET /rpc/content/assets/:id/file` 也不检查后台登录态，给文章正文和本地预览读取素材文件用。
 
 当前接口：
 
@@ -612,8 +623,10 @@ packages/contracts/src/content/content.contract.ts
 - `GET /rpc/content/mdx-components`
 - `POST /rpc/content/assets/images`
 - `GET /rpc/content/previews/:token`
-- `GET /rpc/content/public/posts`
-- `GET /rpc/content/public/posts/:slug`
+- `GET /rpc/bobo/content/posts`
+- `GET /rpc/bobo/content/posts/:slug`
+- `GET /rpc/bobo/content/categories`
+- `GET /rpc/bobo/content/tags`
 
 内容表放在：
 
@@ -647,6 +660,8 @@ content.contract.ts
   -> content.presenter.ts
   -> content.route.ts
 ```
+
+个人站公开内容从 `public-content.route.ts` 进入，调用 `public-content.service.ts` 和 `public-content.presenter.ts`。公开响应类型用 `PublicPostSummary`、`PublicPostDetail`、`PublicCategory` 和 `PublicTag`，不要把后台 revision 字段返回给个人站。
 
 关键规则：
 

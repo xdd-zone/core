@@ -2,15 +2,25 @@ import type {
   AssetDetailResponse,
   AssetListQuery,
   AssetListResponse,
+  CategoryListResponse,
+  CategoryResponse,
+  CreateCategoryRequest,
   CreatePostRequest,
+  CreateTagRequest,
   DeleteAssetResponse,
+  DeleteCategoryResponse,
+  DeleteTagResponse,
   ImageAssetResponse,
   MdxComponentsResponse,
   PostDetailResponse,
   PostListResponse,
   PreviewTokenResponse,
   SavePostDraftRequest,
+  TagListResponse,
+  TagResponse,
   UpdateAssetRequest,
+  UpdateCategoryRequest,
+  UpdateTagRequest,
 } from '@xdd-zone/contracts'
 
 import { momoClient } from '../client'
@@ -18,6 +28,72 @@ import { readMomoJson } from '../rpc'
 
 export function listContentPosts() {
   return readMomoJson<PostListResponse>(momoClient.rpc.content.posts.$get())
+}
+
+export function listContentCategories() {
+  return readMomoJson<CategoryListResponse>(momoClient.rpc.content.categories.$get())
+}
+
+export function createContentCategory(payload: CreateCategoryRequest) {
+  return readMomoJson<CategoryResponse>(
+    momoClient.rpc.content.categories.$post({
+      json: payload,
+    }),
+  )
+}
+
+export function updateContentCategory(id: string, payload: UpdateCategoryRequest) {
+  return readMomoJson<CategoryResponse>(
+    momoClient.rpc.content.categories[':id'].$patch({
+      json: payload,
+      param: {
+        id,
+      },
+    }),
+  )
+}
+
+export function deleteContentCategory(id: string) {
+  return readMomoJson<DeleteCategoryResponse>(
+    momoClient.rpc.content.categories[':id'].$delete({
+      param: {
+        id,
+      },
+    }),
+  )
+}
+
+export function listContentTags() {
+  return readMomoJson<TagListResponse>(momoClient.rpc.content.tags.$get())
+}
+
+export function createContentTag(payload: CreateTagRequest) {
+  return readMomoJson<TagResponse>(
+    momoClient.rpc.content.tags.$post({
+      json: payload,
+    }),
+  )
+}
+
+export function updateContentTag(id: string, payload: UpdateTagRequest) {
+  return readMomoJson<TagResponse>(
+    momoClient.rpc.content.tags[':id'].$patch({
+      json: payload,
+      param: {
+        id,
+      },
+    }),
+  )
+}
+
+export function deleteContentTag(id: string) {
+  return readMomoJson<DeleteTagResponse>(
+    momoClient.rpc.content.tags[':id'].$delete({
+      param: {
+        id,
+      },
+    }),
+  )
 }
 
 export function listContentAssets(query: AssetListQuery) {

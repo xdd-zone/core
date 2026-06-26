@@ -23,23 +23,27 @@ export interface ContentAssetReferenceRecord {
 }
 
 export interface CreateContentPostInput {
+  categoryId?: string | null
   coverAssetId?: string | null
   excerpt?: string | null
   id: string
   revisionId: string
   slug: string
   source: string
+  tagIds?: string[]
   title: string
   userId: string
 }
 
 export interface SaveContentDraftInput {
+  categoryId?: string | null
   coverAssetId?: string | null
   excerpt?: string | null
   id: string
   revisionId: string
   slug?: string
   source: string
+  tagIds?: string[]
   title?: string
   userId: string
 }
@@ -86,4 +90,11 @@ export interface UpdateContentAssetInput {
   alt: string | null
   id: string
   updatedAt: Date
+}
+
+export interface ListPublicPostsInput {
+  categorySlug?: string
+  limit?: number
+  offset?: number
+  tagSlug?: string
 }

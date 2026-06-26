@@ -1,11 +1,13 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { cn } from '@/lib/utils'
 
 import { makePlaceholder } from '../../_lib/placeholder'
+import { SITE_NAV_ITEMS } from '../site/site-nav-items'
 
 const HERO_ROLES = ['独立开发者', 'TS 全栈开发者', '工具作者', '内容记录者']
 const EXPLORATION_CARDS = [
@@ -68,7 +70,6 @@ export function HeroContent() {
 
 export function LandingNavbar() {
   const pillRef = useRef<HTMLDivElement>(null)
-  const [active, setActive] = useState('home')
 
   useEffect(() => {
     let ticking = false
@@ -89,31 +90,20 @@ export function LandingNavbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const navItems = [
-    { id: 'home', label: '首页' },
-    { id: 'work', label: '作品' },
-    { id: 'journal', label: '文章' },
-  ]
-
   return (
-    <nav className="landing-navbar">
-      <div className="landing-nav-pill" ref={pillRef}>
-        <a className="landing-logo" href="#home" aria-label="回到首页">
+    <nav className="site-navbar">
+      <div className="site-nav-pill" ref={pillRef}>
+        <Link className="site-logo" href="/" aria-label="回到首页">
           <span>XD</span>
-        </a>
-        <span className="landing-nav-divider" />
-        {navItems.map((item) => (
-          <a
-            key={item.id}
-            className={cn('landing-nav-link', active === item.id && 'active')}
-            href={`#${item.id}`}
-            onClick={() => setActive(item.id)}
-          >
+        </Link>
+        <span className="site-nav-divider" />
+        {SITE_NAV_ITEMS.map((item) => (
+          <Link key={item.href} className={cn('site-nav-link', item.href === '/' && 'active')} href={item.href}>
             {item.label}
-          </a>
+          </Link>
         ))}
-        <span className="landing-nav-divider" />
-        <a className="landing-say-hi" href="#contact" onClick={() => setActive('contact')}>
+        <span className="site-nav-divider" />
+        <a className="site-say-hi" href="mailto:hi@xidongdong.dev">
           <span className="ring" />
           <span className="inner">联系 ↗</span>
         </a>
@@ -122,13 +112,7 @@ export function LandingNavbar() {
   )
 }
 
-export function RevealOnScroll({
-  children,
-  className,
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
+export function RevealOnScroll({ children, className }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

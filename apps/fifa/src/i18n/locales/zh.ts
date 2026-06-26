@@ -214,6 +214,7 @@ export default {
     postEdit: '编辑文章',
     posts: '文章',
     assets: '媒体库',
+    taxonomy: '分类与标签',
     uiShowcase: '组件与主题',
   },
   setting: {

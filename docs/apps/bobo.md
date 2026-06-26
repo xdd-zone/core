@@ -25,8 +25,12 @@
   管全局布局、字体、metadata 和主题初始化脚本。
 - `apps/bobo/app/(site)/page.tsx`
   首页。
+- `apps/bobo/app/(site)/writing/page.tsx`
+  文稿列表页，读取 `MOMO_BASE_URL` 指向的 Momo 公开文章接口。
+- `apps/bobo/app/(site)/writing/[slug]/page.tsx`
+  文稿详情页，按 slug 读取已发布文章。
 - `apps/bobo/app/(site)/layout.tsx`
-  只给公开站点分区引入首页样式，不改 URL。
+  给公开站点分区引入站点公共样式、首页样式和文稿样式，不改 URL。
 - `apps/bobo/app/(preview)/preview/posts/[postId]/page.tsx`
   文章预览页，读取 `MOMO_BASE_URL` 指向的 Momo 预览接口。
 - `apps/bobo/app/(lab)/lab`
@@ -103,6 +107,7 @@ code-server 的配置放在 `apps/bobo/.env.code-server`，启动命令和访问
 ## 页面规则
 
 - 公开站点页面放在 `apps/bobo/app/(site)/<route>/page.tsx`。
+- 文稿详情页放在 `apps/bobo/app/(site)/writing/[slug]/page.tsx`。
 - 临时演示内容放到 `apps/bobo/app/(lab)/lab`，不要放在首页。
 - 页面 metadata 优先写在对应 `page.tsx` 或 `layout.tsx`。
 - 全局 metadata 放在 `apps/bobo/app/layout.tsx`。

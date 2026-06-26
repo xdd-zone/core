@@ -1,6 +1,6 @@
 import { POST_STATUS_VALUES } from '@xdd-zone/contracts'
 import { relations } from 'drizzle-orm'
-import { index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { index, integer, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { user } from './auth.schema'
 
@@ -29,6 +29,46 @@ export const contentAssets = pgTable('content_assets', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+export const contentCategories = pgTable(
+  'content_categories',
+  {
+    /** 分类主键。 */
+    id: text('id').primaryKey(),
+    /** URL 使用的分类标识，全局唯一。 */
+    slug: text('slug').notNull(),
+    /** 分类名称。 */
+    name: text('name').notNull(),
+    /** 分类说明。 */
+    description: text('description'),
+    /** 创建人 id。 */
+    createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
+    /** 创建时间。 */
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    /** 更新时间。 */
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex('content_categories_slug_unique').on(table.slug)],
+)
+
+export const contentTags = pgTable(
+  'content_tags',
+  {
+    /** 标签主键。 */
+    id: text('id').primaryKey(),
+    /** URL 使用的标签标识，全局唯一。 */
+    slug: text('slug').notNull(),
+    /** 标签名称。 */
+    name: text('name').notNull(),
+    /** 创建人 id。 */
+    createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
+    /** 创建时间。 */
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    /** 更新时间。 */
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex('content_tags_slug_unique').on(table.slug)],
+)
+
 export const contentPosts = pgTable(
   'content_posts',
   {
@@ -42,6 +82,8 @@ export const contentPosts = pgTable(
     excerpt: text('excerpt'),
     /** 文章状态，draft、published 或 archived。 */
     status: contentPostStatusEnum('status').notNull().default('draft'),
+    /** 所属分类 id，删除分类时置空。 */
+    categoryId: text('category_id').references(() => contentCategories.id, { onDelete: 'set null' }),
     /** 封面素材 id。 */
     coverAssetId: text('cover_asset_id').references(() => contentAssets.id, { onDelete: 'set null' }),
     /** 当前草稿版本 id。 */
@@ -64,6 +106,27 @@ export const contentPosts = pgTable(
   (table) => [
     uniqueIndex('content_posts_slug_unique').on(table.slug),
     index('content_posts_status_idx').on(table.status),
+    index('content_posts_category_idx').on(table.categoryId),
+  ],
+)
+
+export const contentPostTags = pgTable(
+  'content_post_tags',
+  {
+    /** 所属文章 id。 */
+    postId: text('post_id')
+      .notNull()
+      .references(() => contentPosts.id, { onDelete: 'cascade' }),
+    /** 关联标签 id。 */
+    tagId: text('tag_id')
+      .notNull()
+      .references(() => contentTags.id, { onDelete: 'cascade' }),
+    /** 创建时间。 */
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.postId, table.tagId] }),
+    index('content_post_tags_tag_idx').on(table.tagId),
   ],
 )
 
@@ -126,12 +189,36 @@ export const contentPreviewTokens = pgTable(
   ],
 )
 
+export const contentCategoriesRelations = relations(contentCategories, ({ many }) => ({
+  posts: many(contentPosts),
+}))
+
+export const contentTagsRelations = relations(contentTags, ({ many }) => ({
+  postTags: many(contentPostTags),
+}))
+
 export const contentPostsRelations = relations(contentPosts, ({ one, many }) => ({
+  category: one(contentCategories, {
+    fields: [contentPosts.categoryId],
+    references: [contentCategories.id],
+  }),
   coverAsset: one(contentAssets, {
     fields: [contentPosts.coverAssetId],
     references: [contentAssets.id],
   }),
+  postTags: many(contentPostTags),
   revisions: many(contentPostRevisions),
+}))
+
+export const contentPostTagsRelations = relations(contentPostTags, ({ one }) => ({
+  post: one(contentPosts, {
+    fields: [contentPostTags.postId],
+    references: [contentPosts.id],
+  }),
+  tag: one(contentTags, {
+    fields: [contentPostTags.tagId],
+    references: [contentTags.id],
+  }),
 }))
 
 export const contentPostRevisionsRelations = relations(contentPostRevisions, ({ one }) => ({
