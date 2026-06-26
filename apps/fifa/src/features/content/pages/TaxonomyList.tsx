@@ -19,7 +19,7 @@ import {
   useUpdateContentTagMutation,
 } from '@fifa/api/content'
 import { FifaPageHeader } from '@fifa/components/common'
-import { App, Button, Form, Input, Modal, Table, Tag as AntTag } from 'antd'
+import { Tag as AntTag, App, Button, Form, Input, Modal, Table } from 'antd'
 import { FilePlus2, Pencil, RefreshCw, Search, Trash2 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 

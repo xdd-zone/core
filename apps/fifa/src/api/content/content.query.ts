@@ -13,8 +13,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createContentCategory,
   createContentPost,
-  createContentTag,
   createContentPreviewToken,
+  createContentTag,
   deleteContentAsset,
   deleteContentCategory,
   deleteContentTag,

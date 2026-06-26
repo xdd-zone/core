@@ -3,9 +3,9 @@
   "compilerOptions": {
     "incremental": true,
     "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "moduleDetection": "force",
     "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "paths": {
       "@fifa/*": ["./src/*"]
     },

@@ -10,7 +10,7 @@ import type {
   UpdateTagInput,
 } from '../types/taxonomy.types'
 import { and, eq, inArray, ne, sql } from 'drizzle-orm'
-import { contentCategories, contentPostTags, contentPosts, contentTags } from '#momo/infra/db/schema/index'
+import { contentCategories, contentPosts, contentPostTags, contentTags } from '#momo/infra/db/schema/index'
 
 const CONTENT_CATEGORIES_SLUG_UNIQUE = 'content_categories_slug_unique'
 const CONTENT_TAGS_SLUG_UNIQUE = 'content_tags_slug_unique'
