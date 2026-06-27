@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 
-import { ThemeToggle } from '@/components/site/theme-toggle'
-
 import { getPublicCategoryMenu } from '@/lib/content/public-content'
 
 import { cn } from '@/lib/utils'
@@ -265,40 +263,6 @@ export default async function Home() {
                 hi@xidongdong.dev
               </span>
             </a>
-          </div>
-          <div className="flex justify-between items-center gap-6 mt-16 pt-6 border-t border-border flex-wrap">
-            <div className="flex items-center gap-5">
-              <a
-                className="text-muted-foreground text-[0.85rem] transition-colors duration-300 hover:text-foreground"
-                href="#"
-              >
-                GitHub
-              </a>
-              <a
-                className="text-muted-foreground text-[0.85rem] transition-colors duration-300 hover:text-foreground"
-                href="#"
-              >
-                博客
-              </a>
-              <a
-                className="text-muted-foreground text-[0.85rem] transition-colors duration-300 hover:text-foreground"
-                href="#"
-              >
-                RSS
-              </a>
-              <a
-                className="text-muted-foreground text-[0.85rem] transition-colors duration-300 hover:text-foreground"
-                href="#"
-              >
-                即刻
-              </a>
-              <span className="text-muted-foreground opacity-30">|</span>
-              <ThemeToggle />
-            </div>
-            <div className="inline-flex items-center gap-2 text-muted-foreground text-[0.85rem]">
-              <span className="w-2 h-2 rounded-full bg-[#4ade80] animate-landing-pulse-dot" />
-              可以交流项目、工具和文章
-            </div>
           </div>
         </div>
       </section>
