@@ -7,6 +7,13 @@
     min-height: 100vh;
   }
 
+  /* 容器：提供响应式留白与居中对齐 */
+  .landing-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 clamp(24px, 6vw, 80px);
+  }
+
   /* Hero */
   .landing-hero {
     position: relative;
@@ -15,7 +22,6 @@
     place-items: center;
     overflow: hidden;
   }
-
 
   /* Hero 内容 */
   .landing-hero-content {

@@ -1,11 +1,6 @@
 /* SVG 占位图生成器，为项目卡片和文章封面提供渐变底色 */
 export function makePlaceholder(key: string): string {
-  const dims =
-    key === 'p2' || key === 'p3'
-      ? [800, 1000]
-      : key.charAt(0) === 'e'
-        ? [640, 640]
-        : [800, 600]
+  const dims = key === 'p2' || key === 'p3' ? [800, 1000] : key.charAt(0) === 'e' ? [640, 640] : [800, 600]
   const palette: Record<string, [string, string]> = {
     p1: ['#1a2433', '#0a0e14'],
     p2: ['#2a2018', '#0d0a07'],

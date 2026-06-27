@@ -75,7 +75,6 @@ export default async function Home() {
   return (
     <div className="landing-page">
       <section className="landing-hero" id="home">
-
         <LandingNavbar categories={categories} />
         <HeroContent />
 
