@@ -215,6 +215,7 @@ describe('content 路由', () => {
     const categoriesData = expectOkData((await categoriesResponse.json()) as ApiResponse<unknown>)
     const categories = PublicCategoryListResponseSchema.parse(categoriesData)
     expect(categories.categories.some((item) => item.slug === 'notes')).toBe(true)
+    expect(categories.categories.find((item) => item.slug === 'notes')?.postCount).toBe(1)
 
     const tagsResponse = await momoApp.request('/rpc/bobo/content/tags')
     const tagsData = expectOkData((await tagsResponse.json()) as ApiResponse<unknown>)

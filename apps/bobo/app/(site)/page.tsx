@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 
+import { getPublicCategoryMenu } from '@/lib/content/public-content'
+
 import {
   ExplorationsParallax,
   HeroContent,
@@ -12,8 +14,7 @@ import { makePlaceholder } from './_lib/placeholder'
 
 export const metadata: Metadata = {
   title: '喜东东 - 独立开发者作品集',
-  description:
-    '我做 Web 产品、Agent 工具和内容系统。这里放近期文章、代表作品、碎碎念，以及一些正在打磨的技术实验。',
+  description: '我做 Web 产品、Agent 工具和内容系统。这里放近期文章、代表作品、碎碎念，以及一些正在打磨的技术实验。',
 }
 
 const projects = [
@@ -66,18 +67,11 @@ const articles = [
   },
 ]
 
-const techStack = [
-  'TypeScript',
-  'React',
-  'Node.js',
-  'Next.js',
-  'Hono',
-  'Drizzle',
-  'SQLite',
-  'Agent Skills',
-]
+const techStack = ['TypeScript', 'React', 'Node.js', 'Next.js', 'Hono', 'Drizzle', 'SQLite', 'Agent Skills']
 
-export default function Home() {
+export default async function Home() {
+  const categories = await getPublicCategoryMenu().catch(() => [])
+
   return (
     <div className="landing-page">
       <section className="landing-hero" id="home">
@@ -85,7 +79,7 @@ export default function Home() {
         <div className="overlay" />
         <div className="bottom-fade" />
 
-        <LandingNavbar />
+        <LandingNavbar categories={categories} />
         <HeroContent />
 
         <div className="landing-scroll-ind">
@@ -122,7 +116,12 @@ export default function Home() {
               {projects.map((proj) => (
                 <div className="landing-proj" key={proj.key}>
                   <div className="landing-proj-img">
-                    <Image src={makePlaceholder(proj.key)} alt={proj.title} fill sizes="(min-width: 768px) 58vw, 100vw" />
+                    <Image
+                      src={makePlaceholder(proj.key)}
+                      alt={proj.title}
+                      fill
+                      sizes="(min-width: 768px) 58vw, 100vw"
+                    />
                     <div className="halftone" />
                   </div>
                   <div className="landing-proj-copy">

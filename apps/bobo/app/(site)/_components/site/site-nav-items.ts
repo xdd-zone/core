@@ -1,5 +1,5 @@
 export const SITE_NAV_ITEMS = [
   { href: '/', label: '首页' },
-  { href: '/writing', label: '文稿' },
+  { href: '/writing', label: '文稿', menu: 'categories' },
   { href: '/works', label: '作品' },
 ] as const

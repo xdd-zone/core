@@ -1,5 +1,5 @@
 import type {
-  PublicCategory,
+  PublicCategoryListItem,
   PublicPostDetail,
   PublicPostListQuery,
   PublicPostSummary,
@@ -12,7 +12,7 @@ import { BizCode } from '@xdd-zone/contracts'
 import { AppError } from '#momo/shared/app-error'
 
 import {
-  toPublicCategory,
+  toPublicCategoryListItem,
   toPublicPostDetail,
   toPublicPostSummary,
   toPublicTag,
@@ -57,9 +57,9 @@ export function createPublicContentService(repository: ContentRepository, taxono
     return toPublicPostDetail(post, revision.source, category ?? null, tags)
   }
 
-  async function listCategories(): Promise<PublicCategory[]> {
-    const categories = await taxonomyRepository.listCategories()
-    return categories.map((category) => toPublicCategory(category))
+  async function listCategories(): Promise<PublicCategoryListItem[]> {
+    const categories = await taxonomyRepository.listCategoriesWithPublishedCount()
+    return categories.map((category) => toPublicCategoryListItem(category))
   }
 
   async function listTags(): Promise<PublicTag[]> {
@@ -85,7 +85,7 @@ export function createPublicContentService(repository: ContentRepository, taxono
 
     return posts.map((post) => {
       const categoryId = categoryIdMap.get(post.id)
-      const category = categoryId ? categoryMap.get(categoryId) ?? null : null
+      const category = categoryId ? (categoryMap.get(categoryId) ?? null) : null
       const tags = tagsMap.get(post.id) ?? []
 
       return toPublicPostSummary(post, category, tags)

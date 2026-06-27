@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { PostRenderer } from '@/components/content/post-renderer'
-import { getPublicPost, PublicContentError } from '@/lib/content/public-content'
+import { getPublicCategoryMenu, getPublicPost, PublicContentError } from '@/lib/content/public-content'
 
 import { SiteNav } from '../../_components/site/site-nav'
 
@@ -32,6 +32,7 @@ export async function generateMetadata({ params }: WritingDetailPageProps): Prom
 
 export default async function WritingDetailPage({ params }: WritingDetailPageProps) {
   const { slug } = await params
+  const categoriesPromise = getPublicCategoryMenu().catch(() => [])
 
   let post: Awaited<ReturnType<typeof getPublicPost>>
   try {
@@ -42,9 +43,7 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
     }
 
     const message =
-      error instanceof PublicContentError && error.reason === 'request-failed'
-        ? error.message
-        : '文章数据格式不正确。'
+      error instanceof PublicContentError && error.reason === 'request-failed' ? error.message : '文章数据格式不正确。'
 
     return (
       <main className="site-page">
@@ -60,9 +59,11 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
     )
   }
 
+  const categories = await categoriesPromise
+
   return (
     <main className="site-page">
-      <SiteNav activeHref="/writing" />
+      <SiteNav activeHref="/writing" categories={categories} />
       <article className="writing-detail">
         <header className="writing-detail-hero">
           <div className="site-hero-fallback" aria-hidden="true" />
@@ -76,7 +77,6 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
             <h1>{post.title}</h1>
             {post.excerpt ? <p>{post.excerpt}</p> : null}
             <div className="writing-detail-meta">
-              {post.category ? <span>{post.category.name}</span> : null}
               <span>{formatDate(post.publishedAt ?? post.updatedAt)}</span>
               {post.tags.map((tag) => (
                 <span key={tag.id}>{tag.name}</span>

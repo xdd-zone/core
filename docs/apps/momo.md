@@ -661,7 +661,7 @@ content.contract.ts
   -> content.route.ts
 ```
 
-个人站公开内容从 `public-content.route.ts` 进入，调用 `public-content.service.ts` 和 `public-content.presenter.ts`。公开响应类型用 `PublicPostSummary`、`PublicPostDetail`、`PublicCategory` 和 `PublicTag`，不要把后台 revision 字段返回给个人站。
+个人站公开内容从 `public-content.route.ts` 进入，调用 `public-content.service.ts` 和 `public-content.presenter.ts`。公开响应类型用 `PublicPostSummary`、`PublicPostDetail`、`PublicCategoryListItem` 和 `PublicTag`，不要把后台 revision 字段返回给个人站。`GET /rpc/bobo/content/categories` 返回全部分类，并带上按已发布文章统计的 `postCount`。
 
 关键规则：
 

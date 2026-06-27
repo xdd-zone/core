@@ -29,12 +29,11 @@ export default async function WritingPage({ searchParams }: WritingPageProps) {
     return <WritingErrorPage error={error} />
   }
 
-  const activeCategory = categorySlug ? data.categories.find((category) => category.slug === categorySlug) : null
   const activeTag = tagSlug ? data.tags.find((tag) => tag.slug === tagSlug) : null
 
   return (
     <main className="site-page writing-page">
-      <SiteNav activeHref="/writing" />
+      <SiteNav activeHref="/writing" categories={data.categories} />
       <section className="writing-hero">
         <div className="site-hero-fallback" aria-hidden="true" />
         <div className="overlay" />
@@ -51,24 +50,6 @@ export default async function WritingPage({ searchParams }: WritingPageProps) {
       <section className="writing-body">
         <div className="site-container writing-layout">
           <aside className="writing-sidebar" aria-label="文稿筛选">
-            <div className="writing-filter-group">
-              <p>分类</p>
-              <div className="writing-chip-list">
-                <FilterLink href={buildFilterHref({ tagSlug })} active={!categorySlug}>
-                  全部
-                </FilterLink>
-                {data.categories.map((category) => (
-                  <FilterLink
-                    key={category.id}
-                    href={buildFilterHref({ categorySlug: category.slug, tagSlug })}
-                    active={category.slug === categorySlug}
-                  >
-                    {category.name}
-                  </FilterLink>
-                ))}
-              </div>
-            </div>
-
             <div className="writing-filter-group">
               <p>标签</p>
               <div className="writing-chip-list">
@@ -98,11 +79,7 @@ export default async function WritingPage({ searchParams }: WritingPageProps) {
                 <h2>
                   已发布<span className="italic">文稿</span>
                 </h2>
-                <p>
-                  {activeCategory || activeTag
-                    ? [activeCategory?.name, activeTag?.name].filter(Boolean).join(' / ')
-                    : '按发布时间排列，先看最新的一批。'}
-                </p>
+                <p>{activeTag ? activeTag.name : '按发布时间排列，先看最新的一批。'}</p>
               </div>
             </div>
 
@@ -116,7 +93,6 @@ export default async function WritingPage({ searchParams }: WritingPageProps) {
                     </div>
                     <div className="writing-entry-body">
                       <div className="writing-entry-meta">
-                        {post.category ? <span>{post.category.name}</span> : null}
                         <span>{formatDate(post.publishedAt ?? post.updatedAt)}</span>
                       </div>
                       <h3>{post.title}</h3>

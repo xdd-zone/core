@@ -96,6 +96,26 @@ export function createTaxonomyRepository(db: DbClient) {
     }))
   }
 
+  async function listCategoriesWithPublishedCount(): Promise<CategoryWithCount[]> {
+    const rows = await db
+      .select({
+        category: contentCategories,
+        postCount: sql<number>`count(${contentPosts.id})::int`.as('post_count'),
+      })
+      .from(contentCategories)
+      .leftJoin(
+        contentPosts,
+        and(eq(contentCategories.id, contentPosts.categoryId), eq(contentPosts.status, 'published')),
+      )
+      .groupBy(contentCategories.id)
+      .orderBy(contentCategories.name)
+
+    return rows.map((row) => ({
+      category: row.category,
+      postCount: row.postCount,
+    }))
+  }
+
   async function updateCategory(input: UpdateCategoryInput): Promise<ContentCategoryRecord | undefined> {
     const updates: Partial<ContentCategoryRecord> = {
       updatedAt: input.updatedAt,
@@ -324,6 +344,7 @@ export function createTaxonomyRepository(db: DbClient) {
     getTagBySlug,
     listCategories,
     listCategoriesWithCount,
+    listCategoriesWithPublishedCount,
     listTags,
     listTagsWithCount,
     setPostTags,

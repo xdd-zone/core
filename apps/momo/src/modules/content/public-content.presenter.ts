@@ -1,12 +1,14 @@
 import type {
   PublicCategory,
+  PublicCategoryListItem,
   PublicPostDetail,
   PublicPostSummary,
   PublicTag,
 } from '@xdd-zone/contracts'
 import type { ContentPostRecord } from './types/content.types'
-import type { ContentCategoryRecord, ContentTagRecord } from './types/taxonomy.types'
+import type { CategoryWithCount, ContentCategoryRecord, ContentTagRecord } from './types/taxonomy.types'
 import {
+  PublicCategoryListItemSchema,
   PublicCategorySchema,
   PublicPostDetailSchema,
   PublicPostSummarySchema,
@@ -56,6 +58,18 @@ export function toPublicCategory(category: ContentCategoryRecord): PublicCategor
   } satisfies PublicCategory
 
   return PublicCategorySchema.parse(summary)
+}
+
+export function toPublicCategoryListItem(item: CategoryWithCount): PublicCategoryListItem {
+  const summary = {
+    description: item.category.description,
+    id: item.category.id,
+    name: item.category.name,
+    postCount: item.postCount,
+    slug: item.category.slug,
+  } satisfies PublicCategoryListItem
+
+  return PublicCategoryListItemSchema.parse(summary)
 }
 
 export function toPublicTag(tag: ContentTagRecord): PublicTag {

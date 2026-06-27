@@ -56,6 +56,10 @@ export const PostDetailSchema = PostSummarySchema.extend({
 
 export const PublicCategorySchema = CategorySummarySchema
 
+export const PublicCategoryListItemSchema = CategorySummarySchema.extend({
+  postCount: z.number().int().nonnegative(),
+})
+
 export const PublicTagSchema = TagSummarySchema
 
 export const PublicPostSummarySchema = z.object({
@@ -108,7 +112,7 @@ export const PublicPostListResponseSchema = z.object({
 })
 
 export const PublicCategoryListResponseSchema = z.object({
-  categories: z.array(PublicCategorySchema),
+  categories: z.array(PublicCategoryListItemSchema),
 })
 
 export const PublicTagListResponseSchema = z.object({
@@ -279,6 +283,7 @@ export type PostSummary = z.infer<typeof PostSummarySchema>
 export type PreviewPostResponse = z.infer<typeof PreviewPostResponseSchema>
 export type PreviewTokenResponse = z.infer<typeof PreviewTokenResponseSchema>
 export type PublicCategory = z.infer<typeof PublicCategorySchema>
+export type PublicCategoryListItem = z.infer<typeof PublicCategoryListItemSchema>
 export type PublicCategoryListResponse = z.infer<typeof PublicCategoryListResponseSchema>
 export type PublicPostDetail = z.infer<typeof PublicPostDetailSchema>
 export type PublicPostListResponse = z.infer<typeof PublicPostListResponseSchema>

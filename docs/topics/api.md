@@ -75,7 +75,7 @@ apps/momo/src/modules/content/public-content.route.ts
 | `GET` | `/rpc/content/previews/:token` | 使用预览 token 读取文章 revision |
 | `GET` | `/rpc/bobo/content/posts` | 个人站文章列表，可按分类和标签筛选 |
 | `GET` | `/rpc/bobo/content/posts/:slug` | 个人站文章详情，只返回已发布文章 |
-| `GET` | `/rpc/bobo/content/categories` | 个人站分类列表 |
+| `GET` | `/rpc/bobo/content/categories` | 个人站分类列表，返回每个分类的已发布文章数量 |
 | `GET` | `/rpc/bobo/content/tags` | 个人站标签列表 |
 
 公开邮箱注册被禁用：

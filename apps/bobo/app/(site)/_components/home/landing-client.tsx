@@ -1,12 +1,14 @@
 'use client'
 
+import type { PublicCategoryMenuItem } from '@/lib/content/public-content'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 import { makePlaceholder } from '../../_lib/placeholder'
+import { CategoryMenu } from '../site/category-menu'
 import { SITE_NAV_ITEMS } from '../site/site-nav-items'
 
 const HERO_ROLES = ['独立开发者', 'TS 全栈开发者', '工具作者', '内容记录者']
@@ -68,8 +70,9 @@ export function HeroContent() {
   )
 }
 
-export function LandingNavbar() {
+export function LandingNavbar({ categories = [] }: { categories?: PublicCategoryMenuItem[] }) {
   const pillRef = useRef<HTMLDivElement>(null)
+  const totalPostCount = categories.reduce((total, category) => total + category.postCount, 0)
 
   useEffect(() => {
     let ticking = false
@@ -97,11 +100,20 @@ export function LandingNavbar() {
           <span>XD</span>
         </Link>
         <span className="site-nav-divider" />
-        {SITE_NAV_ITEMS.map((item) => (
-          <Link key={item.href} className={cn('site-nav-link', item.href === '/' && 'active')} href={item.href}>
-            {item.label}
-          </Link>
-        ))}
+        {SITE_NAV_ITEMS.map((item) =>
+          'menu' in item && item.menu === 'categories' && categories.length > 0 ? (
+            <div className="site-nav-dropdown" key={item.href}>
+              <Link className="site-nav-link site-nav-trigger" href={item.href}>
+                {item.label}
+              </Link>
+              <CategoryMenu categories={categories} totalPostCount={totalPostCount} />
+            </div>
+          ) : (
+            <Link key={item.href} className={cn('site-nav-link', item.href === '/' && 'active')} href={item.href}>
+              {item.label}
+            </Link>
+          ),
+        )}
         <span className="site-nav-divider" />
         <a className="site-say-hi" href="mailto:hi@xidongdong.dev">
           <span className="ring" />
