@@ -75,9 +75,6 @@ export default async function Home() {
   return (
     <div className="landing-page">
       <section className="landing-hero" id="home">
-        <div className="landing-hero-fallback" aria-hidden="true" />
-        <div className="overlay" />
-        <div className="bottom-fade" />
 
         <LandingNavbar categories={categories} />
         <HeroContent />
@@ -213,8 +210,6 @@ export default async function Home() {
       </section>
 
       <section className="landing-contact" id="contact">
-        <div className="video-fallback" aria-hidden="true" />
-        <div className="overlay" />
         <div className="inner landing-container">
           <MarqueeTrack />
           <div className="landing-contact-cta">

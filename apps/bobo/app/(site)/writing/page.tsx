@@ -35,9 +35,6 @@ export default async function WritingPage({ searchParams }: WritingPageProps) {
     <main className="site-page writing-page">
       <SiteNav activeHref="/writing" categories={data.categories} />
       <section className="writing-hero">
-        <div className="site-hero-fallback" aria-hidden="true" />
-        <div className="overlay" />
-        <div className="bottom-fade" />
         <div className="site-container writing-hero-inner">
           <span className="site-eyebrow">writing / content</span>
           <h1>

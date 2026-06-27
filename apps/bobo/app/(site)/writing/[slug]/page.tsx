@@ -66,9 +66,6 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
       <SiteNav activeHref="/writing" categories={categories} />
       <article className="writing-detail">
         <header className="writing-detail-hero">
-          <div className="site-hero-fallback" aria-hidden="true" />
-          <div className="overlay" />
-          <div className="bottom-fade" />
           <div className="site-container writing-detail-head">
             <Link className="writing-back-link" href="/writing">
               ← 返回文稿

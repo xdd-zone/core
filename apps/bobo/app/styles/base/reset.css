@@ -1,4 +1,14 @@
 @layer base {
+  :root {
+    --ld-bg: 0 0% 4%;
+    --ld-surface: 0 0% 8%;
+    --ld-text: 0 0% 96%;
+    --ld-muted: 0 0% 53%;
+    --ld-stroke: 0 0% 12%;
+    --ld-accent-1: #89aacc;
+    --ld-accent-2: #4e85bf;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }

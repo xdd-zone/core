@@ -8,23 +8,7 @@
     overflow: hidden;
     padding: 140px 0 84px;
   }
-  .writing-hero .overlay,
-  .writing-detail-hero .overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.38);
-    z-index: 1;
-  }
-  .writing-hero .bottom-fade,
-  .writing-detail-hero .bottom-fade {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 220px;
-    background: linear-gradient(to top, hsl(var(--ld-bg)), transparent);
-    z-index: 1;
-  }
+
   .writing-hero-inner,
   .writing-detail-head {
     position: relative;

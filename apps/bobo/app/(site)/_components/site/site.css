@@ -1,15 +1,5 @@
 @layer components {
   .site-page {
-    --ld-bg: 0 0% 4%;
-    --ld-surface: 0 0% 8%;
-    --ld-text: 0 0% 96%;
-    --ld-muted: 0 0% 53%;
-    --ld-stroke: 0 0% 12%;
-    --ld-accent-1: #89aacc;
-    --ld-accent-2: #4e85bf;
-    background: hsl(var(--ld-bg));
-    color: hsl(var(--ld-text));
-    color-scheme: dark;
     min-height: 100vh;
   }
 
@@ -19,15 +9,7 @@
     padding: 0 24px;
   }
 
-  .site-hero-fallback {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    background: radial-gradient(ellipse at 30% 20%, #16243a 0%, #060810 55%, #020308 100%);
-  }
+
 
   .site-eyebrow {
     display: block;
