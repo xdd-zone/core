@@ -1,12 +1,12 @@
 @layer components {
-  .writing-hero,
+  .writing-hero {
+    position: relative;
+    padding: 160px 0 96px;
+  }
+
   .writing-detail-hero {
     position: relative;
-    min-height: 72vh;
-    display: grid;
-    align-items: end;
-    overflow: hidden;
-    padding: 140px 0 84px;
+    padding: 160px 0 48px;
   }
 
   .writing-hero-inner,
@@ -253,10 +253,11 @@
   }
 
   @media (max-width: 767px) {
-    .writing-hero,
+    .writing-hero {
+      padding: 120px 0 72px;
+    }
     .writing-detail-hero {
-      min-height: 62vh;
-      padding: 120px 0 64px;
+      padding: 110px 0 48px;
     }
     .writing-layout {
       grid-template-columns: 1fr;
