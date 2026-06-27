@@ -1,10 +1,14 @@
+import { BizCode } from '@xdd-zone/contracts'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import PreviewPostPage from './page'
 
+const originalMomoBaseUrl = process.env.MOMO_BASE_URL
+
 describe('preview post page', () => {
   afterEach(() => {
+    process.env.MOMO_BASE_URL = originalMomoBaseUrl
     vi.restoreAllMocks()
   })
 
@@ -20,6 +24,8 @@ describe('preview post page', () => {
   })
 
   it('momo 返回成功时渲染标题、摘要和正文', async () => {
+    process.env.MOMO_BASE_URL = 'http://localhost:7788'
+
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -54,11 +60,13 @@ describe('preview post page', () => {
   })
 
   it('token 过期时显示错误页', async () => {
+    process.env.MOMO_BASE_URL = 'http://localhost:7788'
+
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify({
           error: {
-            code: 'CONTENT_PREVIEW_TOKEN_EXPIRED',
+            code: BizCode.CONTENT_PREVIEW_TOKEN_EXPIRED,
             message: '预览 token 已失效',
           },
           meta: {
@@ -78,7 +86,7 @@ describe('preview post page', () => {
     const html = renderToStaticMarkup(page)
 
     expect(html).toContain('文章预览不可用')
-    expect(html).toContain('预览链接已失效，或文章不存在。')
+    expect(html).toContain('预览 token 已失效')
   })
 })
 

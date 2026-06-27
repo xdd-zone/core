@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { BizCode } from '@xdd-zone/contracts'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -36,9 +37,14 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
   try {
     post = await getPublicPost(slug)
   } catch (error) {
-    if (error instanceof PublicContentError && error.reason === 'request-failed') {
+    if (error instanceof PublicContentError && error.code === BizCode.COMMON_NOT_FOUND) {
       notFound()
     }
+
+    const message =
+      error instanceof PublicContentError && error.reason === 'request-failed'
+        ? error.message
+        : '文章数据格式不正确。'
 
     return (
       <main className="site-page">
@@ -47,7 +53,7 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
           <div className="site-container">
             <span className="site-eyebrow">writing / post</span>
             <h1>文稿暂时打不开</h1>
-            <p>文章数据格式不正确。</p>
+            <p>{message}</p>
           </div>
         </section>
       </main>

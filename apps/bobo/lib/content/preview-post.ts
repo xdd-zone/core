@@ -1,5 +1,6 @@
-import type { ApiResponse, PreviewPostResponse } from '@xdd-zone/contracts'
+import type { PreviewPostResponse } from '@xdd-zone/contracts'
 import { PreviewPostResponseSchema } from '@xdd-zone/contracts'
+import { getPreviewPost as requestPreviewPost } from '@/lib/api/post.api'
 
 export const PREVIEW_POST_TTL_LABEL = '30 分钟'
 
@@ -20,15 +21,7 @@ export async function getPreviewPost(token: string | undefined, postId: string):
     throw new PreviewPostError('missing-token', '预览链接缺少 token。')
   }
 
-  const response = await fetch(buildPreviewPostUrl(token), {
-    cache: 'no-store',
-  })
-
-  if (!response.ok) {
-    throw new PreviewPostError('request-failed', '预览链接已失效，或文章不存在。')
-  }
-
-  const body = (await response.json()) as ApiResponse<unknown>
+  const body = await requestPreviewPost(token)
 
   if (!body.ok) {
     throw new PreviewPostError('request-failed', body.error.message || '预览链接已失效，或文章不存在。')
@@ -45,9 +38,4 @@ export async function getPreviewPost(token: string | undefined, postId: string):
   }
 
   return parsed.data
-}
-
-function buildPreviewPostUrl(token: string) {
-  const baseUrl = process.env.MOMO_BASE_URL || 'http://localhost:7788'
-  return new URL(`/rpc/content/previews/${encodeURIComponent(token)}`, baseUrl).toString()
 }

@@ -1,4 +1,4 @@
-import type { PublicCategory, PublicPostSummary, PublicTag } from '@xdd-zone/contracts'
+import type { BizCodeValue, PublicCategory, PublicPostSummary, PublicTag } from '@xdd-zone/contracts'
 import {
   PublicCategoryListResponseSchema,
   PublicPostListResponseSchema,
@@ -38,7 +38,7 @@ export async function getPublicPost(slug: string) {
   const body = await requestPublicPost(slug)
 
   if (!body.ok) {
-    throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。')
+    throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。', body.error.code)
   }
 
   const parsed = PublicPostResponseSchema.safeParse(body.data)
@@ -57,7 +57,7 @@ async function fetchPublicPosts(filters: PublicContentFilters): Promise<PublicPo
   })
 
   if (!body.ok) {
-    throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。')
+    throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。', body.error.code)
   }
 
   const parsed = PublicPostListResponseSchema.safeParse(body.data)
@@ -73,7 +73,7 @@ async function fetchPublicCategories(): Promise<PublicCategory[]> {
   const body = await requestPublicCategories()
 
   if (!body.ok) {
-    throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。')
+    throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。', body.error.code)
   }
 
   const parsed = PublicCategoryListResponseSchema.safeParse(body.data)
@@ -89,7 +89,7 @@ async function fetchPublicTags(): Promise<PublicTag[]> {
   const body = await requestPublicTags()
 
   if (!body.ok) {
-    throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。')
+    throw new PublicContentError('request-failed', body.error.message || 'Momo 公开文章接口暂时不可用。', body.error.code)
   }
 
   const parsed = PublicTagListResponseSchema.safeParse(body.data)
@@ -105,10 +105,12 @@ export type PublicContentErrorReason = 'request-failed' | 'invalid-response'
 
 export class PublicContentError extends Error {
   readonly reason: PublicContentErrorReason
+  readonly code?: BizCodeValue
 
-  constructor(reason: PublicContentErrorReason, message: string) {
+  constructor(reason: PublicContentErrorReason, message: string, code?: BizCodeValue) {
     super(message)
     this.name = 'PublicContentError'
     this.reason = reason
+    this.code = code
   }
 }

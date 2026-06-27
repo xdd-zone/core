@@ -1,4 +1,4 @@
-import type { ApiResponse, PublicPostListResponse, PublicPostResponse } from '@xdd-zone/contracts'
+import type { ApiResponse, PreviewPostResponse, PublicPostListResponse, PublicPostResponse } from '@xdd-zone/contracts'
 import { http } from '@/lib/http'
 
 const publicContentInit = {
@@ -25,5 +25,13 @@ export function getPublicPosts(filters: {
 export function getPublicPost(slug: string): Promise<ApiResponse<PublicPostResponse>> {
   return http.get<PublicPostResponse>(`/rpc/bobo/content/posts/${encodeURIComponent(slug)}`, {
     init: publicContentInit,
+  })
+}
+
+export function getPreviewPost(token: string): Promise<ApiResponse<PreviewPostResponse>> {
+  return http.get<PreviewPostResponse>(`/rpc/content/previews/${encodeURIComponent(token)}`, {
+    init: {
+      cache: 'no-store',
+    },
   })
 }

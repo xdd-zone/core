@@ -1,4 +1,4 @@
-import type { ApiResponse } from '@xdd-zone/contracts'
+import type { ApiResponse, BizCodeValue } from '@xdd-zone/contracts'
 import { BizCode } from '@xdd-zone/contracts'
 import { getBoboServerEnv } from '@/lib/env.server'
 
@@ -58,16 +58,56 @@ async function request<TData>(
     const baseUrl = getBoboServerEnv().MOMO_BASE_URL
     const url = new URL(`${path}${buildSearchParams(options.query)}`, baseUrl)
     const response = await fetch(url, createRequestInit(method, options.payload, options.init))
+    const body: unknown = await response.json()
 
-    if (!response.ok) {
-      return buildFailure(`Momo 接口请求失败，HTTP 状态码是 ${response.status}。`)
+    if (isApiResponse<TData>(body)) {
+      return body
     }
 
-    const body = (await response.json()) as ApiResponse<TData>
-    return body
+    return buildFailure('Momo 接口返回的数据格式不正确。')
   } catch {
     return buildFailure('Momo 接口暂时不可用。')
   }
+}
+
+function isApiResponse<TData>(value: unknown): value is ApiResponse<TData> {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  const response = value as Record<string, unknown>
+
+  if (!isApiMeta(response.meta)) {
+    return false
+  }
+
+  if (response.ok === true) {
+    return 'data' in response
+  }
+
+  return response.ok === false && isApiError(response.error)
+}
+
+function isApiMeta(value: unknown) {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  const meta = value as Record<string, unknown>
+  return typeof meta.requestId === 'string' && typeof meta.timestamp === 'string'
+}
+
+function isApiError(value: unknown) {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  const error = value as Record<string, unknown>
+  return typeof error.code === 'string' && isBizCode(error.code) && typeof error.message === 'string'
+}
+
+function isBizCode(value: string): value is BizCodeValue {
+  return Object.values(BizCode).includes(value as BizCodeValue)
 }
 
 function buildFailure<TData>(message: string): ApiResponse<TData> {
