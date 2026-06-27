@@ -46,23 +46,63 @@ export function HeroContent() {
 
   return (
     <div className="relative z-10 text-center px-6">
-      <span className={cn("block mb-8 text-[0.72rem] text-ld-muted uppercase tracking-[0.3em] opacity-0 translate-y-[18px]", ready && "animate-landing-rise")} style={ready ? { animationDelay: '0.04s' } : {}}>XIDONGDONG / 2026</span>
-      <h1 className={cn("text-[clamp(3.5rem,12vw,9rem)] max-md:text-[clamp(4.4rem,20vw,6rem)] leading-[0.9] tracking-[-0.02em] mb-6 italic opacity-0 translate-y-[18px]", ready && "animate-landing-rise")} style={ready ? { animationDelay: '0.13s' } : {}}>喜东东</h1>
-      <p className={cn("text-[clamp(1.1rem,2.5vw,1.5rem)] mb-2 opacity-0 translate-y-[18px]", ready && "animate-landing-rise")} style={ready ? { animationDelay: '0.27s' } : {}}>
+      <span
+        className={cn(
+          'block mb-8 text-[0.72rem] text-muted-foreground uppercase tracking-[0.3em] opacity-0 translate-y-[18px]',
+          ready && 'animate-landing-rise',
+        )}
+        style={ready ? { animationDelay: '0.04s' } : {}}
+      >
+        XIDONGDONG / 2026
+      </span>
+      <h1
+        className={cn(
+          'text-[clamp(3.5rem,12vw,9rem)] max-md:text-[clamp(4.4rem,20vw,6rem)] leading-[0.9] tracking-[-0.02em] mb-6 italic opacity-0 translate-y-[18px]',
+          ready && 'animate-landing-rise',
+        )}
+        style={ready ? { animationDelay: '0.13s' } : {}}
+      >
+        喜东东
+      </h1>
+      <p
+        className={cn(
+          'text-[clamp(1.1rem,2.5vw,1.5rem)] mb-2 opacity-0 translate-y-[18px]',
+          ready && 'animate-landing-rise',
+        )}
+        style={ready ? { animationDelay: '0.27s' } : {}}
+      >
         一名
         <span className="inline-block italic animate-landing-role-fade" key={roleIndex}>
           {HERO_ROLES[roleIndex]}
         </span>
         ，主要写 TypeScript。
       </p>
-      <p className={cn("text-[0.95rem] max-w-[28rem] mx-auto mt-4 mb-12 leading-[1.6] text-ld-muted opacity-0 translate-y-[18px]", ready && "animate-landing-rise")} style={ready ? { animationDelay: '0.35s' } : {}}>
+      <p
+        className={cn(
+          'text-[0.95rem] max-w-[28rem] mx-auto mt-4 mb-12 leading-[1.6] text-muted-foreground opacity-0 translate-y-[18px]',
+          ready && 'animate-landing-rise',
+        )}
+        style={ready ? { animationDelay: '0.35s' } : {}}
+      >
         我做 Web 产品、Agent 工具和内容系统。这里放近期文章、代表作品、碎碎念，以及一些正在打磨的技术实验。
       </p>
-      <div className={cn("inline-flex gap-4 flex-wrap justify-center opacity-0 translate-y-[18px]", ready && "animate-landing-rise")} style={ready ? { animationDelay: '0.43s' } : {}}>
-        <a className="relative rounded-full text-[0.9rem] px-7 py-3.5 inline-block text-center transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 bg-ld-text text-ld-bg hover:shadow-[0_12px_34px_rgba(137,170,204,0.18)]" href="#work">
+      <div
+        className={cn(
+          'inline-flex gap-4 flex-wrap justify-center opacity-0 translate-y-[18px]',
+          ready && 'animate-landing-rise',
+        )}
+        style={ready ? { animationDelay: '0.43s' } : {}}
+      >
+        <a
+          className="relative rounded-full text-[0.9rem] px-7 py-3.5 inline-block text-center transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 bg-ld-text text-ld-bg hover:shadow-[0_12px_34px_rgba(137,170,204,0.18)]"
+          href="#work"
+        >
           看作品
         </a>
-        <a className="relative rounded-full text-[0.9rem] px-7 py-3.5 inline-block text-center transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 border-2 border-ld-stroke bg-ld-bg text-ld-text" href="#contact">
+        <a
+          className="relative rounded-full text-[0.9rem] px-7 py-3.5 inline-block text-center transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 border-2 border-border bg-background text-foreground"
+          href="#contact"
+        >
           联系我
         </a>
       </div>
@@ -95,35 +135,59 @@ export function LandingNavbar({ categories = [] }: { categories?: PublicCategory
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center py-6 px-4">
-      <div className="relative inline-flex items-center gap-[2px] rounded-full backdrop-blur-[12px] border border-white/10 bg-ld-surface p-2 transition-[box-shadow,transform] duration-[360ms] ease-[cubic-bezier(0.23,1,0.32,1)] [&.scrolled]:shadow-[0_8px_24px_rgba(0,0,0,0.4)] [&.scrolled]:-translate-y-0.5" ref={pillRef}>
-        <Link className="relative w-9 h-9 rounded-full grid place-items-center transition-transform duration-300 hover:scale-[1.06] group/logo" href="/" aria-label="回到首页">
+      <div
+        className="relative inline-flex items-center gap-[2px] rounded-full backdrop-blur-[12px] border border-white/10 bg-surface p-2 transition-[box-shadow,transform] duration-[360ms] ease-[cubic-bezier(0.23,1,0.32,1)] [&.scrolled]:shadow-[0_8px_24px_rgba(0,0,0,0.4)] [&.scrolled]:-translate-y-0.5"
+        ref={pillRef}
+      >
+        <Link
+          className="relative w-9 h-9 rounded-full grid place-items-center transition-transform duration-300 hover:scale-[1.06] group/logo"
+          href="/"
+          aria-label="回到首页"
+        >
           <div className="absolute inset-0 rounded-full p-[2px] bg-[linear-gradient(90deg,var(--color-ld-accent-1),var(--color-ld-accent-2))] [mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)] [mask-composite:exclude] transition-transform duration-500 group-hover/logo:rotate-180" />
-          <span className="relative z-1 w-[30px] h-[30px] rounded-full bg-ld-bg grid place-items-center text-[13px] italic">XD</span>
+          <span className="relative z-1 w-[30px] h-[30px] rounded-full bg-background grid place-items-center text-[13px] italic">
+            XD
+          </span>
         </Link>
-        <span className="w-[1px] h-5 bg-ld-stroke mx-1" />
+        <span className="w-[1px] h-5 bg-border mx-1" />
         {SITE_NAV_ITEMS.map((item) =>
           'menu' in item && item.menu === 'categories' && categories.length > 0 ? (
-            <div className="relative group/nav after:absolute after:top-full after:left-1/2 max-md:after:left-0 after:w-[min(720px,calc(100vw-32px))] max-md:after:w-[min(340px,calc(100vw-24px))] after:h-8 after:-translate-x-1/2 max-md:after:-translate-x-[76px]" key={item.href}>
-              <Link className="text-[0.85rem] max-md:text-[0.78rem] max-md:px-2.5 max-md:py-2 rounded-full px-4 py-2 transition-[color,background-color,transform] duration-200 inline-flex items-center border-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 text-ld-muted hover:text-ld-text hover:bg-ld-stroke/50 hover:-translate-y-[1px]" href={item.href}>
+            <div
+              className="relative group/nav after:absolute after:top-full after:left-1/2 max-md:after:left-0 after:w-[min(720px,calc(100vw-32px))] max-md:after:w-[min(340px,calc(100vw-24px))] after:h-8 after:-translate-x-1/2 max-md:after:-translate-x-[76px]"
+              key={item.href}
+            >
+              <Link
+                className="text-[0.85rem] max-md:text-[0.78rem] max-md:px-2.5 max-md:py-2 rounded-full px-4 py-2 transition-[color,background-color,transform] duration-200 inline-flex items-center border-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 text-muted-foreground hover:text-foreground hover:bg-border/50 hover:-translate-y-[1px]"
+                href={item.href}
+              >
                 {item.label}
               </Link>
               <CategoryMenu categories={categories} totalPostCount={totalPostCount} />
             </div>
           ) : (
-            <Link key={item.href} className={cn(
-              'text-[0.85rem] max-md:text-[0.78rem] max-md:px-2.5 max-md:py-2 rounded-full px-4 py-2 transition-[color,background-color,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1',
-              item.href === '/'
-                ? 'text-ld-text bg-ld-stroke/50'
-                : 'text-ld-muted hover:text-ld-text hover:bg-ld-stroke/50 hover:-translate-y-[1px]'
-            )} href={item.href}>
+            <Link
+              key={item.href}
+              className={cn(
+                'text-[0.85rem] max-md:text-[0.78rem] max-md:px-2.5 max-md:py-2 rounded-full px-4 py-2 transition-[color,background-color,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1',
+                item.href === '/'
+                  ? 'text-foreground bg-border/50'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-border/50 hover:-translate-y-[1px]',
+              )}
+              href={item.href}
+            >
               {item.label}
             </Link>
           ),
         )}
-        <span className="w-[1px] h-5 bg-ld-stroke mx-1" />
-        <a className="relative inline-flex items-center gap-1 max-md:text-[0.78rem] text-[0.85rem] rounded-full group/hi focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1" href="mailto:hi@xidongdong.dev">
+        <span className="w-[1px] h-5 bg-border mx-1" />
+        <a
+          className="relative inline-flex items-center gap-1 max-md:text-[0.78rem] text-[0.85rem] rounded-full group/hi focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
+          href="mailto:hi@xidongdong.dev"
+        >
           <span className="absolute inset-[-2px] rounded-full opacity-0 bg-[linear-gradient(90deg,var(--color-ld-accent-1),var(--color-ld-accent-2))] transition-opacity duration-300 ease-out group-hover/hi:opacity-100" />
-          <span className="relative z-1 inline-flex items-center gap-1 bg-ld-surface backdrop-blur-[12px] rounded-full px-4 py-2 max-md:px-2.5 max-md:py-2">联系 ↗</span>
+          <span className="relative z-1 inline-flex items-center gap-1 bg-surface backdrop-blur-[12px] rounded-full px-4 py-2 max-md:px-2.5 max-md:py-2">
+            联系 ↗
+          </span>
         </a>
       </div>
     </nav>
@@ -152,7 +216,13 @@ export function RevealOnScroll({ children, className }: { children: React.ReactN
   }, [])
 
   return (
-    <div ref={ref} className={cn('opacity-0 translate-y-[22px] transition-all duration-[720ms] ease-[cubic-bezier(0.23,1,0.32,1)] [&.in]:opacity-100 [&.in]:translate-y-0', className)}>
+    <div
+      ref={ref}
+      className={cn(
+        'opacity-0 translate-y-[22px] transition-all duration-[720ms] ease-[cubic-bezier(0.23,1,0.32,1)] [&.in]:opacity-100 [&.in]:translate-y-0',
+        className,
+      )}
+    >
       {children}
     </div>
   )
@@ -208,12 +278,15 @@ export function ExplorationsParallax() {
       <section className="relative min-h-[300vh]" ref={exploreRef}>
         <div className="sticky top-0 h-screen grid place-items-center text-center z-10 pointer-events-none">
           <div className="pointer-events-auto max-w-[1280px] mx-auto px-[clamp(24px,6vw,80px)]">
-            <span className="block mb-8 text-[0.72rem] text-ld-muted uppercase tracking-[0.3em]">碎碎念</span>
+            <span className="block mb-8 text-[0.72rem] text-muted-foreground uppercase tracking-[0.3em]">碎碎念</span>
             <h2 className="text-[clamp(2.2rem,6vw,4rem)] leading-[1.05] my-4 italic">碎碎念与实验</h2>
-            <p className="text-ld-muted" style={{ maxWidth: '26rem', margin: '0 auto' }}>
+            <p className="text-muted-foreground" style={{ maxWidth: '26rem', margin: '0 auto' }}>
               小功能、半成品、踩坑记录和临时想法。这里保留一点没那么正式的东西。
             </p>
-            <a className="inline-flex items-center gap-2 border border-ld-stroke rounded-full px-5 py-3 text-[0.9rem] mt-4 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 bg-ld-surface" href="#contact">
+            <a
+              className="inline-flex items-center gap-2 border border-border rounded-full px-5 py-3 text-[0.9rem] mt-4 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 bg-surface"
+              href="#contact"
+            >
               看更新入口 ↗
             </a>
           </div>
@@ -223,7 +296,7 @@ export function ExplorationsParallax() {
             {col0.map((card, i) => (
               <button
                 key={card.key}
-                className="aspect-square max-w-[320px] w-full rounded-[20px] overflow-hidden border border-ld-stroke pointer-events-auto cursor-pointer appearance-none bg-transparent p-0 transition-all duration-150 hover:border-ld-text/30 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
+                className="aspect-square max-w-[320px] w-full rounded-[20px] overflow-hidden border border-border pointer-events-auto cursor-pointer appearance-none bg-transparent p-0 transition-all duration-150 hover:border-foreground/30 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
                 type="button"
                 ref={(el) => {
                   cardsRef.current[i] = el
@@ -231,7 +304,13 @@ export function ExplorationsParallax() {
                 style={{ transform: `rotate(${card.rotate}deg)` }}
                 onClick={() => setLightboxSrc({ alt: card.alt, src: makePlaceholder(card.key) })}
               >
-                <Image className="w-full h-full object-cover" src={makePlaceholder(card.key)} alt={card.alt} width={640} height={640} />
+                <Image
+                  className="w-full h-full object-cover"
+                  src={makePlaceholder(card.key)}
+                  alt={card.alt}
+                  width={640}
+                  height={640}
+                />
               </button>
             ))}
           </div>
@@ -239,7 +318,7 @@ export function ExplorationsParallax() {
             {col1.map((card, i) => (
               <button
                 key={card.key}
-                className="aspect-square max-w-[320px] w-full rounded-[20px] overflow-hidden border border-ld-stroke pointer-events-auto cursor-pointer appearance-none bg-transparent p-0 transition-all duration-150 hover:border-ld-text/30 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 ml-auto"
+                className="aspect-square max-w-[320px] w-full rounded-[20px] overflow-hidden border border-border pointer-events-auto cursor-pointer appearance-none bg-transparent p-0 transition-all duration-150 hover:border-foreground/30 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 ml-auto"
                 type="button"
                 ref={(el) => {
                   cardsRef.current[i + 3] = el
@@ -247,7 +326,13 @@ export function ExplorationsParallax() {
                 style={{ transform: `rotate(${card.rotate}deg)` }}
                 onClick={() => setLightboxSrc({ alt: card.alt, src: makePlaceholder(card.key) })}
               >
-                <Image className="w-full h-full object-cover" src={makePlaceholder(card.key)} alt={card.alt} width={640} height={640} />
+                <Image
+                  className="w-full h-full object-cover"
+                  src={makePlaceholder(card.key)}
+                  alt={card.alt}
+                  width={640}
+                  height={640}
+                />
               </button>
             ))}
           </div>
@@ -255,7 +340,10 @@ export function ExplorationsParallax() {
       </section>
 
       <div
-        className={cn('fixed inset-0 z-[9000] bg-black/90 grid place-items-center p-10 opacity-0 pointer-events-none transition-opacity duration-200', lightboxSrc && 'opacity-100 pointer-events-auto')}
+        className={cn(
+          'fixed inset-0 z-[9000] bg-black/90 grid place-items-center p-10 opacity-0 pointer-events-none transition-opacity duration-200',
+          lightboxSrc && 'opacity-100 pointer-events-auto',
+        )}
         role="dialog"
         aria-modal="true"
         aria-hidden={!lightboxSrc}
@@ -264,7 +352,18 @@ export function ExplorationsParallax() {
           if (e.key === 'Escape') closeLightbox()
         }}
       >
-        {lightboxSrc ? <Image className={cn("max-w-[90vw] max-h-[90vh] rounded-2xl scale-[0.98] transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)]", lightboxSrc && "scale-100")} src={lightboxSrc.src} alt={lightboxSrc.alt} width={960} height={960} /> : null}
+        {lightboxSrc ? (
+          <Image
+            className={cn(
+              'max-w-[90vw] max-h-[90vh] rounded-2xl scale-[0.98] transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)]',
+              lightboxSrc && 'scale-100',
+            )}
+            src={lightboxSrc.src}
+            alt={lightboxSrc.alt}
+            width={960}
+            height={960}
+          />
+        ) : null}
       </div>
     </>
   )
@@ -317,7 +416,9 @@ export function MarqueeTrack() {
     <div className="overflow-hidden whitespace-nowrap my-8 md:my-12">
       <div className="inline-block" ref={trackRef}>
         {spans.map((span, i) => (
-          <span className="text-[clamp(2rem,6vw,4rem)] text-ld-text/85" key={i}>{span.props.children}</span>
+          <span className="text-[clamp(2rem,6vw,4rem)] text-foreground/85" key={i}>
+            {span.props.children}
+          </span>
         ))}
       </div>
     </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 
-import { DEFAULT_THEME, THEME_STORAGE_KEY } from '@/lib/theme'
+import { FALLBACK_DARK, THEME_STORAGE_KEY } from '@/lib/theme'
 
 import './globals.css'
 
@@ -65,11 +65,21 @@ export const metadata: Metadata = {
 const themeInitScript = `
   (() => {
     const storageKey = '${THEME_STORAGE_KEY}';
-    const fallbackTheme = '${DEFAULT_THEME}';
-    const supportedThemes = new Set(['latte', 'frappe', 'macchiato', 'mocha']);
-    const storedTheme = window.localStorage.getItem(storageKey);
-    const theme = supportedThemes.has(storedTheme) ? storedTheme : fallbackTheme;
-    document.documentElement.dataset.theme = theme;
+    const defaultSetting = 'system';
+    const fallbackLight = 'latte';
+    const fallbackDark = 'macchiato';
+    const supportedSettings = new Set(['latte', 'macchiato', 'system']);
+    
+    let storedSetting = window.localStorage.getItem(storageKey);
+    let setting = supportedSettings.has(storedSetting) ? storedSetting : defaultSetting;
+    
+    let activeTheme = setting;
+    if (setting === 'system') {
+      activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? fallbackDark : fallbackLight;
+    }
+    
+    document.documentElement.dataset.theme = activeTheme;
+    document.documentElement.dataset.themeSetting = setting;
   })();
 `
 
@@ -81,7 +91,7 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      data-theme={DEFAULT_THEME}
+      data-theme={FALLBACK_DARK}
       suppressHydrationWarning
       className={`${mapleMono.variable} h-full antialiased`}
     >

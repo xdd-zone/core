@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button'
 import { useTheme } from '@/hooks/use-theme'
 
 export default function LabPage() {
-  const { theme, themes, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
+  const themes = ['latte', 'system', 'macchiato'] as const
 
   return (
     <main className="min-h-screen px-5 py-8 md:px-8 md:py-10">

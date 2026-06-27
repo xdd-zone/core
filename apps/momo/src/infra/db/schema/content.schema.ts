@@ -124,10 +124,7 @@ export const contentPostTags = pgTable(
     /** 创建时间。 */
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [
-    primaryKey({ columns: [table.postId, table.tagId] }),
-    index('content_post_tags_tag_idx').on(table.tagId),
-  ],
+  (table) => [primaryKey({ columns: [table.postId, table.tagId] }), index('content_post_tags_tag_idx').on(table.tagId)],
 )
 
 export const contentPostRevisions = pgTable(

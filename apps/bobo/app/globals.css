@@ -13,13 +13,8 @@
 @import './styles/utilities/animations.css';
 
 @theme {
-  --color-ld-bg: hsl(0 0% 4%);
-  --color-ld-surface: hsl(0 0% 8%);
-  --color-ld-text: hsl(0 0% 96%);
-  --color-ld-muted: hsl(0 0% 53%);
-  --color-ld-stroke: hsl(0 0% 12%);
-  --color-ld-accent-1: #89aacc;
-  --color-ld-accent-2: #4e85bf;
+  --color-ld-accent-1: var(--theme-lavender);
+  --color-ld-accent-2: var(--theme-blue);
 
   --animate-landing-rise: landing-rise 0.58s cubic-bezier(0.23, 1, 0.32, 1) both;
   --animate-landing-role-fade: landing-role-fade 0.4s ease-out;

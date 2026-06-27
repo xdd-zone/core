@@ -1,12 +1,5 @@
 @layer base {
   :root {
-    --ld-bg: 0 0% 4%;
-    --ld-surface: 0 0% 8%;
-    --ld-text: 0 0% 96%;
-    --ld-muted: 0 0% 53%;
-    --ld-stroke: 0 0% 12%;
-    --ld-accent-1: #89aacc;
-    --ld-accent-2: #4e85bf;
   }
 
   * {
@@ -14,17 +7,28 @@
   }
 
   html {
-    @apply min-h-full bg-surface text-fg font-sans;
+    @apply min-h-full bg-background text-foreground font-sans;
   }
 
   body {
-    @apply min-h-full bg-surface text-fg;
-    background: radial-gradient(ellipse at 30% 20%, #16243a 0%, #060810 55%, #020308 100%), var(--theme-base);
+    @apply min-h-full text-foreground;
+    background: radial-gradient(
+      ellipse at 30% 20%,
+      color-mix(in srgb, var(--theme-primary) 25%, #ffffff) 0%,
+      var(--theme-base) 65%,
+      color-mix(in srgb, var(--theme-text) 5%, var(--theme-base)) 100%
+    );
+    background-color: var(--color-background);
     background-attachment: fixed;
     transition:
       background-color 180ms ease,
       color 180ms ease,
       border-color 180ms ease;
+  }
+
+  :where([data-theme='macchiato'], [data-theme='frappe'], [data-theme='mocha']) body {
+    background: radial-gradient(ellipse at 30% 20%, #16243a 0%, #060810 55%, #020308 100%);
+    background-attachment: fixed;
   }
 
   ::selection {

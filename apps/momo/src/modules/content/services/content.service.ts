@@ -434,7 +434,7 @@ export function createContentService(
 
     return posts.map((post) => {
       const categoryId = categoryIdMap.get(post.id)
-      const category = categoryId ? categoryMap.get(categoryId) ?? null : null
+      const category = categoryId ? (categoryMap.get(categoryId) ?? null) : null
       const tags = tagsMap.get(post.id) ?? []
 
       return toPostSummary(post, category, tags)

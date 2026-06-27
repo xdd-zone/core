@@ -1,32 +1,57 @@
 'use client'
 
-import type { ThemeName } from '@/lib/theme'
+import type { ThemeSetting } from '@/lib/theme'
 
 import { startTransition, useCallback, useEffect, useState } from 'react'
+import {
+  applyTheme,
+  DEFAULT_THEME_SETTING,
+  FALLBACK_DARK,
+  FALLBACK_LIGHT,
+  resolveThemeSetting,
+  THEME_STORAGE_KEY,
+} from '@/lib/theme'
 
-import { applyTheme, DEFAULT_THEME, resolveTheme, THEME_STORAGE_KEY, THEMES } from '@/lib/theme'
+function getSystemTheme() {
+  if (typeof window === 'undefined') return FALLBACK_DARK
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? FALLBACK_DARK : FALLBACK_LIGHT
+}
 
-function getInitialTheme(): ThemeName {
+function getInitialThemeSetting(): ThemeSetting {
   if (typeof window === 'undefined') {
-    return DEFAULT_THEME
+    return DEFAULT_THEME_SETTING
   }
-
-  return resolveTheme(window.localStorage.getItem(THEME_STORAGE_KEY) ?? document.documentElement.dataset.theme)
+  return resolveThemeSetting(
+    window.localStorage.getItem(THEME_STORAGE_KEY) ?? document.documentElement.dataset.themeSetting,
+  )
 }
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<ThemeName>(getInitialTheme)
+  const [themeSetting, setThemeState] = useState<ThemeSetting>(getInitialThemeSetting)
 
   useEffect(() => {
-    applyTheme(theme)
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme)
-  }, [theme])
+    const handleThemeChange = (setting: ThemeSetting) => {
+      const activeTheme = setting === 'system' ? getSystemTheme() : setting
+      applyTheme(activeTheme)
+      document.documentElement.dataset.themeSetting = setting
+      window.localStorage.setItem(THEME_STORAGE_KEY, setting)
+    }
 
-  const setTheme = useCallback((next: ThemeName) => {
+    handleThemeChange(themeSetting)
+
+    if (themeSetting === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const listener = () => handleThemeChange('system')
+      mediaQuery.addEventListener('change', listener)
+      return () => mediaQuery.removeEventListener('change', listener)
+    }
+  }, [themeSetting])
+
+  const setTheme = useCallback((next: ThemeSetting) => {
     startTransition(() => {
       setThemeState(next)
     })
   }, [])
 
-  return { theme, themes: THEMES, setTheme } as const
+  return { theme: themeSetting, setTheme } as const
 }

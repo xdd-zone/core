@@ -68,10 +68,13 @@ export function AssetList() {
     [assets.length, total],
   )
 
-  const copyText = useCallback(async (text: string, successMessage: string) => {
-    await navigator.clipboard.writeText(text)
-    message.success(successMessage)
-  }, [message])
+  const copyText = useCallback(
+    async (text: string, successMessage: string) => {
+      await navigator.clipboard.writeText(text)
+      message.success(successMessage)
+    },
+    [message],
+  )
 
   const handleDelete = useCallback(
     (asset: ImageAsset) => {
@@ -106,7 +109,11 @@ export function AssetList() {
         render: (_value: string, asset) => (
           <div className="flex items-center gap-3">
             <div className="size-12 overflow-hidden rounded-lg border border-border-subtle bg-surface-subtle">
-              <img alt={asset.alt ?? asset.fileName} className="h-full w-full object-cover" src={resolveAssetUrl(asset)} />
+              <img
+                alt={asset.alt ?? asset.fileName}
+                className="h-full w-full object-cover"
+                src={resolveAssetUrl(asset)}
+              />
             </div>
             <div className="min-w-0">
               <div className="truncate font-medium text-fg">{asset.fileName}</div>
@@ -144,7 +151,11 @@ export function AssetList() {
         width: 260,
         render: (_, asset) => (
           <div className="flex flex-wrap gap-2">
-            <Button size="small" onClick={() => void copyText(resolveAssetUrl(asset), '图片地址已复制')} icon={<Copy className="size-4" />}>
+            <Button
+              size="small"
+              onClick={() => void copyText(resolveAssetUrl(asset), '图片地址已复制')}
+              icon={<Copy className="size-4" />}
+            >
               复制地址
             </Button>
             <Button
@@ -174,7 +185,11 @@ export function AssetList() {
         description="管理已经上传的图片素材。"
         actions={
           <>
-            <Button icon={<RefreshCw className="size-4" />} loading={query.isFetching} onClick={() => void query.refetch()}>
+            <Button
+              icon={<RefreshCw className="size-4" />}
+              loading={query.isFetching}
+              onClick={() => void query.refetch()}
+            >
               刷新
             </Button>
             <Button onClick={() => void navigate({ to: '/content/posts' as never })}>回到文章</Button>
@@ -205,7 +220,9 @@ export function AssetList() {
           />
         </div>
 
-        {loadError ? <div className="border-b border-border-subtle px-4 py-3 text-sm text-danger">{loadError}</div> : null}
+        {loadError ? (
+          <div className="border-b border-border-subtle px-4 py-3 text-sm text-danger">{loadError}</div>
+        ) : null}
 
         <Table<ImageAsset>
           columns={columns}
