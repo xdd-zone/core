@@ -45,24 +45,24 @@ export function HeroContent() {
   }, [])
 
   return (
-    <div className={cn('landing-hero-content', ready && 'ready')}>
-      <span className="landing-hero-eyebrow">XIDONGDONG / 2026</span>
-      <h1 className="landing-hero-name">喜东东</h1>
-      <p className="landing-hero-role">
+    <div className="relative z-10 text-center px-6">
+      <span className={cn("block mb-8 text-[0.72rem] text-ld-muted uppercase tracking-[0.3em] opacity-0 translate-y-[18px]", ready && "animate-landing-rise")} style={ready ? { animationDelay: '0.04s' } : {}}>XIDONGDONG / 2026</span>
+      <h1 className={cn("text-[clamp(3.5rem,12vw,9rem)] max-md:text-[clamp(4.4rem,20vw,6rem)] leading-[0.9] tracking-[-0.02em] mb-6 italic opacity-0 translate-y-[18px]", ready && "animate-landing-rise")} style={ready ? { animationDelay: '0.13s' } : {}}>喜东东</h1>
+      <p className={cn("text-[clamp(1.1rem,2.5vw,1.5rem)] mb-2 opacity-0 translate-y-[18px]", ready && "animate-landing-rise")} style={ready ? { animationDelay: '0.27s' } : {}}>
         一名
-        <span className="role-word" key={roleIndex}>
+        <span className="inline-block italic animate-landing-role-fade" key={roleIndex}>
           {HERO_ROLES[roleIndex]}
         </span>
         ，主要写 TypeScript。
       </p>
-      <p className="landing-hero-desc">
+      <p className={cn("text-[0.95rem] max-w-[28rem] mx-auto mt-4 mb-12 leading-[1.6] text-ld-muted opacity-0 translate-y-[18px]", ready && "animate-landing-rise")} style={ready ? { animationDelay: '0.35s' } : {}}>
         我做 Web 产品、Agent 工具和内容系统。这里放近期文章、代表作品、碎碎念，以及一些正在打磨的技术实验。
       </p>
-      <div className="landing-cta-row">
-        <a className="landing-btn landing-btn-solid" href="#work">
+      <div className={cn("inline-flex gap-4 flex-wrap justify-center opacity-0 translate-y-[18px]", ready && "animate-landing-rise")} style={ready ? { animationDelay: '0.43s' } : {}}>
+        <a className="relative rounded-full text-[0.9rem] px-7 py-3.5 inline-block text-center transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 bg-ld-text text-ld-bg hover:shadow-[0_12px_34px_rgba(137,170,204,0.18)]" href="#work">
           看作品
         </a>
-        <a className="landing-btn landing-btn-outline" href="#contact">
+        <a className="relative rounded-full text-[0.9rem] px-7 py-3.5 inline-block text-center transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 border-2 border-ld-stroke bg-ld-bg text-ld-text" href="#contact">
           联系我
         </a>
       </div>
@@ -146,7 +146,7 @@ export function RevealOnScroll({ children, className }: { children: React.ReactN
   }, [])
 
   return (
-    <div ref={ref} className={cn('landing-reveal', className)}>
+    <div ref={ref} className={cn('opacity-0 translate-y-[22px] transition-all duration-[720ms] ease-[cubic-bezier(0.23,1,0.32,1)] [&.in]:opacity-100 [&.in]:translate-y-0', className)}>
       {children}
     </div>
   )
@@ -199,25 +199,25 @@ export function ExplorationsParallax() {
 
   return (
     <>
-      <section className="landing-explore" ref={exploreRef}>
-        <div className="landing-explore-pin">
-          <div className="inner landing-container">
-            <span className="landing-hero-eyebrow">碎碎念</span>
-            <h2>碎碎念与实验</h2>
-            <p className="text-fg-muted" style={{ maxWidth: '26rem', margin: '0 auto' }}>
+      <section className="relative min-h-[300vh]" ref={exploreRef}>
+        <div className="sticky top-0 h-screen grid place-items-center text-center z-10 pointer-events-none">
+          <div className="pointer-events-auto max-w-[1280px] mx-auto px-[clamp(24px,6vw,80px)]">
+            <span className="block mb-8 text-[0.72rem] text-ld-muted uppercase tracking-[0.3em]">碎碎念</span>
+            <h2 className="text-[clamp(2.2rem,6vw,4rem)] leading-[1.05] my-4 italic">碎碎念与实验</h2>
+            <p className="text-ld-muted" style={{ maxWidth: '26rem', margin: '0 auto' }}>
               小功能、半成品、踩坑记录和临时想法。这里保留一点没那么正式的东西。
             </p>
-            <a className="landing-dribbble-btn" href="#contact">
+            <a className="inline-flex items-center gap-2 border border-ld-stroke rounded-full px-5 py-3 text-[0.9rem] mt-4 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 bg-ld-surface" href="#contact">
               看更新入口 ↗
             </a>
           </div>
         </div>
-        <div className="landing-parallax-cols">
-          <div className="landing-pcol">
+        <div className="absolute inset-0 z-20 grid grid-cols-2 gap-5 md:gap-12 max-w-[1400px] mx-auto px-4 md:px-8 pointer-events-none">
+          <div className="flex flex-col gap-20 pt-[30vh]">
             {col0.map((card, i) => (
               <button
                 key={card.key}
-                className="landing-pcard"
+                className="aspect-square max-w-[320px] w-full rounded-[20px] overflow-hidden border border-ld-stroke pointer-events-auto cursor-pointer appearance-none bg-transparent p-0 transition-all duration-150 hover:border-ld-text/30 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
                 type="button"
                 ref={(el) => {
                   cardsRef.current[i] = el
@@ -225,15 +225,15 @@ export function ExplorationsParallax() {
                 style={{ transform: `rotate(${card.rotate}deg)` }}
                 onClick={() => setLightboxSrc({ alt: card.alt, src: makePlaceholder(card.key) })}
               >
-                <Image src={makePlaceholder(card.key)} alt={card.alt} width={640} height={640} />
+                <Image className="w-full h-full object-cover" src={makePlaceholder(card.key)} alt={card.alt} width={640} height={640} />
               </button>
             ))}
           </div>
-          <div className="landing-pcol">
+          <div className="flex flex-col gap-20 pt-[55vh]">
             {col1.map((card, i) => (
               <button
                 key={card.key}
-                className="landing-pcard"
+                className="aspect-square max-w-[320px] w-full rounded-[20px] overflow-hidden border border-ld-stroke pointer-events-auto cursor-pointer appearance-none bg-transparent p-0 transition-all duration-150 hover:border-ld-text/30 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 ml-auto"
                 type="button"
                 ref={(el) => {
                   cardsRef.current[i + 3] = el
@@ -241,7 +241,7 @@ export function ExplorationsParallax() {
                 style={{ transform: `rotate(${card.rotate}deg)` }}
                 onClick={() => setLightboxSrc({ alt: card.alt, src: makePlaceholder(card.key) })}
               >
-                <Image src={makePlaceholder(card.key)} alt={card.alt} width={640} height={640} />
+                <Image className="w-full h-full object-cover" src={makePlaceholder(card.key)} alt={card.alt} width={640} height={640} />
               </button>
             ))}
           </div>
@@ -249,7 +249,7 @@ export function ExplorationsParallax() {
       </section>
 
       <div
-        className={cn('landing-lightbox', lightboxSrc && 'open')}
+        className={cn('fixed inset-0 z-[9000] bg-black/90 grid place-items-center p-10 opacity-0 pointer-events-none transition-opacity duration-200', lightboxSrc && 'opacity-100 pointer-events-auto')}
         role="dialog"
         aria-modal="true"
         aria-hidden={!lightboxSrc}
@@ -258,7 +258,7 @@ export function ExplorationsParallax() {
           if (e.key === 'Escape') closeLightbox()
         }}
       >
-        {lightboxSrc ? <Image src={lightboxSrc.src} alt={lightboxSrc.alt} width={960} height={960} /> : null}
+        {lightboxSrc ? <Image className={cn("max-w-[90vw] max-h-[90vh] rounded-2xl scale-[0.98] transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)]", lightboxSrc && "scale-100")} src={lightboxSrc.src} alt={lightboxSrc.alt} width={960} height={960} /> : null}
       </div>
     </>
   )
@@ -308,9 +308,11 @@ export function MarqueeTrack() {
   const spans = Array.from({ length: 20 }, (_, i) => <span key={i}>{unit}</span>)
 
   return (
-    <div className="landing-marquee">
-      <div className="track" ref={trackRef}>
-        {spans}
+    <div className="overflow-hidden whitespace-nowrap my-8 md:my-12">
+      <div className="inline-block" ref={trackRef}>
+        {spans.map((span, i) => (
+          <span className="text-[clamp(2rem,6vw,4rem)] text-ld-text/85" key={i}>{span.props.children}</span>
+        ))}
       </div>
     </div>
   )

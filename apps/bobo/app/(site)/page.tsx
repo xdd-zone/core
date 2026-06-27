@@ -3,6 +3,8 @@ import Image from 'next/image'
 
 import { getPublicCategoryMenu } from '@/lib/content/public-content'
 
+import { cn } from '@/lib/utils'
+
 import {
   ExplorationsParallax,
   HeroContent,
@@ -73,59 +75,70 @@ export default async function Home() {
   const categories = await getPublicCategoryMenu().catch(() => [])
 
   return (
-    <div className="landing-page">
-      <section className="landing-hero" id="home">
+    <div className="min-h-screen">
+      <section className="relative min-h-screen grid place-items-center overflow-hidden" id="home">
         <LandingNavbar categories={categories} />
         <HeroContent />
 
-        <div className="landing-scroll-ind">
-          <span className="lbl">向下</span>
-          <div className="track">
-            <i />
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-center">
+          <span className="text-[0.7rem] tracking-[0.2em] text-ld-muted uppercase block mb-3">向下</span>
+          <div className="w-[1px] h-10 bg-ld-stroke mx-auto overflow-hidden relative">
+            <i className="block w-[1px] h-full bg-ld-text animate-landing-scroll-down" />
           </div>
         </div>
       </section>
 
       {/* 代表作品 */}
-      <section className="landing-works" id="work">
-        <div className="landing-container">
+      <section className="py-12 md:py-16" id="work">
+        <div className="max-w-[1280px] mx-auto px-[clamp(24px,6vw,80px)]">
           <RevealOnScroll>
-            <div className="landing-sec-head">
+            <div className="flex justify-between items-end gap-6 mb-12 flex-wrap">
               <div>
-                <span className="line">
-                  <i className="bar" />
-                  <span className="eyebrow">代表作品</span>
+                <span className="inline-flex items-center gap-3 mb-5">
+                  <i className="w-8 h-[1px] bg-ld-stroke" />
+                  <span className="text-[0.72rem] text-ld-muted uppercase tracking-[0.3em]">代表作品</span>
                 </span>
-                <h2>
+                <h2 className="text-[clamp(2rem,5vw,3.2rem)] leading-[1.05] tracking-[-0.02em]">
                   代表<span className="italic">作品</span>
                 </h2>
-                <p>偏向真实产品和长期维护的工具：能跑、能改、能继续长出来。</p>
+                <p className="text-ld-muted text-[0.95rem] max-w-[30rem] mt-4">偏向真实产品和长期维护的工具：能跑、能改、能继续长出来。</p>
               </div>
-              <a className="landing-view-all" href="#contact">
-                <span className="ring" />
-                <span className="inner">聊聊合作 →</span>
+              <a className="relative inline-flex items-center gap-1.5 rounded-full py-2.5 px-[18px] text-[0.85rem] border border-ld-stroke transition-transform hover:-translate-y-[2px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 group" href="#contact">
+                <span className="absolute inset-[-1px] rounded-full opacity-0 bg-[linear-gradient(90deg,var(--color-ld-accent-1),var(--color-ld-accent-2))] transition-opacity duration-300 group-hover:opacity-100 z-0" />
+                <span className="relative z-10 inline-flex items-center gap-1.5 bg-ld-bg rounded-full px-0.5">聊聊合作 →</span>
               </a>
             </div>
           </RevealOnScroll>
           <RevealOnScroll>
-            <div className="landing-bento">
-              {projects.map((proj) => (
-                <div className="landing-proj" key={proj.key}>
-                  <div className="landing-proj-img">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+              {projects.map((proj, i) => (
+                <div
+                  className={cn(
+                    'relative rounded-[24px] overflow-hidden border border-ld-stroke bg-ld-surface transition-all duration-300 hover:-translate-y-1 hover:border-ld-text/25 group focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1',
+                    i === 0 || i === 3 ? 'md:col-span-7 aspect-[4/3]' : 'md:col-span-5 md:aspect-[3/4] max-md:aspect-[4/3]',
+                  )}
+                  key={proj.key}
+                >
+                  <div className="relative w-full h-full">
                     <Image
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.035]"
                       src={makePlaceholder(proj.key)}
                       alt={proj.title}
                       fill
                       sizes="(min-width: 768px) 58vw, 100vw"
                     />
-                    <div className="halftone" />
+                    <div className="absolute inset-0 opacity-20 mix-blend-multiply pointer-events-none bg-[radial-gradient(circle,#000_1px,transparent_1px)] bg-[size:4px_4px]" />
                   </div>
-                  <div className="landing-proj-copy">
-                    <h3>{proj.title}</h3>
-                    <p>{proj.desc}</p>
+                  <div className="absolute left-5 right-5 bottom-5 z-[2] flex flex-col md:flex-row md:justify-between items-start md:items-end gap-4 md:gap-[18px] pointer-events-none">
+                    <h3 className="text-[clamp(1.35rem,2.2vw,2rem)] leading-none font-medium tracking-[-0.02em] italic [text-shadow:0_12px_30px_rgba(0,0,0,0.55)]">
+                      {proj.title}
+                    </h3>
+                    <p className="max-w-full md:max-w-[18rem] text-ld-text/75 text-[0.82rem] leading-[1.55] text-left md:text-right [text-shadow:0_12px_30px_rgba(0,0,0,0.55)]">
+                      {proj.desc}
+                    </p>
                   </div>
-                  <div className="hover-layer">
-                    <span className="landing-proj-label">
+                  <div className="absolute inset-0 grid place-items-center opacity-0 bg-ld-bg/75 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
+                    <span className="relative inline-flex items-center gap-1.5 bg-white text-[#111] rounded-full px-5 py-2.5 text-[0.9rem] before:absolute before:inset-[-2px] before:rounded-full before:-z-10 before:bg-[linear-gradient(90deg,var(--color-ld-accent-1),var(--color-ld-accent-2),var(--color-ld-accent-1))] before:bg-[length:200%_100%] before:animate-landing-gradient-shift">
                       项目 — <span className="italic">{proj.title}</span>
                     </span>
                   </div>
@@ -137,38 +150,38 @@ export default async function Home() {
       </section>
 
       {/* 近期文章 */}
-      <section className="landing-journal" id="journal">
-        <div className="landing-container">
+      <section className="py-16" id="journal">
+        <div className="max-w-[1280px] mx-auto px-[clamp(24px,6vw,80px)]">
           <RevealOnScroll>
-            <div className="landing-sec-head">
+            <div className="flex justify-between items-end gap-6 mb-12 flex-wrap">
               <div>
-                <span className="line">
-                  <i className="bar" />
-                  <span className="eyebrow">近期文章</span>
+                <span className="inline-flex items-center gap-3 mb-5">
+                  <i className="w-8 h-[1px] bg-ld-stroke" />
+                  <span className="text-[0.72rem] text-ld-muted uppercase tracking-[0.3em]">近期文章</span>
                 </span>
-                <h2>
+                <h2 className="text-[clamp(2rem,5vw,3.2rem)] leading-[1.05] tracking-[-0.02em]">
                   近期<span className="italic">文章</span>
                 </h2>
-                <p>写开发过程里真的遇到的问题，也写一些日常观察。</p>
+                <p className="text-ld-muted text-[0.95rem] max-w-[30rem] mt-4">写开发过程里真的遇到的问题，也写一些日常观察。</p>
               </div>
-              <a className="landing-view-all" href="#journal">
-                <span className="ring" />
-                <span className="inner">继续阅读 →</span>
+              <a className="relative inline-flex items-center gap-1.5 rounded-full py-2.5 px-[18px] text-[0.85rem] border border-ld-stroke transition-transform hover:-translate-y-[2px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 group" href="#journal">
+                <span className="absolute inset-[-1px] rounded-full opacity-0 bg-[linear-gradient(90deg,var(--color-ld-accent-1),var(--color-ld-accent-2))] transition-opacity duration-300 group-hover:opacity-100 z-0" />
+                <span className="relative z-10 inline-flex items-center gap-1.5 bg-ld-bg rounded-full px-0.5">继续阅读 →</span>
               </a>
             </div>
           </RevealOnScroll>
           <RevealOnScroll>
-            <div className="landing-entries">
+            <div className="flex flex-col gap-4">
               {articles.map((article) => (
-                <div className="landing-entry" key={article.key}>
-                  <Image src={makePlaceholder(article.key)} alt="文章封面" width={72} height={72} />
-                  <div className="body">
-                    <h3>{article.title}</h3>
-                    <div className="meta">
+                <div className="flex items-center gap-6 p-4 bg-ld-surface/30 border border-ld-stroke rounded-[28px] md:rounded-[40px] transition-all duration-200 hover:bg-ld-surface hover:translate-x-1 hover:border-ld-text/20" key={article.key}>
+                  <Image className="w-[72px] h-[72px] rounded-3xl object-cover flex-none" src={makePlaceholder(article.key)} alt="文章封面" width={72} height={72} />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-[1.15rem] font-medium tracking-[-0.01em]">{article.title}</h3>
+                    <div className="flex gap-4 text-ld-muted text-[0.8rem] mt-1.5">
                       <span>{article.readTime}</span>
                     </div>
                   </div>
-                  <span className="date">{article.date}</span>
+                  <span className="hidden md:block text-ld-muted text-[0.8rem] whitespace-nowrap">{article.date}</span>
                 </div>
               ))}
             </div>
@@ -178,28 +191,28 @@ export default async function Home() {
 
       <ExplorationsParallax />
 
-      <section className="landing-stats">
-        <div className="landing-container">
+      <section className="py-16">
+        <div className="max-w-[1280px] mx-auto px-[clamp(24px,6vw,80px)]">
           <RevealOnScroll>
-            <div className="landing-stats-grid">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center md:text-left">
               <div className="landing-stat">
-                <div className="num">TS</div>
-                <div className="lbl">主要语言：TypeScript 全栈</div>
+                <div className="text-[clamp(2.5rem,6vw,4rem)] leading-none italic">TS</div>
+                <div className="text-ld-muted text-[0.85rem] mt-3">主要语言：TypeScript 全栈</div>
               </div>
               <div className="landing-stat">
-                <div className="num">3</div>
-                <div className="lbl">首页内容：文章、作品、碎碎念</div>
+                <div className="text-[clamp(2.5rem,6vw,4rem)] leading-none italic">3</div>
+                <div className="text-ld-muted text-[0.85rem] mt-3">首页内容：文章、作品、碎碎念</div>
               </div>
               <div className="landing-stat">
-                <div className="num">∞</div>
-                <div className="lbl">长期更新：工具、想法、实验</div>
+                <div className="text-[clamp(2.5rem,6vw,4rem)] leading-none italic">∞</div>
+                <div className="text-ld-muted text-[0.85rem] mt-3">长期更新：工具、想法、实验</div>
               </div>
             </div>
           </RevealOnScroll>
           <RevealOnScroll>
-            <div className="landing-tech-row" aria-label="技术栈">
+            <div className="flex flex-wrap gap-2.5 mt-[18px] justify-center" aria-label="技术栈">
               {techStack.map((tech) => (
-                <span className="landing-tech-pill" key={tech}>
+                <span className="border border-ld-stroke rounded-full px-3 py-2 text-ld-text/80 bg-ld-surface/45 text-[0.8rem]" key={tech}>
                   {tech}
                 </span>
               ))}
@@ -208,24 +221,24 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="landing-contact" id="contact">
-        <div className="inner landing-container">
+      <section className="relative pt-16 pb-12 overflow-hidden" id="contact">
+        <div className="relative z-[2] max-w-[1280px] mx-auto px-[clamp(24px,6vw,80px)]">
           <MarqueeTrack />
-          <div className="landing-contact-cta">
-            <a className="landing-email-btn" href="mailto:hi@xidongdong.dev">
-              <span className="ring" />
-              <span className="inner">hi@xidongdong.dev</span>
+          <div className="text-center">
+            <a className="relative inline-flex items-center gap-2 rounded-full px-8 py-4 text-[1rem] transition-transform duration-200 hover:-translate-y-0.5 group focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1" href="mailto:hi@xidongdong.dev">
+              <span className="absolute inset-[-2px] rounded-full opacity-0 bg-[linear-gradient(90deg,var(--color-ld-accent-1),var(--color-ld-accent-2))] transition-opacity duration-300 group-hover:opacity-100" />
+              <span className="relative z-10 inline-flex items-center gap-2 bg-ld-surface rounded-full px-1">hi@xidongdong.dev</span>
             </a>
           </div>
-          <div className="landing-footer-bar">
-            <div className="landing-socials">
-              <a href="#">GitHub</a>
-              <a href="#">博客</a>
-              <a href="#">RSS</a>
-              <a href="#">即刻</a>
+          <div className="flex justify-between items-center gap-6 mt-16 pt-6 border-t border-ld-stroke flex-wrap">
+            <div className="flex gap-5">
+              <a className="text-ld-muted text-[0.85rem] transition-colors duration-300 hover:text-ld-text" href="#">GitHub</a>
+              <a className="text-ld-muted text-[0.85rem] transition-colors duration-300 hover:text-ld-text" href="#">博客</a>
+              <a className="text-ld-muted text-[0.85rem] transition-colors duration-300 hover:text-ld-text" href="#">RSS</a>
+              <a className="text-ld-muted text-[0.85rem] transition-colors duration-300 hover:text-ld-text" href="#">即刻</a>
             </div>
-            <div className="landing-avail">
-              <span className="dot" />
+            <div className="inline-flex items-center gap-2 text-ld-muted text-[0.85rem]">
+              <span className="w-2 h-2 rounded-full bg-[#4ade80] animate-landing-pulse-dot" />
               可以交流项目、工具和文章
             </div>
           </div>

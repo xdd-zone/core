@@ -11,3 +11,74 @@
 
 /* 动画 */
 @import './styles/utilities/animations.css';
+
+@theme {
+  --color-ld-bg: hsl(0 0% 4%);
+  --color-ld-surface: hsl(0 0% 8%);
+  --color-ld-text: hsl(0 0% 96%);
+  --color-ld-muted: hsl(0 0% 53%);
+  --color-ld-stroke: hsl(0 0% 12%);
+  --color-ld-accent-1: #89aacc;
+  --color-ld-accent-2: #4e85bf;
+
+  --animate-landing-rise: landing-rise 0.58s cubic-bezier(0.23, 1, 0.32, 1) both;
+  --animate-landing-role-fade: landing-role-fade 0.4s ease-out;
+  --animate-landing-scroll-down: landing-scroll-down 1.5s ease-in-out infinite;
+  --animate-landing-gradient-shift: landing-gradient-shift 6s ease infinite;
+  --animate-landing-pulse-dot: landing-pulse-dot 2s ease-in-out infinite;
+
+  @keyframes landing-rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes landing-role-fade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes landing-scroll-down {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(200%);
+    }
+  }
+
+  @keyframes landing-gradient-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes landing-pulse-dot {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.4;
+      transform: scale(0.7);
+    }
+  }
+}

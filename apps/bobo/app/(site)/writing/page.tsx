@@ -32,24 +32,24 @@ export default async function WritingPage({ searchParams }: WritingPageProps) {
   const activeTag = tagSlug ? data.tags.find((tag) => tag.slug === tagSlug) : null
 
   return (
-    <main className="site-page writing-page">
+    <main className="min-h-screen">
       <SiteNav activeHref="/writing" categories={data.categories} />
-      <section className="writing-hero">
-        <div className="site-container writing-hero-inner">
-          <span className="site-eyebrow">writing / content</span>
-          <h1>
-            文稿<span>记录</span>
+      <section className="relative pt-[160px] pb-24 max-md:pt-[120px] max-md:pb-[72px]">
+        <div className="max-w-[1200px] mx-auto px-6 relative z-2">
+          <span className="block mb-8 text-[0.72rem] text-ld-muted uppercase tracking-[0.3em]">writing / content</span>
+          <h1 className="max-w-[9ch] text-[clamp(4rem,12vw,9rem)] leading-[0.86] tracking-[-0.02em] italic">
+            文稿<span className="block text-ld-text/68">记录</span>
           </h1>
-          <p>这里放已经发布的文章。偏技术、产品和一些做工具时留下来的笔记。</p>
+          <p className="max-w-[34rem] mt-7 text-ld-muted text-[clamp(1rem,2vw,1.2rem)] leading-[1.75]">这里放已经发布的文章。偏技术、产品和一些做工具时留下来的笔记。</p>
         </div>
       </section>
 
-      <section className="writing-body">
-        <div className="site-container writing-layout">
-          <aside className="writing-sidebar" aria-label="文稿筛选">
-            <div className="writing-filter-group">
-              <p>标签</p>
-              <div className="writing-chip-list">
+      <section className="pt-12 pb-24">
+        <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-1 md:grid-cols-[minmax(180px,240px)_minmax(0,1fr)] gap-[clamp(32px,6vw,72px)] items-start">
+          <aside className="sticky top-[112px] max-md:static flex flex-col gap-8 max-md:gap-5 border-t border-ld-stroke pt-6" aria-label="文稿筛选">
+            <div>
+              <p className="mb-3 text-ld-muted text-[0.72rem] tracking-[0.26em] uppercase">标签</p>
+              <div className="flex flex-wrap gap-2">
                 <FilterLink href={buildFilterHref({ categorySlug })} active={!tagSlug}>
                   全部
                 </FilterLink>
@@ -66,50 +66,50 @@ export default async function WritingPage({ searchParams }: WritingPageProps) {
             </div>
           </aside>
 
-          <div className="writing-main">
-            <div className="writing-section-head">
+          <div>
+            <div className="flex justify-between items-end gap-6 mb-7 flex-wrap">
               <div>
-                <span className="line">
-                  <i className="bar" />
-                  <span className="eyebrow">published posts</span>
+                <span className="inline-flex items-center gap-3 mb-5">
+                  <i className="w-8 h-[1px] bg-ld-stroke" />
+                  <span className="text-[0.72rem] text-ld-muted uppercase tracking-[0.3em]">published posts</span>
                 </span>
-                <h2>
+                <h2 className="text-[clamp(2rem,5vw,3.2rem)] leading-[1.05] tracking-[-0.02em]">
                   已发布<span className="italic">文稿</span>
                 </h2>
-                <p>{activeTag ? activeTag.name : '按发布时间排列，先看最新的一批。'}</p>
+                <p className="text-ld-muted text-[0.95rem] max-w-[30rem] mt-4">{activeTag ? activeTag.name : '按发布时间排列，先看最新的一批。'}</p>
               </div>
             </div>
 
             {data.posts.length > 0 ? (
-              <div className="writing-list">
+              <div className="flex flex-col gap-[14px]">
                 {data.posts.map((post) => (
-                  <Link className="writing-entry" href={`/writing/${post.slug}`} key={post.id}>
-                    <div className="writing-entry-date">
-                      <span>{formatMonth(post.publishedAt ?? post.updatedAt)}</span>
-                      <strong>{formatDay(post.publishedAt ?? post.updatedAt)}</strong>
+                  <Link className="grid grid-cols-1 md:grid-cols-[72px_minmax(0,1fr)_auto] gap-[14px] md:gap-6 items-center border border-ld-stroke rounded-[22px] md:rounded-[24px] bg-ld-surface/38 p-5 transition-[background,border-color,transform] duration-[220ms] hover:border-ld-text/20 hover:bg-ld-surface md:hover:translate-x-1 group/entry" href={`/writing/${post.slug}`} key={post.id}>
+                    <div className="aspect-square border border-ld-stroke rounded-[18px] grid place-items-center content-center bg-ld-bg/60 w-[72px] md:w-auto">
+                      <span className="text-ld-muted text-[0.7rem] uppercase">{formatMonth(post.publishedAt ?? post.updatedAt)}</span>
+                      <strong className="text-[1.6rem] leading-none italic">{formatDay(post.publishedAt ?? post.updatedAt)}</strong>
                     </div>
-                    <div className="writing-entry-body">
-                      <div className="writing-entry-meta">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap gap-2 text-ld-muted text-[0.78rem]">
                         <span>{formatDate(post.publishedAt ?? post.updatedAt)}</span>
                       </div>
-                      <h3>{post.title}</h3>
-                      {post.excerpt ? <p>{post.excerpt}</p> : null}
+                      <h3 className="mt-2 text-[clamp(1.25rem,2.5vw,1.8rem)] leading-[1.16] font-medium tracking-[-0.02em]">{post.title}</h3>
+                      {post.excerpt ? <p className="max-w-[42rem] mt-2.5 text-ld-muted text-[0.9rem] leading-[1.7]">{post.excerpt}</p> : null}
                       {post.tags.length > 0 ? (
-                        <div className="writing-entry-tags">
+                        <div className="flex flex-wrap gap-2 text-ld-muted text-[0.78rem] mt-[14px]">
                           {post.tags.map((tag) => (
-                            <span key={tag.id}>{tag.name}</span>
+                            <span className="border border-ld-stroke rounded-full px-2 py-1" key={tag.id}>{tag.name}</span>
                           ))}
                         </div>
                       ) : null}
                     </div>
-                    <span className="writing-entry-arrow">阅读 →</span>
+                    <span className="text-ld-muted text-[0.82rem] whitespace-nowrap max-md:justify-self-start">阅读 →</span>
                   </Link>
                 ))}
               </div>
             ) : (
-              <div className="writing-empty">
-                <p>当前筛选下还没有公开文章。</p>
-                <Link href="/writing">查看全部文稿</Link>
+              <div className="border-t border-ld-stroke py-9">
+                <p className="text-ld-muted">当前筛选下还没有公开文章。</p>
+                <Link className="inline-flex mt-4 text-ld-text underline decoration-ld-text/25 underline-offset-6" href="/writing">查看全部文稿</Link>
               </div>
             )}
           </div>
@@ -123,13 +123,13 @@ function WritingErrorPage({ error }: { error: unknown }) {
   const message = error instanceof PublicContentError ? error.message : '文稿暂时打不开。'
 
   return (
-    <main className="site-page writing-page">
+    <main className="min-h-screen">
       <SiteNav activeHref="/writing" />
-      <section className="writing-error">
-        <div className="site-container">
-          <span className="site-eyebrow">writing / content</span>
-          <h1>文稿暂时打不开</h1>
-          <p>{message}</p>
+      <section className="min-h-screen grid items-center border-t border-ld-stroke py-9">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <span className="block mb-8 text-[0.72rem] text-ld-muted uppercase tracking-[0.3em]">writing / content</span>
+          <h1 className="mt-[18px] text-[clamp(2.5rem,8vw,5rem)] leading-none italic">文稿暂时打不开</h1>
+          <p className="text-ld-muted mt-7 max-w-[34rem] text-[clamp(1rem,2vw,1.2rem)] leading-[1.75]">{message}</p>
         </div>
       </section>
     </main>
@@ -138,7 +138,7 @@ function WritingErrorPage({ error }: { error: unknown }) {
 
 function FilterLink({ active, children, href }: { active: boolean; children: React.ReactNode; href: string }) {
   return (
-    <Link className={active ? 'active' : undefined} href={href}>
+    <Link className={`border border-ld-stroke rounded-full px-[11px] py-[7px] text-[0.8rem] transition-[background,border-color,color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${active ? 'border-ld-text/24 bg-ld-surface text-ld-text -translate-y-[1px]' : 'text-ld-muted hover:border-ld-text/24 hover:bg-ld-surface hover:text-ld-text hover:-translate-y-[1px]'}`} href={href}>
       {children}
     </Link>
   )
