@@ -12,14 +12,16 @@
 
   body {
     @apply min-h-full text-foreground;
-    background: radial-gradient(
+    background-color: var(--theme-base);
+    background-image: radial-gradient(
       ellipse at 30% 20%,
       color-mix(in srgb, var(--theme-primary) 25%, #ffffff) 0%,
       var(--theme-base) 65%,
-      color-mix(in srgb, var(--theme-text) 5%, var(--theme-base)) 100%
+      var(--theme-base) 100%
     );
-    background-color: var(--color-background);
-    background-attachment: fixed;
+    background-size: 100% 120vh;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
     transition:
       background-color 180ms ease,
       color 180ms ease,
@@ -27,8 +29,13 @@
   }
 
   :where([data-theme='macchiato'], [data-theme='frappe'], [data-theme='mocha']) body {
-    background: radial-gradient(ellipse at 30% 20%, #16243a 0%, #060810 55%, #020308 100%);
-    background-attachment: fixed;
+    background-color: #020308;
+    background-image: radial-gradient(
+      ellipse at 30% 20%,
+      #16243a 0%,
+      #060810 55%,
+      #020308 100%
+    );
   }
 
   ::selection {
