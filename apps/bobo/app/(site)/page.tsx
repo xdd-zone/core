@@ -74,7 +74,7 @@ export default async function Home() {
   const categories = await getPublicCategoryMenu().catch(() => [])
 
   return (
-    <div className="min-h-screen">
+    <div className="flex flex-1 flex-col">
       <section className="relative min-h-screen grid place-items-center overflow-hidden" id="home">
         <LandingNavbar categories={categories} />
         <HeroContent />

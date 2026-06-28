@@ -32,7 +32,7 @@ export default async function WritingPage({ searchParams }: WritingPageProps) {
   const activeTag = tagSlug ? data.tags.find((tag) => tag.slug === tagSlug) : null
 
   return (
-    <main className="min-h-screen">
+    <main className="flex flex-1 flex-col">
       <SiteNav activeHref="/writing" categories={data.categories} />
       <section className="relative pt-40 pb-24 max-md:pt-30 max-md:pb-18">
         <div className="max-w-300 mx-auto px-6 relative z-2">
@@ -157,9 +157,9 @@ function WritingErrorPage({ error }: { error: unknown }) {
   const message = error instanceof PublicContentError ? error.message : '文稿暂时打不开。'
 
   return (
-    <main className="min-h-screen">
+    <main className="flex flex-1 flex-col">
       <SiteNav activeHref="/writing" />
-      <section className="min-h-screen grid items-center border-t border-border py-9">
+      <section className="flex-1 grid items-center border-t border-border py-9">
         <div className="max-w-300 mx-auto px-6">
           <span className="block mb-8 text-[0.72rem] text-muted-foreground uppercase tracking-[0.3em]">
             writing / content

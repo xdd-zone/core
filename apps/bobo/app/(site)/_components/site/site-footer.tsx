@@ -37,8 +37,8 @@ const currentYear = new Date().getFullYear()
 export function SiteFooter() {
   return (
     <footer className="relative mt-20 overflow-hidden pb-8 pt-20 transition-colors duration-300">
-      {/* 底部雾气光晕背景 */}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,transparent,color-mix(in_oklab,var(--theme-lavender)_18%,var(--theme-base)))] dark:bg-[linear-gradient(to_bottom,transparent,color-mix(in_oklab,var(--theme-lavender)_3%,var(--theme-crust,#11111b)))]" />
+      {/* 底部雾气光晕背景：使用 mask-image 避免透明过渡产生灰线（死区） */}
+      <div className="pointer-events-none absolute inset-0 bg-[color-mix(in_oklab,var(--theme-lavender)_18%,var(--theme-base))] [mask-image:linear-gradient(to_bottom,transparent,black)] dark:bg-[color-mix(in_oklab,var(--theme-lavender)_3%,var(--theme-crust,#11111b))]" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-[clamp(24px,6vw,80px)]">
         {/* 顶部主要内容：左侧品牌，右侧多列链接 */}

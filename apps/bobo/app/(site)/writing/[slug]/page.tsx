@@ -46,9 +46,9 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
       error instanceof PublicContentError && error.reason === 'request-failed' ? error.message : '文章数据格式不正确。'
 
     return (
-      <main className="min-h-screen">
+      <main className="flex flex-1 flex-col">
         <SiteNav activeHref="/writing" />
-        <section className="min-h-screen grid items-center border-t border-border py-9">
+        <section className="flex-1 grid items-center border-t border-border py-9">
           <div className="max-w-300 mx-auto px-6">
             <span className="block mb-8 text-[0.72rem] text-muted-foreground uppercase tracking-[0.3em]">
               writing / post
@@ -66,7 +66,7 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
   const categories = await categoriesPromise
 
   return (
-    <main className="min-h-screen">
+    <main className="flex flex-1 flex-col">
       <SiteNav activeHref="/writing" categories={categories} />
       <article>
         <header className="relative pt-40 pb-12 max-md:pt-27.5 max-md:pb-12">
