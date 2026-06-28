@@ -4,9 +4,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { PostRenderer } from '@/components/content/post-renderer'
-import { getPublicCategoryMenu, getPublicPost, PublicContentError } from '@/lib/content/public-content'
+import { getPublicPost, PublicContentError } from '@/lib/content/public-content'
 
-import { SiteNav } from '../../_components/site/site-nav'
 
 interface WritingDetailPageProps {
   params: Promise<{
@@ -32,7 +31,6 @@ export async function generateMetadata({ params }: WritingDetailPageProps): Prom
 
 export default async function WritingDetailPage({ params }: WritingDetailPageProps) {
   const { slug } = await params
-  const categoriesPromise = getPublicCategoryMenu().catch(() => [])
 
   let post: Awaited<ReturnType<typeof getPublicPost>>
   try {
@@ -47,7 +45,6 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
 
     return (
       <main className="flex flex-1 flex-col">
-        <SiteNav activeHref="/writing" />
         <section className="flex-1 grid items-center border-t border-border py-9">
           <div className="max-w-300 mx-auto px-6">
             <span className="block mb-8 text-[0.72rem] text-muted-foreground uppercase tracking-[0.3em]">
@@ -63,11 +60,8 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
     )
   }
 
-  const categories = await categoriesPromise
-
   return (
     <main className="flex flex-1 flex-col">
-      <SiteNav activeHref="/writing" categories={categories} />
       <article>
         <header className="relative pt-40 pb-12 max-md:pt-27.5 max-md:pb-12">
           <div className="max-w-240 mx-auto px-6 relative z-2">

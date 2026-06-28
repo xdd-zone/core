@@ -1,13 +1,11 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 
-import { getPublicCategoryMenu } from '@/lib/content/public-content'
 
 import { cn } from '@/lib/utils'
 import {
   ExplorationsParallax,
   HeroContent,
-  LandingNavbar,
   MarqueeTrack,
   RevealOnScroll,
 } from './_components/home/landing-client'
@@ -71,12 +69,9 @@ const articles = [
 const techStack = ['TypeScript', 'React', 'Node.js', 'Next.js', 'Hono', 'Drizzle', 'SQLite', 'Agent Skills']
 
 export default async function Home() {
-  const categories = await getPublicCategoryMenu().catch(() => [])
-
   return (
     <div className="flex flex-1 flex-col">
       <section className="relative min-h-screen grid place-items-center overflow-hidden" id="home">
-        <LandingNavbar categories={categories} />
         <HeroContent />
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-center">

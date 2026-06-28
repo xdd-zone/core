@@ -3,7 +3,6 @@ import Link from 'next/link'
 
 import { getPublicWritingData, PublicContentError } from '@/lib/content/public-content'
 
-import { SiteNav } from '../_components/site/site-nav'
 
 interface WritingPageProps {
   searchParams: Promise<{
@@ -33,7 +32,6 @@ export default async function WritingPage({ searchParams }: WritingPageProps) {
 
   return (
     <main className="flex flex-1 flex-col">
-      <SiteNav activeHref="/writing" categories={data.categories} />
       <section className="relative pt-40 pb-24 max-md:pt-30 max-md:pb-18">
         <div className="max-w-300 mx-auto px-6 relative z-2">
           <span className="block mb-8 text-[0.72rem] text-muted-foreground uppercase tracking-[0.3em]">
@@ -158,7 +156,6 @@ function WritingErrorPage({ error }: { error: unknown }) {
 
   return (
     <main className="flex flex-1 flex-col">
-      <SiteNav activeHref="/writing" />
       <section className="flex-1 grid items-center border-t border-border py-9">
         <div className="max-w-300 mx-auto px-6">
           <span className="block mb-8 text-[0.72rem] text-muted-foreground uppercase tracking-[0.3em]">
