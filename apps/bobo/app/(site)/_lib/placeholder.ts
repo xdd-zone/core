@@ -1,7 +1,7 @@
 /* SVG 占位图生成器，为项目卡片和文章封面提供渐变底色，适配系统明暗模式与 Catppuccin 主题色 */
 export function makePlaceholder(key: string): string {
   const dims = key === 'p2' || key === 'p3' ? [800, 1000] : key.charAt(0) === 'e' ? [640, 640] : [800, 600]
-  
+
   // 各分类使用的 Catppuccin Accent 色相 (光/暗)
   const accents: Record<string, { light: string; dark: string }> = {
     p1: { light: '#1e66f5', dark: '#89b4fa' }, // Blue

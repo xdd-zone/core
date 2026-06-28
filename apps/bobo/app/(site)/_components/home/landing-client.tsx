@@ -48,7 +48,7 @@ export function HeroContent() {
     <div className="relative z-10 text-center px-6">
       <span
         className={cn(
-          'block mb-8 text-[0.72rem] text-muted-foreground uppercase tracking-[0.3em] opacity-0 translate-y-[18px]',
+          'block mb-8 text-[0.72rem] text-muted-foreground uppercase tracking-[0.3em] opacity-0 translate-y-4.5',
           ready && 'animate-landing-rise',
         )}
         style={ready ? { animationDelay: '0.04s' } : {}}
@@ -57,7 +57,7 @@ export function HeroContent() {
       </span>
       <h1
         className={cn(
-          'text-[clamp(3.5rem,12vw,9rem)] max-md:text-[clamp(4.4rem,20vw,6rem)] leading-[0.9] tracking-[-0.02em] mb-6 italic opacity-0 translate-y-[18px]',
+          'text-[clamp(3.5rem,12vw,9rem)] max-md:text-[clamp(4.4rem,20vw,6rem)] leading-[0.9] tracking-[-0.02em] mb-6 italic opacity-0 translate-y-4.5',
           ready && 'animate-landing-rise',
         )}
         style={ready ? { animationDelay: '0.13s' } : {}}
@@ -66,7 +66,7 @@ export function HeroContent() {
       </h1>
       <p
         className={cn(
-          'text-[clamp(1.1rem,2.5vw,1.5rem)] mb-2 opacity-0 translate-y-[18px]',
+          'text-[clamp(1.1rem,2.5vw,1.5rem)] mb-2 opacity-0 translate-y-4.5',
           ready && 'animate-landing-rise',
         )}
         style={ready ? { animationDelay: '0.27s' } : {}}
@@ -79,7 +79,7 @@ export function HeroContent() {
       </p>
       <p
         className={cn(
-          'text-[0.95rem] max-w-[28rem] mx-auto mt-4 mb-12 leading-[1.6] text-muted-foreground opacity-0 translate-y-[18px]',
+          'text-[0.95rem] max-w-md mx-auto mt-4 mb-12 leading-[1.6] text-muted-foreground opacity-0 translate-y-4.5',
           ready && 'animate-landing-rise',
         )}
         style={ready ? { animationDelay: '0.35s' } : {}}
@@ -88,7 +88,7 @@ export function HeroContent() {
       </p>
       <div
         className={cn(
-          'inline-flex gap-4 flex-wrap justify-center opacity-0 translate-y-[18px]',
+          'inline-flex gap-4 flex-wrap justify-center opacity-0 translate-y-4.5',
           ready && 'animate-landing-rise',
         )}
         style={ready ? { animationDelay: '0.43s' } : {}}
@@ -136,7 +136,7 @@ export function LandingNavbar({ categories = [] }: { categories?: PublicCategory
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center py-6 px-4">
       <div
-        className="relative inline-flex items-center gap-[2px] rounded-full backdrop-blur-[12px] border border-white/10 bg-surface p-2 transition-[box-shadow,transform] duration-[360ms] ease-[cubic-bezier(0.23,1,0.32,1)] [&.scrolled]:shadow-[0_8px_24px_rgba(0,0,0,0.4)] [&.scrolled]:-translate-y-0.5"
+        className="relative inline-flex items-center gap-0.5 rounded-full backdrop-blur-md border border-white/10 bg-surface p-2 transition-[box-shadow,transform] duration-360 ease-[cubic-bezier(0.23,1,0.32,1)] [&.scrolled]:shadow-[0_8px_24px_rgba(0,0,0,0.4)] [&.scrolled]:-translate-y-0.5"
         ref={pillRef}
       >
         <Link
@@ -144,20 +144,20 @@ export function LandingNavbar({ categories = [] }: { categories?: PublicCategory
           href="/"
           aria-label="回到首页"
         >
-          <div className="absolute inset-0 rounded-full p-[2px] bg-[linear-gradient(90deg,var(--color-ld-accent-1),var(--color-ld-accent-2))] [mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)] [mask-composite:exclude] transition-transform duration-500 group-hover/logo:rotate-180" />
-          <span className="relative z-1 w-[30px] h-[30px] rounded-full bg-background grid place-items-center text-[13px] italic">
+          <div className="absolute inset-0 rounded-full p-0.5 bg-[linear-gradient(90deg,var(--color-ld-accent-1),var(--color-ld-accent-2))] [mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)] mask-exclude transition-transform duration-500 group-hover/logo:rotate-180" />
+          <span className="relative z-1 w-7.5 h-7.5 rounded-full bg-background grid place-items-center text-[13px] italic">
             XD
           </span>
         </Link>
-        <span className="w-[1px] h-5 bg-border mx-1" />
+        <span className="w-px h-5 bg-border mx-1" />
         {SITE_NAV_ITEMS.map((item) =>
           'menu' in item && item.menu === 'categories' && categories.length > 0 ? (
             <div
-              className="relative group/nav after:absolute after:top-full after:left-1/2 max-md:after:left-0 after:w-[min(720px,calc(100vw-32px))] max-md:after:w-[min(340px,calc(100vw-24px))] after:h-8 after:-translate-x-1/2 max-md:after:-translate-x-[76px]"
+              className="relative group/nav after:absolute after:top-full after:left-1/2 max-md:after:left-0 after:w-[min(720px,calc(100vw-32px))] max-md:after:w-[min(340px,calc(100vw-24px))] after:h-8 after:-translate-x-1/2 max-md:after:-translate-x-19"
               key={item.href}
             >
               <Link
-                className="text-[0.85rem] max-md:text-[0.78rem] max-md:px-2.5 max-md:py-2 rounded-full px-4 py-2 transition-[color,background-color,transform] duration-200 inline-flex items-center border-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 text-muted-foreground hover:text-foreground hover:bg-border/50 hover:-translate-y-[1px]"
+                className="text-[0.85rem] max-md:text-[0.78rem] max-md:px-2.5 max-md:py-2 rounded-full px-4 py-2 transition-[color,background-color,transform] duration-200 inline-flex items-center border-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 text-muted-foreground hover:text-foreground hover:bg-border/50 hover:-translate-y-px"
                 href={item.href}
               >
                 {item.label}
@@ -171,7 +171,7 @@ export function LandingNavbar({ categories = [] }: { categories?: PublicCategory
                 'text-[0.85rem] max-md:text-[0.78rem] max-md:px-2.5 max-md:py-2 rounded-full px-4 py-2 transition-[color,background-color,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1',
                 item.href === '/'
                   ? 'text-foreground bg-border/50'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-border/50 hover:-translate-y-[1px]',
+                  : 'text-muted-foreground hover:text-foreground hover:bg-border/50 hover:-translate-y-px',
               )}
               href={item.href}
             >
@@ -179,13 +179,13 @@ export function LandingNavbar({ categories = [] }: { categories?: PublicCategory
             </Link>
           ),
         )}
-        <span className="w-[1px] h-5 bg-border mx-1" />
+        <span className="w-px h-5 bg-border mx-1" />
         <a
           className="relative inline-flex items-center gap-1 max-md:text-[0.78rem] text-[0.85rem] rounded-full group/hi focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
           href="mailto:hi@xidongdong.dev"
         >
-          <span className="absolute inset-[-2px] rounded-full opacity-0 bg-[linear-gradient(90deg,var(--color-ld-accent-1),var(--color-ld-accent-2))] transition-opacity duration-300 ease-out group-hover/hi:opacity-100" />
-          <span className="relative z-1 inline-flex items-center gap-1 bg-surface backdrop-blur-[12px] rounded-full px-4 py-2 max-md:px-2.5 max-md:py-2">
+          <span className="absolute -inset-0.5 rounded-full opacity-0 bg-[linear-gradient(90deg,var(--color-ld-accent-1),var(--color-ld-accent-2))] transition-opacity duration-300 ease-out group-hover/hi:opacity-100" />
+          <span className="relative z-1 inline-flex items-center gap-1 bg-surface backdrop-blur-md rounded-full px-4 py-2 max-md:px-2.5 max-md:py-2">
             联系 ↗
           </span>
         </a>
@@ -219,7 +219,7 @@ export function RevealOnScroll({ children, className }: { children: React.ReactN
     <div
       ref={ref}
       className={cn(
-        'opacity-0 translate-y-[22px] transition-all duration-[720ms] ease-[cubic-bezier(0.23,1,0.32,1)] [&.in]:opacity-100 [&.in]:translate-y-0',
+        'opacity-0 translate-y-5.5 transition-all duration-720 ease-[cubic-bezier(0.23,1,0.32,1)] [&.in]:opacity-100 [&.in]:translate-y-0',
         className,
       )}
     >
@@ -277,7 +277,7 @@ export function ExplorationsParallax() {
     <>
       <section className="relative min-h-[300vh]" ref={exploreRef}>
         <div className="sticky top-0 h-screen grid place-items-center text-center z-10 pointer-events-none">
-          <div className="pointer-events-auto max-w-[1280px] mx-auto px-[clamp(24px,6vw,80px)]">
+          <div className="pointer-events-auto max-w-7xl mx-auto px-[clamp(24px,6vw,80px)]">
             <span className="block mb-8 text-[0.72rem] text-muted-foreground uppercase tracking-[0.3em]">碎碎念</span>
             <h2 className="text-[clamp(2.2rem,6vw,4rem)] leading-[1.05] my-4 italic">碎碎念与实验</h2>
             <p className="text-muted-foreground" style={{ maxWidth: '26rem', margin: '0 auto' }}>
@@ -291,7 +291,7 @@ export function ExplorationsParallax() {
             </a>
           </div>
         </div>
-        <div className="absolute inset-0 z-20 grid grid-cols-2 gap-5 md:gap-12 max-w-[1400px] mx-auto px-4 md:px-8 pointer-events-none">
+        <div className="absolute inset-0 z-20 grid grid-cols-2 gap-5 md:gap-12 max-w-350 mx-auto px-4 md:px-8 pointer-events-none">
           <div className="flex flex-col gap-20 pt-[30vh]">
             {col0.map((card, i) => (
               <button
@@ -341,7 +341,7 @@ export function ExplorationsParallax() {
 
       <div
         className={cn(
-          'fixed inset-0 z-[9000] bg-black/90 grid place-items-center p-10 opacity-0 pointer-events-none transition-opacity duration-200',
+          'fixed inset-0 z-9000 bg-black/90 grid place-items-center p-10 opacity-0 pointer-events-none transition-opacity duration-200',
           lightboxSrc && 'opacity-100 pointer-events-auto',
         )}
         role="dialog"
@@ -355,7 +355,7 @@ export function ExplorationsParallax() {
         {lightboxSrc ? (
           <Image
             className={cn(
-              'max-w-[90vw] max-h-[90vh] rounded-2xl scale-[0.98] transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)]',
+              'max-w-[90vw] max-h-[90vh] rounded-2xl scale-[0.98] transition-transform duration-240 ease-[cubic-bezier(0.23,1,0.32,1)]',
               lightboxSrc && 'scale-100',
             )}
             src={lightboxSrc.src}

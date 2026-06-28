@@ -49,12 +49,12 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
       <main className="min-h-screen">
         <SiteNav activeHref="/writing" />
         <section className="min-h-screen grid items-center border-t border-border py-9">
-          <div className="max-w-[1200px] mx-auto px-6">
+          <div className="max-w-300 mx-auto px-6">
             <span className="block mb-8 text-[0.72rem] text-muted-foreground uppercase tracking-[0.3em]">
               writing / post
             </span>
-            <h1 className="mt-[18px] text-[clamp(2.5rem,8vw,5rem)] leading-none italic">文稿暂时打不开</h1>
-            <p className="text-muted-foreground mt-7 max-w-[34rem] text-[clamp(1rem,2vw,1.2rem)] leading-[1.75]">
+            <h1 className="mt-4.5 text-[clamp(2.5rem,8vw,5rem)] leading-none italic">文稿暂时打不开</h1>
+            <p className="text-muted-foreground mt-7 max-w-136 text-[clamp(1rem,2vw,1.2rem)] leading-[1.75]">
               {message}
             </p>
           </div>
@@ -69,8 +69,8 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
     <main className="min-h-screen">
       <SiteNav activeHref="/writing" categories={categories} />
       <article>
-        <header className="relative pt-[160px] pb-12 max-md:pt-[110px] max-md:pb-12">
-          <div className="max-w-[1200px] mx-auto px-6 relative z-2 max-w-[960px]">
+        <header className="relative pt-40 pb-12 max-md:pt-27.5 max-md:pb-12">
+          <div className="max-w-240 mx-auto px-6 relative z-2">
             <Link
               className="inline-flex mb-8 text-foreground underline decoration-ld-text/25 underline-offset-6"
               href="/writing"
@@ -84,11 +84,11 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
               {post.title}
             </h1>
             {post.excerpt ? (
-              <p className="max-w-[34rem] mt-7 text-muted-foreground text-[clamp(1rem,2vw,1.2rem)] leading-[1.75]">
+              <p className="max-w-136 mt-7 text-muted-foreground text-[clamp(1rem,2vw,1.2rem)] leading-[1.75]">
                 {post.excerpt}
               </p>
             ) : null}
-            <div className="flex flex-wrap gap-2 text-muted-foreground text-[0.78rem] mt-[26px]">
+            <div className="flex flex-wrap gap-2 text-muted-foreground text-[0.78rem] mt-6.5">
               <span className="border border-border rounded-full px-2 py-1">
                 {formatDate(post.publishedAt ?? post.updatedAt)}
               </span>
@@ -101,7 +101,7 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
           </div>
         </header>
 
-        <div className="max-w-[1200px] mx-auto px-6 max-w-[820px] pt-16 pb-24">
+        <div className="max-w-205 mx-auto px-6 pt-16 pb-24">
           <PostRenderer source={post.source} />
         </div>
       </article>
