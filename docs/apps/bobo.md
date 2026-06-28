@@ -108,7 +108,7 @@ apps/bobo/.env.development
 
 `BOBO_ALLOWED_DEV_ORIGINS` 用来放 Next 开发服务允许访问的 hostname，多个值用英文逗号隔开。
 
-`BOBO_BASE_PATH` 用来改 Next 路由前缀。正常本地开发时留空。通过 code-server 访问时填 `/absproxy/4399`，让页面、站内链接和 `/_next/static` 资源都走同一个前缀。
+`BOBO_BASE_PATH` 用来改 Next 路由前缀。正常本地开发时留空。通过 code-server 访问时填 `/absproxy/14399`，让页面、站内链接和 `/_next/static` 资源都走同一个前缀。
 
 code-server 的配置放在 `apps/bobo/.env.code-server`，启动命令和访问地址看 [code-server 开发](../development/code-server.md)。
 

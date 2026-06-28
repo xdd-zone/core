@@ -28,7 +28,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "dev:cs": "dotenv -e .env.code-server -- vite",
+    "dev:cs": "dotenv -e .env.code-server -- vite --port 12333",
     "build": "pnpm run type-check && vite build",
     "preview": "vite preview",
     "lint": "eslint .",

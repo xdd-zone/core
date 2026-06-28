@@ -16,8 +16,8 @@ pnpm dev:cs
 
 ```text
 Momo: https://code.example.com/proxy/7788/
-Fifa: https://code.example.com/absproxy/2333/
-Bobo: https://code.example.com/absproxy/4399/
+Fifa: https://code.example.com/absproxy/12333/
+Bobo: https://code.example.com/absproxy/14399/
 ```
 
 Momo 的 `BETTER_AUTH_URL` 要填它的对外地址。code-server 里可以写成 `https://code.example.com/proxy/7788` 这种带代理前缀的值，Momo 会按这个地址拼 `/api/auth`。
