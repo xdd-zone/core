@@ -24,9 +24,7 @@ const footerLinkGroups = [
   },
 ] as const
 
-const bottomLinks = [
-  { href: '#', label: '订阅' },
-] as const
+const bottomLinks = [{ href: '#', label: '订阅' }] as const
 
 const currentYear = new Date().getFullYear()
 

@@ -121,9 +121,7 @@ export default async function Home() {
                 <div
                   className={cn(
                     'relative rounded-[24px] overflow-hidden border border-border/70 dark:border-border bg-white dark:bg-surface shadow-sm dark:shadow-none transition-all duration-300 hover:-translate-y-1 hover:border-foreground/25 group focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1',
-                    i === 0 || i === 3
-                      ? 'md:col-span-7 aspect-4/3'
-                      : 'md:col-span-5 md:aspect-3/4 max-md:aspect-4/3',
+                    i === 0 || i === 3 ? 'md:col-span-7 aspect-4/3' : 'md:col-span-5 md:aspect-3/4 max-md:aspect-4/3',
                   )}
                   key={proj.key}
                 >

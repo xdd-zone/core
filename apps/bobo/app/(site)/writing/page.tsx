@@ -165,9 +165,7 @@ function WritingErrorPage({ error }: { error: unknown }) {
             writing / content
           </span>
           <h1 className="mt-4.5 text-[clamp(2.5rem,8vw,5rem)] leading-none italic">文稿暂时打不开</h1>
-          <p className="text-muted-foreground mt-7 max-w-136 text-[clamp(1rem,2vw,1.2rem)] leading-[1.75]">
-            {message}
-          </p>
+          <p className="text-muted-foreground mt-7 max-w-136 text-[clamp(1rem,2vw,1.2rem)] leading-[1.75]">{message}</p>
         </div>
       </section>
     </main>
