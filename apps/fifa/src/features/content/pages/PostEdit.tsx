@@ -476,7 +476,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                     <div className="mt-1 text-xs text-fg-muted">{t('content.postEdit.recentAssetsDescription')}</div>
                   </div>
                   <Button size="small" onClick={() => setAssetPickerOpen(true)}>
-                    {'选封面'}
+                    选封面
                   </Button>
                 </div>
                 <div className="grid gap-3">

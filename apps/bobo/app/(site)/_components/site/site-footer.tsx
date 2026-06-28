@@ -2,49 +2,150 @@ import Link from 'next/link'
 
 import { ThemeToggle } from '@/components/site/theme-toggle'
 
-const footerLinks = [
-  { href: '#', label: 'GitHub', internal: false },
-  { href: '/writing', label: '博客', internal: true },
-  { href: '#', label: 'RSS', internal: false },
-  { href: '#', label: '即刻', internal: false },
+const footerLinkGroups = [
+  {
+    title: '关于',
+    links: [
+      { href: '#', label: '关于本站', internal: false },
+      { href: '/writing', label: '博客', internal: true },
+    ],
+  },
+  {
+    title: '联系',
+    links: [
+      { href: '#', label: 'GitHub', internal: false },
+      { href: '#', label: '即刻', internal: false },
+    ],
+  },
+  {
+    title: '更多',
+    links: [
+      { href: '#', label: 'RSS', internal: false },
+      { href: '#', label: '站点地图', internal: false },
+    ],
+  },
 ] as const
+
+const bottomLinks = [
+  { href: '#', label: 'RSS 订阅' },
+  { href: '#', label: '站点地图' },
+  { href: '#', label: '订阅' },
+] as const
+
+const currentYear = new Date().getFullYear()
 
 export function SiteFooter() {
   return (
-    <footer className="relative pb-10 pt-8">
-      <div className="mx-auto max-w-7xl px-[clamp(24px,6vw,80px)]">
-        <div className="flex items-center justify-between gap-6 border-t border-border pt-6 max-md:flex-col max-md:items-start">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <nav className="flex flex-wrap items-center gap-x-5 gap-y-3" aria-label="站点底部链接">
-              {footerLinks.map((item) =>
-                item.internal ? (
-                  <Link
-                    className="text-[0.85rem] text-muted-foreground transition-colors duration-300 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
-                    href={item.href}
-                    key={item.label}
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <a
-                    className="text-[0.85rem] text-muted-foreground transition-colors duration-300 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
-                    href={item.href}
-                    key={item.label}
-                  >
-                    {item.label}
-                  </a>
-                ),
-              )}
-            </nav>
-            <span className="text-muted-foreground opacity-30" aria-hidden="true">
-              |
-            </span>
-            <ThemeToggle />
+    <footer className="relative mt-20 overflow-hidden pb-8 pt-20 transition-colors duration-300">
+      {/* 底部雾气光晕背景 */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,transparent,color-mix(in_oklab,var(--theme-lavender)_18%,var(--theme-base)))] dark:bg-[linear-gradient(to_bottom,transparent,color-mix(in_oklab,var(--theme-lavender)_3%,var(--theme-crust,#11111b)))]" />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-[clamp(24px,6vw,80px)]">
+        {/* 顶部主要内容：左侧品牌，右侧多列链接 */}
+        <div className="mb-20 flex flex-col justify-between gap-12 md:flex-row lg:gap-24">
+          {/* 左侧品牌与描述 */}
+          <div className="flex max-w-xs flex-col items-start space-y-8">
+            <div>
+              <h2 className="mb-2 text-xl font-bold tracking-tight text-foreground">Bobo</h2>
+              <p className="text-[0.9rem] italic text-muted-foreground">Stay hungry. Stay foolish.</p>
+            </div>
+
+            <div className="space-y-1 text-[0.85rem] text-muted-foreground">
+              <p>
+                © 2024-{currentYear} Powered by Bobo &{' '}
+                <a href="#" className="transition-colors duration-300 hover:text-foreground">
+                  XDD Zone
+                </a>
+                .
+              </p>
+            </div>
+
+            <div className="inline-flex items-center gap-2 text-[0.85rem] text-muted-foreground">
+              <span className="animate-landing-pulse-dot h-2 w-2 rounded-full bg-[#4ade80]" />
+              可以交流项目、工具和文章
+            </div>
           </div>
 
-          <div className="inline-flex items-center gap-2 text-[0.85rem] text-muted-foreground">
-            <span className="h-2 w-2 rounded-full bg-[#4ade80] animate-landing-pulse-dot" />
-            可以交流项目、工具和文章
+          {/* 右侧链接矩阵 */}
+          <div className="grid grid-cols-2 gap-12 sm:grid-cols-3 lg:gap-20">
+            {footerLinkGroups.map((group) => (
+              <div key={group.title} className="flex flex-col space-y-5">
+                <h3 className="text-[0.9rem] font-medium text-foreground">{group.title}</h3>
+                <ul className="flex flex-col space-y-3.5">
+                  {group.links.map((link) => (
+                    <li key={link.label}>
+                      {link.internal ? (
+                        <Link
+                          href={link.href}
+                          className="text-[0.85rem] text-muted-foreground transition-colors duration-300 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
+                        >
+                          {link.label}
+                        </Link>
+                      ) : (
+                        <a
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[0.85rem] text-muted-foreground transition-colors duration-300 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
+                        >
+                          {link.label}
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 底部附加功能栏：工具、主题切换、备案等 */}
+        <div className="flex flex-col items-start justify-between gap-4 pt-8 text-[0.85rem] text-muted-foreground sm:flex-row sm:items-center">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+            <div className="flex flex-wrap items-center gap-x-3">
+              {bottomLinks.map((link, index) => (
+                <div key={link.label} className="flex items-center gap-3">
+                  <a href={link.href} className="transition-colors duration-300 hover:text-foreground">
+                    {link.label}
+                  </a>
+                  {index < bottomLinks.length - 1 && <span className="opacity-30">·</span>}
+                </div>
+              ))}
+            </div>
+
+            <span className="hidden opacity-30 sm:inline">|</span>
+            <ThemeToggle />
+            <span className="hidden opacity-30 sm:inline">|</span>
+
+            <button
+              type="button"
+              className="flex cursor-not-allowed items-center gap-1.5 transition-colors duration-300 hover:text-foreground"
+              aria-label="切换语言"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m5 8 6 6" />
+                <path d="m4 14 6-6 2-3" />
+                <path d="M2 5h12" />
+                <path d="M7 2h1" />
+                <path d="m22 22-5-10-5 10" />
+                <path d="M14 18h6" />
+              </svg>
+              简体中文
+            </button>
+          </div>
+
+          <div className="flex items-center">
+            <span className="select-none transition-colors duration-300 hover:text-foreground">( •̀ ω •́ )✧</span>
           </div>
         </div>
       </div>

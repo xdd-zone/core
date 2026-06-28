@@ -30,12 +30,7 @@
 
   :where([data-theme='macchiato'], [data-theme='frappe'], [data-theme='mocha']) body {
     background-color: #020308;
-    background-image: radial-gradient(
-      ellipse at 30% 20%,
-      #16243a 0%,
-      #060810 55%,
-      #020308 100%
-    );
+    background-image: radial-gradient(ellipse at 30% 20%, #16243a 0%, #060810 55%, #020308 100%);
   }
 
   ::selection {
