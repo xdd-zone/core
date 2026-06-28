@@ -3,7 +3,6 @@ import Link from 'next/link'
 
 import { getPublicWritingData, PublicContentError } from '@/lib/content/public-content'
 
-
 interface WritingPageProps {
   searchParams: Promise<{
     category?: string | string[]

@@ -1,14 +1,8 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 
-
 import { cn } from '@/lib/utils'
-import {
-  ExplorationsParallax,
-  HeroContent,
-  MarqueeTrack,
-  RevealOnScroll,
-} from './_components/home/landing-client'
+import { ExplorationsParallax, HeroContent, MarqueeTrack, RevealOnScroll } from './_components/home/landing-client'
 import { makePlaceholder } from './_lib/placeholder'
 
 export const metadata: Metadata = {

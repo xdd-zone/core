@@ -6,7 +6,6 @@ import { notFound } from 'next/navigation'
 import { PostRenderer } from '@/components/content/post-renderer'
 import { getPublicPost, PublicContentError } from '@/lib/content/public-content'
 
-
 interface WritingDetailPageProps {
   params: Promise<{
     slug: string

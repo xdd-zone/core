@@ -106,8 +106,6 @@ export function HeroContent() {
   )
 }
 
-
-
 export function RevealOnScroll({ children, className }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
 

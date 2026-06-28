@@ -26,9 +26,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       {/* 遮罩层 - 页面切换时的中间态 */}
       <div
         className={`absolute inset-0 z-[40] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          isTransitioning
-            ? 'opacity-100 pointer-events-auto backdrop-blur-md'
-            : 'opacity-0 pointer-events-none'
+          isTransitioning ? 'opacity-100 pointer-events-auto backdrop-blur-md' : 'opacity-0 pointer-events-none'
         }`}
       >
         <div
