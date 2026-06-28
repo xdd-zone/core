@@ -684,8 +684,8 @@ function PostEditContent({ postId }: PostEditContentProps) {
           </div>
         </section>
 
-        <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)]">
-          <section className="flex h-[600px] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm xl:h-[calc(100vh-200px)]">
+        <section className="grid items-start gap-5 lg:grid-cols-2">
+          <section className="flex h-[600px] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm lg:h-[calc(100vh-120px)]">
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border-subtle bg-surface-muted/45 px-5 py-4">
               <div>
                 <div className="text-sm font-medium text-fg">正文编辑</div>
@@ -713,7 +713,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
             </div>
           </section>
 
-          <aside className="flex h-[600px] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm xl:sticky xl:top-5 xl:h-[calc(100vh-200px)]">
+          <aside className="flex h-[600px] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm lg:sticky lg:top-5 lg:h-[calc(100vh-120px)]">
             <div className="shrink-0 border-b border-border-subtle bg-surface-muted/45 px-5 py-4">
               <div className="text-sm font-medium text-fg">预览和素材</div>
               <div className="mt-1 text-xs text-fg-muted">预览会先保存草稿，再生成页面链接。</div>
