@@ -1,5 +1,3 @@
-import Link from 'next/link'
-
 import { ThemeToggle } from '@/components/site/theme-toggle'
 
 const footerLinkGroups = [
@@ -27,8 +25,6 @@ const footerLinkGroups = [
 ] as const
 
 const bottomLinks = [
-  { href: '#', label: 'RSS 订阅' },
-  { href: '#', label: '站点地图' },
   { href: '#', label: '订阅' },
 ] as const
 
@@ -53,9 +49,9 @@ export function SiteFooter() {
             <div className="space-y-1 text-[0.85rem] text-muted-foreground">
               <p>
                 © 2024-{currentYear} Powered by Bobo &{' '}
-                <a href="#" className="transition-colors duration-300 hover:text-foreground">
+                <span className="cursor-not-allowed opacity-50 transition-colors duration-300 hover:text-foreground">
                   XDD Zone
-                </a>
+                </span>
                 .
               </p>
             </div>
@@ -74,23 +70,9 @@ export function SiteFooter() {
                 <ul className="flex flex-col space-y-3.5">
                   {group.links.map((link) => (
                     <li key={link.label}>
-                      {link.internal ? (
-                        <Link
-                          href={link.href}
-                          className="text-[0.85rem] text-muted-foreground transition-colors duration-300 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
-                        >
-                          {link.label}
-                        </Link>
-                      ) : (
-                        <a
-                          href={link.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[0.85rem] text-muted-foreground transition-colors duration-300 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
-                        >
-                          {link.label}
-                        </a>
-                      )}
+                      <span className="cursor-not-allowed text-[0.85rem] text-muted-foreground opacity-50 transition-colors duration-300 hover:text-foreground">
+                        {link.label}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -105,9 +87,9 @@ export function SiteFooter() {
             <div className="flex flex-wrap items-center gap-x-3">
               {bottomLinks.map((link, index) => (
                 <div key={link.label} className="flex items-center gap-3">
-                  <a href={link.href} className="transition-colors duration-300 hover:text-foreground">
+                  <span className="cursor-not-allowed opacity-50 transition-colors duration-300 hover:text-foreground">
                     {link.label}
-                  </a>
+                  </span>
                   {index < bottomLinks.length - 1 && <span className="opacity-30">·</span>}
                 </div>
               ))}
@@ -119,7 +101,7 @@ export function SiteFooter() {
 
             <button
               type="button"
-              className="flex cursor-not-allowed items-center gap-1.5 transition-colors duration-300 hover:text-foreground"
+              className="flex cursor-not-allowed items-center gap-1.5 opacity-50 transition-colors duration-300 hover:text-foreground"
               aria-label="切换语言"
             >
               <svg
