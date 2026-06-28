@@ -30,13 +30,13 @@
 - `apps/bobo/app/(site)/writing/[slug]/page.tsx`
   文稿详情页，按 slug 读取已发布文章。
 - `apps/bobo/app/(site)/layout.tsx`
-  给公开站点分区引入站点公共样式、首页样式和文稿样式，不改 URL。
+  给公开站点页面统一加底部区域，不改 URL。
 - `apps/bobo/app/(preview)/preview/posts/[postId]/page.tsx`
   文章预览页，读取 `MOMO_BASE_URL` 指向的 Momo 预览接口。
 - `apps/bobo/app/(lab)/lab`
   放样式演示、主题验证和临时页面。
 - `apps/bobo/app/globals.css`
-  全局样式入口，只负责导入 Tailwind、shadcn 样式、共享主题入口和本地样式文件。
+  全局样式入口，导入 Tailwind、shadcn 样式、共享主题入口和本地样式文件，并放 Tailwind `@theme` 动画 token。
 - `apps/bobo/app/styles/base/reset.css`
   放基础样式。
 - `apps/bobo/app/styles/utilities/animations.css`
@@ -145,10 +145,13 @@ code-server 的配置放在 `apps/bobo/.env.code-server`，启动命令和访问
 
 ## 主题维护
 
-- 可选主题写在 `apps/bobo/lib/theme.ts` 的 `THEMES`。
-- 默认主题写在 `DEFAULT_THEME`。
+- Bobo 的主题设置类型写在 `apps/bobo/lib/theme.ts` 的 `ThemeSetting`，当前支持 Catppuccin 主题名和 `system`。
+- 默认主题设置写在 `DEFAULT_THEME_SETTING`，当前是 `system`。
+- 系统浅色主题写在 `FALLBACK_LIGHT`，当前是 `latte`。
+- 系统深色主题写在 `FALLBACK_DARK`，当前是 `macchiato`。
 - 本地存储 key 写在 `THEME_STORAGE_KEY`。
 - 页面加载前的主题初始化脚本在 `apps/bobo/app/layout.tsx`。
+- 底部主题切换组件放在 `apps/bobo/components/site/theme-toggle.tsx`，当前提供 Light、System 和 Dark 三个入口。
 - 新增主题时，同时改 `@xdd-zone/catppuccin-theme` 的主题名、色板和样式入口。
 
 ## 依赖维护

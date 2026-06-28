@@ -1,6 +1,6 @@
 # 腾讯云 COS
 
-当前 `apps/momo` 已经接入文件存储驱动层。可以使用本地目录，也可以使用腾讯云 COS。当前还没有媒体上传 HTTP 接口。
+当前 `apps/momo` 已经接入文件存储驱动层。可以使用本地目录，也可以使用腾讯云 COS。内容模块已经通过素材接口保存图片文件。
 
 ## 当前情况
 
@@ -10,7 +10,7 @@
 - 文件名生成和 MIME 白名单放在 `apps/momo/src/infra/storage/media-file.ts`。
 - 存储路径校验放在 `apps/momo/src/infra/storage/storage-path.ts`。
 - `createRuntime()` 会创建 `runtime.storage`。
-- 当前没有 `POST /api/media/upload` 接口，也没有 `modules/media`。
+- 当前没有 `modules/media`。图片素材接口放在 `apps/momo/src/modules/content/content.route.ts`。
 
 ## 腾讯云基础概念
 
@@ -60,17 +60,24 @@ COS_SIGNED_URL_EXPIRES=600
 - `COS_KEY_PREFIX` 默认是 `media`。
 - `COS_SIGNED_URL_EXPIRES` 默认是 `600` 秒，最小值是 `60`。
 
-## 当前和文件存储无关的接口
+## 当前图片素材接口
 
-当前 Momo 已有这些和文件存储无关的接口：
+当前文件存储由 content 模块调用：
 
-- `GET /`
-- `GET /health`
-- `POST /rpc/system/ping`
-- `GET` 或 `POST /api/auth/*`
-- `POST /api/auth/sign-up/email`
-- `GET /rpc/fifa/auth/me`
-- `GET /rpc/bobo/auth/me`
+- `POST /rpc/content/assets/images`
+  上传图片素材，需要 `content.asset.upload` 权限。
+- `GET /rpc/content/assets`
+  读取素材列表，需要 `content.asset.read` 权限。
+- `GET /rpc/content/assets/:id`
+  读取素材详情，需要 `content.asset.read` 权限。
+- `GET /rpc/content/assets/:id/file`
+  读取素材文件，不检查后台登录态，给文章正文和预览页使用。
+- `PATCH /rpc/content/assets/:id`
+  更新素材说明，需要 `content.asset.edit` 权限。
+- `DELETE /rpc/content/assets/:id`
+  删除素材，需要 `content.asset.delete` 权限。
+
+上传请求用 `multipart/form-data`，字段名是 `file`。文件存入当前 `STORAGE_PROVIDER` 指定的驱动，素材记录写入 `content_assets` 表。
 
 ## 验证
 
@@ -103,12 +110,3 @@ COS_SIGNED_URL_EXPIRES=600
 cd apps/momo
 pnpm test
 ```
-
-## 后续如果加媒体接口
-
-文档里需要写清：
-
-- 上传接口路径。
-- `modules/media` 的 route、service 和 repository。
-- 上传、读取和删除文件的请求参数和返回结构。
-- 常见错误怎么查。

@@ -115,6 +115,7 @@ pnpm dev
 ```bash
 pnpm dev:fifa
 pnpm dev:momo
+pnpm dev:bobo
 ```
 
 ### 3. 请求健康检查
@@ -238,12 +239,30 @@ pnpm dev:bobo
   返回 MDX 组件清单。
 - `/rpc/content/assets/images`
   上传图片素材。
+- `/rpc/content/assets`
+  后台素材列表。
+- `/rpc/content/assets/:id`
+  后台素材详情、更新和删除。
+- `/rpc/content/assets/:id/file`
+  读取素材文件。
+- `/rpc/content/categories`
+  后台分类列表和创建分类。
+- `/rpc/content/categories/:id`
+  后台分类详情、更新和删除。
+- `/rpc/content/tags`
+  后台标签列表和创建标签。
+- `/rpc/content/tags/:id`
+  后台标签详情、更新和删除。
 - `/rpc/content/previews/:token`
   使用预览 token 读取文章 revision。
-- `/rpc/content/public/posts`
+- `/rpc/bobo/content/posts`
   公开文章列表。
-- `/rpc/content/public/posts/:slug`
+- `/rpc/bobo/content/posts/:slug`
   公开文章详情。
+- `/rpc/bobo/content/categories`
+  公开分类列表，带已发布文章数量。
+- `/rpc/bobo/content/tags`
+  公开标签列表。
 
 ## 文档入口
 

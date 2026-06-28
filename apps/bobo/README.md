@@ -44,21 +44,19 @@ pnpm --filter @xdd-zone/bobo start
 - `app/(site)/writing/[slug]/page.tsx`
   文稿详情页，按 slug 读取已发布文章。
 - `app/(site)/_components/home`
-  首页专用组件和样式。
+  首页专用交互组件。
 - `app/(site)/_components/site`
-  公开站点共用导航、容器和深色页面样式。
-- `app/(site)/_components/writing`
-  文稿页专用样式。
+  公开站点共用导航、分类菜单和底部区域。
 - `app/(preview)/preview/posts/[postId]/page.tsx`
   文章预览页，读取 `MOMO_BASE_URL` 指向的 Momo 预览接口。
 - `app/layout.tsx`
   全局布局、字体、metadata 和主题初始化脚本。
 - `app/globals.css`
-  全局样式入口。
+  全局样式入口，导入主题和基础样式，并定义首页动画 token。
 - `app/styles`
-  基础样式、背景纹理和动画工具类。
+  基础样式和动画工具类。
 - `components`
-  站点组件。
+  跨页面复用的站点组件。当前主题切换组件在 `components/site/theme-toggle.tsx`。
 - `lib`
   主题函数、工具函数、环境变量校验、Momo HTTP 请求封装和 Bobo 公开内容 API 调用。
 

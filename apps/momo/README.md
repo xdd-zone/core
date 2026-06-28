@@ -8,10 +8,11 @@
 - 创建运行时 app，给测试和包导出使用。
 - 提供统一响应格式、请求日志、CORS、安全响应头、请求体大小限制和超时处理。
 - 提供系统接口和认证接口。
+- 提供内容接口，包含文章草稿、发布、预览 token、公开文章、分类、标签和图片素材。
 - 使用 Better Auth 处理登录、登出、OAuth callback 和 session cookie。
 - 接入 PostgreSQL、Drizzle migration、内存缓存、Redis 协议缓存、本地文件存储、腾讯云 COS、禁用搜索驱动和 Meilisearch 搜索驱动。
 
-还没有媒体上传接口、搜索接口和其他业务模块。
+当前还没有搜索 HTTP 接口和业务索引。
 
 ## 常用命令
 
@@ -65,7 +66,7 @@ pnpm seed:owner
 - `src/routes/index.ts`
   挂载一级路由。
 - `src/modules`
-  放接口模块。当前有 `system` 和 `auth`。
+  放接口模块。当前有 `system`、`auth` 和 `content`。
 - `src/infra`
   放 PostgreSQL、Drizzle、缓存、搜索和文件存储接入代码。
 - `src/shared`
@@ -85,6 +86,46 @@ pnpm seed:owner
   读取当前 session，检查当前用户能不能进入 Fifa。
 - `GET /rpc/bobo/auth/me`
   读取当前 session。未登录时返回 `user: null`，已登录时补上 `bobo.visitor` 角色。
+- `GET /rpc/content/posts`
+  返回后台文章列表。
+- `POST /rpc/content/posts`
+  创建文章草稿。
+- `GET /rpc/content/posts/:id`
+  返回后台文章详情。
+- `PATCH /rpc/content/posts/:id/draft`
+  保存文章草稿。
+- `POST /rpc/content/posts/:id/preview-token`
+  生成文章预览 token。
+- `POST /rpc/content/posts/:id/publish`
+  发布文章。
+- `GET /rpc/content/assets`
+  返回素材列表。
+- `GET /rpc/content/assets/:id`
+  返回素材详情。
+- `POST /rpc/content/assets/images`
+  上传图片素材。
+- `GET /rpc/content/assets/:id/file`
+  读取素材文件。
+- `GET /rpc/content/categories`
+  返回后台分类列表。
+- `POST /rpc/content/categories`
+  创建后台分类。
+- `GET`、`PATCH` 或 `DELETE /rpc/content/categories/:id`
+  读取、更新或删除后台分类。
+- `GET /rpc/content/tags`
+  返回后台标签列表。
+- `POST /rpc/content/tags`
+  创建后台标签。
+- `GET`、`PATCH` 或 `DELETE /rpc/content/tags/:id`
+  读取、更新或删除后台标签。
+- `GET /rpc/bobo/content/posts`
+  返回个人站公开文章列表。
+- `GET /rpc/bobo/content/posts/:slug`
+  返回个人站公开文章详情。
+- `GET /rpc/bobo/content/categories`
+  返回个人站分类列表。
+- `GET /rpc/bobo/content/tags`
+  返回个人站标签列表。
 
 ## 环境变量
 
@@ -134,7 +175,7 @@ const response = await app.request('/health')
 
 - 缓存代码放在 `src/infra/cache`。本地 Redis 协议缓存使用 Valkey，地址是 `redis://localhost:56379`。
 - 搜索代码放在 `src/infra/search`。当前还没有业务模块调用搜索驱动。
-- 文件存储代码放在 `src/infra/storage`。验证当前存储配置时，运行 `pnpm storage:test`。
+- 文件存储代码放在 `src/infra/storage`。内容模块通过 `POST /rpc/content/assets/images` 保存图片素材。验证当前存储配置时，运行 `pnpm storage:test`。
 
 更多说明看：
 

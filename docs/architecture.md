@@ -58,7 +58,7 @@
 - `apps/momo/src/routes/index.ts`
   挂载一级路由。
 - `apps/momo/src/modules`
-  放接口模块。当前系统接口在 `apps/momo/src/modules/system`，认证接口在 `apps/momo/src/modules/auth`。
+  放接口模块。当前系统接口在 `apps/momo/src/modules/system`，认证接口在 `apps/momo/src/modules/auth`，内容接口在 `apps/momo/src/modules/content`。
 - `apps/momo/src/middleware`
   放 request context、安全响应头、请求日志、CORS、请求耗时、请求体大小和超时 middleware。
 - `apps/momo/src/infra`
@@ -79,6 +79,27 @@
 - `POST /api/auth/sign-up/email`
 - `GET /rpc/fifa/auth/me`
 - `GET /rpc/bobo/auth/me`
+- `GET` 或 `POST /rpc/content/posts`
+- `GET /rpc/content/posts/:id`
+- `PATCH /rpc/content/posts/:id/draft`
+- `POST /rpc/content/posts/:id/preview-token`
+- `POST /rpc/content/posts/:id/publish`
+- `GET /rpc/content/assets`
+- `GET /rpc/content/assets/:id`
+- `GET /rpc/content/assets/:id/file`
+- `PATCH /rpc/content/assets/:id`
+- `DELETE /rpc/content/assets/:id`
+- `POST /rpc/content/assets/images`
+- `GET /rpc/content/mdx-components`
+- `GET /rpc/content/previews/:token`
+- `GET` 或 `POST /rpc/content/categories`
+- `GET`、`PATCH` 或 `DELETE /rpc/content/categories/:id`
+- `GET` 或 `POST /rpc/content/tags`
+- `GET`、`PATCH` 或 `DELETE /rpc/content/tags/:id`
+- `GET /rpc/bobo/content/posts`
+- `GET /rpc/bobo/content/posts/:slug`
+- `GET /rpc/bobo/content/categories`
+- `GET /rpc/bobo/content/tags`
 
 新增接口按模块放到 `apps/momo/src/modules/<module>`，再到 `apps/momo/src/routes/index.ts` 用 `route()` 挂载。模块路由用链式写法注册。
 
@@ -138,6 +159,14 @@ Fifa 从 `@xdd-zone/momo/rpc` 通过 `import type` 引入 `AppType`，再用 `ho
   全局布局、字体、metadata 和主题初始化。
 - `apps/bobo/app/(site)/page.tsx`
   首页。
+- `apps/bobo/app/(site)/writing/page.tsx`
+  文稿列表页。
+- `apps/bobo/app/(site)/writing/[slug]/page.tsx`
+  文稿详情页。
+- `apps/bobo/app/(site)/layout.tsx`
+  给公开站点页面统一加底部区域。
+- `apps/bobo/app/(preview)/preview/posts/[postId]/page.tsx`
+  文章预览页。
 - `apps/bobo/app/(lab)/lab`
   样式演示、主题验证和临时页面。
 - `apps/bobo/app/globals.css`
@@ -145,7 +174,7 @@ Fifa 从 `@xdd-zone/momo/rpc` 通过 `import type` 引入 `AppType`，再用 `ho
 - `apps/bobo/components`
   站点组件。
 - `apps/bobo/lib`
-  主题和 className 工具函数。
+  主题函数、className 工具函数、环境变量校验和 Momo 请求封装。
 
 后续维护规则看：
 

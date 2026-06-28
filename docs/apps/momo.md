@@ -581,15 +581,27 @@ apps/momo/src/modules/content
 当前文件：
 
 - `content.route.ts`
-  挂载后台文章接口、公开文章接口、预览 token 接口和图片上传接口。这里只处理权限、请求校验、调用 service 和响应包装。
-- `content.types.ts`
+  挂载后台文章接口、预览 token 接口、素材接口、分类接口和标签接口。这里只处理权限、请求校验、调用 service 和响应包装。
+- `public-content.route.ts`
+  挂载个人站公开文章、分类和标签接口。不检查登录态，只返回公开数据。
+- `types/content.types.ts`
   放内容模块内部类型。数据库记录类型从 Drizzle schema 推导，repository 的输入和结果类型也放这里。
-- `content.service.ts`
-  处理创建文章、保存草稿、发布、生成预览 token、读取公开文章和上传图片。这里负责业务判断，返回 `PostDetail`、`PostSummary[]`、`ImageAsset` 这类资源对象。
-- `content.repository.ts`
+- `types/taxonomy.types.ts`
+  放分类和标签 repository 的输入类型。
+- `services/content.service.ts`
+  处理创建文章、保存草稿、发布、生成预览 token、预览文章和上传图片。这里负责业务判断，返回 `PostDetail`、`PostSummary[]`、`ImageAsset` 这类资源对象。
+- `services/public-content.service.ts`
+  读取个人站公开文章、公开分类和公开标签。
+- `services/taxonomy.service.ts`
+  处理后台分类和标签的创建、读取、更新和删除。
+- `repositories/content.repository.ts`
   读写 `content_posts`、`content_post_revisions`、`content_preview_tokens` 和 `content_assets`。这里只返回数据库 record 或明确的结果联合类型。
+- `repositories/taxonomy.repository.ts`
+  读写 `content_categories`、`content_tags`、`content_post_categories` 和 `content_post_tags`。
 - `content.presenter.ts`
   把内容模块的数据库记录转成 `@xdd-zone/contracts` 的响应类型。日期转 ISO 字符串、响应 schema `parse()` 都在这里做。
+- `public-content.presenter.ts`
+  把公开文章、公开分类和公开标签转成个人站响应类型。
 - `mdx-components.ts`
   放第一版允许插入的 MDX 组件清单，并检查源码里的组件名。
 
