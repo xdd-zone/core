@@ -6,7 +6,8 @@ import type {
   UpdateCategoryRequest,
   UpdateTagRequest,
 } from '@xdd-zone/contracts'
-import type { TableProps } from 'antd'
+import type { TableProps, TabsProps } from 'antd'
+import type { PropsWithChildren } from 'react'
 
 import {
   useContentCategoriesQuery,
@@ -19,7 +20,7 @@ import {
   useUpdateContentTagMutation,
 } from '@fifa/api/content'
 import { FifaPageHeader } from '@fifa/components/common'
-import { Tag as AntTag, App, Button, Form, Input, Modal, Table } from 'antd'
+import { Tag as AntTag, App, Button, Form, Input, Modal, Table, Tabs } from 'antd'
 import { FilePlus2, Pencil, RefreshCw, Search, Trash2 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 
@@ -343,6 +344,76 @@ export function TaxonomyList() {
     [handleDeleteTag, handleOpenEditTag],
   )
 
+  const taxonomyTabs = useMemo<TabsProps['items']>(
+    () => [
+      {
+        key: 'categories',
+        label: <TaxonomyTabLabel count={filteredCategories.length} title="分类" />,
+        children: (
+          <TaxonomyTabContent
+            createText="新建分类"
+            keyword={categoryKeyword}
+            onCreate={() => handleOpenCreate('category')}
+            onKeywordChange={setCategoryKeyword}
+            placeholder="搜索分类名称或 slug"
+          >
+            {categoryLoadError ? (
+              <div className="border-b border-border-subtle px-4 py-3 text-sm text-danger">{categoryLoadError}</div>
+            ) : null}
+            <Table<Category>
+              columns={categoryColumns}
+              dataSource={filteredCategories}
+              loading={categoriesQuery.isLoading}
+              locale={{ emptyText: '暂无分类' }}
+              pagination={tablePagination}
+              rowKey="id"
+              scroll={{ x: 900 }}
+            />
+          </TaxonomyTabContent>
+        ),
+      },
+      {
+        key: 'tags',
+        label: <TaxonomyTabLabel count={filteredTags.length} title="标签" />,
+        children: (
+          <TaxonomyTabContent
+            createText="新建标签"
+            keyword={tagKeyword}
+            onCreate={() => handleOpenCreate('tag')}
+            onKeywordChange={setTagKeyword}
+            placeholder="搜索标签名称或 slug"
+          >
+            {tagLoadError ? (
+              <div className="border-b border-border-subtle px-4 py-3 text-sm text-danger">{tagLoadError}</div>
+            ) : null}
+            <Table<Tag>
+              columns={tagColumns}
+              dataSource={filteredTags}
+              loading={tagsQuery.isLoading}
+              locale={{ emptyText: '暂无标签' }}
+              pagination={tablePagination}
+              rowKey="id"
+              scroll={{ x: 720 }}
+            />
+          </TaxonomyTabContent>
+        ),
+      },
+    ],
+    [
+      categoriesQuery.isLoading,
+      categoryColumns,
+      categoryKeyword,
+      categoryLoadError,
+      filteredCategories,
+      filteredTags,
+      handleOpenCreate,
+      tagColumns,
+      tagKeyword,
+      tagLoadError,
+      tagsQuery.isLoading,
+    ],
+  )
+
   return (
     <div className="space-y-5">
       <FifaPageHeader
@@ -363,53 +434,13 @@ export function TaxonomyList() {
         summaryItems={summaryItems}
       />
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <section className="overflow-hidden rounded-lg border border-border-subtle bg-surface">
-          <TaxonomyPanelHeader
-            count={filteredCategories.length}
-            keyword={categoryKeyword}
-            onCreate={() => handleOpenCreate('category')}
-            onKeywordChange={setCategoryKeyword}
-            placeholder="搜索分类名称或 slug"
-            title="分类"
-          />
-          {categoryLoadError ? (
-            <div className="border-b border-border-subtle px-4 py-3 text-sm text-danger">{categoryLoadError}</div>
-          ) : null}
-          <Table<Category>
-            columns={categoryColumns}
-            dataSource={filteredCategories}
-            loading={categoriesQuery.isLoading}
-            locale={{ emptyText: '暂无分类' }}
-            pagination={tablePagination}
-            rowKey="id"
-            scroll={{ x: 900 }}
-          />
-        </section>
-
-        <section className="overflow-hidden rounded-lg border border-border-subtle bg-surface">
-          <TaxonomyPanelHeader
-            count={filteredTags.length}
-            keyword={tagKeyword}
-            onCreate={() => handleOpenCreate('tag')}
-            onKeywordChange={setTagKeyword}
-            placeholder="搜索标签名称或 slug"
-            title="标签"
-          />
-          {tagLoadError ? (
-            <div className="border-b border-border-subtle px-4 py-3 text-sm text-danger">{tagLoadError}</div>
-          ) : null}
-          <Table<Tag>
-            columns={tagColumns}
-            dataSource={filteredTags}
-            loading={tagsQuery.isLoading}
-            locale={{ emptyText: '暂无标签' }}
-            pagination={tablePagination}
-            rowKey="id"
-            scroll={{ x: 720 }}
-          />
-        </section>
-      </div>
+      <section className="overflow-hidden rounded-lg border border-border-subtle bg-surface">
+        <Tabs
+          className="[&_.ant-tabs-content-holder]:border-0 [&_.ant-tabs-nav]:mb-0 [&_.ant-tabs-nav]:px-4 [&_.ant-tabs-nav]:pt-2"
+          defaultActiveKey="categories"
+          items={taxonomyTabs}
+        />
+      </section>
 
       <Modal
         confirmLoading={createCategoryMutation.isPending || updateCategoryMutation.isPending}
@@ -461,41 +492,51 @@ export function TaxonomyList() {
   )
 }
 
-interface TaxonomyPanelHeaderProps {
-  count: number
+interface TaxonomyTabContentProps {
+  createText: string
   keyword: string
   onCreate: () => void
   onKeywordChange: (value: string) => void
   placeholder: string
-  title: string
 }
 
-function TaxonomyPanelHeader({
-  count,
+function TaxonomyTabContent({
+  children,
+  createText,
   keyword,
   onCreate,
   onKeywordChange,
   placeholder,
-  title,
-}: TaxonomyPanelHeaderProps) {
+}: PropsWithChildren<TaxonomyTabContentProps>) {
   return (
-    <div className="space-y-3 border-b border-border-subtle px-4 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-medium text-fg">{title}</h2>
-          <AntTag>{count}</AntTag>
-        </div>
+    <div>
+      <div className="grid gap-3 border-b border-border-subtle px-4 py-4 md:grid-cols-[minmax(240px,1fr)_auto]">
+        <Input
+          allowClear
+          onChange={(event) => onKeywordChange(event.target.value)}
+          placeholder={placeholder}
+          prefix={<Search className="size-4 text-fg-muted" />}
+          value={keyword}
+        />
         <Button icon={<FilePlus2 className="size-4" />} onClick={onCreate} type="primary">
-          新建
+          {createText}
         </Button>
       </div>
-      <Input
-        allowClear
-        onChange={(event) => onKeywordChange(event.target.value)}
-        placeholder={placeholder}
-        prefix={<Search className="size-4 text-fg-muted" />}
-        value={keyword}
-      />
+      {children}
     </div>
+  )
+}
+
+interface TaxonomyTabLabelProps {
+  count: number
+  title: string
+}
+
+function TaxonomyTabLabel({ count, title }: TaxonomyTabLabelProps) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span>{title}</span>
+      <AntTag className="m-0">{count}</AntTag>
+    </span>
   )
 }
