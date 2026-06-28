@@ -23,6 +23,7 @@ import { FifaPageHeader } from '@fifa/components/common'
 import { Tag as AntTag, App, Button, Form, Input, Modal, Table, Tabs } from 'antd'
 import { FilePlus2, Pencil, RefreshCw, Search, Trash2 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type TaxonomyKind = 'category' | 'tag'
 
@@ -84,6 +85,7 @@ function toTagPayload(values: TagFormValue): CreateTagRequest | UpdateTagRequest
 }
 
 export function TaxonomyList() {
+  const { t } = useTranslation()
   const { message, modal } = App.useApp()
   const [categoryKeyword, setCategoryKeyword] = useState('')
   const [tagKeyword, setTagKeyword] = useState('')
@@ -118,8 +120,8 @@ export function TaxonomyList() {
 
   const summaryItems = useMemo(
     () => [
-      { label: '分类', value: categories.length },
-      { label: '标签', value: tags.length },
+      { label: t('content.taxonomy.summary.categories'), value: categories.length },
+      { label: t('content.taxonomy.summary.tags'), value: tags.length },
     ],
     [categories.length, tags.length],
   )
@@ -173,7 +175,7 @@ export function TaxonomyList() {
       return
     }
 
-    message.success(categoryDialog.item ? '分类已保存' : '分类已创建')
+    message.success(categoryDialog.item ? t('content.taxonomy.saveCategorySuccess') : t('content.taxonomy.createCategorySuccess'))
     setCategoryDialog(emptyCategoryDialog)
     categoryForm.resetFields()
   }, [categoryDialog.item, categoryForm, createCategoryMutation, message, updateCategoryMutation])
@@ -190,7 +192,7 @@ export function TaxonomyList() {
       return
     }
 
-    message.success(tagDialog.item ? '标签已保存' : '标签已创建')
+    message.success(tagDialog.item ? t('content.taxonomy.saveTagSuccess') : t('content.taxonomy.createTagSuccess'))
     setTagDialog(emptyTagDialog)
     tagForm.resetFields()
   }, [createTagMutation, message, tagDialog.item, tagForm, updateTagMutation])
@@ -198,11 +200,11 @@ export function TaxonomyList() {
   const handleDeleteCategory = useCallback(
     (category: Category) => {
       modal.confirm({
-        title: '删除分类',
-        content: `确认删除 ${category.name}。已被文章使用的分类不能删除。`,
-        okText: '删除',
+        title: t('content.taxonomy.categoryDeleteConfirmTitle'),
+        content: t('content.taxonomy.categoryDeleteConfirmMessage', { name: category.name }),
+        okText: t('content.taxonomy.delete'),
         okButtonProps: { danger: true },
-        cancelText: '取消',
+        cancelText: t('content.taxonomy.cancel'),
         onOk: async () => {
           const response = await deleteCategoryMutation.mutateAsync(category.id)
 
@@ -211,7 +213,7 @@ export function TaxonomyList() {
             return
           }
 
-          message.success('分类已删除')
+          message.success(t('content.taxonomy.categoryDeleteSuccess'))
         },
       })
     },
@@ -221,11 +223,11 @@ export function TaxonomyList() {
   const handleDeleteTag = useCallback(
     (tag: Tag) => {
       modal.confirm({
-        title: '删除标签',
-        content: `确认删除 ${tag.name}。已被文章使用的标签不能删除。`,
-        okText: '删除',
+        title: t('content.taxonomy.tagDeleteConfirmTitle'),
+        content: t('content.taxonomy.tagDeleteConfirmMessage', { name: tag.name }),
+        okText: t('content.taxonomy.delete'),
         okButtonProps: { danger: true },
-        cancelText: '取消',
+        cancelText: t('content.taxonomy.cancel'),
         onOk: async () => {
           const response = await deleteTagMutation.mutateAsync(tag.id)
 
@@ -234,7 +236,7 @@ export function TaxonomyList() {
             return
           }
 
-          message.success('标签已删除')
+          message.success(t('content.taxonomy.tagDeleteSuccess'))
         },
       })
     },
@@ -245,7 +247,7 @@ export function TaxonomyList() {
     () => [
       {
         dataIndex: 'name',
-        title: '分类',
+        title: t('content.taxonomy.table.category'),
         render: (name: string, category) => (
           <div className="min-w-0">
             <div className="truncate font-medium text-fg">{name}</div>
@@ -255,29 +257,29 @@ export function TaxonomyList() {
       },
       {
         dataIndex: 'description',
-        title: '说明',
+        title: t('content.taxonomy.table.description'),
         render: (description: string | null) => description || '-',
       },
       {
         dataIndex: 'postCount',
-        title: '文章',
+        title: t('content.taxonomy.table.postCount'),
         width: 90,
         render: (postCount: number) => <AntTag>{postCount}</AntTag>,
       },
       {
         dataIndex: 'updatedAt',
-        title: '更新时间',
+        title: t('content.taxonomy.table.updatedAt'),
         width: 180,
         render: formatDateTime,
       },
       {
         key: 'actions',
-        title: '操作',
+        title: t('content.taxonomy.table.actions'),
         width: 160,
         render: (_, category) => (
           <div className="flex flex-wrap gap-2">
             <Button icon={<Pencil className="size-4" />} onClick={() => handleOpenEditCategory(category)} size="small">
-              编辑
+              {t('content.taxonomy.edit')}
             </Button>
             <Button
               danger
@@ -286,7 +288,7 @@ export function TaxonomyList() {
               onClick={() => handleDeleteCategory(category)}
               size="small"
             >
-              删除
+              {t('content.taxonomy.delete')}
             </Button>
           </div>
         ),
@@ -299,7 +301,7 @@ export function TaxonomyList() {
     () => [
       {
         dataIndex: 'name',
-        title: '标签',
+        title: t('content.taxonomy.table.tag'),
         render: (name: string, tag) => (
           <div className="min-w-0">
             <div className="truncate font-medium text-fg">{name}</div>
@@ -309,24 +311,24 @@ export function TaxonomyList() {
       },
       {
         dataIndex: 'postCount',
-        title: '文章',
+        title: t('content.taxonomy.table.postCount'),
         width: 90,
         render: (postCount: number) => <AntTag>{postCount}</AntTag>,
       },
       {
         dataIndex: 'updatedAt',
-        title: '更新时间',
+        title: t('content.taxonomy.table.updatedAt'),
         width: 180,
         render: formatDateTime,
       },
       {
         key: 'actions',
-        title: '操作',
+        title: t('content.taxonomy.table.actions'),
         width: 160,
         render: (_, tag) => (
           <div className="flex flex-wrap gap-2">
             <Button icon={<Pencil className="size-4" />} onClick={() => handleOpenEditTag(tag)} size="small">
-              编辑
+              {t('content.taxonomy.edit')}
             </Button>
             <Button
               danger
@@ -335,7 +337,7 @@ export function TaxonomyList() {
               onClick={() => handleDeleteTag(tag)}
               size="small"
             >
-              删除
+              {t('content.taxonomy.delete')}
             </Button>
           </div>
         ),
@@ -348,14 +350,14 @@ export function TaxonomyList() {
     () => [
       {
         key: 'categories',
-        label: <TaxonomyTabLabel count={filteredCategories.length} title="分类" />,
+        label: <TaxonomyTabLabel count={filteredCategories.length} title={t('content.taxonomy.categories')} />,
         children: (
           <TaxonomyTabContent
-            createText="新建分类"
+            createText={t('content.taxonomy.createCategory')}
             keyword={categoryKeyword}
             onCreate={() => handleOpenCreate('category')}
             onKeywordChange={setCategoryKeyword}
-            placeholder="搜索分类名称或 slug"
+            placeholder={t('content.taxonomy.categorySearchPlaceholder')}
           >
             {categoryLoadError ? (
               <div className="border-b border-border-subtle px-4 py-3 text-sm text-danger">{categoryLoadError}</div>
@@ -364,7 +366,7 @@ export function TaxonomyList() {
               columns={categoryColumns}
               dataSource={filteredCategories}
               loading={categoriesQuery.isLoading}
-              locale={{ emptyText: '暂无分类' }}
+              locale={{ emptyText: t('content.taxonomy.categoryEmptyText') }}
               pagination={tablePagination}
               rowKey="id"
               scroll={{ x: 900 }}
@@ -374,14 +376,14 @@ export function TaxonomyList() {
       },
       {
         key: 'tags',
-        label: <TaxonomyTabLabel count={filteredTags.length} title="标签" />,
+        label: <TaxonomyTabLabel count={filteredTags.length} title={t('content.taxonomy.tags')} />,
         children: (
           <TaxonomyTabContent
-            createText="新建标签"
+            createText={t('content.taxonomy.createTag')}
             keyword={tagKeyword}
             onCreate={() => handleOpenCreate('tag')}
             onKeywordChange={setTagKeyword}
-            placeholder="搜索标签名称或 slug"
+            placeholder={t('content.taxonomy.tagSearchPlaceholder')}
           >
             {tagLoadError ? (
               <div className="border-b border-border-subtle px-4 py-3 text-sm text-danger">{tagLoadError}</div>
@@ -390,7 +392,7 @@ export function TaxonomyList() {
               columns={tagColumns}
               dataSource={filteredTags}
               loading={tagsQuery.isLoading}
-              locale={{ emptyText: '暂无标签' }}
+              locale={{ emptyText: t('content.taxonomy.tagEmptyText') }}
               pagination={tablePagination}
               rowKey="id"
               scroll={{ x: 720 }}
@@ -417,8 +419,8 @@ export function TaxonomyList() {
   return (
     <div className="space-y-5">
       <FifaPageHeader
-        title="分类与标签"
-        description="管理文章分类、标签和公开 slug。"
+        title={t('content.taxonomy.title')}
+        description={t('content.taxonomy.description')}
         actions={
           <Button
             icon={<RefreshCw className="size-4" />}
@@ -428,7 +430,7 @@ export function TaxonomyList() {
               void tagsQuery.refetch()
             }}
           >
-            刷新
+            {t('content.taxonomy.refresh')}
           </Button>
         }
         summaryItems={summaryItems}
@@ -445,24 +447,24 @@ export function TaxonomyList() {
       <Modal
         confirmLoading={createCategoryMutation.isPending || updateCategoryMutation.isPending}
         destroyOnHidden
-        okText="保存"
+        okText={t('content.taxonomy.save')}
         onCancel={() => {
           setCategoryDialog(emptyCategoryDialog)
           categoryForm.resetFields()
         }}
         onOk={() => void handleSaveCategory()}
         open={categoryDialog.open}
-        title={categoryDialog.item ? '编辑分类' : '新建分类'}
+        title={categoryDialog.item ? t('content.taxonomy.editCategory') : t('content.taxonomy.createCategory')}
       >
         <Form<CategoryFormValue> form={categoryForm} layout="vertical">
           <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
-            <Input placeholder="输入分类名称" />
+            <Input placeholder={t('content.taxonomy.categoryNamePlaceholder')} />
           </Form.Item>
           <Form.Item name="slug" label="Slug" rules={[{ required: true, message: '请输入 slug' }]}>
-            <Input placeholder="例如 notes" />
+            <Input placeholder={t('content.taxonomy.categorySlugPlaceholder')} />
           </Form.Item>
           <Form.Item name="description" label="说明">
-            <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder="输入说明，可留空" />
+            <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder={t('content.taxonomy.categoryDescriptionPlaceholder')} />
           </Form.Item>
         </Form>
       </Modal>
@@ -470,21 +472,21 @@ export function TaxonomyList() {
       <Modal
         confirmLoading={createTagMutation.isPending || updateTagMutation.isPending}
         destroyOnHidden
-        okText="保存"
+        okText={t('content.taxonomy.save')}
         onCancel={() => {
           setTagDialog(emptyTagDialog)
           tagForm.resetFields()
         }}
         onOk={() => void handleSaveTag()}
         open={tagDialog.open}
-        title={tagDialog.item ? '编辑标签' : '新建标签'}
+        title={tagDialog.item ? t('content.taxonomy.editTag') : t('content.taxonomy.createTag')}
       >
         <Form<TagFormValue> form={tagForm} layout="vertical">
           <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
-            <Input placeholder="输入标签名称" />
+            <Input placeholder={t('content.taxonomy.tagNamePlaceholder')} />
           </Form.Item>
           <Form.Item name="slug" label="Slug" rules={[{ required: true, message: '请输入 slug' }]}>
-            <Input placeholder="例如 react" />
+            <Input placeholder={t('content.taxonomy.tagSlugPlaceholder')} />
           </Form.Item>
         </Form>
       </Modal>

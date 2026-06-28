@@ -23,6 +23,7 @@ import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
 import { App, Button, Form, Input, Modal, Select, Tabs, Tag, Upload } from 'antd'
 import { ExternalLink, ImagePlus, PackagePlus, Save, Send, SquareArrowOutUpRight } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const MdxSourceEditor = lazy(() =>
   import('@fifa/components/content/editor').then((mod) => ({ default: mod.MdxSourceEditor })),
@@ -40,10 +41,11 @@ interface PostEditFormValue {
   title: string
 }
 
-const statusLabels: Record<PostStatus, string> = {
-  archived: '已归档',
-  draft: '草稿',
-  published: '已发布',
+function getStatusLabel(status: PostStatus, t: (key: string) => string) {
+  if (status === 'archived') return t('content.posts.status.archived')
+  if (status === 'draft') return t('content.posts.status.draft')
+  if (status === 'published') return t('content.posts.status.published')
+  return status
 }
 
 const tabsBarStyle = { marginBottom: 0, padding: '0 20px' }
@@ -96,8 +98,9 @@ function toDraftPayload(values: PostEditFormValue): SavePostDraftRequest {
 }
 
 function MdxSourceEditorFallback() {
+  const { t } = useTranslation()
   return (
-    <div className="flex h-full items-center justify-center bg-surface/90 text-sm text-fg-muted">正在加载编辑器...</div>
+    <div className="flex h-full items-center justify-center bg-surface/90 text-sm text-fg-muted">{t('content.postEdit.loadingEditor')}</div>
   )
 }
 
@@ -113,6 +116,7 @@ interface PostEditContentProps {
 }
 
 function PostEditContent({ postId }: PostEditContentProps) {
+  const { t } = useTranslation()
   const { message, modal } = App.useApp()
   const navigate = useNavigate()
   const pathname = useLocation({
@@ -224,7 +228,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
       }
 
       setDirty(false)
-      message.success('草稿已保存')
+      message.success(t('content.postEdit.draftSaved'))
       return response.data.post
     })()
 
@@ -267,10 +271,10 @@ function PostEditContent({ postId }: PostEditContentProps) {
 
   const handlePublish = useCallback(() => {
     modal.confirm({
-      title: '发布文章',
-      content: dirty ? '当前有未保存内容。确认后会先保存草稿，再发布文章。' : '确认发布当前草稿。',
-      okText: '发布',
-      cancelText: '取消',
+      title: t('content.postEdit.publishConfirmTitle'),
+      content: dirty ? t('content.postEdit.publishDirtyConfirmMessage') : t('content.postEdit.publishConfirmMessage'),
+      okText: t('content.postEdit.publish'),
+      cancelText: t('content.postEdit.cancel'),
       onOk: async () => {
         if (dirty) {
           const savedPost = await saveDraft()
@@ -288,7 +292,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
         }
 
         setDirty(false)
-        message.success('文章已发布')
+        message.success(t('content.postEdit.publishSuccess'))
       },
     })
   }, [dirty, message, modal, publishMutation, saveDraft])
@@ -337,7 +341,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
       }
 
       insertSnippet(buildImageSnippet(response.data.asset))
-      message.success('图片已插入')
+      message.success(t('content.postEdit.imageInserted'))
     },
     [insertSnippet, message, post, uploadImageMutation],
   )
@@ -362,11 +366,11 @@ function PostEditContent({ postId }: PostEditContentProps) {
       post
         ? [
             {
-              label: '状态',
-              value: <Tag color={getStatusColor(post.status)}>{statusLabels[post.status]}</Tag>,
+              label: t('content.postEdit.summary.status'),
+              value: <Tag color={getStatusColor(post.status)}>{getStatusLabel(post.status, t)}</Tag>,
             },
             {
-              label: '更新时间',
+              label: t('content.postEdit.summary.updatedAt'),
               value: formatDateTime(post.updatedAt),
             },
           ]
@@ -378,7 +382,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
     () => [
       {
         key: 'preview',
-        label: '预览',
+        label: t('content.postEdit.previewTab'),
         children: (
           <div className="flex h-full flex-col space-y-3 p-5">
             {previewUrl ? (
@@ -388,7 +392,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/40"></span>
                     <span className="relative inline-flex size-2 rounded-full bg-success"></span>
                   </span>
-                  当前预览已生成
+                  {t('content.postEdit.currentPreviewReady')}
                 </span>
                 <Button
                   icon={<SquareArrowOutUpRight className="size-3.5" />}
@@ -396,21 +400,21 @@ function PostEditContent({ postId }: PostEditContentProps) {
                   onClick={() => void handlePreview()}
                   size="small"
                 >
-                  更新
+                  {t('content.postEdit.updatePreview')}
                 </Button>
               </div>
             ) : null}
             <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border-subtle bg-surface-subtle shadow-inner">
               {previewUrl ? (
-                <iframe className="h-full w-full border-0 bg-surface" src={previewUrl} title="文章预览" />
+                <iframe className="h-full w-full border-0 bg-surface" src={previewUrl} title='文章预览' />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
                   <div className="flex size-12 items-center justify-center rounded-full border border-border-subtle bg-surface shadow-sm">
                     <SquareArrowOutUpRight className="size-5 text-fg-muted" />
                   </div>
                   <div className="space-y-1">
-                    <div className="text-sm font-medium text-fg">暂无预览</div>
-                    <div className="text-xs text-fg-muted">生成后在此直接查看页面效果</div>
+                    <div className="text-sm font-medium text-fg">{t('content.postEdit.noPreview')}</div>
+                    <div className="text-xs text-fg-muted">{t('content.postEdit.noPreviewDescription')}</div>
                   </div>
                   <Button
                     className="mt-2"
@@ -418,7 +422,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                     loading={previewTokenMutation.isPending || draftSaving}
                     onClick={() => void handlePreview()}
                   >
-                    生成预览
+                    {t('content.postEdit.generatePreview')}
                   </Button>
                 </div>
               )}
@@ -428,7 +432,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
       },
       {
         key: 'assets',
-        label: '素材',
+        label: t('content.postEdit.tabAssets'),
         children: (
           <div className="h-full overflow-y-auto p-5">
             <div className="space-y-4">
@@ -447,7 +451,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                           <span className="relative inline-flex size-3 rounded-full bg-primary"></span>
                         </span>
                       </div>
-                      <div className="text-sm font-medium text-fg">正在上传图片...</div>
+                      <div className="text-sm font-medium text-fg">{t('content.postEdit.uploadingImage')}</div>
                     </div>
                   ) : (
                     <>
@@ -455,9 +459,9 @@ function PostEditContent({ postId }: PostEditContentProps) {
                         <ImagePlus className="size-5 text-fg-muted transition-colors group-hover:text-primary" />
                       </div>
                       <div className="text-center">
-                        <div className="text-sm font-medium text-fg">选择或拖放图片至此处</div>
+                        <div className="text-sm font-medium text-fg">{t('content.postEdit.selectOrDropImage')}</div>
                         <div className="mt-2 px-2 text-[11px] leading-relaxed text-fg-muted/80">
-                          上传后，将自动在编辑器光标位置生成图片组件。
+                          {t('content.postEdit.uploadDescription')}
                         </div>
                       </div>
                     </>
@@ -468,11 +472,11 @@ function PostEditContent({ postId }: PostEditContentProps) {
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-sm font-medium text-fg">最近素材</div>
-                    <div className="mt-1 text-xs text-fg-muted">点一下就能把图片插进正文。</div>
+                    <div className="text-sm font-medium text-fg">{t('content.postEdit.recentAssets')}</div>
+                    <div className="mt-1 text-xs text-fg-muted">{t('content.postEdit.recentAssetsDescription')}</div>
                   </div>
                   <Button size="small" onClick={() => setAssetPickerOpen(true)}>
-                    选封面
+                    {'选封面'}
                   </Button>
                 </div>
                 <div className="grid gap-3">
@@ -490,13 +494,13 @@ function PostEditContent({ postId }: PostEditContentProps) {
                       />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium text-fg">{asset.fileName}</div>
-                        <div className="truncate text-xs text-fg-muted">{asset.alt ?? '未填写说明'}</div>
+                        <div className="truncate text-xs text-fg-muted">{asset.alt ?? t('content.postEdit.noDescription')}</div>
                       </div>
                     </button>
                   ))}
                   {sidebarAssets.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-border-subtle py-8 text-center text-xs text-fg-muted">
-                      暂无素材
+                      {t('content.assets.emptyText')}
                     </div>
                   ) : null}
                 </div>
@@ -507,7 +511,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
       },
       {
         key: 'components',
-        label: '组件',
+        label: t('content.postEdit.componentsTab'),
         children: (
           <div className="h-full overflow-y-auto p-5">
             <div className="space-y-4">
@@ -527,7 +531,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                       onClick={() => handleInsertComponent(component)}
                       size="small"
                     >
-                      插入
+                      {t('content.postEdit.insert')}
                     </Button>
                   </div>
                   <div className="bg-surface px-3 py-2.5">
@@ -540,7 +544,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
 
               {mdxComponents.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border-subtle py-8 text-center text-xs text-fg-muted">
-                  暂无可用组件。
+                  {t('content.postEdit.mdxComponentsEmpty')}
                 </div>
               ) : null}
             </div>
@@ -566,8 +570,8 @@ function PostEditContent({ postId }: PostEditContentProps) {
     return (
       <div className="space-y-5">
         <FifaPageHeader
-          title="编辑文章"
-          description="当前文章读取失败。"
+          title={t('content.postEdit.editPost')}
+          description={t('content.postEdit.error')}
           onBack={() => void navigate({ to: '/content/posts' as never })}
         />
         <section className="rounded-lg border border-border-subtle bg-surface px-5 py-4 text-sm text-danger">
@@ -580,9 +584,9 @@ function PostEditContent({ postId }: PostEditContentProps) {
   return (
     <div className="space-y-5">
       <FifaPageHeader
-        title={post?.title ?? '编辑文章'}
-        description="修改元信息和正文，手动保存草稿后再预览或发布。"
-        backLabel="返回文章列表"
+        title={post?.title ?? t('content.postEdit.editPost')}
+        description={t('content.postEdit.subtitle')}
+        backLabel={t('content.postEdit.backToList')}
         onBack={() => void navigate({ to: '/content/posts' as never })}
         actions={
           post ? (
@@ -593,17 +597,17 @@ function PostEditContent({ postId }: PostEditContentProps) {
                 loading={draftSaving}
                 onClick={() => void saveDraft()}
               >
-                保存草稿
+                {t('content.postEdit.saveDraft')}
               </Button>
               <Button
                 icon={<SquareArrowOutUpRight className="size-4" />}
                 loading={previewTokenMutation.isPending || draftSaving}
                 onClick={() => void handlePreview()}
               >
-                预览
+                {t('content.postEdit.previewTab')}
               </Button>
               <Button disabled={!previewUrl} icon={<ExternalLink className="size-4" />} onClick={handleOpenPreview}>
-                新标签预览
+                {t('content.postEdit.previewInNewTab')}
               </Button>
               <Button
                 icon={<Send className="size-4" />}
@@ -611,7 +615,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                 onClick={handlePublish}
                 type="primary"
               >
-                发布
+                {t('content.postEdit.publish')}
               </Button>
             </>
           ) : null
@@ -629,57 +633,57 @@ function PostEditContent({ postId }: PostEditContentProps) {
         <section className="overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm">
           <div className="border-b border-border-subtle bg-surface-muted/45 px-5 py-4">
             <div>
-              <div className="text-sm font-medium text-fg">文章信息</div>
-              <div className="mt-1 text-xs text-fg-muted">标题、路径、摘要和封面素材。</div>
+              <div className="text-sm font-medium text-fg">{t('content.postEdit.postInfo')}</div>
+              <div className="mt-1 text-xs text-fg-muted">{t('content.postEdit.postInfoDescription')}</div>
             </div>
           </div>
 
           <div className="px-5 py-4">
             <div className="grid gap-x-4 md:grid-cols-2">
-              <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
-                <Input placeholder="输入标题" />
+              <Form.Item name="title" label={t('content.postEdit.form.title')} rules={[{ required: true, message: t('content.postEdit.form.titleRequired') }]}>
+                <Input placeholder={t('content.postEdit.form.titlePlaceholder')} />
               </Form.Item>
-              <Form.Item name="slug" label="Slug" rules={[{ required: true, message: '请输入 slug' }]}>
-                <Input placeholder="输入 slug" />
+              <Form.Item name="slug" label={t('content.postEdit.form.slug')} rules={[{ required: true, message: t('content.postEdit.form.slugRequired') }]}>
+                <Input placeholder={t('content.postEdit.form.slugPlaceholder')} />
               </Form.Item>
             </div>
 
-            <Form.Item name="excerpt" label="摘要">
-              <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder="输入摘要，可留空" />
+            <Form.Item name="excerpt" label={t('content.postEdit.form.excerpt')}>
+              <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder={t('content.postEdit.form.excerptPlaceholder')} />
             </Form.Item>
 
             <div className="grid gap-x-4 md:grid-cols-2">
-              <Form.Item name="categoryId" label="分类">
+              <Form.Item name="categoryId" label={t('content.postEdit.form.category')}>
                 <Select
                   allowClear
                   loading={categoriesQuery.isLoading}
                   options={categoryOptions}
-                  placeholder="选择分类，可留空"
+                  placeholder={t('content.postEdit.form.categoryPlaceholder')}
                 />
               </Form.Item>
-              <Form.Item name="tagIds" label="标签">
+              <Form.Item name="tagIds" label={t('content.postEdit.form.tag')}>
                 <Select
                   allowClear
                   loading={tagsQuery.isLoading}
                   mode="multiple"
                   options={tagOptions}
-                  placeholder="选择标签，可留空"
+                  placeholder={t('content.postEdit.form.tagPlaceholder')}
                 />
               </Form.Item>
             </div>
 
-            <Form.Item className="mb-0" name="coverAssetId" label="封面素材 ID">
+            <Form.Item className="mb-0" name="coverAssetId" label={t('content.postEdit.coverAssetId')}>
               <Input
                 addonAfter={
                   <Button onClick={() => setAssetPickerOpen(true)} type="link">
-                    选择素材
+                    {t('content.postEdit.chooseCoverAsset')}
                   </Button>
                 }
-                placeholder="输入素材 ID，可留空"
+                placeholder={t('content.postEdit.coverAssetIdPlaceholder')}
               />
             </Form.Item>
             {currentCoverAssetId ? (
-              <div className="mt-3 text-xs text-fg-muted">当前封面 ID：{currentCoverAssetId}</div>
+              <div className="mt-3 text-xs text-fg-muted">{t('content.postEdit.currentCoverAssetId', { id: currentCoverAssetId })}</div>
             ) : null}
           </div>
         </section>
@@ -688,8 +692,8 @@ function PostEditContent({ postId }: PostEditContentProps) {
           <section className="flex h-[600px] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm lg:h-[calc(100vh-120px)]">
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border-subtle bg-surface-muted/45 px-5 py-4">
               <div>
-                <div className="text-sm font-medium text-fg">正文编辑</div>
-                <div className="mt-1 text-xs text-fg-muted">{dirty ? '有未保存内容' : '当前内容已保存'}</div>
+                <div className="text-sm font-medium text-fg">{t('content.postEdit.editor.title')}</div>
+                <div className="mt-1 text-xs text-fg-muted">{dirty ? t('content.postEdit.editor.unsavedContent') : t('content.postEdit.editor.contentSaved')}</div>
               </div>
             </div>
 
@@ -697,14 +701,14 @@ function PostEditContent({ postId }: PostEditContentProps) {
               <Form.Item
                 className="absolute inset-0 mb-0! [&_.ant-form-item-control-input-content]:h-full [&_.ant-form-item-control-input]:h-full [&_.ant-form-item-control]:h-full [&_.ant-form-item-row]:h-full"
                 name="source"
-                rules={[{ required: true, message: '请输入正文' }]}
+                rules={[{ required: true, message: t('content.postEdit.editor.sourceRequired') }]}
               >
                 <Suspense fallback={<MdxSourceEditorFallback />}>
                   <MdxSourceEditor
                     ref={editorRef}
                     onChange={updateSource}
                     onSelectionChange={setSelection}
-                    placeholder="输入 MDX 源码"
+                    placeholder={t('content.postEdit.editor.mdxPlaceholder')}
                     readOnly={postQuery.isLoading}
                     value={source}
                   />
@@ -715,8 +719,8 @@ function PostEditContent({ postId }: PostEditContentProps) {
 
           <aside className="flex h-[600px] flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm lg:sticky lg:top-5 lg:h-[calc(100vh-120px)]">
             <div className="shrink-0 border-b border-border-subtle bg-surface-muted/45 px-5 py-4">
-              <div className="text-sm font-medium text-fg">预览和素材</div>
-              <div className="mt-1 text-xs text-fg-muted">预览会先保存草稿，再生成页面链接。</div>
+              <div className="text-sm font-medium text-fg">{t('content.postEdit.previewAndAssets')}</div>
+              <div className="mt-1 text-xs text-fg-muted">{t('content.postEdit.previewAndAssetsDescription')}</div>
             </div>
 
             <Tabs
@@ -735,14 +739,14 @@ function PostEditContent({ postId }: PostEditContentProps) {
             setPickerKeyword('')
           }}
           open={assetPickerOpen}
-          title="选择封面素材"
+          title={t('content.postEdit.selectCoverAsset')}
           width={960}
         >
           <div className="space-y-4">
             <Input
               allowClear
               onChange={(event) => setPickerKeyword(event.target.value)}
-              placeholder="搜索文件名或说明"
+              placeholder={t('content.postEdit.searchAssetPlaceholder')}
               value={pickerKeyword}
             />
             <div className="grid max-h-[60vh] grid-cols-2 gap-3 overflow-y-auto xl:grid-cols-3">
@@ -762,13 +766,13 @@ function PostEditContent({ postId }: PostEditContentProps) {
                   </div>
                   <div className="space-y-1 px-3 py-2.5">
                     <div className="truncate text-sm font-medium text-fg">{asset.fileName}</div>
-                    <div className="truncate text-xs text-fg-muted">{asset.alt ?? '未填写说明'}</div>
+                    <div className="truncate text-xs text-fg-muted">{asset.alt ?? t('content.postEdit.noDescription')}</div>
                   </div>
                 </button>
               ))}
               {pickerAssets.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border-subtle py-8 text-center text-xs text-fg-muted">
-                  暂无素材
+                  {t('content.assets.emptyText')}
                 </div>
               ) : null}
             </div>

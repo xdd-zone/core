@@ -13,21 +13,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { App, Button, Form, Input, Modal, Select, Table, Tag } from 'antd'
 import { FilePlus2, Pencil, RefreshCw, Search } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
-
-const statusOptions: Array<{ label: string; value: PostStatus }> = [
-  { label: '草稿', value: 'draft' },
-  { label: '已发布', value: 'published' },
-  { label: '已归档', value: 'archived' },
-]
-
-const statusFilterOptions: Array<{ label: string; value: PostStatus | 'all' }> = [
-  { label: '全部状态', value: 'all' },
-  ...statusOptions,
-]
-
-const tableLocale = {
-  emptyText: '暂无文章',
-}
+import { useTranslation } from 'react-i18next'
 
 const tablePagination = {
   pageSize: 10,
@@ -66,8 +52,11 @@ function getStatusColor(status: PostStatus) {
   return 'warning'
 }
 
-function getStatusLabel(status: PostStatus) {
-  return statusOptions.find((option) => option.value === status)?.label ?? status
+function getStatusLabel(status: PostStatus, t: (key: string) => string) {
+  if (status === 'draft') return t('content.posts.status.draft')
+  if (status === 'published') return t('content.posts.status.published')
+  if (status === 'archived') return t('content.posts.status.archived')
+  return status
 }
 
 function toInitialSource(title: string) {
@@ -75,6 +64,7 @@ function toInitialSource(title: string) {
 }
 
 export function PostList() {
+  const { t } = useTranslation()
   const { message } = App.useApp()
   const navigate = useNavigate()
   const postsQuery = useContentPostsQuery()
@@ -85,6 +75,16 @@ export function PostList() {
   const [createOpen, setCreateOpen] = useState(false)
   const [keyword, setKeyword] = useState('')
   const [status, setStatus] = useState<PostStatus | 'all'>('all')
+
+  const statusFilterOptions = useMemo(
+    () => [
+      { label: t('content.posts.status.all'), value: 'all' },
+      { label: t('content.posts.status.draft'), value: 'draft' },
+      { label: t('content.posts.status.published'), value: 'published' },
+      { label: t('content.posts.status.archived'), value: 'archived' },
+    ],
+    [t],
+  )
 
   const posts = useMemo(() => (postsQuery.data?.ok ? postsQuery.data.data.posts : []), [postsQuery.data])
   const categories = useMemo(
@@ -106,11 +106,11 @@ export function PostList() {
   const summaryItems = useMemo(
     () => [
       {
-        label: '文章',
+        label: t('content.posts.summary.totalPosts'),
         value: posts.length,
       },
       {
-        label: '当前结果',
+        label: t('content.posts.summary.currentResults'),
         value: filteredPosts.length,
       },
     ],
@@ -121,7 +121,7 @@ export function PostList() {
     () => [
       {
         dataIndex: 'title',
-        title: '标题',
+        title: t('content.posts.table.title'),
         render: (title: string, post) => (
           <div className="min-w-0">
             <div className="truncate font-medium text-fg">{title}</div>
@@ -131,24 +131,24 @@ export function PostList() {
       },
       {
         dataIndex: 'slug',
-        title: 'Slug',
+        title: t('content.posts.table.slug'),
         render: (slug: string) => <span className="font-mono text-xs">{slug}</span>,
       },
       {
         dataIndex: 'status',
-        title: '状态',
+        title: t('content.posts.table.status'),
         width: 110,
-        render: (value: PostStatus) => <Tag color={getStatusColor(value)}>{getStatusLabel(value)}</Tag>,
+        render: (value: PostStatus) => <Tag color={getStatusColor(value)}>{getStatusLabel(value, t)}</Tag>,
       },
       {
         dataIndex: 'category',
-        title: '分类',
+        title: t('content.posts.table.category'),
         width: 160,
         render: (category: PostSummary['category']) => (category ? <Tag>{category.name}</Tag> : '-'),
       },
       {
         dataIndex: 'tags',
-        title: '标签',
+        title: t('content.posts.table.tags'),
         width: 220,
         render: (tags: PostSummary['tags']) => (
           <div className="flex flex-wrap gap-1">
@@ -158,19 +158,19 @@ export function PostList() {
       },
       {
         dataIndex: 'updatedAt',
-        title: '更新时间',
+        title: t('content.posts.table.updatedAt'),
         width: 180,
         render: formatDateTime,
       },
       {
         dataIndex: 'publishedAt',
-        title: '发布时间',
+        title: t('content.posts.table.publishedAt'),
         width: 180,
         render: formatDateTime,
       },
       {
         key: 'actions',
-        title: '操作',
+        title: t('content.posts.table.actions'),
         width: 110,
         render: (_, post) => (
           <Button
@@ -183,12 +183,12 @@ export function PostList() {
             size="small"
             type="link"
           >
-            编辑
+            {t('content.posts.edit')}
           </Button>
         ),
       },
     ],
-    [navigate],
+    [navigate, t],
   )
 
   const handleCreate = useCallback(async () => {
@@ -209,7 +209,7 @@ export function PostList() {
 
     setCreateOpen(false)
     form.resetFields()
-    message.success('文章已创建')
+    message.success(t('content.posts.createSuccess'))
     await navigate({
       to: `/content/posts/${response.data.post.id}` as never,
     })
@@ -218,8 +218,8 @@ export function PostList() {
   return (
     <div className="space-y-5">
       <FifaPageHeader
-        title="文章管理"
-        description="管理后台文章草稿、发布状态和编辑入口。"
+        title={t('content.posts.title')}
+        description={t('content.posts.description')}
         actions={
           <>
             <Button
@@ -227,10 +227,10 @@ export function PostList() {
               loading={postsQuery.isFetching}
               onClick={() => void postsQuery.refetch()}
             >
-              刷新
+              {t('content.posts.refresh')}
             </Button>
             <Button icon={<FilePlus2 className="size-4" />} onClick={() => setCreateOpen(true)} type="primary">
-              新建文章
+              {t('content.posts.createPost')}
             </Button>
           </>
         }
@@ -243,7 +243,7 @@ export function PostList() {
             allowClear
             prefix={<Search className="text-fg-muted size-4" />}
             onChange={(event) => setKeyword(event.target.value)}
-            placeholder="搜索标题、slug、分类或标签"
+            placeholder={t('content.posts.searchPlaceholder')}
             value={keyword}
           />
           <Select options={statusFilterOptions} onChange={setStatus} value={status} />
@@ -257,7 +257,7 @@ export function PostList() {
           columns={columns}
           dataSource={filteredPosts}
           loading={postsQuery.isLoading}
-          locale={tableLocale}
+          locale={{ emptyText: t('content.posts.emptyText') }}
           pagination={tablePagination}
           rowKey="id"
           scroll={tableScroll}
@@ -267,34 +267,34 @@ export function PostList() {
       <Modal
         confirmLoading={createPostMutation.isPending}
         destroyOnHidden
-        okText="创建"
+        okText={t('content.posts.create')}
         onCancel={() => setCreateOpen(false)}
         onOk={() => void handleCreate()}
         open={createOpen}
-        title="新建文章"
+        title={t('content.posts.createPost')}
       >
         <Form<CreatePostFormValue> form={form} layout="vertical">
-          <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
-            <Input placeholder="输入文章标题" />
+          <Form.Item name="title" label={t('content.posts.form.title')} rules={[{ required: true, message: t('content.posts.form.titleRequired') }]}>
+            <Input placeholder={t('content.posts.form.titlePlaceholder')} />
           </Form.Item>
-          <Form.Item name="slug" label="Slug" rules={[{ required: true, message: '请输入 slug' }]}>
-            <Input placeholder="例如 hello-world" />
+          <Form.Item name="slug" label={t('content.posts.form.slug')} rules={[{ required: true, message: t('content.posts.form.slugRequired') }]}>
+            <Input placeholder={t('content.posts.form.slugPlaceholder')} />
           </Form.Item>
-          <Form.Item name="categoryId" label="分类">
+          <Form.Item name="categoryId" label={t('content.posts.form.category')}>
             <Select
               allowClear
               loading={categoriesQuery.isLoading}
               options={categoryOptions}
-              placeholder="选择分类，可留空"
+              placeholder={t('content.posts.form.categoryPlaceholder')}
             />
           </Form.Item>
-          <Form.Item name="tagIds" label="标签">
+          <Form.Item name="tagIds" label={t('content.posts.form.tag')}>
             <Select
               allowClear
               loading={tagsQuery.isLoading}
               mode="multiple"
               options={tagOptions}
-              placeholder="选择标签，可留空"
+              placeholder={t('content.posts.form.tagPlaceholder')}
             />
           </Form.Item>
         </Form>
