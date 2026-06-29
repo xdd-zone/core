@@ -63,7 +63,7 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
     <main className="flex flex-1 flex-col">
       <article>
         <header className="relative pt-40 pb-12 max-md:pt-27.5 max-md:pb-12">
-          <div className="max-w-240 mx-auto px-6 relative z-2">
+          <div className="max-w-205 mx-auto px-6 relative z-2">
             <Link
               className="inline-flex mb-8 text-foreground underline decoration-ld-text/25 underline-offset-6"
               href="/writing"
