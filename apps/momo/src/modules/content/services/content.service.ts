@@ -3,6 +3,8 @@ import type {
   AssetListResponse,
   AssetReference,
   CreatePostRequest,
+  GeneratePostMetaRequest,
+  GeneratePostMetaResponse,
   ImageAsset,
   PostDetail,
   PostRevision,
@@ -27,6 +29,7 @@ import { ContentAssetNotFoundError, ContentSlugConflictError } from '../reposito
 const PREVIEW_TOKEN_TTL_MS = 30 * 60 * 1000
 const ASSET_LIST_DEFAULT_PAGE_SIZE = 24
 const ASSET_LIST_MAX_PAGE_SIZE = 100
+const POST_META_SOURCE_LIMIT = 4000
 
 export function createContentService(
   runtime: MomoRuntime,
@@ -125,6 +128,22 @@ export function createContentService(
     ])
 
     return toPostDetail(post, input.source, category ?? null, tags)
+  }
+
+  async function generatePostMetaSuggestion(input: GeneratePostMetaRequest): Promise<GeneratePostMetaResponse> {
+    const suggestionInput: GeneratePostMetaRequest = {
+      ...input,
+      source: input.source ? input.source.slice(0, POST_META_SOURCE_LIMIT) : undefined,
+    }
+    const result = await runtime.llm.generatePostMeta(suggestionInput)
+    const suggestion = await normalizePostMetaSuggestion(input, result.suggestion, (slug) =>
+      repository.findPostBySlug(slug),
+    )
+
+    return {
+      suggestion,
+      usage: result.usage,
+    }
   }
 
   async function saveDraft(id: string, input: SavePostDraftRequest, userId: string): Promise<PostDetail> {
@@ -445,6 +464,7 @@ export function createContentService(
     createPost,
     createPreviewToken,
     deleteAsset,
+    generatePostMetaSuggestion,
     getAssetById,
     getMdxComponents,
     getPostById,
@@ -505,6 +525,45 @@ function normalizePageSize(value: number | undefined): number {
 
 function normalizeText(value: string | undefined): string | undefined {
   return value?.trim() || undefined
+}
+
+export function normalizePostSlug(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9-]+/g, '-')
+    .replaceAll(/-+/g, '-')
+    .replaceAll(/^-|-$/g, '')
+    .slice(0, 160)
+    .replaceAll(/-$/g, '')
+}
+
+export async function normalizePostMetaSuggestion(
+  input: GeneratePostMetaRequest,
+  suggestion: GeneratePostMetaResponse['suggestion'],
+  findPostBySlug: (slug: string) => Promise<unknown>,
+): Promise<GeneratePostMetaResponse['suggestion']> {
+  const normalized: GeneratePostMetaResponse['suggestion'] = {}
+
+  if (input.targets.includes('slug') && suggestion.slug) {
+    const slug = normalizePostSlug(suggestion.slug)
+
+    if (slug) {
+      const duplicate = await findPostBySlug(slug)
+      normalized.slug = slug
+      normalized.slugAvailable = !duplicate
+    }
+  }
+
+  if (input.targets.includes('excerpt') && suggestion.excerpt) {
+    normalized.excerpt = suggestion.excerpt.trim().slice(0, 500)
+  }
+
+  if (input.targets.includes('title') && suggestion.title) {
+    normalized.title = suggestion.title.trim().slice(0, 160)
+  }
+
+  return normalized
 }
 
 function toAssetReference(reference: ContentAssetReferenceRecord): AssetReference {

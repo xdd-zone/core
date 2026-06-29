@@ -6,12 +6,13 @@ import {
   useContentPostsQuery,
   useContentTagsQuery,
   useCreateContentPostMutation,
+  useGenerateContentPostMetaSuggestionMutation,
 } from '@fifa/api/content'
 import { FifaPageHeader } from '@fifa/components/common'
 import { filterContentPosts } from '@fifa/features/content/utils/post-list'
 import { useNavigate } from '@tanstack/react-router'
 import { App, Button, Form, Input, Modal, Select, Table, Tag } from 'antd'
-import { FilePlus2, Pencil, RefreshCw, Search } from 'lucide-react'
+import { FilePlus2, Pencil, RefreshCw, Search, Wand2 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -71,6 +72,7 @@ export function PostList() {
   const categoriesQuery = useContentCategoriesQuery()
   const tagsQuery = useContentTagsQuery()
   const createPostMutation = useCreateContentPostMutation()
+  const metaSuggestionMutation = useGenerateContentPostMetaSuggestionMutation()
   const [form] = Form.useForm<CreatePostFormValue>()
   const [createOpen, setCreateOpen] = useState(false)
   const [keyword, setKeyword] = useState('')
@@ -213,7 +215,44 @@ export function PostList() {
     await navigate({
       to: `/content/posts/${response.data.post.id}` as never,
     })
-  }, [createPostMutation, form, message, navigate])
+  }, [createPostMutation, form, message, navigate, t])
+
+  const handleGenerateSlug = useCallback(async () => {
+    const title = form.getFieldValue('title')?.trim()
+
+    if (!title) {
+      message.warning(t('content.posts.form.titleRequired'))
+      return
+    }
+
+    const response = await metaSuggestionMutation.mutateAsync({
+      locale: 'zh-CN',
+      mode: 'create',
+      targets: ['slug'],
+      title,
+    })
+
+    if (!response.ok) {
+      message.error(response.error.message)
+      return
+    }
+
+    const { slug, slugAvailable } = response.data.suggestion
+
+    if (!slug) {
+      message.warning(t('content.posts.ai.emptySuggestion'))
+      return
+    }
+
+    form.setFieldValue('slug', slug)
+
+    if (slugAvailable === false) {
+      message.warning(t('content.posts.ai.slugConflict'))
+      return
+    }
+
+    message.success(t('content.posts.ai.slugGenerated'))
+  }, [form, message, metaSuggestionMutation, t])
 
   return (
     <div className="space-y-5">
@@ -274,11 +313,31 @@ export function PostList() {
         title={t('content.posts.createPost')}
       >
         <Form<CreatePostFormValue> form={form} layout="vertical">
-          <Form.Item name="title" label={t('content.posts.form.title')} rules={[{ required: true, message: t('content.posts.form.titleRequired') }]}>
+          <Form.Item
+            name="title"
+            label={t('content.posts.form.title')}
+            rules={[{ required: true, message: t('content.posts.form.titleRequired') }]}
+          >
             <Input placeholder={t('content.posts.form.titlePlaceholder')} />
           </Form.Item>
-          <Form.Item name="slug" label={t('content.posts.form.slug')} rules={[{ required: true, message: t('content.posts.form.slugRequired') }]}>
-            <Input placeholder={t('content.posts.form.slugPlaceholder')} />
+          <Form.Item
+            name="slug"
+            label={t('content.posts.form.slug')}
+            rules={[{ required: true, message: t('content.posts.form.slugRequired') }]}
+          >
+            <Input
+              addonAfter={
+                <Button
+                  icon={<Wand2 className="size-4" />}
+                  loading={metaSuggestionMutation.isPending}
+                  onClick={() => void handleGenerateSlug()}
+                  type="link"
+                >
+                  {t('content.posts.ai.generateSlug')}
+                </Button>
+              }
+              placeholder={t('content.posts.form.slugPlaceholder')}
+            />
           </Form.Item>
           <Form.Item name="categoryId" label={t('content.posts.form.category')}>
             <Select

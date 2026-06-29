@@ -43,6 +43,8 @@
     "@codemirror/language": "catalog:",
     "@codemirror/view": "catalog:",
     "@lezer/highlight": "catalog:",
+    "@rc-component/input-number": "catalog:",
+    "@rc-component/mentions": "catalog:",
     "@shikijs/langs": "catalog:shiki",
     "@shikijs/transformers": "catalog:shiki",
     "@tanstack/react-query": "catalog:",

@@ -12,8 +12,6 @@ import { useTranslation } from 'react-i18next'
 
 const pageSize = 24
 
-
-
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat('zh-CN', {
     dateStyle: 'medium',
@@ -199,7 +197,9 @@ export function AssetList() {
             >
               {t('content.assets.refresh')}
             </Button>
-            <Button onClick={() => void navigate({ to: '/content/posts' as never })}>{t('content.assets.goBackPosts')}</Button>
+            <Button onClick={() => void navigate({ to: '/content/posts' as never })}>
+              {t('content.assets.goBackPosts')}
+            </Button>
           </>
         }
         summaryItems={summaryItems}
@@ -271,7 +271,11 @@ export function AssetList() {
         open={editAsset !== null}
         title={t('content.assets.editAlt')}
       >
-        <Input onChange={(event) => setEditAlt(event.target.value)} placeholder={t('content.assets.editAltPlaceholder')} value={editAlt} />
+        <Input
+          onChange={(event) => setEditAlt(event.target.value)}
+          placeholder={t('content.assets.editAltPlaceholder')}
+          value={editAlt}
+        />
       </Modal>
     </div>
   )

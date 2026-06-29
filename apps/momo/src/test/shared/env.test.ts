@@ -49,6 +49,12 @@ describe('momo 环境变量', () => {
       LOG_SQL: false,
       PORT: 8080,
       SEARCH_PROVIDER: 'none',
+      LLM_PROVIDER: 'none',
+      OPENAI_API_KEY: undefined,
+      OPENAI_API_FORMAT: 'chat_completions',
+      OPENAI_BASE_URL: undefined,
+      OPENAI_MODEL: 'gpt-5-mini',
+      OPENAI_TIMEOUT_MS: 15000,
       STORAGE_PROVIDER: 'local',
     })
   })
@@ -228,6 +234,24 @@ describe('momo 环境变量', () => {
         MEILI_HOST: 'http://localhost:57700',
         PORT: '7788',
         SEARCH_PROVIDER: 'meilisearch',
+      }),
+    ).toThrow()
+  })
+
+  it('openai LLM 缺少 api key 时抛错', () => {
+    expect(() =>
+      getMomoEnv({
+        APP_ENV: 'development',
+        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        BETTER_AUTH_URL: 'http://localhost:7788',
+        CORS_ORIGINS: 'http://localhost:2333',
+        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
+        GITHUB_CLIENT_ID: 'github-client-id',
+        GITHUB_CLIENT_SECRET: 'github-client-secret',
+        GOOGLE_CLIENT_ID: 'google-client-id',
+        GOOGLE_CLIENT_SECRET: 'google-client-secret',
+        LLM_PROVIDER: 'openai',
+        PORT: '7788',
       }),
     ).toThrow()
   })

@@ -175,7 +175,9 @@ export function TaxonomyList() {
       return
     }
 
-    message.success(categoryDialog.item ? t('content.taxonomy.saveCategorySuccess') : t('content.taxonomy.createCategorySuccess'))
+    message.success(
+      categoryDialog.item ? t('content.taxonomy.saveCategorySuccess') : t('content.taxonomy.createCategorySuccess'),
+    )
     setCategoryDialog(emptyCategoryDialog)
     categoryForm.resetFields()
   }, [categoryDialog.item, categoryForm, createCategoryMutation, message, updateCategoryMutation])
@@ -464,7 +466,10 @@ export function TaxonomyList() {
             <Input placeholder={t('content.taxonomy.categorySlugPlaceholder')} />
           </Form.Item>
           <Form.Item name="description" label="说明">
-            <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder={t('content.taxonomy.categoryDescriptionPlaceholder')} />
+            <Input.TextArea
+              autoSize={{ minRows: 2, maxRows: 4 }}
+              placeholder={t('content.taxonomy.categoryDescriptionPlaceholder')}
+            />
           </Form.Item>
         </Form>
       </Modal>

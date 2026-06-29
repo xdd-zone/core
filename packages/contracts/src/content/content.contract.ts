@@ -21,6 +21,36 @@ export const SavePostDraftRequestSchema = ContentPostBaseSchema.partial().extend
   source: z.string().min(1).optional(),
 })
 
+export const GeneratePostMetaTargetSchema = z.enum(['slug', 'excerpt', 'title'])
+
+export const GeneratePostMetaRequestSchema = z.object({
+  excerpt: z.string().trim().max(500).nullable().optional(),
+  locale: z.enum(['zh-CN', 'en-US']).default('zh-CN'),
+  mode: z.enum(['create', 'edit']),
+  slug: z.string().trim().max(160).optional(),
+  source: z.string().optional(),
+  targets: z.array(GeneratePostMetaTargetSchema).min(1).max(3),
+  title: z.string().trim().max(160).optional(),
+})
+
+export const GeneratePostMetaSuggestionSchema = z.object({
+  excerpt: z.string().max(500).optional(),
+  slug: z.string().max(160).optional(),
+  slugAvailable: z.boolean().optional(),
+  title: z.string().max(160).optional(),
+})
+
+export const GeneratePostMetaUsageSchema = z.object({
+  inputTokens: z.number().int().nonnegative().optional(),
+  outputTokens: z.number().int().nonnegative().optional(),
+  totalTokens: z.number().int().nonnegative().optional(),
+})
+
+export const GeneratePostMetaResponseSchema = z.object({
+  suggestion: GeneratePostMetaSuggestionSchema,
+  usage: GeneratePostMetaUsageSchema.optional(),
+})
+
 export const CategorySummarySchema = z.object({
   description: z.string().nullable(),
   id: z.string(),
@@ -266,6 +296,10 @@ export type CategoryResponse = z.infer<typeof CategoryResponseSchema>
 export type CategorySummary = z.infer<typeof CategorySummarySchema>
 export type CreateCategoryRequest = z.infer<typeof CreateCategoryRequestSchema>
 export type CreatePostRequest = z.infer<typeof CreatePostRequestSchema>
+export type GeneratePostMetaRequest = z.infer<typeof GeneratePostMetaRequestSchema>
+export type GeneratePostMetaResponse = z.infer<typeof GeneratePostMetaResponseSchema>
+export type GeneratePostMetaSuggestion = z.infer<typeof GeneratePostMetaSuggestionSchema>
+export type GeneratePostMetaTarget = z.infer<typeof GeneratePostMetaTargetSchema>
 export type CreateTagRequest = z.infer<typeof CreateTagRequestSchema>
 export type DeleteAssetResponse = z.infer<typeof DeleteAssetResponseSchema>
 export type DeleteCategoryResponse = z.infer<typeof DeleteCategoryResponseSchema>

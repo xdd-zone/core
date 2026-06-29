@@ -1,6 +1,7 @@
 import type { Logger } from 'pino'
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { CacheDriver } from '#momo/infra/cache'
+import type { LlmDriver } from '#momo/infra/llm'
 import type { SearchDriver } from '#momo/infra/search'
 import type { StorageDriver } from '#momo/infra/storage'
 import { BizCode } from '@xdd-zone/contracts'
@@ -32,6 +33,7 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
       GITHUB_CLIENT_SECRET: 'test-github-client-secret',
       GOOGLE_CLIENT_ID: 'test-google-client-id',
       GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
+      LLM_PROVIDER: 'none',
       MEILI_API_KEY: undefined,
       MEILI_HOST: undefined,
       MEILI_INDEX_PREFIX: 'momo',
@@ -45,11 +47,19 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
       LOCAL_STORAGE_DIR: undefined,
       LOG_LEVEL: appEnv === 'test' ? 'silent' : 'info',
       LOG_SQL: false,
+      OPENAI_API_KEY: undefined,
+      OPENAI_API_FORMAT: 'chat_completions',
+      OPENAI_BASE_URL: undefined,
+      OPENAI_MODEL: 'gpt-5-mini',
+      OPENAI_TIMEOUT_MS: 15000,
       PORT: 7788,
       SEARCH_PROVIDER: 'none',
       STORAGE_PROVIDER: 'local',
     },
     logger: mockLogger as unknown as Logger,
+    llm: {
+      generatePostMeta: vi.fn(),
+    } as unknown as LlmDriver,
     cache: {
       close: vi.fn(),
       delete: vi.fn(),

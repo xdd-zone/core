@@ -221,6 +221,12 @@ SEARCH_PROVIDER
 MEILI_HOST
 MEILI_API_KEY
 MEILI_INDEX_PREFIX
+LLM_PROVIDER
+OPENAI_API_KEY
+OPENAI_API_FORMAT
+OPENAI_BASE_URL
+OPENAI_MODEL
+OPENAI_TIMEOUT_MS
 STORAGE_PROVIDER
 LOCAL_STORAGE_DIR
 COS_SECRET_ID
@@ -253,6 +259,8 @@ OWNER_DISPLAY_NAME
 `CACHE_PROVIDER` 控制缓存驱动。默认值是 `memory`，数据只存在当前 Node.js 进程里。设成 `redis` 时，需要配置 `CACHE_URL`，本地 Valkey 地址是 `redis://localhost:56379`。`CACHE_KEY_PREFIX` 默认是 `momo`，`CACHE_DEFAULT_TTL_SECONDS` 默认是 `300` 秒。
 
 `SEARCH_PROVIDER` 控制搜索驱动。默认值是 `none`，不会连接外部搜索服务。设成 `meilisearch` 时，需要配置 `MEILI_HOST` 和 `MEILI_API_KEY`，本地 Meilisearch 地址是 `http://localhost:57700`。`MEILI_INDEX_PREFIX` 默认是 `momo`，驱动会把逻辑索引名 `posts` 拼成真实索引名 `momo_posts`。当前还没有业务模块调用搜索驱动。
+
+`LLM_PROVIDER` 控制 LLM 驱动。默认值是 `none`，不会连接模型服务。设成 `openai` 时，需要配置 `OPENAI_API_KEY`。`OPENAI_API_FORMAT` 默认是 `chat_completions`，会请求 Chat Completions 兼容接口；接 OpenAI Responses API 时设成 `responses`。`OPENAI_BASE_URL` 可选，用来改成兼容 OpenAI 协议的服务地址。`OPENAI_MODEL` 默认是 `gpt-5-mini`，`OPENAI_TIMEOUT_MS` 默认是 `15000` 毫秒。
 
 `STORAGE_PROVIDER` 控制文件存储驱动。默认值是 `local`，使用 `LOCAL_STORAGE_DIR`，未设置时写到 `storage/media`。设成 `cos` 时，`COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION` 必须配置。`COS_KEY_PREFIX` 默认是 `media`，`COS_SIGNED_URL_EXPIRES` 默认是 `600` 秒。
 
@@ -625,6 +633,7 @@ packages/contracts/src/content/content.contract.ts
 
 - `GET /rpc/content/posts`
 - `POST /rpc/content/posts`
+- `POST /rpc/content/posts/meta-suggestion`
 - `GET /rpc/content/posts/:id`
 - `PATCH /rpc/content/posts/:id/draft`
 - `POST /rpc/content/posts/:id/preview-token`
@@ -680,6 +689,7 @@ content.contract.ts
 关键规则：
 
 - route 用 `CreatePostRequestSchema`、`SavePostDraftRequestSchema` 校验请求体。
+- `POST /rpc/content/posts/meta-suggestion` 用 `GeneratePostMetaRequestSchema` 校验请求体。接口只返回建议值，不写数据库。
 - service 只接收 contract 请求类型、用户 id、文章 id、token 这类明确参数。
 - service 需要文章版本时，如果指针存在但版本记录查不到，按数据错误抛 `SYSTEM.INTERNAL_ERROR`。
 - repository 的 `ContentPostRecord`、`ContentRevisionRecord` 从 Drizzle schema 推导，不手写 `status` 的窄类型。

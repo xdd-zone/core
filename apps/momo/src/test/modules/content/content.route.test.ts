@@ -1,6 +1,7 @@
 import type {
   ApiResponse,
   CreatePostRequest,
+  GeneratePostMetaResponse,
   ImageAssetResponse,
   MdxComponentsResponse,
   PostDetailResponse,
@@ -63,6 +64,23 @@ describe('content 路由', () => {
     expect(response.status).toBe(401)
     expect(body.ok).toBe(false)
     expect(!body.ok && body.error.code).toBe(BizCode.AUTH_UNAUTHENTICATED)
+  })
+
+  it('llm 未启用时生成文章字段建议会返回 409', async () => {
+    const response = await momoApp.request('/rpc/content/posts/meta-suggestion', {
+      body: JSON.stringify({
+        mode: 'create',
+        targets: ['slug'],
+        title: 'Hello Content',
+      }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'POST',
+    })
+    const body = (await response.json()) as ApiResponse<GeneratePostMetaResponse>
+
+    expect(response.status).toBe(409)
+    expect(body.ok).toBe(false)
+    expect(!body.ok && body.error.code).toBe(BizCode.BIZ_RULE_VIOLATION)
   })
 
   it('非 fifa owner 请求后台文章列表被拒绝', async () => {

@@ -10,6 +10,8 @@ import type {
   DeleteAssetResponse,
   DeleteCategoryResponse,
   DeleteTagResponse,
+  GeneratePostMetaRequest,
+  GeneratePostMetaResponse,
   ImageAssetResponse,
   MdxComponentsResponse,
   PostDetailResponse,
@@ -112,6 +114,14 @@ export function listContentAssets(query: AssetListQuery) {
 export function createContentPost(payload: CreatePostRequest) {
   return readMomoJson<PostDetailResponse>(
     momoClient.rpc.content.posts.$post({
+      json: payload,
+    }),
+  )
+}
+
+export function generateContentPostMetaSuggestion(payload: GeneratePostMetaRequest) {
+  return readMomoJson<GeneratePostMetaResponse>(
+    momoClient.rpc.content.posts['meta-suggestion'].$post({
       json: payload,
     }),
   )

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createRuntime } from '#momo/bootstrap'
 import { MemoryCache, RedisCache } from '#momo/infra/cache'
+import { DisabledLlm, OpenAILlm } from '#momo/infra/llm'
 import { DisabledSearch, MeilisearchSearch } from '#momo/infra/search'
 
 function stubBaseEnv() {
@@ -45,6 +46,24 @@ describe('runtime 创建', () => {
     const runtime = createRuntime()
 
     expect(runtime.search).toBeInstanceOf(DisabledSearch)
+  })
+
+  it('默认创建禁用 LLM 驱动', () => {
+    stubBaseEnv()
+
+    const runtime = createRuntime()
+
+    expect(runtime.llm).toBeInstanceOf(DisabledLlm)
+  })
+
+  it('llm_provider=openai 时创建 OpenAI LLM 驱动', () => {
+    stubBaseEnv()
+    vi.stubEnv('LLM_PROVIDER', 'openai')
+    vi.stubEnv('OPENAI_API_KEY', 'test-openai-api-key')
+
+    const runtime = createRuntime()
+
+    expect(runtime.llm).toBeInstanceOf(OpenAILlm)
   })
 
   it('search_provider=meilisearch 时创建 Meilisearch 搜索驱动', () => {

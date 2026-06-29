@@ -92,6 +92,8 @@ pnpm seed:owner
   返回后台文章列表。
 - `POST /rpc/content/posts`
   创建文章草稿。
+- `POST /rpc/content/posts/meta-suggestion`
+  生成文章 slug、摘要或标题建议，不保存文章。
 - `GET /rpc/content/posts/:id`
   返回后台文章详情。
 - `PATCH /rpc/content/posts/:id/draft`
@@ -150,6 +152,10 @@ pnpm seed:owner
   默认 `memory`。设成 `redis` 时，需要配置 `CACHE_URL`。
 - `SEARCH_PROVIDER`
   默认 `none`。设成 `meilisearch` 时，需要配置 `MEILI_HOST` 和 `MEILI_API_KEY`。
+- `LLM_PROVIDER`
+  默认 `none`。设成 `openai` 时，需要配置 `OPENAI_API_KEY`。
+- `OPENAI_API_FORMAT`
+  默认 `chat_completions`。接 OpenAI Responses API 时设成 `responses`。
 - `STORAGE_PROVIDER`
   默认 `local`。设成 `cos` 时，需要配置腾讯云 COS 变量。
 
@@ -177,6 +183,7 @@ const response = await app.request('/health')
 
 - 缓存代码放在 `src/infra/cache`。本地 Redis 协议缓存使用 Valkey，地址是 `redis://localhost:56379`。
 - 搜索代码放在 `src/infra/search`。当前还没有业务模块调用搜索驱动。
+- LLM 代码放在 `src/infra/llm`。内容模块通过 `POST /rpc/content/posts/meta-suggestion` 生成文章字段建议。
 - 文件存储代码放在 `src/infra/storage`。内容模块通过 `POST /rpc/content/assets/images` 保存图片素材。验证当前存储配置时，运行 `pnpm storage:test`。
 
 更多说明看：

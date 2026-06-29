@@ -7,6 +7,7 @@ import {
   CreateCategoryRequestSchema,
   CreatePostRequestSchema,
   CreateTagRequestSchema,
+  GeneratePostMetaRequestSchema,
   SavePostDraftRequestSchema,
   UpdateAssetRequestSchema,
   UpdateCategoryRequestSchema,
@@ -49,6 +50,21 @@ export function createContentRoute(runtime: MomoRuntime) {
       async (c) => {
         const query = c.req.valid('query')
         const result = await service.listAssets(query)
+        return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
+      },
+    )
+    .post(
+      '/rpc/content/posts/meta-suggestion',
+      createRequirePermission(runtime, 'content.post.edit'),
+      zValidator('json', GeneratePostMetaRequestSchema, (result) => {
+        if (result.success) {
+          return
+        }
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) => {
+        const result = await service.generatePostMetaSuggestion(c.req.valid('json'))
         return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
       },
     )

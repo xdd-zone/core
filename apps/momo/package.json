@@ -26,6 +26,7 @@
   "imports": {
     "#momo/bootstrap": "./src/bootstrap/index.ts",
     "#momo/infra/cache": "./src/infra/cache/index.ts",
+    "#momo/infra/llm": "./src/infra/llm/index.ts",
     "#momo/infra/search": "./src/infra/search/index.ts",
     "#momo/infra/storage": "./src/infra/storage/index.ts",
     "#momo/middleware": "./src/middleware/index.ts",
@@ -75,6 +76,7 @@
     "drizzle-orm": "catalog:",
     "hono": "catalog:",
     "meilisearch": "catalog:",
+    "openai": "catalog:",
     "pino": "catalog:",
     "postgres": "catalog:",
     "redis": "catalog:",

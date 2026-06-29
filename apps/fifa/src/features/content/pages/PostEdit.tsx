@@ -9,6 +9,7 @@ import {
   useContentPostQuery,
   useContentTagsQuery,
   useCreateContentPreviewTokenMutation,
+  useGenerateContentPostMetaSuggestionMutation,
   useMdxComponentsQuery,
   usePublishContentPostMutation,
   useSaveContentPostDraftMutation,
@@ -21,7 +22,7 @@ import { ignoreAntdUploadRequest } from '@fifa/features/content/utils/upload'
 import { useTabBarStore } from '@fifa/stores'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
 import { App, Button, Form, Input, Modal, Select, Tabs, Tag, Upload } from 'antd'
-import { ExternalLink, ImagePlus, PackagePlus, Save, Send, SquareArrowOutUpRight } from 'lucide-react'
+import { ExternalLink, ImagePlus, PackagePlus, Save, Send, SquareArrowOutUpRight, Wand2 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -100,7 +101,9 @@ function toDraftPayload(values: PostEditFormValue): SavePostDraftRequest {
 function MdxSourceEditorFallback() {
   const { t } = useTranslation()
   return (
-    <div className="flex h-full items-center justify-center bg-surface/90 text-sm text-fg-muted">{t('content.postEdit.loadingEditor')}</div>
+    <div className="flex h-full items-center justify-center bg-surface/90 text-sm text-fg-muted">
+      {t('content.postEdit.loadingEditor')}
+    </div>
   )
 }
 
@@ -138,6 +141,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
   const saveDraftMutation = useSaveContentPostDraftMutation(postId)
   const previewTokenMutation = useCreateContentPreviewTokenMutation(postId)
   const publishMutation = usePublishContentPostMutation(postId)
+  const metaSuggestionMutation = useGenerateContentPostMetaSuggestionMutation()
   const uploadImageMutation = useUploadContentImageMutation()
   const [assetPickerOpen, setAssetPickerOpen] = useState(false)
   const [pickerKeyword, setPickerKeyword] = useState('')
@@ -241,7 +245,84 @@ function PostEditContent({ postId }: PostEditContentProps) {
 
     saveDraftPromiseRef.current = guardedSavePromise
     return guardedSavePromise
-  }, [form, message, post, saveDraftMutation])
+  }, [form, message, post, saveDraftMutation, t])
+
+  const handleGenerateMeta = useCallback(
+    async (targets: Array<'slug' | 'excerpt' | 'title'>) => {
+      const values = form.getFieldsValue()
+      const response = await metaSuggestionMutation.mutateAsync({
+        excerpt: values.excerpt?.trim() || null,
+        locale: 'zh-CN',
+        mode: 'edit',
+        slug: values.slug?.trim(),
+        source: values.source,
+        targets,
+        title: values.title?.trim(),
+      })
+
+      if (!response.ok) {
+        message.error(response.error.message)
+        return
+      }
+
+      const suggestion = response.data.suggestion
+      const nextValues: Partial<PostEditFormValue> = {}
+
+      if (targets.includes('slug') && suggestion.slug) {
+        nextValues.slug = suggestion.slug
+      }
+
+      if (targets.includes('excerpt') && suggestion.excerpt) {
+        nextValues.excerpt = suggestion.excerpt
+      }
+
+      if (targets.includes('title') && suggestion.title) {
+        nextValues.title = suggestion.title
+      }
+
+      if (Object.keys(nextValues).length === 0) {
+        message.warning(t('content.postEdit.ai.emptySuggestion'))
+        return
+      }
+
+      modal.confirm({
+        cancelText: t('content.postEdit.cancel'),
+        content: (
+          <div className="space-y-3">
+            {nextValues.title ? (
+              <div>
+                <div className="text-xs text-fg-muted">{t('content.postEdit.form.title')}</div>
+                <div className="mt-1 text-sm text-fg">{nextValues.title}</div>
+              </div>
+            ) : null}
+            {nextValues.slug ? (
+              <div>
+                <div className="text-xs text-fg-muted">{t('content.postEdit.form.slug')}</div>
+                <div className="mt-1 font-mono text-sm text-fg">{nextValues.slug}</div>
+                {suggestion.slugAvailable === false ? (
+                  <div className="mt-1 text-xs text-warning">{t('content.postEdit.ai.slugConflict')}</div>
+                ) : null}
+              </div>
+            ) : null}
+            {nextValues.excerpt ? (
+              <div>
+                <div className="text-xs text-fg-muted">{t('content.postEdit.form.excerpt')}</div>
+                <div className="mt-1 text-sm text-fg">{nextValues.excerpt}</div>
+              </div>
+            ) : null}
+          </div>
+        ),
+        okText: t('content.postEdit.ai.apply'),
+        onOk: () => {
+          form.setFieldsValue(nextValues)
+          setDirty(true)
+          message.success(t('content.postEdit.ai.applied'))
+        },
+        title: t('content.postEdit.ai.applyTitle'),
+      })
+    },
+    [form, message, metaSuggestionMutation, modal, t],
+  )
 
   const handlePreview = useCallback(async () => {
     const savedPost = await saveDraft()
@@ -406,7 +487,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
             ) : null}
             <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border-subtle bg-surface-subtle shadow-inner">
               {previewUrl ? (
-                <iframe className="h-full w-full border-0 bg-surface" src={previewUrl} title='文章预览' />
+                <iframe className="h-full w-full border-0 bg-surface" src={previewUrl} title="文章预览" />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
                   <div className="flex size-12 items-center justify-center rounded-full border border-border-subtle bg-surface shadow-sm">
@@ -494,7 +575,9 @@ function PostEditContent({ postId }: PostEditContentProps) {
                       />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium text-fg">{asset.fileName}</div>
-                        <div className="truncate text-xs text-fg-muted">{asset.alt ?? t('content.postEdit.noDescription')}</div>
+                        <div className="truncate text-xs text-fg-muted">
+                          {asset.alt ?? t('content.postEdit.noDescription')}
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -632,24 +715,61 @@ function PostEditContent({ postId }: PostEditContentProps) {
       >
         <section className="overflow-hidden rounded-2xl border border-border-subtle bg-surface/85 shadow-sm">
           <div className="border-b border-border-subtle bg-surface-muted/45 px-5 py-4">
-            <div>
-              <div className="text-sm font-medium text-fg">{t('content.postEdit.postInfo')}</div>
-              <div className="mt-1 text-xs text-fg-muted">{t('content.postEdit.postInfoDescription')}</div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium text-fg">{t('content.postEdit.postInfo')}</div>
+                <div className="mt-1 text-xs text-fg-muted">{t('content.postEdit.postInfoDescription')}</div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  icon={<Wand2 className="size-4" />}
+                  loading={metaSuggestionMutation.isPending}
+                  onClick={() => void handleGenerateMeta(['slug'])}
+                  size="small"
+                >
+                  {t('content.postEdit.ai.generateSlug')}
+                </Button>
+                <Button
+                  loading={metaSuggestionMutation.isPending}
+                  onClick={() => void handleGenerateMeta(['excerpt'])}
+                  size="small"
+                >
+                  {t('content.postEdit.ai.generateExcerpt')}
+                </Button>
+                <Button
+                  loading={metaSuggestionMutation.isPending}
+                  onClick={() => void handleGenerateMeta(['slug', 'excerpt'])}
+                  size="small"
+                >
+                  {t('content.postEdit.ai.generateSlugAndExcerpt')}
+                </Button>
+              </div>
             </div>
           </div>
 
           <div className="px-5 py-4">
             <div className="grid gap-x-4 md:grid-cols-2">
-              <Form.Item name="title" label={t('content.postEdit.form.title')} rules={[{ required: true, message: t('content.postEdit.form.titleRequired') }]}>
+              <Form.Item
+                name="title"
+                label={t('content.postEdit.form.title')}
+                rules={[{ required: true, message: t('content.postEdit.form.titleRequired') }]}
+              >
                 <Input placeholder={t('content.postEdit.form.titlePlaceholder')} />
               </Form.Item>
-              <Form.Item name="slug" label={t('content.postEdit.form.slug')} rules={[{ required: true, message: t('content.postEdit.form.slugRequired') }]}>
+              <Form.Item
+                name="slug"
+                label={t('content.postEdit.form.slug')}
+                rules={[{ required: true, message: t('content.postEdit.form.slugRequired') }]}
+              >
                 <Input placeholder={t('content.postEdit.form.slugPlaceholder')} />
               </Form.Item>
             </div>
 
             <Form.Item name="excerpt" label={t('content.postEdit.form.excerpt')}>
-              <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder={t('content.postEdit.form.excerptPlaceholder')} />
+              <Input.TextArea
+                autoSize={{ minRows: 2, maxRows: 4 }}
+                placeholder={t('content.postEdit.form.excerptPlaceholder')}
+              />
             </Form.Item>
 
             <div className="grid gap-x-4 md:grid-cols-2">
@@ -683,7 +803,9 @@ function PostEditContent({ postId }: PostEditContentProps) {
               />
             </Form.Item>
             {currentCoverAssetId ? (
-              <div className="mt-3 text-xs text-fg-muted">{t('content.postEdit.currentCoverAssetId', { id: currentCoverAssetId })}</div>
+              <div className="mt-3 text-xs text-fg-muted">
+                {t('content.postEdit.currentCoverAssetId', { id: currentCoverAssetId })}
+              </div>
             ) : null}
           </div>
         </section>
@@ -693,7 +815,9 @@ function PostEditContent({ postId }: PostEditContentProps) {
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border-subtle bg-surface-muted/45 px-5 py-4">
               <div>
                 <div className="text-sm font-medium text-fg">{t('content.postEdit.editor.title')}</div>
-                <div className="mt-1 text-xs text-fg-muted">{dirty ? t('content.postEdit.editor.unsavedContent') : t('content.postEdit.editor.contentSaved')}</div>
+                <div className="mt-1 text-xs text-fg-muted">
+                  {dirty ? t('content.postEdit.editor.unsavedContent') : t('content.postEdit.editor.contentSaved')}
+                </div>
               </div>
             </div>
 
@@ -766,7 +890,9 @@ function PostEditContent({ postId }: PostEditContentProps) {
                   </div>
                   <div className="space-y-1 px-3 py-2.5">
                     <div className="truncate text-sm font-medium text-fg">{asset.fileName}</div>
-                    <div className="truncate text-xs text-fg-muted">{asset.alt ?? t('content.postEdit.noDescription')}</div>
+                    <div className="truncate text-xs text-fg-muted">
+                      {asset.alt ?? t('content.postEdit.noDescription')}
+                    </div>
                   </div>
                 </button>
               ))}

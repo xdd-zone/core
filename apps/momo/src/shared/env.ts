@@ -30,6 +30,7 @@ const momoEnvSchema = z
     GITHUB_CLIENT_SECRET: z.string().min(1),
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
+    LLM_PROVIDER: z.enum(['none', 'openai']).default('none'),
     MEILI_API_KEY: optionalStringSchema,
     MEILI_HOST: optionalUrlSchema,
     MEILI_INDEX_PREFIX: z.string().min(1).default('momo'),
@@ -50,6 +51,11 @@ const momoEnvSchema = z
       return value
     }, z.boolean()),
     PORT: z.coerce.number().int().min(1).max(65535),
+    OPENAI_API_KEY: optionalStringSchema,
+    OPENAI_API_FORMAT: z.enum(['chat_completions', 'responses']).default('chat_completions'),
+    OPENAI_BASE_URL: optionalUrlSchema,
+    OPENAI_MODEL: z.string().min(1).default('gpt-5-mini'),
+    OPENAI_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
     SEARCH_PROVIDER: z.enum(['none', 'meilisearch']).default('none'),
     STORAGE_PROVIDER: z.enum(['local', 'cos']).default('local'),
     LOCAL_STORAGE_DIR: optionalStringSchema,
@@ -85,6 +91,14 @@ const momoEnvSchema = z
         path: ['MEILI_API_KEY'],
       })
     }
+
+    if (env.LLM_PROVIDER === 'openai' && !env.OPENAI_API_KEY) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'LLM_PROVIDER=openai 时，OPENAI_API_KEY 必须配置',
+        path: ['OPENAI_API_KEY'],
+      })
+    }
   })
   .transform((env) => ({
     ...env,
@@ -108,12 +122,18 @@ export function getMomoEnv(source: NodeJS.ProcessEnv = process.env): MomoEnv {
     GITHUB_CLIENT_SECRET: source.GITHUB_CLIENT_SECRET,
     GOOGLE_CLIENT_ID: source.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: source.GOOGLE_CLIENT_SECRET,
+    LLM_PROVIDER: source.LLM_PROVIDER,
     MEILI_API_KEY: source.MEILI_API_KEY,
     MEILI_HOST: source.MEILI_HOST,
     MEILI_INDEX_PREFIX: source.MEILI_INDEX_PREFIX,
     LOG_LEVEL: source.LOG_LEVEL,
     LOG_SQL: source.LOG_SQL,
     PORT: source.PORT,
+    OPENAI_API_KEY: source.OPENAI_API_KEY,
+    OPENAI_API_FORMAT: source.OPENAI_API_FORMAT,
+    OPENAI_BASE_URL: source.OPENAI_BASE_URL,
+    OPENAI_MODEL: source.OPENAI_MODEL,
+    OPENAI_TIMEOUT_MS: source.OPENAI_TIMEOUT_MS,
     SEARCH_PROVIDER: source.SEARCH_PROVIDER,
     STORAGE_PROVIDER: source.STORAGE_PROVIDER,
     LOCAL_STORAGE_DIR: source.LOCAL_STORAGE_DIR,

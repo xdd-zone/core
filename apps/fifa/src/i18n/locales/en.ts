@@ -102,6 +102,16 @@ export default {
       title: 'Media Library',
     },
     postEdit: {
+      ai: {
+        applied: 'Suggestion applied',
+        apply: 'Apply',
+        applyTitle: 'Apply AI Suggestion',
+        emptySuggestion: 'No suggestion available',
+        generateExcerpt: 'Generate Excerpt',
+        generateSlug: 'Generate Slug',
+        generateSlugAndExcerpt: 'Generate Slug & Excerpt',
+        slugConflict: 'This slug already exists. Edit it before applying.',
+      },
       backToList: 'Back to List',
       cancel: 'Cancel',
       chooseCoverAsset: 'Choose Asset',
@@ -170,6 +180,12 @@ export default {
       uploadingImage: 'Uploading...',
     },
     posts: {
+      ai: {
+        emptySuggestion: 'No suggestion available',
+        generateSlug: 'Generate Slug',
+        slugConflict: 'This slug already exists. Edit it before creating.',
+        slugGenerated: 'Slug generated',
+      },
       cancel: 'Cancel',
       create: 'Create',
       createPost: 'New Post',

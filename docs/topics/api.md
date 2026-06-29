@@ -51,6 +51,7 @@ apps/momo/src/modules/content/public-content.route.ts
 | `GET`/`POST` | `/api/auth/*` | `better-auth` 登录、登出、OAuth callback 和 session cookie |
 | `GET` | `/rpc/content/posts` | 后台文章列表 |
 | `POST` | `/rpc/content/posts` | 创建文章草稿 |
+| `POST` | `/rpc/content/posts/meta-suggestion` | 生成文章 slug、摘要或标题建议，不保存文章 |
 | `GET` | `/rpc/content/posts/:id` | 后台文章详情 |
 | `PATCH` | `/rpc/content/posts/:id/draft` | 保存文章草稿并写入新 revision |
 | `POST` | `/rpc/content/posts/:id/preview-token` | 生成 30 分钟有效的预览 token |

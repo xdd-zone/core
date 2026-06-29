@@ -102,6 +102,16 @@ export default {
       title: '媒体库',
     },
     postEdit: {
+      ai: {
+        applied: '已应用建议',
+        apply: '应用',
+        applyTitle: '应用 AI 建议',
+        emptySuggestion: '没有可用建议',
+        generateExcerpt: '生成摘要',
+        generateSlug: '生成 slug',
+        generateSlugAndExcerpt: '生成 slug 和摘要',
+        slugConflict: '这个 slug 已存在，应用前先改一下。',
+      },
       backToList: '返回文章列表',
       cancel: '取消',
       chooseCoverAsset: '选择素材',
@@ -170,6 +180,12 @@ export default {
       uploadingImage: '正在上传图片...',
     },
     posts: {
+      ai: {
+        emptySuggestion: '没有可用建议',
+        generateSlug: '生成 slug',
+        slugConflict: '这个 slug 已存在，创建前先改一下。',
+        slugGenerated: 'slug 已生成',
+      },
       cancel: '取消',
       create: '创建',
       createPost: '新建文章',

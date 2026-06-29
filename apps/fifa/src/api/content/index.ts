@@ -13,6 +13,7 @@ export {
   useDeleteContentAssetMutation,
   useDeleteContentCategoryMutation,
   useDeleteContentTagMutation,
+  useGenerateContentPostMetaSuggestionMutation,
   useMdxComponentsQuery,
   usePublishContentPostMutation,
   useSaveContentPostDraftMutation,

@@ -3,6 +3,7 @@ import type {
   CreateCategoryRequest,
   CreatePostRequest,
   CreateTagRequest,
+  GeneratePostMetaRequest,
   SavePostDraftRequest,
   UpdateAssetRequest,
   UpdateCategoryRequest,
@@ -18,6 +19,7 @@ import {
   deleteContentAsset,
   deleteContentCategory,
   deleteContentTag,
+  generateContentPostMetaSuggestion,
   getContentAsset,
   getContentPost,
   listContentAssets,
@@ -112,6 +114,12 @@ export function useCreateContentPostMutation() {
         })
       }
     },
+  })
+}
+
+export function useGenerateContentPostMetaSuggestionMutation() {
+  return useMutation({
+    mutationFn: (payload: GeneratePostMetaRequest) => generateContentPostMetaSuggestion(payload),
   })
 }
 
