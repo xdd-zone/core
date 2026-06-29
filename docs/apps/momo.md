@@ -240,6 +240,8 @@ OWNER_PASSWORD
 OWNER_DISPLAY_NAME
 ```
 
+执行 `seed:owner` 时，脚本会同时写入默认应用、登录方式、角色、owner 账号、内容分类、内容标签和第一篇已发布文章。分类、标签和文章按 slug 复用已有记录，重复执行不会重复插入。
+
 `pnpm dev`、`pnpm auth:generate`、`pnpm seed:owner`、`pnpm storage:test` 和 `pnpm db:*` 会读取 `apps/momo/.env.development`。`pnpm test` 会读取 `apps/momo/.env.test`。
 
 `LOG_LEVEL` 控制 Pino 日志级别。未配置时，开发和生产使用 `info`，测试使用 `silent`。

@@ -1,10 +1,15 @@
 import type { MomoAuth } from '#momo/modules/auth/auth.config'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 import { closeDb, configureDbClient, getDb } from '#momo/infra/db/client'
 import {
   account,
   applicationAuthMethods,
   applications,
+  contentCategories,
+  contentPostRevisions,
+  contentPosts,
+  contentPostTags,
+  contentTags,
   roles,
   user,
   userRoleBindings,
@@ -52,6 +57,69 @@ const roleRecords = [
   { id: 'role_bobo_visitor', applicationId: 'app_bobo', code: 'visitor', name: 'bobo.visitor' },
 ]
 
+const initialContentConfig = {
+  categories: [
+    {
+      description: '按时间查看全部文章。',
+      id: 'content_category_archive',
+      name: '归档',
+      slug: 'archive',
+    },
+    {
+      description: '记录前端、后端和工程工具相关内容。',
+      id: 'content_category_tech',
+      name: '技术',
+      slug: 'tech',
+    },
+    {
+      description: '记录工具、环境和个人项目里的尝试。',
+      id: 'content_category_tinkering',
+      name: '折腾',
+      slug: 'tinkering',
+    },
+    {
+      description: '记录经历、见闻和阶段回顾。',
+      id: 'content_category_experience',
+      name: '经历',
+      slug: 'experience',
+    },
+    {
+      description: '记录界面、交互和视觉相关内容。',
+      id: 'content_category_design',
+      name: '设计',
+      slug: 'design',
+    },
+  ],
+  post: {
+    categorySlug: 'tech',
+    excerpt: '这里是 XDD Zone 的第一篇初始化文章，用来确认内容系统可以正常发布。',
+    id: 'content_post_hello_xdd_zone',
+    revisionId: 'content_revision_hello_xdd_zone_1',
+    slug: 'hello-xdd-zone',
+    source: [
+      '# 你好，XDD Zone',
+      '',
+      '这是 Momo seed 脚本写入的第一篇文章。',
+      '',
+      '它用于确认分类、标签、文章草稿和发布版本都能正常写入数据库。',
+      '',
+      '后续可以在 Fifa 后台编辑或删除这篇文章。',
+    ].join('\n'),
+    tagSlugs: ['typescript', 'react', 'hono'],
+    title: '你好，XDD Zone',
+  },
+  tags: [
+    { id: 'content_tag_typescript', name: 'TypeScript', slug: 'typescript' },
+    { id: 'content_tag_react', name: 'React', slug: 'react' },
+    { id: 'content_tag_nextjs', name: 'Next.js', slug: 'nextjs' },
+    { id: 'content_tag_nodejs', name: 'Node.js', slug: 'nodejs' },
+    { id: 'content_tag_hono', name: 'Hono', slug: 'hono' },
+    { id: 'content_tag_drizzle', name: 'Drizzle', slug: 'drizzle' },
+    { id: 'content_tag_postgresql', name: 'PostgreSQL', slug: 'postgresql' },
+    { id: 'content_tag_tailwind_css', name: 'Tailwind CSS', slug: 'tailwind-css' },
+  ],
+}
+
 async function main() {
   const owner = readOwnerSeedInput()
   const env = getMomoEnv()
@@ -70,6 +138,7 @@ async function main() {
   await ensureCredentialAccount(ownerUser.id)
   await ensureUserRole(ownerUser.id, 'role_fifa_owner')
   await ensureUserRole(ownerUser.id, 'role_bobo_visitor')
+  await ensureInitialContent(ownerUser.id)
 
   console.log(`owner seed 已完成: ${owner.email}`)
 }
@@ -193,6 +262,180 @@ async function ensureUserRole(userId: string, roleId: string): Promise<void> {
         updatedAt: new Date(),
       },
     })
+}
+
+async function ensureInitialContent(userId: string): Promise<void> {
+  const now = new Date()
+
+  await getDb().transaction(async (tx) => {
+    await tx
+      .insert(contentCategories)
+      .values(
+        initialContentConfig.categories.map((category) => ({
+          ...category,
+          createdAt: now,
+          createdBy: userId,
+          updatedAt: now,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: contentCategories.slug,
+        set: {
+          description: sql`excluded.description`,
+          name: sql`excluded.name`,
+          updatedAt: now,
+        },
+      })
+
+    await tx
+      .insert(contentTags)
+      .values(
+        initialContentConfig.tags.map((tag) => ({
+          ...tag,
+          createdAt: now,
+          createdBy: userId,
+          updatedAt: now,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: contentTags.slug,
+        set: {
+          name: sql`excluded.name`,
+          updatedAt: now,
+        },
+      })
+
+    const categoryBySlug = await selectCategoryIdsBySlug(
+      initialContentConfig.categories.map((category) => category.slug),
+      tx,
+    )
+    const tagBySlug = await selectTagIdsBySlug(
+      initialContentConfig.tags.map((tag) => tag.slug),
+      tx,
+    )
+    const categoryId = categoryBySlug.get(initialContentConfig.post.categorySlug)
+    const tagIds = initialContentConfig.post.tagSlugs.map((tagSlug) => tagBySlug.get(tagSlug)).filter(isString)
+
+    if (!categoryId) {
+      throw new Error(`初始化文章分类不存在: ${initialContentConfig.post.categorySlug}`)
+    }
+
+    if (tagIds.length !== initialContentConfig.post.tagSlugs.length) {
+      throw new Error(`初始化文章标签不存在: ${initialContentConfig.post.tagSlugs.join(', ')}`)
+    }
+
+    await tx
+      .insert(contentPosts)
+      .values({
+        categoryId,
+        createdAt: now,
+        createdBy: userId,
+        draftRevisionId: initialContentConfig.post.revisionId,
+        excerpt: initialContentConfig.post.excerpt,
+        id: initialContentConfig.post.id,
+        publishedAt: now,
+        publishedBy: userId,
+        publishedRevisionId: initialContentConfig.post.revisionId,
+        slug: initialContentConfig.post.slug,
+        status: 'published',
+        title: initialContentConfig.post.title,
+        updatedAt: now,
+        updatedBy: userId,
+      })
+      .onConflictDoUpdate({
+        target: contentPosts.slug,
+        set: {
+          categoryId,
+          excerpt: sql`excluded.excerpt`,
+          publishedAt: sql`coalesce(${contentPosts.publishedAt}, excluded.published_at)`,
+          publishedBy: sql`coalesce(${contentPosts.publishedBy}, excluded.published_by)`,
+          status: 'published',
+          title: sql`excluded.title`,
+          updatedAt: now,
+          updatedBy: userId,
+        },
+      })
+
+    const postId = await selectPostIdBySlug(initialContentConfig.post.slug, tx)
+    if (!postId) {
+      throw new Error(`初始化文章不存在: ${initialContentConfig.post.slug}`)
+    }
+
+    await tx
+      .insert(contentPostRevisions)
+      .values({
+        createdAt: now,
+        createdBy: userId,
+        excerpt: initialContentConfig.post.excerpt,
+        id: initialContentConfig.post.revisionId,
+        postId,
+        revisionNo: 1,
+        source: initialContentConfig.post.source,
+        title: initialContentConfig.post.title,
+      })
+      .onConflictDoUpdate({
+        target: contentPostRevisions.id,
+        set: {
+          excerpt: sql`excluded.excerpt`,
+          source: sql`excluded.source`,
+          title: sql`excluded.title`,
+        },
+      })
+
+    await tx
+      .update(contentPosts)
+      .set({
+        draftRevisionId: initialContentConfig.post.revisionId,
+        publishedRevisionId: initialContentConfig.post.revisionId,
+        updatedAt: now,
+      })
+      .where(eq(contentPosts.id, postId))
+
+    await tx
+      .insert(contentPostTags)
+      .values(
+        tagIds.map((tagId) => ({
+          createdAt: now,
+          postId,
+          tagId,
+        })),
+      )
+      .onConflictDoNothing()
+  })
+}
+
+async function selectCategoryIdsBySlug(
+  slugs: string[],
+  db: Pick<ReturnType<typeof getDb>, 'select'>,
+): Promise<Map<string, string>> {
+  const rows = await db
+    .select({ id: contentCategories.id, slug: contentCategories.slug })
+    .from(contentCategories)
+    .where(inArray(contentCategories.slug, slugs))
+
+  return new Map(rows.map((row) => [row.slug, row.id]))
+}
+
+async function selectTagIdsBySlug(
+  slugs: string[],
+  db: Pick<ReturnType<typeof getDb>, 'select'>,
+): Promise<Map<string, string>> {
+  const rows = await db
+    .select({ id: contentTags.id, slug: contentTags.slug })
+    .from(contentTags)
+    .where(inArray(contentTags.slug, slugs))
+
+  return new Map(rows.map((row) => [row.slug, row.id]))
+}
+
+async function selectPostIdBySlug(slug: string, db: Pick<ReturnType<typeof getDb>, 'select'>): Promise<string | null> {
+  const rows = await db.select({ id: contentPosts.id }).from(contentPosts).where(eq(contentPosts.slug, slug)).limit(1)
+
+  return rows[0]?.id ?? null
+}
+
+function isString(value: string | undefined): value is string {
+  return typeof value === 'string'
 }
 
 main()

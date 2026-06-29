@@ -55,6 +55,8 @@ pnpm db:migrate
 pnpm seed:owner
 ```
 
+`pnpm seed:owner` 会写入 owner 账号、默认应用、登录方式、角色、初始内容分类、标签和第一篇已发布文章。重复执行会复用已有记录。
+
 ## 常改位置
 
 - `src/index.ts`
