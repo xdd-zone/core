@@ -76,11 +76,6 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
             <h1 className="max-w-[12ch] mt-7 text-[clamp(3rem,8vw,6.5rem)] leading-[0.86] tracking-[-0.02em] italic">
               {post.title}
             </h1>
-            {post.excerpt ? (
-              <p className="max-w-136 mt-7 text-muted-foreground text-[clamp(1rem,2vw,1.2rem)] leading-[1.75]">
-                {post.excerpt}
-              </p>
-            ) : null}
             <div className="flex flex-wrap gap-2 text-muted-foreground text-[0.78rem] mt-6.5">
               <span className="border border-border rounded-full px-2 py-1">
                 {formatDate(post.publishedAt ?? post.updatedAt)}
@@ -95,6 +90,20 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
         </header>
 
         <div className="max-w-205 mx-auto px-6 pt-16 pb-24">
+          {post.excerpt ? (
+            <div className="mb-16 md:mb-20">
+              <div className="flex items-center gap-4 mb-4 md:mb-5">
+                <div className="h-[1px] w-8 md:w-12 bg-muted-foreground/30" />
+                <div className="text-[0.65rem] font-mono text-muted-foreground/70 uppercase tracking-[0.3em]">
+                  A.I. Synthesis
+                </div>
+              </div>
+              <p className="text-foreground/80 leading-[1.9] text-[0.95rem] md:text-[1.05rem] pl-12 md:pl-16 max-w-[80ch]">
+                {post.excerpt}
+              </p>
+            </div>
+          ) : null}
+
           <PostRenderer source={post.source} />
         </div>
       </article>
