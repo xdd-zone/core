@@ -13,7 +13,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   return (
     <div className="relative flex flex-1 flex-col items-center justify-center w-full overflow-hidden py-20">
       {/* 类似过渡页的背景遮罩，带有微弱警告色的光晕 */}
-      <div className="absolute inset-0 pointer-events-none -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-destructive/5 via-background to-background opacity-50" />
+      <div className="absolute inset-0 pointer-events-none -z-10 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-destructive/5 via-background to-background opacity-50" />
 
       <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in-95 duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]">
         <div className="flex flex-col items-center gap-6">

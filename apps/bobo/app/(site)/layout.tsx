@@ -6,7 +6,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const categories = await getPublicCategoryMenu().catch(() => [])
 
   return (
-    <div className="flex min-h-[100dvh] flex-col text-foreground">
+    <div className="flex min-h-dvh flex-col text-foreground">
       <SiteNav categories={categories} />
       <div className="flex flex-1 flex-col">{children}</div>
       <SiteFooter />

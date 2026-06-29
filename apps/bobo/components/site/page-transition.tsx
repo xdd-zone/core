@@ -25,12 +25,12 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
     <div className="relative flex-1 flex flex-col w-full h-full">
       {/* 遮罩层 - 页面切换时的中间态 */}
       <div
-        className={`absolute inset-0 z-[40] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`absolute inset-0 z-40 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           isTransitioning ? 'opacity-100 pointer-events-auto backdrop-blur-md' : 'opacity-0 pointer-events-none'
         }`}
       >
         <div
-          className={`sticky top-0 w-full h-[100dvh] flex flex-col items-center justify-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          className={`sticky top-0 w-full h-dvh flex flex-col items-center justify-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
             isTransitioning ? 'scale-100 translate-y-0' : 'scale-95 -translate-y-8'
           }`}
         >
@@ -73,7 +73,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       <div
         className={`transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] flex-1 flex flex-col ${
           isTransitioning
-            ? 'opacity-0 translate-y-12 blur-[8px] scale-[0.98]'
+            ? 'opacity-0 translate-y-12 blur-sm scale-[0.98]'
             : 'opacity-100 translate-y-0 blur-none scale-100'
         }`}
       >
