@@ -4,7 +4,14 @@ import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { FullscreenButton, LanguageButton, SearchButton, SettingButton, ThemeToggle } from '../../atoms'
+import {
+  AccountMenuButton,
+  FullscreenButton,
+  LanguageButton,
+  SearchButton,
+  SettingButton,
+  ThemeToggle,
+} from '../../atoms'
 
 function getDefaultActionsExpanded() {
   if (typeof window === 'undefined') {
@@ -64,6 +71,8 @@ export function HeaderActions() {
 
       {/* 打开设置抽屉 */}
       <SettingButton />
+
+      <AccountMenuButton />
     </div>
   )
 }

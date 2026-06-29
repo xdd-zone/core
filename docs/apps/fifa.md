@@ -204,7 +204,7 @@ PATCH /rpc/llm/use-cases/:useCase
 - `POST /api/auth/sign-in/email`
   用 `useSignInEmailMutation()`，只在登录页提交表单时发送。
 - `GET /rpc/fifa/auth/me`
-  登录成功后请求一次。当前只看接口是否返回成功，不保存用户信息。
+  用 `useFifaAuthMeMutation()` 在登录成功后验证账号。顶栏头像菜单用 `useFifaAuthMeQuery()` 读取当前账号信息。
 - `GET /health`
   用 `useSystemHealthQuery()`，页面打开后自动请求，也可以点刷新按钮重新请求。
 - `POST /rpc/system/ping`

@@ -36,6 +36,11 @@ export default {
     passwordOnly: 'Email and password sign-in only.',
     passwordPlaceholder: 'Enter password',
     passwordRequired: 'Enter password',
+    accountMenu: 'Account menu',
+    currentAccount: 'Current account',
+    signOut: 'Sign out',
+    signOutFailed: 'Sign out failed',
+    signOutSuccess: 'Signed out',
   },
   home: {
     description: 'The frontend shell is kept, with one Momo validation endpoint connected.',

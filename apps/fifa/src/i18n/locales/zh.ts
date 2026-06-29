@@ -36,6 +36,11 @@ export default {
     passwordOnly: '当前只支持邮箱密码登录。',
     passwordPlaceholder: '输入密码',
     passwordRequired: '请输入密码',
+    accountMenu: '账号菜单',
+    currentAccount: '当前账号',
+    signOut: '退出登录',
+    signOutFailed: '退出登录失败',
+    signOutSuccess: '已退出登录',
   },
   home: {
     description: '当前保留前端基础框架，并接入 Momo 的最小验证接口。',

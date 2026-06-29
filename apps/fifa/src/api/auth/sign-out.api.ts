@@ -12,8 +12,12 @@ export async function signOut(): Promise<void> {
 
   try {
     response = await fetch(resolveMomoHttpUrl('/api/auth/sign-out'), {
-      method: 'POST',
+      body: JSON.stringify({}),
       credentials: 'include',
+      headers: {
+        'content-type': 'application/json',
+      },
+      method: 'POST',
     })
   } catch {
     throw new SignOutError('退出登录失败')

@@ -1,3 +1,4 @@
+export { AccountMenuButton } from './AccountMenuButton'
 export { Brand } from './Brand'
 export { CollapseButton } from './CollapseButton'
 export { FullscreenButton } from './FullscreenButton'

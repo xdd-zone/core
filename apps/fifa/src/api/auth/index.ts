@@ -1,4 +1,10 @@
-export { useFifaAuthMeMutation, useSignInEmailMutation } from './auth.query'
+export {
+  authQueryKeys,
+  useFifaAuthMeMutation,
+  useFifaAuthMeQuery,
+  useSignInEmailMutation,
+  useSignOutMutation,
+} from './auth.query'
 export { FifaAuthMeError, getFifaAuthMe, isFifaAuthForbiddenError, isFifaAuthUnauthenticatedError } from './me.api'
 export type { FifaAuthMeResponse, FifaAuthUser } from './me.api'
 export { signInEmail, SignInEmailError } from './sign-in.api'
