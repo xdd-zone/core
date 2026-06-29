@@ -40,9 +40,7 @@ export class OpenAILlm implements LlmDriver {
     return this.generatePostMetaWithChatCompletions(input)
   }
 
-  private async generatePostMetaWithChatCompletions(
-    input: GeneratePostMetaRequest,
-  ): Promise<GeneratePostMetaResponse> {
+  private async generatePostMetaWithChatCompletions(input: GeneratePostMetaRequest): Promise<GeneratePostMetaResponse> {
     const response = await this.client.chat.completions.create({
       messages: [
         {
