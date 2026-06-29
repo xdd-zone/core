@@ -10,7 +10,7 @@
 - 提供系统接口和认证接口。
 - 提供内容接口，包含文章草稿、发布、预览 token、公开文章、分类、标签和图片素材。
 - 使用 Better Auth 处理登录、登出、OAuth callback 和 session cookie。
-- 接入 PostgreSQL、Drizzle migration、内存缓存、Redis 协议缓存、本地文件存储、腾讯云 COS、禁用搜索驱动和 Meilisearch 搜索驱动。
+- 接入 PostgreSQL、Drizzle migration、内存缓存、Redis 协议缓存、本地文件存储、腾讯云 COS、禁用搜索驱动、Meilisearch 搜索驱动和 LLM 驱动。
 
 当前还没有搜索 HTTP 接口和业务索引。
 
@@ -68,7 +68,7 @@ pnpm seed:owner
 - `src/routes/index.ts`
   挂载一级路由。
 - `src/modules`
-  放接口模块。当前有 `system`、`auth` 和 `content`。
+  放业务模块。当前有 `system`、`auth`、`content` 和 `llm`。
 - `src/infra`
   放 PostgreSQL、Drizzle、缓存、搜索和文件存储接入代码。
 - `src/shared`
@@ -94,6 +94,10 @@ pnpm seed:owner
   创建文章草稿。
 - `POST /rpc/content/posts/meta-suggestion`
   生成文章 slug、摘要或标题建议，不保存文章。
+- `GET /rpc/llm/use-cases`
+  返回 LLM use case 配置列表。
+- `PATCH /rpc/llm/use-cases/:useCase`
+  更新单个 LLM use case 配置。
 - `GET /rpc/content/posts/:id`
   返回后台文章详情。
 - `PATCH /rpc/content/posts/:id/draft`
@@ -179,11 +183,11 @@ import { app } from './src/app'
 const response = await app.request('/health')
 ```
 
-## 缓存、搜索和文件存储
+## 缓存、搜索、LLM 和文件存储
 
 - 缓存代码放在 `src/infra/cache`。本地 Redis 协议缓存使用 Valkey，地址是 `redis://localhost:56379`。
 - 搜索代码放在 `src/infra/search`。当前还没有业务模块调用搜索驱动。
-- LLM 代码放在 `src/infra/llm`。内容模块通过 `POST /rpc/content/posts/meta-suggestion` 生成文章字段建议。
+- LLM provider 调用代码放在 `src/infra/llm`。LLM 业务用例和配置接口放在 `src/modules/llm`。内容模块通过 `POST /rpc/content/posts/meta-suggestion` 生成文章字段建议。
 - 文件存储代码放在 `src/infra/storage`。内容模块通过 `POST /rpc/content/assets/images` 保存图片素材。验证当前存储配置时，运行 `pnpm storage:test`。
 
 更多说明看：

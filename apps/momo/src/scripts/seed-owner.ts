@@ -10,6 +10,7 @@ import {
   contentPosts,
   contentPostTags,
   contentTags,
+  llmUseCaseConfigs,
   roles,
   user,
   userRoleBindings,
@@ -55,6 +56,18 @@ const authMethodRecords = [
 const roleRecords = [
   { id: 'role_fifa_owner', applicationId: 'app_fifa', code: 'owner', name: 'fifa.owner' },
   { id: 'role_bobo_visitor', applicationId: 'app_bobo', code: 'visitor', name: 'bobo.visitor' },
+]
+
+const llmUseCaseConfigRecords = [
+  {
+    apiFormat: 'chat_completions' as const,
+    enabled: 0,
+    id: 'llm_use_case_content_post_meta',
+    model: 'gpt-5-mini',
+    provider: 'none' as const,
+    timeoutMs: 15000,
+    useCase: 'content.post.meta' as const,
+  },
 ]
 
 const initialContentConfig = {
@@ -138,6 +151,7 @@ async function main() {
   await ensureCredentialAccount(ownerUser.id)
   await ensureUserRole(ownerUser.id, 'role_fifa_owner')
   await ensureUserRole(ownerUser.id, 'role_bobo_visitor')
+  await ensureLlmUseCaseConfigs()
   await ensureInitialContent(ownerUser.id)
 
   console.log(`owner seed 已完成: ${owner.email}`)
@@ -259,6 +273,18 @@ async function ensureUserRole(userId: string, roleId: string): Promise<void> {
       target: [userRoleBindings.userId, userRoleBindings.roleId],
       set: {
         status: 'active',
+        updatedAt: new Date(),
+      },
+    })
+}
+
+async function ensureLlmUseCaseConfigs(): Promise<void> {
+  await getDb()
+    .insert(llmUseCaseConfigs)
+    .values(llmUseCaseConfigRecords)
+    .onConflictDoUpdate({
+      target: llmUseCaseConfigs.useCase,
+      set: {
         updatedAt: new Date(),
       },
     })

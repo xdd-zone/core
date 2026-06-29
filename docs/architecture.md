@@ -58,7 +58,7 @@
 - `apps/momo/src/routes/index.ts`
   挂载一级路由。
 - `apps/momo/src/modules`
-  放接口模块。当前系统接口在 `apps/momo/src/modules/system`，认证接口在 `apps/momo/src/modules/auth`，内容接口在 `apps/momo/src/modules/content`。
+  放业务模块。当前系统接口在 `apps/momo/src/modules/system`，认证接口在 `apps/momo/src/modules/auth`，内容接口在 `apps/momo/src/modules/content`，LLM 用例在 `apps/momo/src/modules/llm`。
 - `apps/momo/src/middleware`
   放 request context、安全响应头、请求日志、CORS、请求耗时、请求体大小和超时 middleware。
 - `apps/momo/src/infra`

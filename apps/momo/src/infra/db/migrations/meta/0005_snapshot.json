@@ -1,6 +1,6 @@
 {
-  "id": "f0c22bba-e67a-49d4-8274-12ae41601e0f",
-  "prevId": "32d247ad-8e49-42f5-ac4e-ff4f2037ae3d",
+  "id": "1259e783-526f-470c-be0e-5a399890aa35",
+  "prevId": "f0c22bba-e67a-49d4-8274-12ae41601e0f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1494,6 +1494,115 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.llm_use_case_configs": {
+      "name": "llm_use_case_configs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "use_case": {
+          "name": "use_case",
+          "type": "llm_use_case",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "provider": {
+          "name": "provider",
+          "type": "llm_provider",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'none'"
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "api_format": {
+          "name": "api_format",
+          "type": "llm_api_format",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'chat_completions'"
+        },
+        "base_url": {
+          "name": "base_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "timeout_ms": {
+          "name": "timeout_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "temperature": {
+          "name": "temperature",
+          "type": "numeric(3, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_output_tokens": {
+          "name": "max_output_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "llm_use_case_configs_use_case_unique": {
+          "name": "llm_use_case_configs_use_case_unique",
+          "columns": [
+            {
+              "expression": "use_case",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -1501,6 +1610,21 @@
       "name": "content_post_status",
       "schema": "public",
       "values": ["draft", "published", "archived"]
+    },
+    "public.llm_api_format": {
+      "name": "llm_api_format",
+      "schema": "public",
+      "values": ["chat_completions", "responses"]
+    },
+    "public.llm_provider": {
+      "name": "llm_provider",
+      "schema": "public",
+      "values": ["none", "openai"]
+    },
+    "public.llm_use_case": {
+      "name": "llm_use_case",
+      "schema": "public",
+      "values": ["content.post.meta"]
     }
   },
   "schemas": {},

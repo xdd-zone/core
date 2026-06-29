@@ -42,7 +42,7 @@ describe('openai llm', () => {
     openAIConstructorMock.mockClear()
   })
 
-  it('使用 Chat Completions 兼容接口生成文章字段建议', async () => {
+  it('使用 Chat Completions 兼容接口生成结构化 JSON', async () => {
     createChatCompletionMock.mockResolvedValue({
       choices: [
         {
@@ -71,14 +71,25 @@ describe('openai llm', () => {
     })
 
     await expect(
-      llm.generatePostMeta({
-        locale: 'zh-CN',
-        mode: 'create',
-        source: '# 测试文章',
-        targets: ['title', 'slug', 'excerpt'],
+      llm.generateStructuredJson({
+        responseFormat: {
+          name: 'post_meta_suggestion',
+          schema: {
+            additionalProperties: false,
+            properties: {
+              excerpt: { type: 'string' },
+              slug: { type: 'string' },
+              title: { type: 'string' },
+            },
+            required: [],
+            type: 'object',
+          },
+        },
+        systemPrompt: '只返回 JSON',
+        userPrompt: JSON.stringify({ source: '# 测试文章' }),
       }),
     ).resolves.toEqual({
-      suggestion: {
+      data: {
         excerpt: '测试摘要',
         slug: 'test-post',
         title: '测试标题',
@@ -98,13 +109,23 @@ describe('openai llm', () => {
     expect(createChatCompletionMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'deepseek-v4-flash',
+        messages: [
+          {
+            content: '只返回 JSON',
+            role: 'system',
+          },
+          {
+            content: JSON.stringify({ source: '# 测试文章' }),
+            role: 'user',
+          },
+        ],
         response_format: { type: 'json_object' },
       }),
     )
     expect(createResponseMock).not.toHaveBeenCalled()
   })
 
-  it('使用 Responses 接口生成文章字段建议', async () => {
+  it('使用 Responses 接口生成结构化 JSON', async () => {
     createResponseMock.mockResolvedValue({
       output_text: JSON.stringify({
         excerpt: '测试摘要',
@@ -126,14 +147,25 @@ describe('openai llm', () => {
     })
 
     await expect(
-      llm.generatePostMeta({
-        locale: 'zh-CN',
-        mode: 'create',
-        source: '# 测试文章',
-        targets: ['title', 'slug', 'excerpt'],
+      llm.generateStructuredJson({
+        responseFormat: {
+          name: 'post_meta_suggestion',
+          schema: {
+            additionalProperties: false,
+            properties: {
+              excerpt: { type: 'string' },
+              slug: { type: 'string' },
+              title: { type: 'string' },
+            },
+            required: [],
+            type: 'object',
+          },
+        },
+        systemPrompt: '只返回 JSON',
+        userPrompt: JSON.stringify({ source: '# 测试文章' }),
       }),
     ).resolves.toEqual({
-      suggestion: {
+      data: {
         excerpt: '测试摘要',
         slug: 'test-post',
         title: '测试标题',
@@ -148,8 +180,19 @@ describe('openai llm', () => {
     expect(createResponseMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'gpt-5-mini',
+        input: [
+          {
+            content: '只返回 JSON',
+            role: 'system',
+          },
+          {
+            content: JSON.stringify({ source: '# 测试文章' }),
+            role: 'user',
+          },
+        ],
         text: expect.objectContaining({
           format: expect.objectContaining({
+            name: 'post_meta_suggestion',
             type: 'json_schema',
           }),
         }),

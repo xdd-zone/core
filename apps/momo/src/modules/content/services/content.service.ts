@@ -14,12 +14,14 @@ import type {
   UpdateAssetRequest,
 } from '@xdd-zone/contracts'
 import type { MomoRuntime } from '#momo/bootstrap'
+import type { LlmService } from '#momo/modules/llm/index'
 import type { ContentRepository } from '../repositories/content.repository'
 import type { TaxonomyRepository } from '../repositories/taxonomy.repository'
 import type { ContentAssetRecord, ContentAssetReferenceRecord, ContentPostRecord } from '../types/content.types'
 import { createHash, randomUUID } from 'node:crypto'
 import { BizCode } from '@xdd-zone/contracts'
 import { validateMediaFile } from '#momo/infra/storage'
+import { createLlmService } from '#momo/modules/llm/index'
 import { AppError } from '#momo/shared/app-error'
 
 import { toImageAsset, toPostDetail, toPostRevision, toPostSummary, toPreviewTokenResponse } from '../content.presenter'
@@ -29,12 +31,12 @@ import { ContentAssetNotFoundError, ContentSlugConflictError } from '../reposito
 const PREVIEW_TOKEN_TTL_MS = 30 * 60 * 1000
 const ASSET_LIST_DEFAULT_PAGE_SIZE = 24
 const ASSET_LIST_MAX_PAGE_SIZE = 100
-const POST_META_SOURCE_LIMIT = 4000
 
 export function createContentService(
   runtime: MomoRuntime,
   repository: ContentRepository,
   taxonomyRepository: TaxonomyRepository,
+  llmService?: LlmService,
 ) {
   async function listPosts(): Promise<PostSummary[]> {
     const posts = await repository.listPosts()
@@ -131,14 +133,9 @@ export function createContentService(
   }
 
   async function generatePostMetaSuggestion(input: GeneratePostMetaRequest): Promise<GeneratePostMetaResponse> {
-    const suggestionInput: GeneratePostMetaRequest = {
-      ...input,
-      source: input.source ? input.source.slice(0, POST_META_SOURCE_LIMIT) : undefined,
-    }
-    const result = await runtime.llm.generatePostMeta(suggestionInput)
-    const suggestion = await normalizePostMetaSuggestion(input, result.suggestion, (slug) =>
-      repository.findPostBySlug(slug),
-    )
+    const result = await (llmService ?? createLlmService(runtime)).generatePostMetaSuggestion(input)
+    const findPostBySlug = (slug: string) => repository.findPostBySlug(slug)
+    const suggestion = await normalizePostMetaSuggestion(input, result.suggestion, findPostBySlug)
 
     return {
       suggestion,

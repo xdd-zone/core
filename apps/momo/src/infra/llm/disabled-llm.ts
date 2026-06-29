@@ -1,10 +1,11 @@
-import type { GeneratePostMetaRequest, GeneratePostMetaResponse } from '@xdd-zone/contracts'
-import type { LlmDriver } from './llm.types'
+import type { GenerateStructuredJsonRequest, GenerateStructuredJsonResponse, LlmDriver } from './llm.types'
 import { BizCode } from '@xdd-zone/contracts'
 import { AppError } from '#momo/shared/app-error'
 
 export class DisabledLlm implements LlmDriver {
-  generatePostMeta(_input: GeneratePostMetaRequest): Promise<GeneratePostMetaResponse> {
+  generateStructuredJson<TData = unknown>(
+    _input: GenerateStructuredJsonRequest,
+  ): Promise<GenerateStructuredJsonResponse<TData>> {
     throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM 未启用，先配置 LLM_PROVIDER 和 OPENAI_API_KEY', 409)
   }
 }

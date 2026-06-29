@@ -43,7 +43,7 @@ apps/momo/src/
 - `bootstrap`
   创建 runtime，组装 Hono app，注册全局中间件、错误处理和路由。
 - `modules`
-  业务模块。当前有 `system`、`auth` 和 `content`。文件较少的模块可以先平铺；文件变多后，把 service、repository 和内部类型分别放到 `services`、`repositories` 和 `types` 目录。
+  业务模块。当前有 `system`、`auth`、`content` 和 `llm`。文件较少的模块可以先平铺；文件变多后，把 service、repository 和内部类型分别放到 `services`、`repositories` 和 `types` 目录。
 - `middleware`
   request context、请求日志、CORS 这类通用 middleware。
 - `infra`
@@ -101,6 +101,17 @@ apps/momo/src/
 │   │   └── types/
 │   │       ├── content.types.ts
 │   │       └── taxonomy.types.ts
+│   ├── llm/
+│   │   ├── index.ts
+│   │   ├── llm.presenter.ts
+│   │   ├── llm.route.ts
+│   │   ├── repositories/
+│   │   │   └── llm-config.repository.ts
+│   │   ├── services/
+│   │   │   └── llm.service.ts
+│   │   └── types/
+│   │       ├── config.types.ts
+│   │       └── llm.types.ts
 ├── middleware/
 │   ├── index.ts
 │   ├── body-limit.middleware.ts
@@ -262,6 +273,8 @@ OWNER_DISPLAY_NAME
 
 `LLM_PROVIDER` 控制 LLM 驱动。默认值是 `none`，不会连接模型服务。设成 `openai` 时，需要配置 `OPENAI_API_KEY`。`OPENAI_API_FORMAT` 默认是 `chat_completions`，会请求 Chat Completions 兼容接口；接 OpenAI Responses API 时设成 `responses`。`OPENAI_BASE_URL` 可选，用来改成兼容 OpenAI 协议的服务地址。`OPENAI_MODEL` 默认是 `gpt-5-mini`，`OPENAI_TIMEOUT_MS` 默认是 `15000` 毫秒。
 
+LLM 配置页不会保存 API Key。`OPENAI_API_KEY` 仍然从环境变量读取。数据库里的 use case 配置只保存 provider、model、接口格式、Base URL、超时时间和模型参数。
+
 `STORAGE_PROVIDER` 控制文件存储驱动。默认值是 `local`，使用 `LOCAL_STORAGE_DIR`，未设置时写到 `storage/media`。设成 `cos` 时，`COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION` 必须配置。`COS_KEY_PREFIX` 默认是 `media`，`COS_SIGNED_URL_EXPIRES` 默认是 `600` 秒。
 
 文件存储驱动只保存图片。`save()` 允许 `image/avif`、`image/gif`、`image/jpeg`、`image/png` 和 `image/webp`，单个文件最大 `10 MiB`。`openFile()` 在本地存储时返回 `200` 和文件内容，在 COS 存储时返回 `302` 跳转地址。`stat()` 可以读取文件大小、MIME 和修改时间。
@@ -279,13 +292,13 @@ apps/momo/src/bootstrap
 当前文件：
 
 - `create-runtime.ts`
-  读取 `shared/env.ts`，创建 logger、cache、search 和 storage，返回 `MomoRuntime`。
+  读取 `shared/env.ts`，创建 logger、cache、search、llm 和 storage，返回 `MomoRuntime`。
 - `create-app.ts`
   创建 `new Hono<HonoEnv>()`，注册全局中间件、错误处理、404 和一级路由。
 - `index.ts`
   统一导出 `createRuntime()`、`createMomoApp()` 和 `MomoRuntime`。
 
-`MomoRuntime` 当前有 `env`、`logger`、`cache`、`search` 和 `storage`。后续如果加数据库或其他外部资源，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
+`MomoRuntime` 当前有 `env`、`logger`、`cache`、`search`、`llm` 和 `storage`。后续如果加数据库或其他外部资源，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
 
 不要把 env、db、cache 写进 `c.var`。`c.var` 只放当前请求的数据。
 
@@ -696,6 +709,54 @@ content.contract.ts
 - repository 保存草稿时，`excerpt: null` 和 `coverAssetId: null` 必须能清空字段。
 - presenter 统一处理 `Date#toISOString()`。content service 不直接把日期拼进 API 响应。
 - route 只包响应 data。列表接口包 `{ posts }`，详情接口包 `{ post }`，上传接口包 `{ asset }`。
+
+### llm 模块
+
+LLM 模块放在：
+
+```text
+apps/momo/src/modules/llm
+```
+
+当前文件：
+
+- `services/llm.service.ts`
+  放 LLM 业务用例。当前只有 `content.post.meta`，用于给文章生成 slug、摘要或标题建议。调用模型前会读取 use case 配置。
+- `repositories/llm-config.repository.ts`
+  读写 `llm_use_case_configs`。
+- `llm.route.ts`
+  提供 LLM 配置接口。当前接口只允许 `fifa.owner` 调用。
+- `llm.presenter.ts`
+  把数据库记录转成 contracts 里的响应类型，并返回当前环境变量里是否有 API Key。
+- `types/llm.types.ts`
+  放 LLM 模块内部类型。
+- `types/config.types.ts`
+  放 LLM 配置记录和 repository 输入类型。
+- `index.ts`
+  导出 service 创建函数和内部类型。
+
+LLM provider 调用代码放在：
+
+```text
+apps/momo/src/infra/llm
+```
+
+`infra/llm` 只负责调用模型服务并返回结构化 JSON。`modules/llm` 负责读取 use case 配置、拼 prompt、限制输入长度和校验模型返回值。内容模块调用 `modules/llm`，不直接调用 `infra/llm`。
+
+当前接口：
+
+- `GET /rpc/llm/use-cases`
+- `PATCH /rpc/llm/use-cases/:useCase`
+
+LLM 配置表放在：
+
+```text
+apps/momo/src/infra/db/schema/llm.schema.ts
+```
+
+当前只有 `llm_use_case_configs`。这张表保存 `content.post.meta` 的启停状态、provider、model、接口格式、Base URL、超时时间、temperature 和输出 token 上限。这里不保存 API Key。
+
+`POST /rpc/content/posts/meta-suggestion` 仍然是内容模块接口，只返回建议值，不写数据库。
 
 ### 多个 service 和 repository
 

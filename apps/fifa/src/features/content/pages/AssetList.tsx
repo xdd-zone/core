@@ -70,7 +70,7 @@ export function AssetList() {
       { label: t('content.assets.summary.totalAssets'), value: total },
       { label: t('content.assets.summary.currentPage'), value: assets.length },
     ],
-    [assets.length, total],
+    [assets.length, t, total],
   )
 
   const copyText = useCallback(
@@ -102,7 +102,7 @@ export function AssetList() {
         },
       })
     },
-    [deleteAssetMutation, message, modal, query],
+    [deleteAssetMutation, message, modal, query, t],
   )
 
   const columns = useMemo<TableProps<ImageAsset>['columns']>(
@@ -180,7 +180,7 @@ export function AssetList() {
         ),
       },
     ],
-    [copyText, handleDelete],
+    [copyText, handleDelete, t],
   )
 
   return (

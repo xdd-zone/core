@@ -105,6 +105,27 @@ export type {
   UpdateCategoryRequest,
   UpdateTagRequest,
 } from './content/content.contract'
+export {
+  LLM_API_FORMAT_VALUES,
+  LLM_PROVIDER_VALUES,
+  LLM_USE_CASE_VALUES,
+  LlmApiFormatSchema,
+  LlmProviderSchema,
+  LlmUseCaseConfigListResponseSchema,
+  LlmUseCaseConfigResponseSchema,
+  LlmUseCaseConfigSchema,
+  LlmUseCaseSchema,
+  UpdateLlmUseCaseConfigRequestSchema,
+} from './llm/llm.contract'
+export type {
+  LlmApiFormat,
+  LlmProvider,
+  LlmUseCase,
+  LlmUseCaseConfig,
+  LlmUseCaseConfigListResponse,
+  LlmUseCaseConfigResponse,
+  UpdateLlmUseCaseConfigRequest,
+} from './llm/llm.contract'
 export { HealthResponseSchema } from './system/health.contract'
 export type { HealthResponse } from './system/health.contract'
 export { PingRequestSchema, PingResponseSchema } from './system/ping.contract'

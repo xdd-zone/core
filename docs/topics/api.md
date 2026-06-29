@@ -49,6 +49,8 @@ apps/momo/src/modules/content/public-content.route.ts
 | `GET` | `/rpc/fifa/auth/me` | 当前 fifa 用户 |
 | `GET` | `/rpc/bobo/auth/me` | 当前 bobo 用户，未登录时 `user` 为 `null` |
 | `GET`/`POST` | `/api/auth/*` | `better-auth` 登录、登出、OAuth callback 和 session cookie |
+| `GET` | `/rpc/llm/use-cases` | LLM use case 配置列表 |
+| `PATCH` | `/rpc/llm/use-cases/:useCase` | 更新单个 LLM use case 配置 |
 | `GET` | `/rpc/content/posts` | 后台文章列表 |
 | `POST` | `/rpc/content/posts` | 创建文章草稿 |
 | `POST` | `/rpc/content/posts/meta-suggestion` | 生成文章 slug、摘要或标题建议，不保存文章 |

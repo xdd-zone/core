@@ -1,15 +1,5 @@
-import type { GeneratePostMetaRequest, GeneratePostMetaResponse } from '@xdd-zone/contracts'
-import type { LlmDriver } from './llm.types'
+import type { GenerateStructuredJsonRequest, GenerateStructuredJsonResponse, LlmDriver } from './llm.types'
 import OpenAI from 'openai'
-import { z } from 'zod'
-
-const MODEL_SOURCE_LIMIT = 4000
-
-const modelOutputSchema = z.object({
-  excerpt: z.string().optional(),
-  slug: z.string().optional(),
-  title: z.string().optional(),
-})
 
 export type OpenAIApiFormat = 'chat_completions' | 'responses'
 
@@ -32,34 +22,40 @@ export class OpenAILlm implements LlmDriver {
     })
   }
 
-  async generatePostMeta(input: GeneratePostMetaRequest): Promise<GeneratePostMetaResponse> {
+  async generateStructuredJson<TData = unknown>(
+    input: GenerateStructuredJsonRequest,
+  ): Promise<GenerateStructuredJsonResponse<TData>> {
     if (this.config.apiFormat === 'responses') {
-      return this.generatePostMetaWithResponses(input)
+      return this.generateStructuredJsonWithResponses<TData>(input)
     }
 
-    return this.generatePostMetaWithChatCompletions(input)
+    return this.generateStructuredJsonWithChatCompletions<TData>(input)
   }
 
-  private async generatePostMetaWithChatCompletions(input: GeneratePostMetaRequest): Promise<GeneratePostMetaResponse> {
+  private async generateStructuredJsonWithChatCompletions<TData = unknown>(
+    input: GenerateStructuredJsonRequest,
+  ): Promise<GenerateStructuredJsonResponse<TData>> {
     const response = await this.client.chat.completions.create({
       messages: [
         {
           role: 'system',
-          content: this.getSystemPrompt(),
+          content: input.systemPrompt,
         },
         {
           role: 'user',
-          content: this.getUserPrompt(input),
+          content: input.userPrompt,
         },
       ],
+      max_completion_tokens: input.maxOutputTokens,
       model: this.config.model,
       response_format: { type: 'json_object' },
+      temperature: input.temperature,
     })
 
-    const parsed = modelOutputSchema.parse(JSON.parse(response.choices[0]?.message.content || '{}'))
+    const data = JSON.parse(response.choices[0]?.message.content || '{}') as TData
 
     return {
-      suggestion: parsed,
+      data,
       usage: response.usage
         ? {
             inputTokens: response.usage.prompt_tokens,
@@ -70,42 +66,37 @@ export class OpenAILlm implements LlmDriver {
     }
   }
 
-  private async generatePostMetaWithResponses(input: GeneratePostMetaRequest): Promise<GeneratePostMetaResponse> {
+  private async generateStructuredJsonWithResponses<TData = unknown>(
+    input: GenerateStructuredJsonRequest,
+  ): Promise<GenerateStructuredJsonResponse<TData>> {
     const response = await this.client.responses.create({
       input: [
         {
           role: 'system',
-          content: this.getSystemPrompt(),
+          content: input.systemPrompt,
         },
         {
           role: 'user',
-          content: this.getUserPrompt(input),
+          content: input.userPrompt,
         },
       ],
+      max_output_tokens: input.maxOutputTokens,
       model: this.config.model,
+      temperature: input.temperature,
       text: {
         format: {
-          name: 'post_meta_suggestion',
-          schema: {
-            additionalProperties: false,
-            properties: {
-              excerpt: { type: 'string' },
-              slug: { type: 'string' },
-              title: { type: 'string' },
-            },
-            required: [],
-            type: 'object',
-          },
-          strict: false,
+          name: input.responseFormat.name,
+          schema: input.responseFormat.schema,
+          strict: input.responseFormat.strict ?? false,
           type: 'json_schema',
         },
       },
     })
 
-    const parsed = modelOutputSchema.parse(JSON.parse(response.output_text || '{}'))
+    const data = JSON.parse(response.output_text || '{}') as TData
 
     return {
-      suggestion: parsed,
+      data,
       usage: response.usage
         ? {
             inputTokens: response.usage.input_tokens,
@@ -114,21 +105,5 @@ export class OpenAILlm implements LlmDriver {
           }
         : undefined,
     }
-  }
-
-  private getSystemPrompt(): string {
-    return '你是文章编辑助手。只返回 JSON。slug 必须使用小写英文、数字和连字符。摘要要直接描述文章内容，不写营销话。'
-  }
-
-  private getUserPrompt(input: GeneratePostMetaRequest): string {
-    return JSON.stringify({
-      excerpt: input.excerpt ?? null,
-      locale: input.locale,
-      mode: input.mode,
-      slug: input.slug,
-      source: input.source ? input.source.slice(0, MODEL_SOURCE_LIMIT) : undefined,
-      targets: input.targets,
-      title: input.title,
-    })
   }
 }

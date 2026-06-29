@@ -123,7 +123,7 @@ export function TaxonomyList() {
       { label: t('content.taxonomy.summary.categories'), value: categories.length },
       { label: t('content.taxonomy.summary.tags'), value: tags.length },
     ],
-    [categories.length, tags.length],
+    [categories.length, tags.length, t],
   )
 
   const handleOpenCreate = useCallback(
@@ -180,7 +180,7 @@ export function TaxonomyList() {
     )
     setCategoryDialog(emptyCategoryDialog)
     categoryForm.resetFields()
-  }, [categoryDialog.item, categoryForm, createCategoryMutation, message, updateCategoryMutation])
+  }, [categoryDialog.item, categoryForm, createCategoryMutation, message, t, updateCategoryMutation])
 
   const handleSaveTag = useCallback(async () => {
     const values = await tagForm.validateFields()
@@ -197,7 +197,7 @@ export function TaxonomyList() {
     message.success(tagDialog.item ? t('content.taxonomy.saveTagSuccess') : t('content.taxonomy.createTagSuccess'))
     setTagDialog(emptyTagDialog)
     tagForm.resetFields()
-  }, [createTagMutation, message, tagDialog.item, tagForm, updateTagMutation])
+  }, [createTagMutation, message, t, tagDialog.item, tagForm, updateTagMutation])
 
   const handleDeleteCategory = useCallback(
     (category: Category) => {
@@ -219,7 +219,7 @@ export function TaxonomyList() {
         },
       })
     },
-    [deleteCategoryMutation, message, modal],
+    [deleteCategoryMutation, message, modal, t],
   )
 
   const handleDeleteTag = useCallback(
@@ -242,7 +242,7 @@ export function TaxonomyList() {
         },
       })
     },
-    [deleteTagMutation, message, modal],
+    [deleteTagMutation, message, modal, t],
   )
 
   const categoryColumns = useMemo<TableProps<Category>['columns']>(
@@ -296,7 +296,7 @@ export function TaxonomyList() {
         ),
       },
     ],
-    [handleDeleteCategory, handleOpenEditCategory],
+    [handleDeleteCategory, handleOpenEditCategory, t],
   )
 
   const tagColumns = useMemo<TableProps<Tag>['columns']>(
@@ -345,7 +345,7 @@ export function TaxonomyList() {
         ),
       },
     ],
-    [handleDeleteTag, handleOpenEditTag],
+    [handleDeleteTag, handleOpenEditTag, t],
   )
 
   const taxonomyTabs = useMemo<TabsProps['items']>(
@@ -415,6 +415,7 @@ export function TaxonomyList() {
       tagKeyword,
       tagLoadError,
       tagsQuery.isLoading,
+      t,
     ],
   )
 

@@ -116,7 +116,7 @@ export function PostList() {
         value: filteredPosts.length,
       },
     ],
-    [filteredPosts.length, posts.length],
+    [filteredPosts.length, posts.length, t],
   )
 
   const columns = useMemo<TableProps<PostSummary>['columns']>(

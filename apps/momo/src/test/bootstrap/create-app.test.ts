@@ -58,7 +58,7 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
     },
     logger: mockLogger as unknown as Logger,
     llm: {
-      generatePostMeta: vi.fn(),
+      generateStructuredJson: vi.fn(),
     } as unknown as LlmDriver,
     cache: {
       close: vi.fn(),

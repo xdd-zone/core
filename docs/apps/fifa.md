@@ -12,8 +12,9 @@
 - Catppuccin 主题。
 - 登录页、首页、404 页面和几个示例页。
 - 内容模块，当前提供文章列表、创建、编辑、媒体库、分类和标签管理页。
+- 系统设置模块，当前提供 LLM 配置页。
 
-当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。
+当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。当前系统设置模块接入了 Momo 的 LLM 配置接口。
 
 ## 开始改 UI 前先看
 
@@ -61,6 +62,7 @@ apps/fifa/src/
 - `/content/posts/$postId`
 - `/content/assets`
 - `/content/taxonomy`
+- `/settings/llm`
 - `/env-example`
 - `/ui-showcase`
 - `/markdown-example`
@@ -113,6 +115,9 @@ apps/fifa/src/api/system/index.ts
 apps/fifa/src/api/content/posts.api.ts
 apps/fifa/src/api/content/content.query.ts
 apps/fifa/src/api/content/index.ts
+apps/fifa/src/api/llm/llm.api.ts
+apps/fifa/src/api/llm/llm.query.ts
+apps/fifa/src/api/llm/index.ts
 ```
 
 文件分工：
@@ -131,6 +136,10 @@ apps/fifa/src/api/content/index.ts
   调 Momo content RPC。页面不要直接 import `momoClient`。
 - `api/content/content.query.ts`
   放 content 模块的 query key 和 hooks。页面不要手写 content query key。
+- `api/llm/*.api.ts`
+  调 Momo LLM 配置接口。页面不要直接 import `momoClient`。
+- `api/llm/llm.query.ts`
+  放 LLM 配置的 query key 和 hooks。页面不要手写 LLM query key。
 
 Fifa 通过环境变量读取 Momo 地址：
 
@@ -186,6 +195,8 @@ POST /rpc/content/tags
 GET /rpc/content/tags/:id
 PATCH /rpc/content/tags/:id
 DELETE /rpc/content/tags/:id
+GET /rpc/llm/use-cases
+PATCH /rpc/llm/use-cases/:useCase
 ```
 
 当前写法：
@@ -200,6 +211,8 @@ DELETE /rpc/content/tags/:id
   用 `usePingSystemMutation()`，只在点击 Ping 按钮时发送。
 - content 文章、素材、分类和标签接口
   页面通过 `apps/fifa/src/api/content/content.query.ts` 里的 hooks 调用。
+- LLM 配置接口
+  页面通过 `apps/fifa/src/api/llm/llm.query.ts` 里的 hooks 调用。
 
 新增 Fifa 请求时按这个顺序写：
 

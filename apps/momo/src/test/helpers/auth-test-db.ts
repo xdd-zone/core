@@ -7,6 +7,7 @@ import {
   account,
   applicationAuthMethods,
   applications,
+  llmUseCaseConfigs,
   roles,
   user,
   userRoleBindings,
@@ -24,6 +25,7 @@ const migrationFiles = [
   '0002_open_victor_mancha.sql',
   '0003_daffy_miek.sql',
   '0004_high_vapor.sql',
+  '0005_puzzling_wasp.sql',
 ]
 let prepareDatabaseQueue = Promise.resolve()
 
@@ -51,10 +53,11 @@ export async function prepareAuthTestDatabase(): Promise<void> {
 
 export async function resetAuthTestData(): Promise<void> {
   await getDb().execute(
-    'TRUNCATE TABLE "content_preview_tokens", "content_post_revisions", "content_post_tags", "content_posts", "content_tags", "content_categories", "content_assets", "rate_limit", "verification", "session", "account", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
+    'TRUNCATE TABLE "llm_use_case_configs", "content_preview_tokens", "content_post_revisions", "content_post_tags", "content_posts", "content_tags", "content_categories", "content_assets", "rate_limit", "verification", "session", "account", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
   )
 
   await seedAccessRecords()
+  await seedLlmUseCaseConfigs()
 }
 
 export async function createCredentialUser(input: {
@@ -184,6 +187,18 @@ async function seedAccessRecords(): Promise<void> {
       { id: 'role_fifa_owner', applicationId: 'app_fifa', code: 'owner', name: 'fifa.owner' },
       { id: 'role_bobo_visitor', applicationId: 'app_bobo', code: 'visitor', name: 'bobo.visitor' },
     ])
+}
+
+async function seedLlmUseCaseConfigs(): Promise<void> {
+  await getDb().insert(llmUseCaseConfigs).values({
+    apiFormat: 'chat_completions',
+    enabled: 0,
+    id: 'llm_use_case_content_post_meta',
+    model: 'gpt-5-mini',
+    provider: 'none',
+    timeoutMs: 15000,
+    useCase: 'content.post.meta',
+  })
 }
 
 function toCookieHeader(response: Response): string {

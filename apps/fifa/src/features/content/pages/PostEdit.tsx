@@ -376,7 +376,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
         message.success(t('content.postEdit.publishSuccess'))
       },
     })
-  }, [dirty, message, modal, publishMutation, saveDraft])
+  }, [dirty, message, modal, publishMutation, saveDraft, t])
 
   const updateSource = useCallback(
     (nextSource: string) => {
@@ -424,7 +424,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
       insertSnippet(buildImageSnippet(response.data.asset))
       message.success(t('content.postEdit.imageInserted'))
     },
-    [insertSnippet, message, post, uploadImageMutation],
+    [insertSnippet, message, post, t, uploadImageMutation],
   )
 
   const handleChooseCoverAsset = useCallback(
@@ -456,7 +456,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
             },
           ]
         : [],
-    [post],
+    [post, t],
   )
 
   const tabsItems = useMemo<TabsProps['items']>(
@@ -637,6 +637,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
     ],
     [
       sidebarAssets,
+      draftSaving,
       handleBeforeUpload,
       handleInsertComponent,
       handlePreview,
@@ -644,7 +645,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
       mdxComponents,
       previewTokenMutation.isPending,
       previewUrl,
-      draftSaving,
+      t,
       uploadImageMutation.isPending,
     ],
   )

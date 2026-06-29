@@ -16,6 +16,7 @@ import {
 import { Hono } from 'hono'
 import { getDb } from '#momo/infra/db/client'
 import { createRequirePermission } from '#momo/modules/auth/index'
+import { createLlmConfigRepository, createLlmService } from '#momo/modules/llm/index'
 import { AppError } from '#momo/shared/app-error'
 import { createMeta } from '#momo/shared/meta'
 import { createSuccessResponse } from '#momo/shared/response'
@@ -29,7 +30,9 @@ import { createTaxonomyService } from './services/taxonomy.service'
 export function createContentRoute(runtime: MomoRuntime) {
   const repository = createContentRepository(getDb())
   const taxonomyRepository = createTaxonomyRepository(getDb())
-  const service = createContentService(runtime, repository, taxonomyRepository)
+  const llmRepository = createLlmConfigRepository(getDb())
+  const llmService = createLlmService(runtime, llmRepository)
+  const service = createContentService(runtime, repository, taxonomyRepository, llmService)
   const taxonomyService = createTaxonomyService(taxonomyRepository)
 
   return new Hono<HonoEnv>()

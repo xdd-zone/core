@@ -3,6 +3,7 @@ import type { HonoEnv } from '#momo/shared/hono-env'
 import { Hono } from 'hono'
 import { createAuthRoute } from '#momo/modules/auth/index'
 import { createContentRoute, createPublicContentRoute } from '#momo/modules/content/index'
+import { createLlmRoute } from '#momo/modules/llm/index'
 import { createSystemRoute } from '#momo/modules/system/system.route'
 
 export function createRoutes(runtime: MomoRuntime) {
@@ -10,6 +11,7 @@ export function createRoutes(runtime: MomoRuntime) {
     .route('/', createAuthRoute(runtime))
     .route('/', createContentRoute(runtime))
     .route('/', createPublicContentRoute())
+    .route('/', createLlmRoute(runtime))
     .route('/', createSystemRoute(runtime))
 }
 
