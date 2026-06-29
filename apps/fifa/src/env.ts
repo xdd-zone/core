@@ -7,7 +7,6 @@ export function getFifaEnv(): FifaEnv {
   return parseFifaEnv({
     VITE_APP_ENV: import.meta.env.VITE_APP_ENV,
     VITE_BOBO_BASE_URL: import.meta.env.VITE_BOBO_BASE_URL,
-    VITE_DEV_BASE_PATH: import.meta.env.VITE_DEV_BASE_PATH,
     VITE_MOMO_BASE_URL: import.meta.env.VITE_MOMO_BASE_URL,
   })
 }

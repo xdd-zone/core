@@ -75,7 +75,7 @@ GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
 
-`BETTER_AUTH_URL` 会参与拼接 Better Auth 回调地址。这里填 `http://localhost:7788` 时，Google 后台也必须填 `http://localhost:7788/api/auth/callback/google`。
+`BETTER_AUTH_URL` 会参与拼接 Better Auth 回调地址。这里填 `http://localhost:7788` 时，Google 后台也必须填 `http://localhost:7788/api/auth/callback/google`。code-server Web IDE 里使用个人 dev 域名时，按实际 Momo 地址添加 `/api/auth/callback/google`，配置入口看 [code-server 内开发](../development/code-server.md)。
 
 ## 常见错误
 

@@ -106,14 +106,11 @@ src/
 
 ```text
 VITE_APP_ENV=development
-VITE_BOBO_BASE_URL=http://localhost:3000
-VITE_DEV_BASE_PATH=
+VITE_BOBO_BASE_URL=http://localhost:4399
 VITE_MOMO_BASE_URL=http://localhost:7788
 ```
 
-`VITE_BOBO_BASE_URL` 用来拼文章预览地址，格式是 `${VITE_BOBO_BASE_URL}/preview/posts/${postId}?token=${token}`。通过 code-server 访问 Bobo 时，这里填 `https://code.example.com/absproxy/14399`。
-
-通过 code-server 访问 Fifa 时，用 `pnpm dev:cs`，地址看 [docs/development/code-server.md](../../docs/development/code-server.md)。
+`VITE_BOBO_BASE_URL` 用来拼文章预览地址，格式是 `${VITE_BOBO_BASE_URL}/preview/posts/${postId}?token=${token}`。
 
 ## 开发前先看
 

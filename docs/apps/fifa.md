@@ -138,31 +138,17 @@ Fifa 通过环境变量读取 Momo 地址：
 VITE_MOMO_BASE_URL=http://localhost:7788
 ```
 
-通过 code-server 访问时，这里填 `https://code.example.com/proxy/7788`。
-
 Fifa 通过环境变量读取 Bobo 地址，用来拼文章预览 iframe 地址：
 
 ```text
-VITE_BOBO_BASE_URL=http://localhost:3000
+VITE_BOBO_BASE_URL=http://localhost:4399
 ```
-
-通过 code-server 访问 Bobo 时，这里填 `https://code.example.com/absproxy/14399`，让 iframe 和新标签页都打开 Bobo 的代理路径。
 
 Fifa 当前还会读取运行环境：
 
 ```text
 VITE_APP_ENV=development
 ```
-
-code-server 开发时，Fifa 还会读取代理路径：
-
-```text
-VITE_DEV_BASE_PATH=/absproxy/12333
-```
-
-正常本地开发时，这个变量留空。
-
-通过 code-server 访问 Fifa 时，用 `pnpm dev:cs`，访问地址看 [code-server 开发](../development/code-server.md)。
 
 示例文件在：
 

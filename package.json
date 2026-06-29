@@ -22,13 +22,9 @@
   "scripts": {
     "dev": "turbo run dev --filter=@xdd-zone/momo --filter=@xdd-zone/fifa --filter=@xdd-zone/bobo",
     "dev:all": "pnpm run dev",
-    "dev:cs": "turbo run dev:cs --filter=@xdd-zone/momo --filter=@xdd-zone/fifa --filter=@xdd-zone/bobo",
     "dev:momo": "turbo run dev --filter=@xdd-zone/momo",
     "dev:fifa": "turbo run dev --filter=@xdd-zone/fifa",
     "dev:bobo": "turbo run dev --filter=@xdd-zone/bobo",
-    "dev:momo:cs": "turbo run dev:cs --filter=@xdd-zone/momo",
-    "dev:fifa:cs": "turbo run dev:cs --filter=@xdd-zone/fifa",
-    "dev:bobo:cs": "turbo run dev:cs --filter=@xdd-zone/bobo",
     "build": "turbo run build",
     "build:momo": "turbo run build --filter=@xdd-zone/momo",
     "build:fifa": "turbo run build --filter=@xdd-zone/fifa",

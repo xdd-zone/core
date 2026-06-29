@@ -117,13 +117,13 @@ pnpm dev:bobo
 - Bobo: `http://localhost:4399`
 - Health: `http://localhost:7788/health`
 
-code-server 里通过代理访问本机服务时，用：
+code-server Web IDE 里如果要通过个人 dev 域名访问本机服务，也用同一套 `.env.development` 和同一个开发命令：
 
 ```bash
-pnpm dev:cs
+pnpm dev
 ```
 
-具体地址和环境变量看 [code-server 开发](./development/code-server.md)。
+域名、frp 和 Caddy 维护在个人目录，入口看 [code-server 内开发](./development/code-server.md)。
 
 ## 构建命令
 

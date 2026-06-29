@@ -25,8 +25,7 @@
     }
   },
   "scripts": {
-    "dev": "next dev -p 4399",
-    "dev:cs": "dotenv -e .env.code-server -- next dev -p 14399",
+    "dev": "dotenv -e .env.development -- next dev -p 4399",
     "build": "pnpm run type-check && next build",
     "start": "next start -p 4399",
     "lint": "eslint .",

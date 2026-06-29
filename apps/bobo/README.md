@@ -67,12 +67,9 @@ pnpm --filter @xdd-zone/bobo start
 ```text
 MOMO_BASE_URL=http://localhost:7788
 BOBO_ALLOWED_DEV_ORIGINS=localhost,127.0.0.1
-BOBO_BASE_PATH=
 ```
 
 本地开发配置放在 `apps/bobo/.env.development`。`MOMO_BASE_URL` 只给 Next 服务端代码读取，启动配置和服务端请求都会校验它。
-
-通过 code-server 访问 Bobo 时，用 `pnpm dev:cs`，地址看 [docs/development/code-server.md](../../docs/development/code-server.md)。
 
 ## 改动前看哪里
 

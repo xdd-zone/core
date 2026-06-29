@@ -67,9 +67,9 @@ describe('content 工具函数', () => {
     expect(buildBoboPreviewUrl('post-1', 'token-1')).toBe('http://localhost:3000/preview/posts/post-1?token=token-1')
   })
 
-  it('bobo 地址带 code-server 路径时保留代理前缀', () => {
-    expect(buildBoboPreviewUrl('post-1', 'token-1', 'https://code.xdd.ink/absproxy/4399')).toBe(
-      'https://code.xdd.ink/absproxy/4399/preview/posts/post-1?token=token-1',
+  it('bobo 地址带路径前缀时保留前缀', () => {
+    expect(buildBoboPreviewUrl('post-1', 'token-1', 'https://example.xdd.ink/bobo')).toBe(
+      'https://example.xdd.ink/bobo/preview/posts/post-1?token=token-1',
     )
   })
 

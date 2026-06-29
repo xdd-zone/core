@@ -72,7 +72,7 @@ GITHUB_CLIENT_ID=your-github-client-id
 GITHUB_CLIENT_SECRET=your-github-client-secret
 ```
 
-`BETTER_AUTH_URL` 会参与拼接 Better Auth 回调地址。这里填 `http://localhost:7788` 时，GitHub 后台也必须填 `http://localhost:7788/api/auth/callback/github`。
+`BETTER_AUTH_URL` 会参与拼接 Better Auth 回调地址。这里填 `http://localhost:7788` 时，GitHub 后台也必须填 `http://localhost:7788/api/auth/callback/github`。code-server Web IDE 里使用个人 dev 域名时，按实际 Momo 地址添加 `/api/auth/callback/github`，配置入口看 [code-server 内开发](../development/code-server.md)。
 
 ## 常见错误
 

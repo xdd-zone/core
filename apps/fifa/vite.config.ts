@@ -27,18 +27,14 @@ function getPackageName(id: string): string | null {
 }
 
 export default defineConfig(({ mode }) => {
-  const momoProxyTarget = process.env.MOMO_PROXY_TARGET || 'https://momo.test.xdd.ink'
   const viteEnv = {
     ...loadEnv(mode, __dirname, 'VITE_'),
     ...process.env,
   }
-  const devBasePath = typeof viteEnv.VITE_DEV_BASE_PATH === 'string' ? viteEnv.VITE_DEV_BASE_PATH : ''
-  const normalizedDevBasePath = devBasePath === '' ? '/' : `/${devBasePath.replace(/^\/|\/$/g, '')}/`
 
-  parseFifaEnv(viteEnv)
+  const fifaEnv = parseFifaEnv(viteEnv)
 
   return {
-    base: normalizedDevBasePath,
     build: {
       // 静态资源目录
       assetsDir: 'assets',
@@ -145,7 +141,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       // 允许通过域名访问（用于反向代理）
-      allowedHosts: ['fifa.test.xdd.ink', '.xdd.ink'],
+      allowedHosts: ['fifa-dev.xdd.ink', '.xdd.ink'],
       host: true,
       open: true,
       port: 2333,
@@ -153,17 +149,17 @@ export default defineConfig(({ mode }) => {
         '/api/auth': {
           changeOrigin: true,
           secure: true,
-          target: momoProxyTarget,
+          target: fifaEnv.VITE_MOMO_BASE_URL,
         },
         '/health': {
           changeOrigin: true,
           secure: true,
-          target: momoProxyTarget,
+          target: fifaEnv.VITE_MOMO_BASE_URL,
         },
         '/rpc': {
           changeOrigin: true,
           secure: true,
-          target: momoProxyTarget,
+          target: fifaEnv.VITE_MOMO_BASE_URL,
         },
       },
     },

@@ -3,7 +3,6 @@ import { z } from 'zod'
 export const fifaEnvSchema = z.object({
   VITE_APP_ENV: z.enum(['development', 'test', 'production']),
   VITE_BOBO_BASE_URL: z.string().url(),
-  VITE_DEV_BASE_PATH: z.string().optional(),
   VITE_MOMO_BASE_URL: z.string().url(),
 })
 
@@ -13,7 +12,6 @@ export function parseFifaEnv(source: Record<string, unknown>): FifaEnv {
   const result = fifaEnvSchema.safeParse({
     VITE_APP_ENV: source.VITE_APP_ENV,
     VITE_BOBO_BASE_URL: source.VITE_BOBO_BASE_URL,
-    VITE_DEV_BASE_PATH: source.VITE_DEV_BASE_PATH,
     VITE_MOMO_BASE_URL: source.VITE_MOMO_BASE_URL,
   })
 
@@ -42,7 +40,7 @@ function formatFifaEnvIssues(source: Record<string, unknown>): string {
   if (source.VITE_BOBO_BASE_URL === undefined || source.VITE_BOBO_BASE_URL === '') {
     lines.push('- VITE_BOBO_BASE_URL 没有配置')
   } else if (!z.string().url().safeParse(source.VITE_BOBO_BASE_URL).success) {
-    lines.push('- VITE_BOBO_BASE_URL 必须是完整 URL，例如 http://localhost:3000')
+    lines.push('- VITE_BOBO_BASE_URL 必须是完整 URL，例如 http://localhost:4399')
   }
 
   return lines.join('\n')

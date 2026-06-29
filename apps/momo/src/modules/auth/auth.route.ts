@@ -7,19 +7,17 @@ import { createMeta } from '#momo/shared/meta'
 import { createSuccessResponse } from '#momo/shared/response'
 
 import { createMomoAuth } from './auth.config'
-import { resolveBetterAuthBaseUrl, rewriteBetterAuthRequestUrl } from './better-auth-url'
 import { assertFifaOwner, ensureBoboVisitor, getCurrentAuthUser } from './services'
 
 export function createAuthRoute(runtime: MomoRuntime) {
   const auth = createMomoAuth(runtime)
-  const authBaseUrl = resolveBetterAuthBaseUrl(runtime.env.BETTER_AUTH_URL)
 
   return new Hono<HonoEnv>()
     .all('/api/auth/sign-up/email', () => {
       throw new AppError(BizCode.AUTH_METHOD_NOT_ALLOWED, '当前不开放邮箱注册', 403)
     })
     .all('/api/auth/*', (c) => {
-      return auth.handler(rewriteBetterAuthRequestUrl(c.req.raw, authBaseUrl))
+      return auth.handler(c.req.raw)
     })
     .get('/rpc/fifa/auth/me', async (c) => {
       const user = await getCurrentAuthUser(auth, c.req.raw.headers)

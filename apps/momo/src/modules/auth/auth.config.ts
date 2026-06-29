@@ -4,7 +4,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { getDb } from '#momo/infra/db/client'
 import { createBetterAuthLogger, createChildLogger } from '#momo/infra/logger'
 
-import { AUTH_BASE_PATH, resolveBetterAuthBaseUrl } from './better-auth-url'
+const AUTH_BASE_PATH = '/api/auth'
 
 export function createMomoAuth(runtime: Pick<MomoRuntime, 'env' | 'logger'>) {
   const authLogger = createChildLogger(runtime.logger, 'auth')
@@ -12,7 +12,7 @@ export function createMomoAuth(runtime: Pick<MomoRuntime, 'env' | 'logger'>) {
   return betterAuth({
     appName: 'XDD Zone',
     basePath: AUTH_BASE_PATH,
-    baseURL: resolveBetterAuthBaseUrl(runtime.env.BETTER_AUTH_URL),
+    baseURL: runtime.env.BETTER_AUTH_URL,
     database: drizzleAdapter(getDb(), {
       provider: 'pg',
     }),

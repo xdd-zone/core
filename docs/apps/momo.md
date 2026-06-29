@@ -248,7 +248,7 @@ OWNER_DISPLAY_NAME
 
 `LOG_SQL` 只在开发环境生效。设成 `true` 时会打印 SQL 和 `paramsCount`，不会打印参数原值。
 
-`BETTER_AUTH_URL` 填 Momo 的对外地址。正常本地开发时用 `http://localhost:7788`。通过 code-server 访问时，填 `https://code.example.com/proxy/7788` 这种带代理前缀的地址，Momo 会按这个地址拼 `/api/auth`。
+`BETTER_AUTH_URL` 填 Momo 的对外地址，Momo 会按这个地址拼 `/api/auth`。本地开发通常填 `http://localhost:7788`。code-server Web IDE 里使用个人 dev 域名时，配置入口看 [code-server 内开发](../development/code-server.md)。`CORS_ORIGINS` 需要包含实际访问 Fifa 和 Bobo 的地址。
 
 `CACHE_PROVIDER` 控制缓存驱动。默认值是 `memory`，数据只存在当前 Node.js 进程里。设成 `redis` 时，需要配置 `CACHE_URL`，本地 Valkey 地址是 `redis://localhost:56379`。`CACHE_KEY_PREFIX` 默认是 `momo`，`CACHE_DEFAULT_TTL_SECONDS` 默认是 `300` 秒。
 

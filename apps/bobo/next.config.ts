@@ -7,7 +7,6 @@ const allowedDevOrigins =
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: allowedDevOrigins.length > 0 ? allowedDevOrigins : undefined,
-  basePath: process.env.BOBO_BASE_PATH || undefined,
 }
 
 export default nextConfig
