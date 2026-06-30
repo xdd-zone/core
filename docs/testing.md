@@ -1,12 +1,10 @@
 # 测试和检查
 
-这份文档写当前仓库的测试目录设计、编写规则和可直接跑的检查命令。
+这份文档写当前仓库的测试文件放在哪里、怎么写和可直接跑的检查命令。
 
 ## 测试目录设计
 
-测试文件统一放在各应用的 `src/test/` 下，目录结构和 `src/` 的一级目录一一对应。
-
-当前 Momo 和 Fifa 有单元测试。其他应用后续新增时按同样的结构放。
+Momo 和 Fifa 使用 `src/test/`。Bobo 使用 Next.js App Router，没有 `src/` 目录，测试文件和被测文件放在同一层。
 
 ### Momo 测试目录
 
@@ -46,28 +44,53 @@ apps/fifa/src/test/
         └── auth-guard.test.ts
 ```
 
+### Bobo 测试文件
+
+```text
+apps/bobo/
+├── app/
+│   ├── (preview)/preview/posts/[postId]/page.test.tsx
+│   └── (site)/writing/[slug]/page.test.tsx
+├── components/content/post-renderer.test.tsx
+└── lib/
+    ├── content/preview-post.test.ts
+    └── http.test.ts
+```
+
+Bobo 测试和被测文件放在同一层。比如 `apps/bobo/lib/http.ts` 对应 `apps/bobo/lib/http.test.ts`。
+
+不要给 Bobo 新建独立的 `apps/bobo/test/` 目录。跨多个测试共用的辅助代码确实出现后，再放到离使用点最近的 `test-utils.ts`，不要提前建空目录。
+
 分目录的原则：
 
 - 一级目录和 `src/` 下的一级目录保持一致：`bootstrap/`、`infra/`、`middleware/`、`modules/`、`shared/`。
 - `modules/` 下按业务模块再分一层，和 `src/modules/<module>` 一一对应。
 - 测试文件名和被测文件名一致，后缀改成 `.test.ts`。比如 `system.route.ts` 对应 `system.route.test.ts`。
+- Bobo 没有 `src/` 目录，按 `app/`、`components/`、`lib/` 的真实位置放测试文件。
 
 什么时候新建目录：
 
-- 新增业务模块 `src/modules/post/` 时，对应加 `src/test/modules/post/`。
-- 新增基础设施如 `src/infra/cache/memory-cache.ts` 时，测试放 `src/test/infra/memory-cache.test.ts`。
+- Momo 新增业务模块 `src/modules/post/` 时，对应加 `src/test/modules/post/`。
+- Momo 或 Fifa 新增基础设施如 `src/infra/cache/memory-cache.ts` 时，测试放 `src/test/infra/memory-cache.test.ts`。
+- Bobo 新增 `apps/bobo/lib/xxx.ts` 时，测试放 `apps/bobo/lib/xxx.test.ts`。
 - 没有测试的目录不用提前建空目录。
 
 不需要做的：
 
 - 不搞 `__tests__` 目录或 `*.spec.ts` 命名，统一用 `.test.ts`。
-- 不提前建 `helpers/`、`fixtures/`、`utils/` 子目录。确实出现多个测试共用的工具代码时，加一个 `src/test/helpers/` 就够。
+- 不提前建 `helpers/`、`fixtures/`、`utils/` 子目录。确实出现多个测试共用的工具代码时，再按当前应用的测试目录规则加。
 
-### 为什么放 `src/test/` 而不是 `apps/momo/test/`
+### 为什么 Momo 和 Fifa 放 `src/test/`
 
 - `#momo/` 和 `@fifa/` 路径别名直接可用，和源码 import 方式一致。
-- `tsup` 只编译指定入口文件，`test/` 目录天然不会被打包。
+- Momo 的 `tsup` 只编译指定入口文件，测试文件不会被打包。
 - Vitest 默认匹配 `**/*.test.ts`，在 `src/` 下直接识别，不用额外配。
+
+### 为什么 Bobo 不维护 `test/` 目录
+
+- Bobo 的页面入口就在 `apps/bobo/app`，组件在 `components`，工具函数在 `lib`。测试贴着被测文件更容易找到。
+- `apps/bobo/vitest.config.ts` 使用 Vitest 默认匹配规则，`*.test.ts` 和 `*.test.tsx` 会直接被识别。
+- 单独建 `apps/bobo/test/` 只会多维护一套目录映射，当前没有共用测试夹具需要放进去。
 
 ## 测试编写规则
 
@@ -119,6 +142,7 @@ expect(mockLogger.info).toHaveBeenCalled()
 - Momo 测试通过 `apps/momo/vitest.config.ts` 关闭文件并行，避免多个数据库接口测试同时重建同一个测试库。
 - Fifa 测试读取 `apps/fifa/.env.test`。当前只测前端请求解析和路由权限判断，不需要启动 Momo。
 - Fifa 测试通过 `apps/fifa/vitest.config.ts` 配置 `@fifa` 路径别名和 Vitest 运行环境。
+- Bobo 测试通过 `apps/bobo/vitest.config.ts` 配置 `@` 路径别名和 Node 运行环境。
 
 ## 检查命令
 

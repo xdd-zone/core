@@ -124,6 +124,15 @@ apps/bobo/.env.development
 - 组件 className 拼接使用 `apps/bobo/lib/utils.ts` 里的 `cn()`。
 - shadcn 组件配置在 `apps/bobo/components.json`。
 
+## 测试规则
+
+- Bobo 测试文件和被测文件放在同一层，文件名统一用 `.test.ts` 或 `.test.tsx`。
+- 不维护独立的 `apps/bobo/test/` 目录。
+- 页面测试贴着 App Router 页面放，比如 `apps/bobo/app/(site)/writing/[slug]/page.test.tsx`。
+- 组件测试贴着组件放，比如 `apps/bobo/components/content/post-renderer.test.tsx`。
+- 工具函数测试贴着 `lib` 文件放，比如 `apps/bobo/lib/http.test.ts`。
+- 确实出现多个测试共用的辅助代码时，再放到离使用点最近的 `test-utils.ts`，不要提前建空目录。
+
 ## 样式规则
 
 - 全局样式入口只改 `apps/bobo/app/globals.css`。
