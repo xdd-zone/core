@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createRuntime } from '#momo/bootstrap'
 import { MemoryCache, RedisCache } from '#momo/infra/cache'
-import { DisabledLlm, OpenAILlm } from '#momo/infra/llm'
+import { DisabledLlm } from '#momo/infra/llm'
 import { DisabledSearch, MeilisearchSearch } from '#momo/infra/search'
 
 function stubBaseEnv() {
@@ -14,6 +14,7 @@ function stubBaseEnv() {
   vi.stubEnv('GITHUB_CLIENT_SECRET', 'test-github-client-secret')
   vi.stubEnv('GOOGLE_CLIENT_ID', 'test-google-client-id')
   vi.stubEnv('GOOGLE_CLIENT_SECRET', 'test-google-client-secret')
+  vi.stubEnv('LLM_SECRET_KEY', 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=')
   vi.stubEnv('PORT', '7788')
 }
 
@@ -56,14 +57,12 @@ describe('runtime 创建', () => {
     expect(runtime.llm).toBeInstanceOf(DisabledLlm)
   })
 
-  it('llm_provider=openai 时创建 OpenAI LLM 驱动', () => {
+  it('LLM 运行时不从环境变量创建 OpenAI 驱动', () => {
     stubBaseEnv()
-    vi.stubEnv('LLM_PROVIDER', 'openai')
-    vi.stubEnv('OPENAI_API_KEY', 'test-openai-api-key')
 
     const runtime = createRuntime()
 
-    expect(runtime.llm).toBeInstanceOf(OpenAILlm)
+    expect(runtime.llm).toBeInstanceOf(DisabledLlm)
   })
 
   it('search_provider=meilisearch 时创建 Meilisearch 搜索驱动', () => {

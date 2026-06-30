@@ -195,8 +195,16 @@ POST /rpc/content/tags
 GET /rpc/content/tags/:id
 PATCH /rpc/content/tags/:id
 DELETE /rpc/content/tags/:id
+GET /rpc/llm/providers
+POST /rpc/llm/providers
+PATCH /rpc/llm/providers/:providerId
+DELETE /rpc/llm/providers/:providerId/api-key
+POST /rpc/llm/providers/:providerId/test
 GET /rpc/llm/use-cases
 PATCH /rpc/llm/use-cases/:useCase
+GET /rpc/llm/call-logs
+GET /rpc/llm/call-logs/:logId
+DELETE /rpc/llm/call-logs/expired
 ```
 
 当前写法：

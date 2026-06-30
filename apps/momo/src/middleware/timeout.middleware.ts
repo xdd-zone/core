@@ -4,7 +4,9 @@ import { HTTPException } from 'hono/http-exception'
 import { timeout } from 'hono/timeout'
 
 const RPC_TIMEOUT_MS = 5000
+const LLM_GENERATION_TIMEOUT_MS = 60000
 const AUTH_TIMEOUT_MS = 10000
+const LLM_GENERATION_PATH = '/rpc/content/posts/meta-suggestion'
 
 function createTimeoutException() {
   return new HTTPException(504, {
@@ -13,6 +15,16 @@ function createTimeoutException() {
 }
 
 export function registerTimeout(app: Hono<HonoEnv>): void {
-  app.use('/rpc/*', timeout(RPC_TIMEOUT_MS, createTimeoutException))
+  const rpcTimeout = timeout(RPC_TIMEOUT_MS, createTimeoutException)
+
+  app.use(LLM_GENERATION_PATH, timeout(LLM_GENERATION_TIMEOUT_MS, createTimeoutException))
+  app.use('/rpc/*', async (c, next) => {
+    if (c.req.path === LLM_GENERATION_PATH) {
+      await next()
+      return
+    }
+
+    return rpcTimeout(c, next)
+  })
   app.use('/api/auth/*', timeout(AUTH_TIMEOUT_MS, createTimeoutException))
 }

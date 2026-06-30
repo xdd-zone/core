@@ -4,11 +4,14 @@ import type { CacheDriver } from '#momo/infra/cache'
 import type { LlmDriver } from '#momo/infra/llm'
 import type { SearchDriver } from '#momo/infra/search'
 import type { StorageDriver } from '#momo/infra/storage'
+import type { LlmConfigRepository } from '../../../modules/llm/repositories/llm-config.repository'
 import { BizCode } from '@xdd-zone/contracts'
 import { describe, expect, it, vi } from 'vitest'
-import { DisabledLlm } from '#momo/infra/llm'
+import { DisabledLlm, encryptLlmSecret } from '#momo/infra/llm'
 
 import { createLlmService, getPostMetaUserPrompt } from '../../../modules/llm/services/llm.service'
+
+const LLM_SECRET_KEY = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
 
 describe('llm service', () => {
   it('content.post.meta 会裁剪 source 后生成 user prompt', () => {
@@ -24,24 +27,15 @@ describe('llm service', () => {
     expect(prompt.source).toHaveLength(4000)
   })
 
-  it('content.post.meta 会校验模型返回格式', async () => {
-    const service = createLlmService(
-      createRuntime(new DisabledLlm(), {
-        LLM_PROVIDER: 'openai',
-        OPENAI_API_KEY: 'test-openai-api-key',
+  it('content.post.meta 会校验模型返回格式并写错误日志', async () => {
+    const repository = createRepository({ enabled: true, providerEnabled: true, withApiKey: true })
+    const service = createLlmService(createRuntime(new DisabledLlm()), repository, () => ({
+      generateStructuredJson: vi.fn().mockResolvedValue({
+        data: {
+          title: 123,
+        },
       }),
-      createRepository({
-        enabled: true,
-        provider: 'openai',
-      }),
-      () => ({
-        generateStructuredJson: vi.fn().mockResolvedValue({
-          data: {
-            title: 123,
-          },
-        }),
-      }),
-    )
+    }))
 
     await expect(
       service.generatePostMetaSuggestion({
@@ -54,6 +48,7 @@ describe('llm service', () => {
       message: 'LLM 返回的文章字段建议格式不正确',
       status: 409,
     })
+    expect(repository.createCallLog).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }))
   })
 
   it('llm 未启用时返回 409', async () => {
@@ -76,10 +71,7 @@ describe('llm service', () => {
       createRuntime({
         generateStructuredJson: vi.fn(),
       }),
-      createRepository({
-        enabled: false,
-        provider: 'openai',
-      }),
+      createRepository({ enabled: false, providerEnabled: true, withApiKey: true }),
     )
 
     await expect(
@@ -95,15 +87,12 @@ describe('llm service', () => {
     })
   })
 
-  it('provider=none 时返回 409', async () => {
+  it('provider 禁用时返回 409', async () => {
     const service = createLlmService(
       createRuntime({
         generateStructuredJson: vi.fn(),
       }),
-      createRepository({
-        enabled: true,
-        provider: 'none',
-      }),
+      createRepository({ enabled: true, providerEnabled: false, withApiKey: true }),
     )
 
     await expect(
@@ -114,32 +103,78 @@ describe('llm service', () => {
       }),
     ).rejects.toMatchObject({
       code: BizCode.BIZ_RULE_VIOLATION,
+      message: 'LLM Provider 未启用',
+      status: 409,
+    })
+  })
+
+  it('provider 无 API Key 时返回 409', async () => {
+    const service = createLlmService(
+      createRuntime({
+        generateStructuredJson: vi.fn(),
+      }),
+      createRepository({ enabled: true, providerEnabled: true, withApiKey: false }),
+    )
+
+    await expect(
+      service.generatePostMetaSuggestion({
+        locale: 'zh-CN',
+        mode: 'create',
+        targets: ['title'],
+      }),
+    ).rejects.toMatchObject({
+      code: BizCode.BIZ_RULE_VIOLATION,
+      message: 'LLM Provider 未配置 API Key',
       status: 409,
     })
   })
 })
 
-function createRepository(overrides: { enabled: boolean; provider: 'none' | 'openai' }) {
+function createRepository(overrides: { enabled: boolean; providerEnabled: boolean; withApiKey: boolean }) {
   const now = new Date()
-
-  return {
-    findConfigByUseCase: vi.fn().mockResolvedValue({
-      apiFormat: 'chat_completions',
-      baseUrl: 'https://api.example.com',
-      createdAt: now,
-      enabled: overrides.enabled ? 1 : 0,
-      id: 'llm-config-1',
-      maxOutputTokens: 512,
-      model: 'test-model',
-      provider: overrides.provider,
-      temperature: '0.70',
-      timeoutMs: 30000,
-      updatedAt: now,
-      useCase: 'content.post.meta',
-    }),
-    listConfigs: vi.fn(),
-    upsertConfig: vi.fn(),
+  const provider = {
+    apiFormat: 'chat_completions' as const,
+    apiKeyCiphertext: overrides.withApiKey ? encryptLlmSecret('test-openai-api-key', LLM_SECRET_KEY) : null,
+    apiKeyHint: overrides.withApiKey ? 'key' : null,
+    baseUrl: 'https://api.example.com',
+    createdAt: now,
+    defaultModel: 'test-model',
+    enabled: overrides.providerEnabled ? 1 : 0,
+    id: 'provider-1',
+    name: 'Test Provider',
+    providerType: 'openai' as const,
+    timeoutMs: 30000,
+    updatedAt: now,
   }
+  const repository = {
+    clearProviderApiKey: vi.fn(),
+    createCallLog: vi.fn().mockResolvedValue({ id: 'log-1' }),
+    createProvider: vi.fn(),
+    deleteExpiredCallLogs: vi.fn(),
+    findCallLogById: vi.fn(),
+    findConfigByUseCase: vi.fn().mockResolvedValue({
+      config: {
+        createdAt: now,
+        enabled: overrides.enabled ? 1 : 0,
+        id: 'llm-config-1',
+        maxOutputTokens: 512,
+        model: 'test-model',
+        providerId: 'provider-1',
+        temperature: '0.70',
+        updatedAt: now,
+        useCase: 'content.post.meta',
+      },
+      provider,
+    }),
+    findProviderById: vi.fn().mockResolvedValue(provider),
+    listCallLogs: vi.fn(),
+    listConfigs: vi.fn(),
+    listProviders: vi.fn(),
+    updateProvider: vi.fn(),
+    upsertConfig: vi.fn(),
+  } satisfies Partial<LlmConfigRepository>
+
+  return repository as LlmConfigRepository
 }
 
 function createRuntime(llm: LlmDriver, envOverrides: Partial<MomoRuntime['env']> = {}): MomoRuntime {
@@ -159,18 +194,13 @@ function createRuntime(llm: LlmDriver, envOverrides: Partial<MomoRuntime['env']>
       GITHUB_CLIENT_SECRET: 'test-github-client-secret',
       GOOGLE_CLIENT_ID: 'test-google-client-id',
       GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
-      LLM_PROVIDER: 'none',
+      LLM_SECRET_KEY,
       MEILI_API_KEY: undefined,
       MEILI_HOST: undefined,
       MEILI_INDEX_PREFIX: 'momo',
       LOG_LEVEL: 'silent',
       LOG_SQL: false,
       PORT: 7788,
-      OPENAI_API_KEY: undefined,
-      OPENAI_API_FORMAT: 'chat_completions',
-      OPENAI_BASE_URL: undefined,
-      OPENAI_MODEL: 'gpt-5-mini',
-      OPENAI_TIMEOUT_MS: 15000,
       SEARCH_PROVIDER: 'none',
       STORAGE_PROVIDER: 'local',
       LOCAL_STORAGE_DIR: undefined,

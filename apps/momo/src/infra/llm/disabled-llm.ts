@@ -6,6 +6,6 @@ export class DisabledLlm implements LlmDriver {
   generateStructuredJson<TData = unknown>(
     _input: GenerateStructuredJsonRequest,
   ): Promise<GenerateStructuredJsonResponse<TData>> {
-    throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM 未启用，先配置 LLM_PROVIDER 和 OPENAI_API_KEY', 409)
+    throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM 未启用，先配置数据库里的 LLM Provider', 409)
   }
 }

@@ -6,7 +6,7 @@ import type { StorageDriver } from '#momo/infra/storage/storage.types'
 import type { MomoEnv } from '#momo/shared/env'
 import { resolve } from 'node:path'
 import { MemoryCache, RedisCache } from '#momo/infra/cache'
-import { DisabledLlm, OpenAILlm } from '#momo/infra/llm'
+import { DisabledLlm } from '#momo/infra/llm'
 import { createChildLogger, createLogger } from '#momo/infra/logger'
 import { DisabledSearch, MeilisearchSearch } from '#momo/infra/search'
 import { CosStorage } from '#momo/infra/storage/cos-storage'
@@ -22,26 +22,10 @@ export interface MomoRuntime {
   storage: StorageDriver
 }
 
-function createLlmDriver(env: MomoEnv, logger: Logger): LlmDriver {
+function createLlmDriver(_env: MomoEnv, logger: Logger): LlmDriver {
   const llmLogger = createChildLogger(logger, 'llm')
+  llmLogger.info({ provider: 'database' }, 'LLM 运行时配置从数据库读取')
 
-  if (env.LLM_PROVIDER === 'openai') {
-    if (!env.OPENAI_API_KEY) {
-      throw new Error('LLM_PROVIDER=openai 时，OPENAI_API_KEY 必须配置')
-    }
-
-    llmLogger.info({ apiFormat: env.OPENAI_API_FORMAT, model: env.OPENAI_MODEL, provider: 'openai' }, '使用 OpenAI LLM')
-
-    return new OpenAILlm({
-      apiKey: env.OPENAI_API_KEY,
-      apiFormat: env.OPENAI_API_FORMAT,
-      baseURL: env.OPENAI_BASE_URL,
-      model: env.OPENAI_MODEL,
-      timeout: env.OPENAI_TIMEOUT_MS,
-    })
-  }
-
-  llmLogger.info({ provider: 'none' }, '未启用 LLM')
   return new DisabledLlm()
 }
 

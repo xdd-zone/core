@@ -1,26 +1,32 @@
-import type { LlmApiFormat, LlmProvider, LlmUseCase } from '@xdd-zone/contracts'
-import type { MomoEnv } from '#momo/shared/env'
+import type { LlmApiFormat, LlmProviderType, LlmUseCase } from '@xdd-zone/contracts'
+
+export interface ResolvedLlmProviderConfig {
+  apiFormat: LlmApiFormat
+  apiKeyCiphertext: string | null
+  baseUrl: string
+  defaultModel: string
+  enabled: boolean
+  id: string
+  name: string
+  providerType: LlmProviderType
+  timeoutMs: number
+}
 
 export interface ResolvedLlmUseCaseConfig {
-  apiFormat: LlmApiFormat
-  baseUrl?: string
   enabled: boolean
   maxOutputTokens?: number
   model: string
-  provider: LlmProvider
+  provider: ResolvedLlmProviderConfig | null
+  providerId?: string
   temperature?: number
-  timeoutMs: number
   useCase: LlmUseCase
 }
 
-export function createDefaultLlmUseCaseConfig(env: MomoEnv, useCase: LlmUseCase): ResolvedLlmUseCaseConfig {
+export function createDefaultLlmUseCaseConfig(useCase: LlmUseCase): ResolvedLlmUseCaseConfig {
   return {
-    apiFormat: env.OPENAI_API_FORMAT,
-    baseUrl: env.OPENAI_BASE_URL,
-    enabled: env.LLM_PROVIDER !== 'none',
-    model: env.OPENAI_MODEL,
-    provider: env.LLM_PROVIDER,
-    timeoutMs: env.OPENAI_TIMEOUT_MS,
+    enabled: false,
+    model: 'gpt-5-mini',
+    provider: null,
     useCase,
   }
 }

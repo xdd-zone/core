@@ -7,6 +7,7 @@ import {
   account,
   applicationAuthMethods,
   applications,
+  llmProviders,
   llmUseCaseConfigs,
   roles,
   user,
@@ -26,6 +27,7 @@ const migrationFiles = [
   '0003_daffy_miek.sql',
   '0004_high_vapor.sql',
   '0005_puzzling_wasp.sql',
+  '0006_typical_wither.sql',
 ]
 let prepareDatabaseQueue = Promise.resolve()
 
@@ -53,7 +55,7 @@ export async function prepareAuthTestDatabase(): Promise<void> {
 
 export async function resetAuthTestData(): Promise<void> {
   await getDb().execute(
-    'TRUNCATE TABLE "llm_use_case_configs", "content_preview_tokens", "content_post_revisions", "content_post_tags", "content_posts", "content_tags", "content_categories", "content_assets", "rate_limit", "verification", "session", "account", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
+    'TRUNCATE TABLE "llm_call_logs", "llm_use_case_configs", "llm_providers", "content_preview_tokens", "content_post_revisions", "content_post_tags", "content_posts", "content_tags", "content_categories", "content_assets", "rate_limit", "verification", "session", "account", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
   )
 
   await seedAccessRecords()
@@ -190,13 +192,22 @@ async function seedAccessRecords(): Promise<void> {
 }
 
 async function seedLlmUseCaseConfigs(): Promise<void> {
-  await getDb().insert(llmUseCaseConfigs).values({
+  await getDb().insert(llmProviders).values({
     apiFormat: 'chat_completions',
+    baseUrl: 'https://api.openai.com/v1',
+    defaultModel: 'gpt-5-mini',
+    enabled: 0,
+    id: 'llm_provider_default',
+    name: '默认 OpenAI 兼容服务',
+    providerType: 'openai',
+    timeoutMs: 15000,
+  })
+
+  await getDb().insert(llmUseCaseConfigs).values({
     enabled: 0,
     id: 'llm_use_case_content_post_meta',
     model: 'gpt-5-mini',
-    provider: 'none',
-    timeoutMs: 15000,
+    providerId: 'llm_provider_default',
     useCase: 'content.post.meta',
   })
 }

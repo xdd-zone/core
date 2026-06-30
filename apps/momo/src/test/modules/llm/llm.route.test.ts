@@ -1,6 +1,6 @@
-import type { ApiResponse, LlmUseCaseConfigListResponse, LlmUseCaseConfigResponse } from '@xdd-zone/contracts'
+import type { ApiResponse, LlmProviderListResponse, LlmUseCaseConfigListResponse, LlmUseCaseConfigResponse } from '@xdd-zone/contracts'
 import type app from '#momo/app'
-import { BizCode, LlmUseCaseConfigListResponseSchema, LlmUseCaseConfigResponseSchema } from '@xdd-zone/contracts'
+import { BizCode, LlmProviderListResponseSchema, LlmUseCaseConfigListResponseSchema, LlmUseCaseConfigResponseSchema } from '@xdd-zone/contracts'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   bindFifaOwner,
@@ -66,17 +66,29 @@ describe('llm 路由', () => {
     expect(data.configs[0]?.useCase).toBe('content.post.meta')
   })
 
+  it('可以读取 LLM provider 列表', async () => {
+    const response = await momoApp.request('/rpc/llm/providers', {
+      headers: { cookie: ownerCookie },
+    })
+    const body = (await response.json()) as ApiResponse<LlmProviderListResponse>
+
+    expect(response.status).toBe(200)
+    const data = expectOkData(body)
+    LlmProviderListResponseSchema.parse(data)
+    expect(data.providers[0]).toMatchObject({
+      id: 'llm_provider_default',
+      providerType: 'openai',
+    })
+  })
+
   it('可以更新 LLM use case 配置', async () => {
     const response = await momoApp.request('/rpc/llm/use-cases/content.post.meta', {
       body: JSON.stringify({
-        apiFormat: 'responses',
-        baseUrl: 'https://api.example.com',
         enabled: true,
         maxOutputTokens: 1024,
         model: 'gpt-test',
-        provider: 'openai',
+        providerId: 'llm_provider_default',
         temperature: 0.7,
-        timeoutMs: 30000,
       }),
       headers: jsonHeaders(ownerCookie),
       method: 'PATCH',
@@ -87,16 +99,14 @@ describe('llm 路由', () => {
     const data = expectOkData(body)
     LlmUseCaseConfigResponseSchema.parse(data)
     expect(data.config).toMatchObject({
-      apiFormat: 'responses',
-      baseUrl: 'https://api.example.com',
       enabled: true,
       maxOutputTokens: 1024,
       model: 'gpt-test',
-      provider: 'openai',
+      providerId: 'llm_provider_default',
       temperature: 0.7,
-      timeoutMs: 30000,
       useCase: 'content.post.meta',
     })
+    expect(data.config.provider).toMatchObject({ id: 'llm_provider_default' })
   })
 
   it('非法 use case 返回 400', async () => {
@@ -114,7 +124,7 @@ describe('llm 路由', () => {
 
   it('非法参数返回 400', async () => {
     const response = await momoApp.request('/rpc/llm/use-cases/content.post.meta', {
-      body: JSON.stringify({ timeoutMs: -1 }),
+      body: JSON.stringify({ maxOutputTokens: -1 }),
       headers: jsonHeaders(ownerCookie),
       method: 'PATCH',
     })

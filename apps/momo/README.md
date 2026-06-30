@@ -94,10 +94,26 @@ pnpm seed:owner
   创建文章草稿。
 - `POST /rpc/content/posts/meta-suggestion`
   生成文章 slug、摘要或标题建议，不保存文章。
+- `GET /rpc/llm/providers`
+  返回 LLM Provider 配置列表，不返回 API Key 明文。
+- `POST /rpc/llm/providers`
+  新建 OpenAI-compatible Provider。
+- `PATCH /rpc/llm/providers/:providerId`
+  更新 Provider 名称、地址、模型、超时时间、启用状态或 API Key。
+- `DELETE /rpc/llm/providers/:providerId/api-key`
+  清空未启用 Provider 的 API Key。
+- `POST /rpc/llm/providers/:providerId/test`
+  用 Provider 默认模型发起测试调用，并写入调用日志。
 - `GET /rpc/llm/use-cases`
   返回 LLM use case 配置列表。
 - `PATCH /rpc/llm/use-cases/:useCase`
   更新单个 LLM use case 配置。
+- `GET /rpc/llm/call-logs`
+  返回 LLM 调用日志列表。
+- `GET /rpc/llm/call-logs/:logId`
+  返回单条 LLM 调用日志。
+- `DELETE /rpc/llm/call-logs/expired`
+  删除已过期的 LLM 调用日志。
 - `GET /rpc/content/posts/:id`
   返回后台文章详情。
 - `PATCH /rpc/content/posts/:id/draft`
@@ -156,10 +172,8 @@ pnpm seed:owner
   默认 `memory`。设成 `redis` 时，需要配置 `CACHE_URL`。
 - `SEARCH_PROVIDER`
   默认 `none`。设成 `meilisearch` 时，需要配置 `MEILI_HOST` 和 `MEILI_API_KEY`。
-- `LLM_PROVIDER`
-  默认 `none`。设成 `openai` 时，需要配置 `OPENAI_API_KEY`。
-- `OPENAI_API_FORMAT`
-  默认 `chat_completions`。接 OpenAI Responses API 时设成 `responses`。
+- `LLM_SECRET_KEY`
+  32 字节 base64 字符串，只用来加密数据库里的 LLM Provider API Key。
 - `STORAGE_PROVIDER`
   默认 `local`。设成 `cos` 时，需要配置腾讯云 COS 变量。
 
@@ -187,7 +201,7 @@ const response = await app.request('/health')
 
 - 缓存代码放在 `src/infra/cache`。本地 Redis 协议缓存使用 Valkey，地址是 `redis://localhost:56379`。
 - 搜索代码放在 `src/infra/search`。当前还没有业务模块调用搜索驱动。
-- LLM provider 调用代码放在 `src/infra/llm`。LLM 业务用例和配置接口放在 `src/modules/llm`。内容模块通过 `POST /rpc/content/posts/meta-suggestion` 生成文章字段建议。
+- LLM provider 调用代码放在 `src/infra/llm`。Provider、use case 和调用日志接口放在 `src/modules/llm`。内容模块通过 `POST /rpc/content/posts/meta-suggestion` 生成文章字段建议。
 - 文件存储代码放在 `src/infra/storage`。内容模块通过 `POST /rpc/content/assets/images` 保存图片素材。验证当前存储配置时，运行 `pnpm storage:test`。
 
 更多说明看：

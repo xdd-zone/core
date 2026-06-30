@@ -1,26 +1,36 @@
 import type {
+  CreateLlmProviderRequest,
   GeneratePostMetaRequest,
   GeneratePostMetaResponse,
+  LlmCallLogListQuery,
+  LlmCallLogListResponse,
+  LlmCallLogResponse,
+  LlmProviderListResponse,
+  LlmProviderResponse,
   LlmUseCase,
   LlmUseCaseConfig,
   LlmUseCaseConfigListResponse,
   LlmUseCaseConfigResponse,
+  TestLlmProviderResponse,
+  UpdateLlmProviderRequest,
   UpdateLlmUseCaseConfigRequest,
 } from '@xdd-zone/contracts'
 import type { MomoRuntime } from '#momo/bootstrap'
-import type { LlmDriver } from '#momo/infra/llm'
+import type { GenerateStructuredJsonResponse, LlmDriver } from '#momo/infra/llm'
 import type { LlmConfigRepository } from '../repositories/llm-config.repository'
-import type { ResolvedLlmUseCaseConfig } from '../types/llm.types'
+import type { ResolvedLlmProviderConfig, ResolvedLlmUseCaseConfig } from '../types/llm.types'
 import { BizCode, LLM_USE_CASE_VALUES } from '@xdd-zone/contracts'
 import { z } from 'zod'
-import { OpenAILlm } from '#momo/infra/llm'
+import { createApiKeyHint, decryptLlmSecret, encryptLlmSecret, OpenAILlm } from '#momo/infra/llm'
 import { AppError } from '#momo/shared/app-error'
 
-import { toLlmUseCaseConfig } from '../llm.presenter'
+import { toLlmCallLog, toLlmProvider, toLlmUseCaseConfig } from '../llm.presenter'
 import { createDefaultLlmUseCaseConfig } from '../types/llm.types'
 
 const POST_META_SOURCE_LIMIT = 4000
 const DEFAULT_USE_CASE: LlmUseCase = 'content.post.meta'
+const ERROR_MESSAGE_LIMIT = 500
+const LOG_TTL_DAYS = 30
 
 const postMetaOutputSchema = z.object({
   excerpt: z.string().optional(),
@@ -39,26 +49,123 @@ const postMetaJsonSchema = {
   type: 'object',
 }
 
-type LlmDriverFactory = (config: ResolvedLlmUseCaseConfig) => LlmDriver
+type LlmDriverFactory = (config: ResolvedLlmProviderConfig, apiKey: string, model: string) => LlmDriver
 
 export function createLlmService(
   runtime: MomoRuntime,
   repository?: LlmConfigRepository,
   driverFactory?: LlmDriverFactory,
 ) {
+  async function listProviders(): Promise<LlmProviderListResponse> {
+    ensureRepository()
+    const providers = await repository!.listProviders()
+
+    return { providers: providers.map(toLlmProvider) }
+  }
+
+  async function createProvider(input: CreateLlmProviderRequest): Promise<LlmProviderResponse> {
+    ensureRepository()
+    const provider = await repository!.createProvider({
+      ...input,
+      apiKeyCiphertext: input.apiKey ? encryptLlmSecret(input.apiKey, runtime.env.LLM_SECRET_KEY) : null,
+      apiKeyHint: input.apiKey ? createApiKeyHint(input.apiKey) : null,
+    })
+
+    return { provider: toLlmProvider(provider) }
+  }
+
+  async function updateProvider(providerId: string, input: UpdateLlmProviderRequest): Promise<LlmProviderResponse> {
+    ensureRepository()
+    await requireProvider(providerId)
+    const provider = await repository!.updateProvider(providerId, {
+      ...input,
+      apiKeyCiphertext: input.apiKey ? encryptLlmSecret(input.apiKey, runtime.env.LLM_SECRET_KEY) : undefined,
+      apiKeyHint: input.apiKey ? createApiKeyHint(input.apiKey) : undefined,
+    })
+
+    if (!provider) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, 'LLM Provider 不存在', 404)
+    }
+
+    return { provider: toLlmProvider(provider) }
+  }
+
+  async function clearProviderApiKey(providerId: string): Promise<LlmProviderResponse> {
+    ensureRepository()
+    const current = await requireProvider(providerId)
+
+    if (current.enabled === 1) {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, '启用中的 LLM Provider 不能清空 API Key', 409)
+    }
+
+    const provider = await repository!.clearProviderApiKey(providerId)
+
+    if (!provider) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, 'LLM Provider 不存在', 404)
+    }
+
+    return { provider: toLlmProvider(provider) }
+  }
+
+  async function testProvider(input: {
+    actorId?: string | null
+    providerId: string
+    requestId?: string | null
+  }): Promise<TestLlmProviderResponse> {
+    ensureRepository()
+    const provider = toResolvedProvider(await requireProvider(input.providerId))
+    const startedAt = new Date()
+
+    try {
+      const driver = createDriverForProvider(provider, provider.defaultModel)
+      const result = await driver.generateStructuredJson({
+        maxOutputTokens: 32,
+        responseFormat: {
+          name: 'provider_test',
+          schema: { additionalProperties: false, properties: { ok: { type: 'boolean' } }, required: ['ok'], type: 'object' },
+        },
+        systemPrompt: '只返回 JSON。',
+        temperature: 0,
+        userPrompt: JSON.stringify({ ok: true }),
+      })
+      const log = await writeCallLog({
+        actorId: input.actorId,
+        model: provider.defaultModel,
+        operation: 'provider.test',
+        provider,
+        requestId: input.requestId,
+        result,
+        startedAt,
+        status: 'success',
+      })
+
+      return { logId: log.id, status: 'success', usage: result.usage }
+    } catch (error) {
+      const log = await writeCallLog({
+        actorId: input.actorId,
+        error,
+        model: provider.defaultModel,
+        operation: 'provider.test',
+        provider,
+        requestId: input.requestId,
+        startedAt,
+        status: 'error',
+      })
+      throw toAppError(error, log.id)
+    }
+  }
+
   async function listUseCaseConfigs(): Promise<LlmUseCaseConfigListResponse> {
     const records = repository ? await repository.listConfigs() : []
-    const byUseCase = new Map(records.map((record) => [record.useCase, record]))
+    const byUseCase = new Map(records.map((row) => [row.config.useCase, row]))
 
     return {
-      configs: LLM_USE_CASE_VALUES.map((useCase) => {
-        const record = byUseCase.get(useCase)
-
-        if (record) {
-          return toLlmUseCaseConfig(record, runtime)
+      configs: LLM_USE_CASE_VALUES.map((useCase) => byUseCase.get(useCase)).map((row, index) => {
+        if (row) {
+          return toLlmUseCaseConfig(row)
         }
 
-        return toDefaultUseCaseConfig(useCase)
+        return toDefaultUseCaseConfig(LLM_USE_CASE_VALUES[index]!)
       }),
     }
   }
@@ -67,136 +174,310 @@ export function createLlmService(
     useCase: LlmUseCase,
     input: UpdateLlmUseCaseConfigRequest,
   ): Promise<LlmUseCaseConfigResponse> {
-    if (!repository) {
-      throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM 配置仓库未启用', 409)
+    ensureRepository()
+    const current = await resolveUseCaseConfig(useCase)
+
+    if (input.providerId) {
+      await requireProvider(input.providerId)
     }
 
-    const current = await resolveUseCaseConfig(useCase)
-    const next: ResolvedLlmUseCaseConfig = {
-      ...current,
-      apiFormat: input.apiFormat ?? current.apiFormat,
-      baseUrl: input.baseUrl === undefined ? current.baseUrl : (input.baseUrl ?? undefined),
+    const record = await repository!.upsertConfig({
       enabled: input.enabled ?? current.enabled,
       maxOutputTokens:
-        input.maxOutputTokens === undefined ? current.maxOutputTokens : (input.maxOutputTokens ?? undefined),
+        input.maxOutputTokens === undefined ? (current.maxOutputTokens ?? null) : input.maxOutputTokens,
       model: input.model?.trim() ?? current.model,
-      provider: input.provider ?? current.provider,
-      temperature: input.temperature === undefined ? current.temperature : (input.temperature ?? undefined),
-      timeoutMs: input.timeoutMs ?? current.timeoutMs,
-    }
-
-    const record = await repository.upsertConfig({
-      apiFormat: next.apiFormat,
-      baseUrl: next.baseUrl ?? null,
-      enabled: next.enabled,
-      maxOutputTokens: next.maxOutputTokens ?? null,
-      model: next.model,
-      provider: next.provider,
-      temperature: next.temperature ?? null,
-      timeoutMs: next.timeoutMs,
+      providerId: input.providerId === undefined ? (current.providerId ?? null) : input.providerId,
+      temperature: input.temperature === undefined ? (current.temperature ?? null) : input.temperature,
       useCase,
     })
+    const row = await repository!.findConfigByUseCase(record.useCase)
 
     return {
-      config: toLlmUseCaseConfig(record, runtime),
+      config: toLlmUseCaseConfig(row!),
     }
   }
 
   async function generatePostMetaSuggestion(input: GeneratePostMetaRequest): Promise<GeneratePostMetaResponse> {
     const config = await resolveUseCaseConfig(DEFAULT_USE_CASE)
-    const driver = driverFactory ? driverFactory(config) : createDriverForUseCase(config)
-    const result = await driver.generateStructuredJson({
-      maxOutputTokens: config.maxOutputTokens,
-      responseFormat: {
-        name: 'post_meta_suggestion',
-        schema: postMetaJsonSchema,
-      },
-      systemPrompt: getPostMetaSystemPrompt(),
-      temperature: config.temperature,
-      userPrompt: getPostMetaUserPrompt(input),
-    })
+    const provider = requireUsableProvider(config)
+    const startedAt = new Date()
 
-    const parsed = postMetaOutputSchema.safeParse(result.data)
-    if (!parsed.success) {
-      throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM 返回的文章字段建议格式不正确', 409, {
-        issues: parsed.error.issues,
+    try {
+      const driver = createDriverForProvider(provider, config.model)
+      const result = await driver.generateStructuredJson({
+        maxOutputTokens: config.maxOutputTokens,
+        responseFormat: {
+          name: 'post_meta_suggestion',
+          schema: postMetaJsonSchema,
+        },
+        systemPrompt: getPostMetaSystemPrompt(),
+        temperature: config.temperature,
+        userPrompt: getPostMetaUserPrompt(input),
       })
+
+      const parsed = postMetaOutputSchema.safeParse(result.data)
+      if (!parsed.success) {
+        throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM 返回的文章字段建议格式不正确', 409, {
+          issues: parsed.error.issues,
+        })
+      }
+
+      await writeCallLog({
+        model: config.model,
+        operation: 'content.post.meta',
+        provider,
+        result,
+        startedAt,
+        status: 'success',
+        useCase: DEFAULT_USE_CASE,
+      })
+
+      return {
+        suggestion: parsed.data,
+        usage: result.usage,
+      }
+    } catch (error) {
+      await writeCallLog({
+        error,
+        model: config.model,
+        operation: 'content.post.meta',
+        provider,
+        startedAt,
+        status: 'error',
+        useCase: DEFAULT_USE_CASE,
+      })
+      throw error
     }
+  }
+
+  async function listCallLogs(input: LlmCallLogListQuery): Promise<LlmCallLogListResponse> {
+    ensureRepository()
+    const result = await repository!.listCallLogs(input)
 
     return {
-      suggestion: parsed.data,
-      usage: result.usage,
+      logs: result.logs.map(toLlmCallLog),
+      page: input.page,
+      pageSize: input.pageSize,
+      total: result.total,
     }
+  }
+
+  async function getCallLog(logId: string): Promise<LlmCallLogResponse> {
+    ensureRepository()
+    const row = await repository!.findCallLogById(logId)
+
+    if (!row) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, 'LLM 调用日志不存在', 404)
+    }
+
+    return { log: toLlmCallLog(row) }
+  }
+
+  async function deleteExpiredCallLogs() {
+    ensureRepository()
+    const deleted = await repository!.deleteExpiredCallLogs()
+
+    return { deleted }
   }
 
   return {
+    clearProviderApiKey,
+    createProvider,
+    deleteExpiredCallLogs,
     generatePostMetaSuggestion,
+    getCallLog,
+    listCallLogs,
+    listProviders,
     listUseCaseConfigs,
+    testProvider,
+    updateProvider,
     updateUseCaseConfig,
   }
 
-  async function resolveUseCaseConfig(useCase: LlmUseCase): Promise<ResolvedLlmUseCaseConfig> {
-    const record = repository ? await repository.findConfigByUseCase(useCase) : null
+  function ensureRepository(): void {
+    if (!repository) {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM 配置仓库未启用', 409)
+    }
+  }
 
-    if (!record) {
-      return createDefaultLlmUseCaseConfig(runtime.env, useCase)
+  async function requireProvider(providerId: string) {
+    ensureRepository()
+    const provider = await repository!.findProviderById(providerId)
+
+    if (!provider) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, 'LLM Provider 不存在', 404)
+    }
+
+    return provider
+  }
+
+  async function resolveUseCaseConfig(useCase: LlmUseCase): Promise<ResolvedLlmUseCaseConfig> {
+    const row = repository ? await repository.findConfigByUseCase(useCase) : null
+
+    if (!row) {
+      return createDefaultLlmUseCaseConfig(useCase)
     }
 
     return {
-      apiFormat: record.apiFormat,
-      baseUrl: record.baseUrl ?? undefined,
-      enabled: record.enabled === 1,
-      maxOutputTokens: record.maxOutputTokens ?? undefined,
-      model: record.model,
-      provider: record.provider,
-      temperature: record.temperature === null ? undefined : Number(record.temperature),
-      timeoutMs: record.timeoutMs,
+      enabled: row.config.enabled === 1,
+      maxOutputTokens: row.config.maxOutputTokens ?? undefined,
+      model: row.config.model,
+      provider: row.provider ? toResolvedProvider(row.provider) : null,
+      providerId: row.config.providerId ?? undefined,
+      temperature: row.config.temperature === null ? undefined : Number(row.config.temperature),
       useCase,
     }
   }
 
-  function createDriverForUseCase(config: ResolvedLlmUseCaseConfig): LlmDriver {
-    if (!config.enabled || config.provider === 'none') {
+  function requireUsableProvider(config: ResolvedLlmUseCaseConfig): ResolvedLlmProviderConfig {
+    if (!config.enabled) {
       throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM 用例未启用', 409)
     }
 
-    if (config.provider === 'openai') {
-      if (!runtime.env.OPENAI_API_KEY) {
-        throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM_PROVIDER=openai 时，OPENAI_API_KEY 必须配置', 409)
-      }
-
-      return new OpenAILlm({
-        apiKey: runtime.env.OPENAI_API_KEY,
-        apiFormat: config.apiFormat,
-        baseURL: config.baseUrl,
-        model: config.model,
-        timeout: config.timeoutMs,
-      })
+    if (!config.providerId || !config.provider) {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM 用例未绑定 Provider', 409)
     }
 
-    return runtime.llm
+    if (!config.provider.enabled) {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM Provider 未启用', 409)
+    }
+
+    if (!config.provider.apiKeyCiphertext) {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM Provider 未配置 API Key', 409)
+    }
+
+    return config.provider
+  }
+
+  function createDriverForProvider(provider: ResolvedLlmProviderConfig, model: string): LlmDriver {
+    if (!provider.enabled) {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM Provider 未启用', 409)
+    }
+
+    if (!provider.apiKeyCiphertext) {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, 'LLM Provider 未配置 API Key', 409)
+    }
+
+    const apiKey = decryptLlmSecret(provider.apiKeyCiphertext, runtime.env.LLM_SECRET_KEY)
+
+    if (driverFactory) {
+      return driverFactory(provider, apiKey, model)
+    }
+
+    return new OpenAILlm({
+      apiKey,
+      apiFormat: provider.apiFormat,
+      baseURL: provider.baseUrl,
+      model,
+      timeout: provider.timeoutMs,
+    })
+  }
+
+  function toResolvedProvider(provider: Awaited<ReturnType<LlmConfigRepository['findProviderById']>>): ResolvedLlmProviderConfig {
+    if (!provider) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, 'LLM Provider 不存在', 404)
+    }
+
+    return {
+      apiFormat: provider.apiFormat,
+      apiKeyCiphertext: provider.apiKeyCiphertext,
+      baseUrl: provider.baseUrl,
+      defaultModel: provider.defaultModel,
+      enabled: provider.enabled === 1,
+      id: provider.id,
+      name: provider.name,
+      providerType: provider.providerType,
+      timeoutMs: provider.timeoutMs,
+    }
+  }
+
+  async function writeCallLog(input: {
+    actorId?: string | null
+    error?: unknown
+    model: string
+    operation: 'provider.test' | 'content.post.meta'
+    provider: ResolvedLlmProviderConfig
+    requestId?: string | null
+    result?: GenerateStructuredJsonResponse
+    startedAt: Date
+    status: 'success' | 'error'
+    useCase?: LlmUseCase | null
+  }) {
+    ensureRepository()
+    const endedAt = new Date()
+    const error = input.error ? normalizeLlmError(input.error) : null
+
+    return repository!.createCallLog({
+      actorId: input.actorId,
+      durationMs: endedAt.getTime() - input.startedAt.getTime(),
+      endedAt,
+      errorCode: error?.errorCode,
+      errorDetails: error?.errorDetails,
+      errorMessage: error?.errorMessage,
+      errorStatus: error?.errorStatus,
+      errorType: error?.errorType,
+      expiresAt: new Date(endedAt.getTime() + LOG_TTL_DAYS * 24 * 60 * 60 * 1000),
+      inputTokens: input.result?.usage?.inputTokens,
+      model: input.model,
+      operation: input.operation,
+      outputTokens: input.result?.usage?.outputTokens,
+      providerApiFormat: input.provider.apiFormat,
+      providerBaseUrl: input.provider.baseUrl,
+      providerId: input.provider.id,
+      providerName: input.provider.name,
+      providerType: input.provider.providerType,
+      requestId: input.requestId,
+      startedAt: input.startedAt,
+      status: input.status,
+      totalTokens: input.result?.usage?.totalTokens,
+      useCase: input.useCase,
+    })
   }
 
   function toDefaultUseCaseConfig(useCase: LlmUseCase): LlmUseCaseConfig {
-    const config = createDefaultLlmUseCaseConfig(runtime.env, useCase)
+    const config = createDefaultLlmUseCaseConfig(useCase)
     const now = new Date(0).toISOString()
 
     return {
-      apiFormat: config.apiFormat,
-      baseUrl: config.baseUrl ?? null,
       createdAt: now,
       enabled: config.enabled,
-      hasApiKey: Boolean(runtime.env.OPENAI_API_KEY),
       id: `default_${useCase}`,
       maxOutputTokens: config.maxOutputTokens ?? null,
       model: config.model,
-      provider: config.provider,
+      provider: null,
+      providerId: null,
       temperature: config.temperature ?? null,
-      timeoutMs: config.timeoutMs,
       updatedAt: now,
       useCase,
     }
   }
+}
+
+function normalizeLlmError(error: unknown) {
+  const maybeError = error as {
+    code?: unknown
+    message?: unknown
+    name?: unknown
+    status?: unknown
+    type?: unknown
+  }
+
+  return {
+    errorCode: typeof maybeError.code === 'string' ? maybeError.code : null,
+    errorDetails: null,
+    errorMessage: String(maybeError.message ?? 'LLM 调用失败').slice(0, ERROR_MESSAGE_LIMIT),
+    errorStatus: typeof maybeError.status === 'number' ? maybeError.status : null,
+    errorType: typeof maybeError.type === 'string' ? maybeError.type : String(maybeError.name ?? 'Error'),
+  }
+}
+
+function toAppError(error: unknown, logId: string): AppError {
+  if (error instanceof AppError) {
+    return error
+  }
+
+  const normalized = normalizeLlmError(error)
+  return new AppError(BizCode.BIZ_RULE_VIOLATION, normalized.errorMessage, 409, { logId })
 }
 
 export function getPostMetaSystemPrompt(): string {

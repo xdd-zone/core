@@ -49,8 +49,16 @@ apps/momo/src/modules/content/public-content.route.ts
 | `GET` | `/rpc/fifa/auth/me` | 当前 fifa 用户 |
 | `GET` | `/rpc/bobo/auth/me` | 当前 bobo 用户，未登录时 `user` 为 `null` |
 | `GET`/`POST` | `/api/auth/*` | `better-auth` 登录、登出、OAuth callback 和 session cookie |
+| `GET` | `/rpc/llm/providers` | LLM Provider 配置列表，不返回 API Key 明文 |
+| `POST` | `/rpc/llm/providers` | 新建 OpenAI-compatible Provider |
+| `PATCH` | `/rpc/llm/providers/:providerId` | 更新 Provider 配置或 API Key |
+| `DELETE` | `/rpc/llm/providers/:providerId/api-key` | 清空未启用 Provider 的 API Key |
+| `POST` | `/rpc/llm/providers/:providerId/test` | 测试 Provider 并写入调用日志 |
 | `GET` | `/rpc/llm/use-cases` | LLM use case 配置列表 |
 | `PATCH` | `/rpc/llm/use-cases/:useCase` | 更新单个 LLM use case 配置 |
+| `GET` | `/rpc/llm/call-logs` | LLM 调用日志列表 |
+| `GET` | `/rpc/llm/call-logs/:logId` | 单条 LLM 调用日志 |
+| `DELETE` | `/rpc/llm/call-logs/expired` | 删除已过期的 LLM 调用日志 |
 | `GET` | `/rpc/content/posts` | 后台文章列表 |
 | `POST` | `/rpc/content/posts` | 创建文章草稿 |
 | `POST` | `/rpc/content/posts/meta-suggestion` | 生成文章 slug、摘要或标题建议，不保存文章 |
@@ -145,7 +153,7 @@ Momo 自己写的接口返回统一结构。
 - `/rpc/*` 的非 GET 请求最大 `1 MiB`。
 - `/api/auth/*` 的非 GET 请求最大 `64 KiB`。
 
-请求处理超时时，Momo 自己写的接口返回 `504 SYSTEM.UPSTREAM_TIMEOUT`。当前 `/rpc/*` 超时时间是 `5s`，`/api/auth/*` 超时时间是 `10s`。
+请求处理超时时，Momo 自己写的接口返回 `504 SYSTEM.UPSTREAM_TIMEOUT`。当前普通 `/rpc/*` 超时时间是 `5s`，`/rpc/content/posts/meta-suggestion` 是 `60s`，`/api/auth/*` 是 `10s`。
 
 ## 响应示例
 

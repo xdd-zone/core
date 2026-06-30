@@ -1,6 +1,25 @@
 import { describe, expect, it } from 'vitest'
 import { getMomoEnv } from '#momo/shared/env'
 
+const LLM_SECRET_KEY = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
+
+function baseEnv(overrides: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+  return {
+    APP_ENV: 'development',
+    BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    BETTER_AUTH_URL: 'http://localhost:7788',
+    CORS_ORIGINS: 'http://localhost:2333',
+    DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
+    GITHUB_CLIENT_ID: 'github-client-id',
+    GITHUB_CLIENT_SECRET: 'github-client-secret',
+    GOOGLE_CLIENT_ID: 'google-client-id',
+    GOOGLE_CLIENT_SECRET: 'google-client-secret',
+    LLM_SECRET_KEY,
+    PORT: '7788',
+    ...overrides,
+  }
+}
+
 describe('momo 环境变量', () => {
   it('required 环境变量缺少时抛错', () => {
     expect(() => getMomoEnv({ APP_ENV: 'development' })).toThrow()
@@ -8,18 +27,14 @@ describe('momo 环境变量', () => {
 
   it('comma 分隔的 CORS 来源会被解析', () => {
     expect(
-      getMomoEnv({
-        APP_ENV: 'production',
-        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        BETTER_AUTH_URL: 'https://api.xdd.zone',
-        CORS_ORIGINS: 'https://fifa.xdd.zone, https://bobo.xdd.zone',
-        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
-        GITHUB_CLIENT_ID: 'github-client-id',
-        GITHUB_CLIENT_SECRET: 'github-client-secret',
-        GOOGLE_CLIENT_ID: 'google-client-id',
-        GOOGLE_CLIENT_SECRET: 'google-client-secret',
-        PORT: '8080',
-      }),
+      getMomoEnv(
+        baseEnv({
+          APP_ENV: 'production',
+          BETTER_AUTH_URL: 'https://api.xdd.zone',
+          CORS_ORIGINS: 'https://fifa.xdd.zone, https://bobo.xdd.zone',
+          PORT: '8080',
+        }),
+      ),
     ).toEqual({
       APP_ENV: 'production',
       BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
@@ -34,6 +49,7 @@ describe('momo 环境变量', () => {
       GITHUB_CLIENT_SECRET: 'github-client-secret',
       GOOGLE_CLIENT_ID: 'google-client-id',
       GOOGLE_CLIENT_SECRET: 'google-client-secret',
+      LLM_SECRET_KEY,
       MEILI_API_KEY: undefined,
       MEILI_HOST: undefined,
       MEILI_INDEX_PREFIX: 'momo',
@@ -49,31 +65,12 @@ describe('momo 环境变量', () => {
       LOG_SQL: false,
       PORT: 8080,
       SEARCH_PROVIDER: 'none',
-      LLM_PROVIDER: 'none',
-      OPENAI_API_KEY: undefined,
-      OPENAI_API_FORMAT: 'chat_completions',
-      OPENAI_BASE_URL: undefined,
-      OPENAI_MODEL: 'gpt-5-mini',
-      OPENAI_TIMEOUT_MS: 15000,
       STORAGE_PROVIDER: 'local',
     })
   })
 
   it('默认日志配置在缺少日志环境变量时生效', () => {
-    expect(
-      getMomoEnv({
-        APP_ENV: 'development',
-        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        BETTER_AUTH_URL: 'http://localhost:7788',
-        CORS_ORIGINS: 'http://localhost:2333',
-        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
-        GITHUB_CLIENT_ID: 'github-client-id',
-        GITHUB_CLIENT_SECRET: 'github-client-secret',
-        GOOGLE_CLIENT_ID: 'google-client-id',
-        GOOGLE_CLIENT_SECRET: 'google-client-secret',
-        PORT: '7788',
-      }),
-    ).toEqual(
+    expect(getMomoEnv(baseEnv())).toEqual(
       expect.objectContaining({
         LOG_LEVEL: 'info',
         LOG_SQL: false,
@@ -83,20 +80,12 @@ describe('momo 环境变量', () => {
 
   it('日志级别和 SQL 日志开关会被解析', () => {
     expect(
-      getMomoEnv({
-        APP_ENV: 'development',
-        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        BETTER_AUTH_URL: 'http://localhost:7788',
-        CORS_ORIGINS: 'http://localhost:2333',
-        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
-        GITHUB_CLIENT_ID: 'github-client-id',
-        GITHUB_CLIENT_SECRET: 'github-client-secret',
-        GOOGLE_CLIENT_ID: 'google-client-id',
-        GOOGLE_CLIENT_SECRET: 'google-client-secret',
-        LOG_LEVEL: 'debug',
-        LOG_SQL: 'true',
-        PORT: '7788',
-      }),
+      getMomoEnv(
+        baseEnv({
+          LOG_LEVEL: 'debug',
+          LOG_SQL: 'true',
+        }),
+      ),
     ).toEqual(
       expect.objectContaining({
         LOG_LEVEL: 'debug',
@@ -107,22 +96,14 @@ describe('momo 环境变量', () => {
 
   it('缓存配置会把空 URL 当作未设置', () => {
     expect(
-      getMomoEnv({
-        APP_ENV: 'development',
-        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        BETTER_AUTH_URL: 'http://localhost:7788',
-        CACHE_DEFAULT_TTL_SECONDS: '60',
-        CACHE_KEY_PREFIX: 'momo-test',
-        CACHE_PROVIDER: 'memory',
-        CACHE_URL: '',
-        CORS_ORIGINS: 'http://localhost:2333',
-        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
-        GITHUB_CLIENT_ID: 'github-client-id',
-        GITHUB_CLIENT_SECRET: 'github-client-secret',
-        GOOGLE_CLIENT_ID: 'google-client-id',
-        GOOGLE_CLIENT_SECRET: 'google-client-secret',
-        PORT: '7788',
-      }),
+      getMomoEnv(
+        baseEnv({
+          CACHE_DEFAULT_TTL_SECONDS: '60',
+          CACHE_KEY_PREFIX: 'momo-test',
+          CACHE_PROVIDER: 'memory',
+          CACHE_URL: '',
+        }),
+      ),
     ).toEqual(
       expect.objectContaining({
         CACHE_DEFAULT_TTL_SECONDS: 60,
@@ -134,38 +115,11 @@ describe('momo 环境变量', () => {
   })
 
   it('redis 缓存缺少 URL 时抛错', () => {
-    expect(() =>
-      getMomoEnv({
-        APP_ENV: 'development',
-        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        BETTER_AUTH_URL: 'http://localhost:7788',
-        CACHE_PROVIDER: 'redis',
-        CORS_ORIGINS: 'http://localhost:2333',
-        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
-        GITHUB_CLIENT_ID: 'github-client-id',
-        GITHUB_CLIENT_SECRET: 'github-client-secret',
-        GOOGLE_CLIENT_ID: 'google-client-id',
-        GOOGLE_CLIENT_SECRET: 'google-client-secret',
-        PORT: '7788',
-      }),
-    ).toThrow()
+    expect(() => getMomoEnv(baseEnv({ CACHE_PROVIDER: 'redis' }))).toThrow()
   })
 
   it('搜索配置默认关闭', () => {
-    expect(
-      getMomoEnv({
-        APP_ENV: 'development',
-        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        BETTER_AUTH_URL: 'http://localhost:7788',
-        CORS_ORIGINS: 'http://localhost:2333',
-        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
-        GITHUB_CLIENT_ID: 'github-client-id',
-        GITHUB_CLIENT_SECRET: 'github-client-secret',
-        GOOGLE_CLIENT_ID: 'google-client-id',
-        GOOGLE_CLIENT_SECRET: 'google-client-secret',
-        PORT: '7788',
-      }),
-    ).toEqual(
+    expect(getMomoEnv(baseEnv())).toEqual(
       expect.objectContaining({
         MEILI_API_KEY: undefined,
         MEILI_HOST: undefined,
@@ -177,20 +131,12 @@ describe('momo 环境变量', () => {
 
   it('meilisearch 搜索配置会把空可选值当作未设置', () => {
     expect(
-      getMomoEnv({
-        APP_ENV: 'development',
-        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        BETTER_AUTH_URL: 'http://localhost:7788',
-        CORS_ORIGINS: 'http://localhost:2333',
-        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
-        GITHUB_CLIENT_ID: 'github-client-id',
-        GITHUB_CLIENT_SECRET: 'github-client-secret',
-        GOOGLE_CLIENT_ID: 'google-client-id',
-        GOOGLE_CLIENT_SECRET: 'google-client-secret',
-        MEILI_API_KEY: '',
-        MEILI_HOST: '',
-        PORT: '7788',
-      }),
+      getMomoEnv(
+        baseEnv({
+          MEILI_API_KEY: '',
+          MEILI_HOST: '',
+        }),
+      ),
     ).toEqual(
       expect.objectContaining({
         MEILI_API_KEY: undefined,
@@ -202,78 +148,40 @@ describe('momo 环境变量', () => {
 
   it('meilisearch 搜索缺少 host 时抛错', () => {
     expect(() =>
-      getMomoEnv({
-        APP_ENV: 'development',
-        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        BETTER_AUTH_URL: 'http://localhost:7788',
-        CORS_ORIGINS: 'http://localhost:2333',
-        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
-        GITHUB_CLIENT_ID: 'github-client-id',
-        GITHUB_CLIENT_SECRET: 'github-client-secret',
-        GOOGLE_CLIENT_ID: 'google-client-id',
-        GOOGLE_CLIENT_SECRET: 'google-client-secret',
-        MEILI_API_KEY: 'momo-meilisearch-development-master-key',
-        PORT: '7788',
-        SEARCH_PROVIDER: 'meilisearch',
-      }),
+      getMomoEnv(
+        baseEnv({
+          MEILI_API_KEY: 'momo-meilisearch-development-master-key',
+          SEARCH_PROVIDER: 'meilisearch',
+        }),
+      ),
     ).toThrow()
   })
 
   it('meilisearch 搜索缺少 api key 时抛错', () => {
     expect(() =>
-      getMomoEnv({
-        APP_ENV: 'development',
-        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        BETTER_AUTH_URL: 'http://localhost:7788',
-        CORS_ORIGINS: 'http://localhost:2333',
-        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
-        GITHUB_CLIENT_ID: 'github-client-id',
-        GITHUB_CLIENT_SECRET: 'github-client-secret',
-        GOOGLE_CLIENT_ID: 'google-client-id',
-        GOOGLE_CLIENT_SECRET: 'google-client-secret',
-        MEILI_HOST: 'http://localhost:57700',
-        PORT: '7788',
-        SEARCH_PROVIDER: 'meilisearch',
-      }),
+      getMomoEnv(
+        baseEnv({
+          MEILI_HOST: 'http://localhost:57700',
+          SEARCH_PROVIDER: 'meilisearch',
+        }),
+      ),
     ).toThrow()
   })
 
-  it('openai LLM 缺少 api key 时抛错', () => {
-    expect(() =>
-      getMomoEnv({
-        APP_ENV: 'development',
-        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        BETTER_AUTH_URL: 'http://localhost:7788',
-        CORS_ORIGINS: 'http://localhost:2333',
-        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
-        GITHUB_CLIENT_ID: 'github-client-id',
-        GITHUB_CLIENT_SECRET: 'github-client-secret',
-        GOOGLE_CLIENT_ID: 'google-client-id',
-        GOOGLE_CLIENT_SECRET: 'google-client-secret',
-        LLM_PROVIDER: 'openai',
-        PORT: '7788',
-      }),
-    ).toThrow()
+  it('LLM_SECRET_KEY 不是 32 字节 base64 时抛错', () => {
+    expect(() => getMomoEnv(baseEnv({ LLM_SECRET_KEY: 'bad-key' }))).toThrow()
   })
 
   it('存储配置会把空可选值当作未设置', () => {
     expect(
-      getMomoEnv({
-        APP_ENV: 'development',
-        BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        BETTER_AUTH_URL: 'http://localhost:7788',
-        CORS_ORIGINS: 'http://localhost:2333',
-        COS_PUBLIC_BASE_URL: '',
-        COS_SECRET_ID: '',
-        DATABASE_URL: 'postgres://momo:momo@localhost:55432/momo',
-        GITHUB_CLIENT_ID: 'github-client-id',
-        GITHUB_CLIENT_SECRET: 'github-client-secret',
-        GOOGLE_CLIENT_ID: 'google-client-id',
-        GOOGLE_CLIENT_SECRET: 'google-client-secret',
-        LOCAL_STORAGE_DIR: '',
-        PORT: '7788',
-        STORAGE_PROVIDER: 'cos',
-      }),
+      getMomoEnv(
+        baseEnv({
+          COS_PUBLIC_BASE_URL: '',
+          COS_SECRET_ID: '',
+          LOCAL_STORAGE_DIR: '',
+          STORAGE_PROVIDER: 'cos',
+        }),
+      ),
     ).toEqual(
       expect.objectContaining({
         COS_KEY_PREFIX: 'media',

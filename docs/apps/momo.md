@@ -232,12 +232,7 @@ SEARCH_PROVIDER
 MEILI_HOST
 MEILI_API_KEY
 MEILI_INDEX_PREFIX
-LLM_PROVIDER
-OPENAI_API_KEY
-OPENAI_API_FORMAT
-OPENAI_BASE_URL
-OPENAI_MODEL
-OPENAI_TIMEOUT_MS
+LLM_SECRET_KEY
 STORAGE_PROVIDER
 LOCAL_STORAGE_DIR
 COS_SECRET_ID
@@ -271,9 +266,13 @@ OWNER_DISPLAY_NAME
 
 `SEARCH_PROVIDER` 控制搜索驱动。默认值是 `none`，不会连接外部搜索服务。设成 `meilisearch` 时，需要配置 `MEILI_HOST` 和 `MEILI_API_KEY`，本地 Meilisearch 地址是 `http://localhost:57700`。`MEILI_INDEX_PREFIX` 默认是 `momo`，驱动会把逻辑索引名 `posts` 拼成真实索引名 `momo_posts`。当前还没有业务模块调用搜索驱动。
 
-`LLM_PROVIDER` 控制 LLM 驱动。默认值是 `none`，不会连接模型服务。设成 `openai` 时，需要配置 `OPENAI_API_KEY`。`OPENAI_API_FORMAT` 默认是 `chat_completions`，会请求 Chat Completions 兼容接口；接 OpenAI Responses API 时设成 `responses`。`OPENAI_BASE_URL` 可选，用来改成兼容 OpenAI 协议的服务地址。`OPENAI_MODEL` 默认是 `gpt-5-mini`，`OPENAI_TIMEOUT_MS` 默认是 `15000` 毫秒。
+`LLM_SECRET_KEY` 是 32 字节 base64 字符串，只用来加密数据库里的 LLM Provider API Key。生成命令：
 
-LLM 配置页不会保存 API Key。`OPENAI_API_KEY` 仍然从环境变量读取。数据库里的 use case 配置只保存 provider、model、接口格式、Base URL、超时时间和模型参数。
+```bash
+openssl rand -base64 32
+```
+
+LLM 运行时只读取数据库配置。Provider 保存名称、OpenAI-compatible 服务地址、接口格式、默认模型、超时时间、启用状态和加密后的 API Key。use case 只保存启用状态、绑定的 Provider、模型和模型参数。接口不会返回 API Key 明文。
 
 `STORAGE_PROVIDER` 控制文件存储驱动。默认值是 `local`，使用 `LOCAL_STORAGE_DIR`，未设置时写到 `storage/media`。设成 `cos` 时，`COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION` 必须配置。`COS_KEY_PREFIX` 默认是 `media`，`COS_SIGNED_URL_EXPIRES` 默认是 `600` 秒。
 
@@ -723,11 +722,11 @@ apps/momo/src/modules/llm
 - `services/llm.service.ts`
   放 LLM 业务用例。当前只有 `content.post.meta`，用于给文章生成 slug、摘要或标题建议。调用模型前会读取 use case 配置。
 - `repositories/llm-config.repository.ts`
-  读写 `llm_use_case_configs`。
+  读写 `llm_providers`、`llm_use_case_configs` 和 `llm_call_logs`。
 - `llm.route.ts`
-  提供 LLM 配置接口。当前接口只允许 `fifa.owner` 调用。
+  提供 Provider、use case 和调用日志接口。当前接口只允许 `fifa.owner` 调用。
 - `llm.presenter.ts`
-  把数据库记录转成 contracts 里的响应类型，并返回当前环境变量里是否有 API Key。
+  把数据库记录转成 contracts 里的响应类型，不返回 API Key 明文。
 - `types/llm.types.ts`
   放 LLM 模块内部类型。
 - `types/config.types.ts`
@@ -745,8 +744,16 @@ apps/momo/src/infra/llm
 
 当前接口：
 
+- `GET /rpc/llm/providers`
+- `POST /rpc/llm/providers`
+- `PATCH /rpc/llm/providers/:providerId`
+- `DELETE /rpc/llm/providers/:providerId/api-key`
+- `POST /rpc/llm/providers/:providerId/test`
 - `GET /rpc/llm/use-cases`
 - `PATCH /rpc/llm/use-cases/:useCase`
+- `GET /rpc/llm/call-logs`
+- `GET /rpc/llm/call-logs/:logId`
+- `DELETE /rpc/llm/call-logs/expired`
 
 LLM 配置表放在：
 
@@ -754,7 +761,7 @@ LLM 配置表放在：
 apps/momo/src/infra/db/schema/llm.schema.ts
 ```
 
-当前只有 `llm_use_case_configs`。这张表保存 `content.post.meta` 的启停状态、provider、model、接口格式、Base URL、超时时间、temperature 和输出 token 上限。这里不保存 API Key。
+当前有 `llm_providers`、`llm_use_case_configs` 和 `llm_call_logs`。Provider 表保存 OpenAI-compatible 服务地址、接口格式、默认模型、超时时间、启用状态和加密后的 API Key。use case 表保存启停状态、绑定的 Provider、model、temperature 和输出 token 上限。调用日志表保存调用状态、耗时、token 数、Provider 快照和截断后的错误信息。
 
 `POST /rpc/content/posts/meta-suggestion` 仍然是内容模块接口，只返回建议值，不写数据库。
 
@@ -938,7 +945,7 @@ apps/momo/src/middleware
 - `body-limit.middleware.ts`
   导出 `registerBodyLimit()`。这里限制 `/rpc/*` 的非 GET 请求最大 `1 MiB`，限制 `/api/auth/*` 的非 GET 请求最大 `64 KiB`。超过限制时返回 `413 COMMON.PAYLOAD_TOO_LARGE`。
 - `timeout.middleware.ts`
-  导出 `registerTimeout()`。这里限制 `/rpc/*` 最长 `5s`，限制 `/api/auth/*` 最长 `10s`。超时时返回 `504 SYSTEM.UPSTREAM_TIMEOUT`。
+  导出 `registerTimeout()`。这里限制普通 `/rpc/*` 最长 `5s`，限制 `/rpc/content/posts/meta-suggestion` 最长 `60s`，限制 `/api/auth/*` 最长 `10s`。超时时返回 `504 SYSTEM.UPSTREAM_TIMEOUT`。
 - `timing.middleware.ts`
   导出 `registerTiming()`。这里只在开发环境写 `Server-Timing` 响应头。
 - `index.ts`

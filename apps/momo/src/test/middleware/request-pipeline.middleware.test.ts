@@ -82,6 +82,39 @@ describe('request pipeline 中间件', () => {
     expect(!body.ok && body.error.message).toBe('请求体过大')
   })
 
+  it('LLM 生成接口使用更长超时时间', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const timeoutApp = new Hono<HonoEnv>()
+
+      registerRequestContext(timeoutApp)
+      registerTimeout(timeoutApp)
+      timeoutApp.post('/rpc/content/posts/meta-suggestion', async () => {
+        await new Promise(() => undefined)
+        return new Response('never')
+      })
+
+      const responsePromise = Promise.resolve(timeoutApp.request('/rpc/content/posts/meta-suggestion', { method: 'POST' }))
+      await vi.advanceTimersByTimeAsync(5000)
+
+      let settled = false
+      void responsePromise.then(() => {
+        settled = true
+      })
+      await Promise.resolve()
+
+      expect(settled).toBe(false)
+
+      await vi.advanceTimersByTimeAsync(55000)
+      const response = await responsePromise
+
+      expect(response.status).toBe(504)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('auth 请求超时时返回 504', async () => {
     vi.useFakeTimers()
 

@@ -7,3 +7,4 @@ export type {
   LlmUsage,
 } from './llm.types'
 export { OpenAILlm } from './openai-llm'
+export { createApiKeyHint, decryptLlmSecret, encryptLlmSecret } from './secret'

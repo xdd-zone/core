@@ -2,14 +2,12 @@ import en from '@fifa/i18n/locales/en'
 import zh from '@fifa/i18n/locales/zh'
 
 const llmKeys = [
-  'apiFormat.chatCompletions',
+  'apiFormat.chat_completions',
   'apiFormat.responses',
   'cancel',
-  'form.apiFormatRequired',
-  'form.modelRequired',
-  'form.providerRequired',
-  'form.timeoutMsRequired',
-  'useCase.contentPostMeta',
+  'providers.form.nameRequired',
+  'providers.form.baseUrlRequired',
+  'useCases.useCase.content.post.meta',
 ] as const
 
 function readPath(source: unknown, path: string): unknown {
