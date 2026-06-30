@@ -38,4 +38,17 @@ describe('rich content renderer', () => {
     expect(html).not.toContain('<script>')
     expect(html).toContain('&lt;section&gt;正文&lt;/section&gt;')
   })
+
+  it('未知 MDX-like 标签按 markdown 文本渲染', () => {
+    const html = renderToStaticMarkup(<RichContentRenderer source={'<UnknownCard title="标题" />'} />)
+
+    expect(html).toContain('&lt;UnknownCard title=&quot;标题&quot; /&gt;')
+  })
+
+  it('callout 的未知 tone 不会阻断渲染', () => {
+    const html = renderToStaticMarkup(<RichContentRenderer source={'<Callout tone="quiet">提示内容</Callout>'} />)
+
+    expect(html).toContain('提示内容')
+    expect(html).toContain('border-primary')
+  })
 })

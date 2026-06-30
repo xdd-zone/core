@@ -123,6 +123,7 @@ apps/bobo/.env.development
 - 复用点明确后，再放到 `apps/bobo/components`。
 - 组件 className 拼接使用 `apps/bobo/lib/utils.ts` 里的 `cn()`。
 - shadcn 组件配置在 `apps/bobo/components.json`。
+- `apps/bobo/components/content/rich-content-renderer/mdx/components` 下的 MDX 组件按一组件一目录维护。组件目录里放 `index.tsx`、`props.ts` 和 `definition.tsx`，复杂组件再按需加 `parts.tsx` 和贴身测试。
 
 ## 测试规则
 
