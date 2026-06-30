@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { PostRenderer } from '@/components/content/post-renderer'
+import { RichContentRenderer } from '@/components/content/rich-content-renderer'
 import { getPreviewPost, PREVIEW_POST_TTL_LABEL, PreviewPostError } from '@/lib/content/preview-post'
 
 interface PreviewPostPageProps {
@@ -68,7 +68,7 @@ export default async function PreviewPostPage({ params, searchParams }: PreviewP
           </dl>
         </header>
         <div className="py-10 md:py-12">
-          <PostRenderer source={preview.revision.source} />
+          <RichContentRenderer source={preview.revision.source} />
         </div>
       </div>
     </main>

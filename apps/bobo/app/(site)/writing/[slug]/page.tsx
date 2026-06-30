@@ -3,7 +3,7 @@ import { BizCode } from '@xdd-zone/contracts'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import { PostRenderer } from '@/components/content/post-renderer'
+import { RichContentRenderer } from '@/components/content/rich-content-renderer'
 import { getPublicPost, PublicContentError } from '@/lib/content/public-content'
 
 interface WritingDetailPageProps {
@@ -104,7 +104,7 @@ export default async function WritingDetailPage({ params }: WritingDetailPagePro
             </div>
           ) : null}
 
-          <PostRenderer source={post.source} />
+          <RichContentRenderer source={post.source} />
         </div>
       </article>
     </main>

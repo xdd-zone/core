@@ -1,12 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-import { PostRenderer } from './post-renderer'
+import { RichContentRenderer } from './rich-content-renderer'
 
-describe('post renderer', () => {
+describe('rich content renderer', () => {
   it('可以渲染 markdown 和受限 MDX 组件', () => {
     const html = renderToStaticMarkup(
-      <PostRenderer
+      <RichContentRenderer
         source={`# 标题
 
 正文里有 [链接](/lab) 和 \`代码\`。
@@ -30,7 +30,9 @@ describe('post renderer', () => {
   })
 
   it('不解析原始 HTML', () => {
-    const html = renderToStaticMarkup(<PostRenderer source={'<section>正文</section>\n\n<script>alert(1)</script>'} />)
+    const html = renderToStaticMarkup(
+      <RichContentRenderer source={'<section>正文</section>\n\n<script>alert(1)</script>'} />,
+    )
 
     expect(html).not.toContain('<section>')
     expect(html).not.toContain('<script>')

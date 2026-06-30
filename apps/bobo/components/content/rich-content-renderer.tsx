@@ -6,11 +6,11 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 
-interface PostRendererProps {
+interface RichContentRendererProps {
   source: string
 }
 
-type PostSegment =
+type ContentSegment =
   | {
       content: string
       kind: 'markdown'
@@ -65,11 +65,11 @@ const markdownOverrides = {
   },
 }
 
-export function PostRenderer({ source }: PostRendererProps) {
-  const segments = parsePostSegments(source)
+export function RichContentRenderer({ source }: RichContentRendererProps) {
+  const segments = parseContentSegments(source)
 
   return (
-    <article className="space-y-5 text-[0.95rem] leading-7 text-fg-subtle md:text-base md:leading-8">
+    <div className="space-y-5 text-[0.95rem] leading-7 text-fg-subtle md:text-base md:leading-8">
       {segments.map((segment, index) => {
         if (segment.kind === 'markdown') {
           return (
@@ -88,12 +88,12 @@ export function PostRenderer({ source }: PostRendererProps) {
 
         return <MdxSegment key={`mdx-${index}`} segment={segment} />
       })}
-    </article>
+    </div>
   )
 }
 
-function parsePostSegments(source: string): PostSegment[] {
-  const segments: PostSegment[] = []
+function parseContentSegments(source: string): ContentSegment[] {
+  const segments: ContentSegment[] = []
   let lastIndex = 0
 
   for (const match of source.matchAll(mdxBlockPattern)) {
@@ -124,7 +124,7 @@ function parsePostSegments(source: string): PostSegment[] {
   return segments
 }
 
-function appendMarkdownSegment(segments: PostSegment[], content: string) {
+function appendMarkdownSegment(segments: ContentSegment[], content: string) {
   if (!content.trim()) {
     return
   }
@@ -146,7 +146,7 @@ function parseProps(rawProps: string) {
   return props
 }
 
-function MdxSegment({ segment }: { segment: Extract<PostSegment, { kind: 'mdx' }> }) {
+function MdxSegment({ segment }: { segment: Extract<ContentSegment, { kind: 'mdx' }> }) {
   if (segment.component === 'Callout') {
     return <Callout tone={segment.props.tone}>{segment.text}</Callout>
   }
