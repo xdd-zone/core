@@ -88,3 +88,63 @@ export function OrderedList({ children }: { children: ReactNode }) {
 export function Divider() {
   return <hr className="my-10 border-border/70" />
 }
+
+export function HeadingFour({ children }: { children: ReactNode }) {
+  return <h4 className="mt-6 text-lg font-semibold tracking-tight text-fg">{children}</h4>
+}
+
+export function HeadingFive({ children }: { children: ReactNode }) {
+  return <h5 className="mt-4 text-base font-semibold tracking-tight text-fg">{children}</h5>
+}
+
+export function HeadingSix({ children }: { children: ReactNode }) {
+  return <h6 className="mt-4 text-sm font-semibold tracking-tight text-fg-subtle">{children}</h6>
+}
+
+export function ListItem({ children, ...props }: ComponentProps<'li'>) {
+  return (
+    <li className="leading-7" {...props}>
+      {children}
+    </li>
+  )
+}
+
+export function Strong({ children }: { children: ReactNode }) {
+  return <strong className="font-semibold text-fg">{children}</strong>
+}
+
+export function Emphasis({ children }: { children: ReactNode }) {
+  return <em className="italic">{children}</em>
+}
+
+export function Strikethrough({ children }: { children: ReactNode }) {
+  return <del className="line-through text-fg-muted">{children}</del>
+}
+
+export function Table({ children }: { children: ReactNode }) {
+  return (
+    <div className="my-6 w-full overflow-x-auto">
+      <table className="w-full border-collapse rounded-lg border border-border/70 text-sm text-left">{children}</table>
+    </div>
+  )
+}
+
+export function TableHead({ children }: { children: ReactNode }) {
+  return <thead className="bg-muted/50 text-fg">{children}</thead>
+}
+
+export function TableBody({ children }: { children: ReactNode }) {
+  return <tbody className="divide-y divide-border/70 bg-surface/30">{children}</tbody>
+}
+
+export function TableRow({ children }: { children: ReactNode }) {
+  return <tr className="transition-colors hover:bg-muted/30">{children}</tr>
+}
+
+export function TableHeader({ children }: { children: ReactNode }) {
+  return <th className="whitespace-nowrap border-b border-border/70 px-4 py-3 font-semibold">{children}</th>
+}
+
+export function TableData({ children }: { children: ReactNode }) {
+  return <td className="whitespace-nowrap px-4 py-3 align-middle text-fg-subtle">{children}</td>
+}
