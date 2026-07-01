@@ -24,14 +24,32 @@ import {
   useUpdateLlmUseCaseConfigMutation,
 } from '@fifa/api/llm'
 import { FifaPageHeader } from '@fifa/components/common'
-import { App, Button, Drawer, Form, Input, InputNumber, Modal, Select, Space, Switch, Table, Tabs, Tag, Tooltip } from 'antd'
+import {
+  App,
+  Button,
+  Drawer,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Select,
+  Space,
+  Switch,
+  Table,
+  Tabs,
+  Tag,
+  Tooltip,
+} from 'antd'
 import { Eye, KeyRound, Pencil, RefreshCw, Trash2, Zap } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+interface DialogState<T> {
+  open: boolean
+  record: T | null
+}
 
-
-type DialogState<T> = { open: boolean; record: T | null }
+type LlmCallLogTablePagination = Parameters<NonNullable<TableProps<LlmCallLog>['onChange']>>[0]
 
 function ProviderSection() {
   const { t } = useTranslation()
@@ -45,7 +63,10 @@ function ProviderSection() {
   const deleteApiKeyMutation = useDeleteLlmProviderApiKeyMutation()
   const testMutation = useTestLlmProviderMutation()
 
-  const providers = useMemo(() => (providersQuery.data?.ok ? providersQuery.data.data.providers : []), [providersQuery.data])
+  const providers = useMemo(
+    () => (providersQuery.data?.ok ? providersQuery.data.data.providers : []),
+    [providersQuery.data],
+  )
 
   const apiFormatOptions = useMemo(
     () => [
@@ -55,37 +76,40 @@ function ProviderSection() {
     [t],
   )
 
-  const providerTypeOptions = useMemo(
-    () => [
-      { label: t('settings.llm.providerType.openai'), value: 'openai' },
-    ],
-    [t],
-  )
+  const providerTypeOptions = useMemo(() => [{ label: t('settings.llm.providerType.openai'), value: 'openai' }], [t])
 
-  const handleOpenCreate = useCallback(() => {
+  useEffect(() => {
+    if (!dialog.open) return
+
     form.resetFields()
+    if (dialog.record) {
+      form.setFieldsValue({
+        apiFormat: dialog.record.apiFormat,
+        baseUrl: dialog.record.baseUrl,
+        defaultModel: dialog.record.defaultModel,
+        enabled: dialog.record.enabled,
+        name: dialog.record.name,
+        providerType: dialog.record.providerType,
+        timeoutMs: dialog.record.timeoutMs,
+      })
+      return
+    }
+
     form.setFieldsValue({
       apiFormat: 'chat_completions',
       enabled: false,
       providerType: 'openai',
       timeoutMs: 15000,
     })
+  }, [dialog.open, dialog.record, form])
+
+  const handleOpenCreate = useCallback(() => {
     setDialog({ open: true, record: null })
-  }, [form])
+  }, [])
 
   const handleOpenEdit = useCallback((record: LlmProvider) => {
-    form.resetFields()
-    form.setFieldsValue({
-      apiFormat: record.apiFormat,
-      baseUrl: record.baseUrl,
-      defaultModel: record.defaultModel,
-      enabled: record.enabled,
-      name: record.name,
-      providerType: record.providerType,
-      timeoutMs: record.timeoutMs,
-    })
     setDialog({ open: true, record })
-  }, [form])
+  }, [])
 
   const handleSave = useCallback(async () => {
     const values = await form.validateFields()
@@ -95,7 +119,10 @@ function ProviderSection() {
     }
 
     if (dialog.record) {
-      const res = await updateMutation.mutateAsync({ payload: payload as UpdateLlmProviderRequest, providerId: dialog.record.id })
+      const res = await updateMutation.mutateAsync({
+        payload: payload as UpdateLlmProviderRequest,
+        providerId: dialog.record.id,
+      })
       if (!res.ok) {
         message.error(res.error.message)
         return
@@ -112,110 +139,135 @@ function ProviderSection() {
     setDialog({ open: false, record: null })
   }, [createMutation, dialog.record, form, message, t, updateMutation])
 
-  const handleDeleteApiKey = useCallback((record: LlmProvider) => {
-    modal.confirm({
-      title: t('settings.llm.providers.deleteApiKey'),
-      content: t('settings.llm.providers.deleteApiKeyConfirm'),
-      okText: t('settings.llm.providers.deleteApiKey'),
-      okButtonProps: { danger: true },
-      cancelText: t('settings.llm.cancel'),
-      onOk: async () => {
-        const res = await deleteApiKeyMutation.mutateAsync(record.id)
-        if (!res.ok) {
-          message.error(res.error.message)
-          return
-        }
-        message.success(t('settings.llm.providers.deleteApiKeySuccess'))
+  const handleDeleteApiKey = useCallback(
+    (record: LlmProvider) => {
+      modal.confirm({
+        title: t('settings.llm.providers.deleteApiKey'),
+        content: t('settings.llm.providers.deleteApiKeyConfirm'),
+        okText: t('settings.llm.providers.deleteApiKey'),
+        okButtonProps: { danger: true },
+        cancelText: t('settings.llm.cancel'),
+        onOk: async () => {
+          const res = await deleteApiKeyMutation.mutateAsync(record.id)
+          if (!res.ok) {
+            message.error(res.error.message)
+            return
+          }
+          message.success(t('settings.llm.providers.deleteApiKeySuccess'))
+        },
+      })
+    },
+    [deleteApiKeyMutation, message, modal, t],
+  )
+
+  const handleTest = useCallback(
+    async (record: LlmProvider) => {
+      const res = await testMutation.mutateAsync(record.id)
+      if (!res.ok) {
+        message.error(res.error.message)
+        return
+      }
+      if (res.data.status === 'success') {
+        message.success(t('settings.llm.providers.testSuccess'))
+      } else {
+        message.error(t('settings.llm.providers.testFailed'))
+      }
+    },
+    [message, t, testMutation],
+  )
+
+  const columns = useMemo<TableProps<LlmProvider>['columns']>(
+    () => [
+      {
+        dataIndex: 'name',
+        title: t('settings.llm.providers.table.name'),
+        render: (name: string, record: LlmProvider) => (
+          <div className="min-w-0">
+            <div className="truncate font-medium text-fg">{name}</div>
+            <div className="mt-1 truncate font-mono text-xs text-fg-muted">{record.id}</div>
+          </div>
+        ),
       },
-    })
-  }, [deleteApiKeyMutation, message, modal, t])
-
-  const handleTest = useCallback(async (record: LlmProvider) => {
-    const res = await testMutation.mutateAsync(record.id)
-    if (!res.ok) {
-      message.error(res.error.message)
-      return
-    }
-    if (res.data.status === 'success') {
-      message.success(t('settings.llm.providers.testSuccess'))
-    } else {
-      message.error(t('settings.llm.providers.testFailed'))
-    }
-  }, [message, t, testMutation])
-
-  const columns = useMemo<TableProps<LlmProvider>['columns']>(() => [
-    {
-      dataIndex: 'name',
-      title: t('settings.llm.providers.table.name'),
-      render: (name: string, record: LlmProvider) => (
-        <div className="min-w-0">
-          <div className="truncate font-medium text-fg">{name}</div>
-          <div className="mt-1 truncate font-mono text-xs text-fg-muted">{record.id}</div>
-        </div>
-      ),
-    },
-    {
-      dataIndex: 'enabled',
-      title: t('settings.llm.providers.table.status'),
-      width: 90,
-      render: (enabled: boolean) => (
-        <Tag color={enabled ? 'success' : 'default'}>
-          {enabled ? t('settings.llm.status.enabled') : t('settings.llm.status.disabled')}
-        </Tag>
-      ),
-    },
-    {
-      dataIndex: 'providerType',
-      title: t('settings.llm.providers.table.providerType'),
-      width: 120,
-      render: (type: LlmProviderType) => <Tag>{t(`settings.llm.providerType.${type}`)}</Tag>,
-    },
-    {
-      dataIndex: 'apiFormat',
-      title: t('settings.llm.providers.table.apiFormat'),
-      width: 140,
-      render: (fmt: LlmApiFormat) => t(`settings.llm.apiFormat.${fmt}`),
-    },
-    {
-      dataIndex: 'defaultModel',
-      title: t('settings.llm.providers.table.defaultModel'),
-      render: (model: string) => <span className="font-mono text-xs">{model}</span>,
-    },
-    {
-      dataIndex: 'hasApiKey',
-      title: t('settings.llm.providers.table.apiKey'),
-      width: 100,
-      render: (hasApiKey: boolean) => (
-        <Tag color={hasApiKey ? 'success' : 'warning'}>
-          {hasApiKey ? t('settings.llm.apiKey.configured') : t('settings.llm.apiKey.missing')}
-        </Tag>
-      ),
-    },
-    {
-      key: 'actions',
-      title: t('settings.llm.providers.table.actions'),
-      width: 180,
-      render: (_, record) => (
-        <Space size="small">
-          <Tooltip title={t('settings.llm.providers.edit')}>
-            <Button icon={<Pencil className="size-4" />} onClick={() => handleOpenEdit(record)} size="small" type="text" />
-          </Tooltip>
-          <Tooltip title={t('settings.llm.providers.test')}>
-            <Button icon={<Zap className="size-4" />} onClick={() => handleTest(record)} size="small" type="text" />
-          </Tooltip>
-          <Tooltip title={t('settings.llm.providers.deleteApiKey')}>
-            <Button danger disabled={!record.hasApiKey} icon={<KeyRound className="size-4" />} onClick={() => handleDeleteApiKey(record)} size="small" type="text" />
-          </Tooltip>
-        </Space>
-      ),
-    },
-  ], [handleDeleteApiKey, handleOpenEdit, handleTest, t])
+      {
+        dataIndex: 'enabled',
+        title: t('settings.llm.providers.table.status'),
+        width: 90,
+        render: (enabled: boolean) => (
+          <Tag color={enabled ? 'success' : 'default'}>
+            {enabled ? t('settings.llm.status.enabled') : t('settings.llm.status.disabled')}
+          </Tag>
+        ),
+      },
+      {
+        dataIndex: 'providerType',
+        title: t('settings.llm.providers.table.providerType'),
+        width: 120,
+        render: (type: LlmProviderType) => <Tag>{t(`settings.llm.providerType.${type}`)}</Tag>,
+      },
+      {
+        dataIndex: 'apiFormat',
+        title: t('settings.llm.providers.table.apiFormat'),
+        width: 140,
+        render: (fmt: LlmApiFormat) => t(`settings.llm.apiFormat.${fmt}`),
+      },
+      {
+        dataIndex: 'defaultModel',
+        title: t('settings.llm.providers.table.defaultModel'),
+        render: (model: string) => <span className="font-mono text-xs">{model}</span>,
+      },
+      {
+        dataIndex: 'hasApiKey',
+        title: t('settings.llm.providers.table.apiKey'),
+        width: 100,
+        render: (hasApiKey: boolean) => (
+          <Tag color={hasApiKey ? 'success' : 'warning'}>
+            {hasApiKey ? t('settings.llm.apiKey.configured') : t('settings.llm.apiKey.missing')}
+          </Tag>
+        ),
+      },
+      {
+        key: 'actions',
+        title: t('settings.llm.providers.table.actions'),
+        width: 180,
+        render: (_, record) => (
+          <Space size="small">
+            <Tooltip title={t('settings.llm.providers.edit')}>
+              <Button
+                icon={<Pencil className="size-4" />}
+                onClick={() => handleOpenEdit(record)}
+                size="small"
+                type="text"
+              />
+            </Tooltip>
+            <Tooltip title={t('settings.llm.providers.test')}>
+              <Button icon={<Zap className="size-4" />} onClick={() => handleTest(record)} size="small" type="text" />
+            </Tooltip>
+            <Tooltip title={t('settings.llm.providers.deleteApiKey')}>
+              <Button
+                danger
+                disabled={!record.hasApiKey}
+                icon={<KeyRound className="size-4" />}
+                onClick={() => handleDeleteApiKey(record)}
+                size="small"
+                type="text"
+              />
+            </Tooltip>
+          </Space>
+        ),
+      },
+    ],
+    [handleDeleteApiKey, handleOpenEdit, handleTest, t],
+  )
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
         <Space>
-          <Button icon={<RefreshCw className="size-4" />} loading={providersQuery.isFetching} onClick={() => providersQuery.refetch()}>
+          <Button
+            icon={<RefreshCw className="size-4" />}
+            loading={providersQuery.isFetching}
+            onClick={() => providersQuery.refetch()}
+          >
             {t('settings.llm.refresh')}
           </Button>
           <Button onClick={handleOpenCreate} type="primary">
@@ -250,29 +302,69 @@ function ProviderSection() {
           <Form.Item label={t('settings.llm.providers.form.enabled')} name="enabled" valuePropName="checked">
             <Switch />
           </Form.Item>
-          <Form.Item label={t('settings.llm.providers.form.name')} name="name" rules={[{ message: t('settings.llm.providers.form.nameRequired'), required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label={t('settings.llm.providers.form.providerType')} name="providerType" rules={[{ message: t('settings.llm.providers.form.providerTypeRequired'), required: true }]}>
-            <Select disabled={!!dialog.record} options={providerTypeOptions} />
-          </Form.Item>
-          <Form.Item label={t('settings.llm.providers.form.apiFormat')} name="apiFormat" rules={[{ message: t('settings.llm.providers.form.apiFormatRequired'), required: true }]}>
-            <Select options={apiFormatOptions} />
-          </Form.Item>
-          <Form.Item label={t('settings.llm.providers.form.baseUrl')} name="baseUrl" rules={[{ message: t('settings.llm.providers.form.baseUrlRequired'), required: true }]}>
+          <Form.Item
+            label={t('settings.llm.providers.form.name')}
+            name="name"
+            rules={[{ message: t('settings.llm.providers.form.nameRequired'), required: true }]}
+          >
             <Input />
           </Form.Item>
           <Form.Item
-            extra={dialog.record?.hasApiKey ? t('settings.llm.providers.form.apiKeyHint') : undefined}
+            label={t('settings.llm.providers.form.providerType')}
+            name="providerType"
+            rules={[{ message: t('settings.llm.providers.form.providerTypeRequired'), required: true }]}
+          >
+            <Select disabled={!!dialog.record} options={providerTypeOptions} />
+          </Form.Item>
+          <Form.Item
+            label={t('settings.llm.providers.form.apiFormat')}
+            name="apiFormat"
+            rules={[{ message: t('settings.llm.providers.form.apiFormatRequired'), required: true }]}
+          >
+            <Select options={apiFormatOptions} />
+          </Form.Item>
+          <Form.Item
+            label={t('settings.llm.providers.form.baseUrl')}
+            name="baseUrl"
+            rules={[{ message: t('settings.llm.providers.form.baseUrlRequired'), required: true }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            dependencies={['enabled']}
+            extra={
+              dialog.record?.hasApiKey
+                ? t('settings.llm.providers.form.apiKeyHint')
+                : t('settings.llm.providers.form.apiKeyRequiredWhenEnabled')
+            }
             label={t('settings.llm.providers.form.apiKey')}
             name="apiKey"
+            rules={[
+              ({ getFieldValue }) => ({
+                validator: (_, value: string | undefined) => {
+                  if (!getFieldValue('enabled') || dialog.record?.hasApiKey || value?.trim()) {
+                    return Promise.resolve()
+                  }
+
+                  return Promise.reject(new Error(t('settings.llm.providers.form.apiKeyRequiredWhenEnabled')))
+                },
+              }),
+            ]}
           >
             <Input.Password />
           </Form.Item>
-          <Form.Item label={t('settings.llm.providers.form.defaultModel')} name="defaultModel" rules={[{ message: t('settings.llm.providers.form.defaultModelRequired'), required: true }]}>
+          <Form.Item
+            label={t('settings.llm.providers.form.defaultModel')}
+            name="defaultModel"
+            rules={[{ message: t('settings.llm.providers.form.defaultModelRequired'), required: true }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item label={t('settings.llm.providers.form.timeoutMs')} name="timeoutMs" rules={[{ message: t('settings.llm.providers.form.timeoutMsRequired'), required: true }]}>
+          <Form.Item
+            label={t('settings.llm.providers.form.timeoutMs')}
+            name="timeoutMs"
+            rules={[{ message: t('settings.llm.providers.form.timeoutMsRequired'), required: true }]}
+          >
             <InputNumber className="w-full" max={120000} min={1000} step={1000} />
           </Form.Item>
         </Form>
@@ -292,26 +384,34 @@ function UseCasesSection() {
   const updateMutation = useUpdateLlmUseCaseConfigMutation()
 
   const configs = useMemo(() => (configsQuery.data?.ok ? configsQuery.data.data.configs : []), [configsQuery.data])
-  const providers = useMemo(() => (providersQuery.data?.ok ? providersQuery.data.data.providers : []), [providersQuery.data])
+  const providers = useMemo(
+    () => (providersQuery.data?.ok ? providersQuery.data.data.providers : []),
+    [providersQuery.data],
+  )
 
   const providerOptions = useMemo(() => {
     return [
       { label: t('settings.llm.useCases.form.providerIdPlaceholder'), value: '' },
-      ...providers.map((p) => ({ label: p.name, value: p.id }))
+      ...providers.map((p) => ({ label: p.name, value: p.id })),
     ]
   }, [providers, t])
 
-  const handleOpenEdit = useCallback((record: LlmUseCaseConfig) => {
+  useEffect(() => {
+    if (!dialog.open || !dialog.record) return
+
     form.resetFields()
     form.setFieldsValue({
-      enabled: record.enabled,
-      maxOutputTokens: record.maxOutputTokens,
-      model: record.model,
-      providerId: record.providerId || '',
-      temperature: record.temperature,
+      enabled: dialog.record.enabled,
+      maxOutputTokens: dialog.record.maxOutputTokens,
+      model: dialog.record.model,
+      providerId: dialog.record.providerId || '',
+      temperature: dialog.record.temperature,
     })
+  }, [dialog.open, dialog.record, form])
+
+  const handleOpenEdit = useCallback((record: LlmUseCaseConfig) => {
     setDialog({ open: true, record })
-  }, [form])
+  }, [])
 
   const handleSave = useCallback(async () => {
     if (!dialog.record) return
@@ -333,63 +433,76 @@ function UseCasesSection() {
     setDialog({ open: false, record: null })
   }, [dialog.record, form, message, t, updateMutation])
 
-  const columns = useMemo<TableProps<LlmUseCaseConfig>['columns']>(() => [
-    {
-      dataIndex: 'useCase',
-      title: t('settings.llm.useCases.table.useCase'),
-      render: (useCase: LlmUseCase) => (
-        <div className="min-w-0">
-          <div className="truncate font-medium text-fg">{t(`settings.llm.useCases.useCase.${useCase}`)}</div>
-          <div className="mt-1 truncate font-mono text-xs text-fg-muted">{useCase}</div>
-        </div>
-      ),
-    },
-    {
-      dataIndex: 'enabled',
-      title: t('settings.llm.useCases.table.status'),
-      width: 90,
-      render: (enabled: boolean) => (
-        <Tag color={enabled ? 'success' : 'default'}>
-          {enabled ? t('settings.llm.status.enabled') : t('settings.llm.status.disabled')}
-        </Tag>
-      ),
-    },
-    {
-      dataIndex: 'provider',
-      title: t('settings.llm.useCases.table.provider'),
-      render: (provider: LlmProvider | null) => provider ? <Tag>{provider.name}</Tag> : <span className="text-fg-muted">-</span>,
-    },
-    {
-      dataIndex: 'model',
-      title: t('settings.llm.useCases.table.model'),
-      render: (model: string) => <span className="font-mono text-xs">{model}</span>,
-    },
-    {
-      dataIndex: 'temperature',
-      title: t('settings.llm.useCases.table.temperature'),
-      width: 120,
-      render: (val: number | null) => val ?? '-',
-    },
-    {
-      dataIndex: 'maxOutputTokens',
-      title: t('settings.llm.useCases.table.maxOutputTokens'),
-      width: 120,
-      render: (val: number | null) => val ?? '-',
-    },
-    {
-      key: 'actions',
-      title: t('settings.llm.useCases.table.actions'),
-      width: 100,
-      render: (_, record) => (
-        <Button icon={<Pencil className="size-4" />} onClick={() => handleOpenEdit(record)} size="small" type="text" />
-      ),
-    },
-  ], [handleOpenEdit, t])
+  const columns = useMemo<TableProps<LlmUseCaseConfig>['columns']>(
+    () => [
+      {
+        dataIndex: 'useCase',
+        title: t('settings.llm.useCases.table.useCase'),
+        render: (useCase: LlmUseCase) => (
+          <div className="min-w-0">
+            <div className="truncate font-medium text-fg">{t(`settings.llm.useCases.useCase.${useCase}`)}</div>
+            <div className="mt-1 truncate font-mono text-xs text-fg-muted">{useCase}</div>
+          </div>
+        ),
+      },
+      {
+        dataIndex: 'enabled',
+        title: t('settings.llm.useCases.table.status'),
+        width: 90,
+        render: (enabled: boolean) => (
+          <Tag color={enabled ? 'success' : 'default'}>
+            {enabled ? t('settings.llm.status.enabled') : t('settings.llm.status.disabled')}
+          </Tag>
+        ),
+      },
+      {
+        dataIndex: 'provider',
+        title: t('settings.llm.useCases.table.provider'),
+        render: (provider: LlmProvider | null) =>
+          provider ? <Tag>{provider.name}</Tag> : <span className="text-fg-muted">-</span>,
+      },
+      {
+        dataIndex: 'model',
+        title: t('settings.llm.useCases.table.model'),
+        render: (model: string) => <span className="font-mono text-xs">{model}</span>,
+      },
+      {
+        dataIndex: 'temperature',
+        title: t('settings.llm.useCases.table.temperature'),
+        width: 120,
+        render: (val: number | null) => val ?? '-',
+      },
+      {
+        dataIndex: 'maxOutputTokens',
+        title: t('settings.llm.useCases.table.maxOutputTokens'),
+        width: 120,
+        render: (val: number | null) => val ?? '-',
+      },
+      {
+        key: 'actions',
+        title: t('settings.llm.useCases.table.actions'),
+        width: 100,
+        render: (_, record) => (
+          <Button
+            icon={<Pencil className="size-4" />}
+            onClick={() => handleOpenEdit(record)}
+            size="small"
+            type="text"
+          />
+        ),
+      },
+    ],
+    [handleOpenEdit, t],
+  )
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button icon={<RefreshCw className="size-4" />} loading={configsQuery.isFetching} onClick={() => configsQuery.refetch()}>
+        <Button
+          icon={<RefreshCw className="size-4" />}
+          loading={configsQuery.isFetching}
+          onClick={() => configsQuery.refetch()}
+        >
           {t('settings.llm.refresh')}
         </Button>
       </div>
@@ -450,7 +563,10 @@ function CallLogsSection() {
 
   const logs = useMemo(() => (logsQuery.data?.ok ? logsQuery.data.data.logs : []), [logsQuery.data])
   const total = useMemo(() => (logsQuery.data?.ok ? logsQuery.data.data.total : 0), [logsQuery.data])
-  const providers = useMemo(() => (providersQuery.data?.ok ? providersQuery.data.data.providers : []), [providersQuery.data])
+  const providers = useMemo(
+    () => (providersQuery.data?.ok ? providersQuery.data.data.providers : []),
+    [providersQuery.data],
+  )
 
   const providerOptions = useMemo(() => {
     return providers.map((p) => ({ label: p.name, value: p.id }))
@@ -461,8 +577,12 @@ function CallLogsSection() {
     [],
   )
 
-  const handleTableChange = useCallback((pagination: any) => {
-    setQuery((prev: LlmCallLogListQuery) => ({ ...prev, page: pagination.current, pageSize: pagination.pageSize }))
+  const handleTableChange = useCallback((pagination: LlmCallLogTablePagination) => {
+    setQuery((prev: LlmCallLogListQuery) => ({
+      ...prev,
+      page: pagination.current ?? prev.page,
+      pageSize: pagination.pageSize ?? prev.pageSize,
+    }))
   }, [])
 
   const handleDeleteExpired = useCallback(() => {
@@ -481,79 +601,127 @@ function CallLogsSection() {
     })
   }, [deleteExpiredMutation, message, modal, t])
 
-  const columns = useMemo<TableProps<LlmCallLog>['columns']>(() => [
-    {
-      dataIndex: 'operation',
-      title: t('settings.llm.callLogs.table.operation'),
-      render: (op: LlmCallOperation, record: LlmCallLog) => (
-        <div className="min-w-0">
-          <div className="truncate font-medium text-fg">{op}</div>
-          {record.useCase && <div className="mt-1 truncate font-mono text-xs text-fg-muted">{record.useCase}</div>}
-        </div>
-      ),
-    },
-    {
-      dataIndex: 'status',
-      title: t('settings.llm.callLogs.table.status'),
-      width: 90,
-      render: (status: LlmCallStatus) => (
-        <Tag color={status === 'success' ? 'success' : 'error'}>{t(`settings.llm.callLogs.status.${status}`)}</Tag>
-      ),
-    },
-    {
-      dataIndex: 'providerName',
-      title: t('settings.llm.callLogs.table.provider'),
-      render: (name: string, record: LlmCallLog) => (
-        <div className="min-w-0">
-          <div className="truncate text-fg">{name}</div>
-          <div className="mt-1 truncate font-mono text-xs text-fg-muted">{record.model}</div>
-        </div>
-      ),
-    },
-    {
-      dataIndex: 'durationMs',
-      title: t('settings.llm.callLogs.table.duration'),
-      width: 100,
-      render: (ms: number | null) => ms ? `${ms}ms` : '-',
-    },
-    {
-      dataIndex: 'totalTokens',
-      title: t('settings.llm.callLogs.table.tokens'),
-      width: 140,
-      render: (_: any, record: LlmCallLog) => (
-        <span className="text-xs">
-          {record.totalTokens ?? '-'}{' / '}{record.inputTokens ?? '-'}{' / '}{record.outputTokens ?? '-'}
-        </span>
-      ),
-    },
-    {
-      dataIndex: 'startedAt',
-      title: t('settings.llm.callLogs.table.startedAt'),
-      width: 180,
-      render: (value: string) => dateTimeFormatter.format(new Date(value)),
-    },
-    {
-      key: 'actions',
-      title: t('settings.llm.callLogs.table.actions'),
-      width: 80,
-      render: (_, record) => (
-        <Button icon={<Eye className="size-4" />} onClick={() => setDetailLog(record)} size="small" type="text" />
-      ),
-    },
-  ], [dateTimeFormatter, t])
+  const columns = useMemo<TableProps<LlmCallLog>['columns']>(
+    () => [
+      {
+        dataIndex: 'operation',
+        title: t('settings.llm.callLogs.table.operation'),
+        render: (op: LlmCallOperation, record: LlmCallLog) => (
+          <div className="min-w-0">
+            <div className="truncate font-medium text-fg">{op}</div>
+            {record.useCase && <div className="mt-1 truncate font-mono text-xs text-fg-muted">{record.useCase}</div>}
+          </div>
+        ),
+      },
+      {
+        dataIndex: 'status',
+        title: t('settings.llm.callLogs.table.status'),
+        width: 90,
+        render: (status: LlmCallStatus) => (
+          <Tag color={status === 'success' ? 'success' : 'error'}>{t(`settings.llm.callLogs.status.${status}`)}</Tag>
+        ),
+      },
+      {
+        dataIndex: 'providerName',
+        title: t('settings.llm.callLogs.table.provider'),
+        render: (name: string, record: LlmCallLog) => (
+          <div className="min-w-0">
+            <div className="truncate text-fg">{name}</div>
+            <div className="mt-1 truncate font-mono text-xs text-fg-muted">{record.model}</div>
+          </div>
+        ),
+      },
+      {
+        dataIndex: 'durationMs',
+        title: t('settings.llm.callLogs.table.duration'),
+        width: 100,
+        render: (ms: number | null) => (ms ? `${ms}ms` : '-'),
+      },
+      {
+        dataIndex: 'totalTokens',
+        title: t('settings.llm.callLogs.table.tokens'),
+        width: 140,
+        render: (_totalTokens: LlmCallLog['totalTokens'], record: LlmCallLog) => (
+          <span className="text-xs">
+            {record.totalTokens ?? '-'}
+            {' / '}
+            {record.inputTokens ?? '-'}
+            {' / '}
+            {record.outputTokens ?? '-'}
+          </span>
+        ),
+      },
+      {
+        dataIndex: 'startedAt',
+        title: t('settings.llm.callLogs.table.startedAt'),
+        width: 180,
+        render: (value: string) => dateTimeFormatter.format(new Date(value)),
+      },
+      {
+        key: 'actions',
+        title: t('settings.llm.callLogs.table.actions'),
+        width: 80,
+        render: (_, record) => (
+          <Button icon={<Eye className="size-4" />} onClick={() => setDetailLog(record)} size="small" type="text" />
+        ),
+      },
+    ],
+    [dateTimeFormatter, t],
+  )
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Space className="flex-wrap" size="small">
-          <Select allowClear className="w-36" onChange={(v) => setQuery((p: LlmCallLogListQuery) => ({ ...p, status: v, page: 1 }))} options={[{ label: t('settings.llm.callLogs.status.success'), value: 'success' }, { label: t('settings.llm.callLogs.status.error'), value: 'error' }]} placeholder={t('settings.llm.callLogs.table.status')} value={query.status} />
-          <Select allowClear className="w-40" onChange={(v) => setQuery((p: LlmCallLogListQuery) => ({ ...p, providerId: v, page: 1 }))} options={providerOptions} placeholder={t('settings.llm.callLogs.table.provider')} value={query.providerId} />
-          <Input allowClear className="w-40" onChange={(e) => setQuery((p: LlmCallLogListQuery) => ({ ...p, model: e.target.value || undefined, page: 1 }))} placeholder={t('settings.llm.callLogs.table.model')} value={query.model} />
-          <Input allowClear className="w-48" onChange={(e) => setQuery((p: LlmCallLogListQuery) => ({ ...p, requestId: e.target.value || undefined, page: 1 }))} placeholder={t('settings.llm.callLogs.table.requestId')} value={query.requestId} />
+          <Select
+            allowClear
+            className="w-36"
+            onChange={(v) => setQuery((p: LlmCallLogListQuery) => ({ ...p, status: v, page: 1 }))}
+            options={[
+              { label: t('settings.llm.callLogs.status.success'), value: 'success' },
+              { label: t('settings.llm.callLogs.status.error'), value: 'error' },
+            ]}
+            placeholder={t('settings.llm.callLogs.table.status')}
+            value={query.status}
+          />
+          <Select
+            allowClear
+            className="w-40"
+            onChange={(v) => setQuery((p: LlmCallLogListQuery) => ({ ...p, providerId: v, page: 1 }))}
+            options={providerOptions}
+            placeholder={t('settings.llm.callLogs.table.provider')}
+            value={query.providerId}
+          />
+          <Input
+            allowClear
+            className="w-40"
+            onChange={(e) =>
+              setQuery((p: LlmCallLogListQuery) => ({ ...p, model: e.target.value || undefined, page: 1 }))
+            }
+            placeholder={t('settings.llm.callLogs.table.model')}
+            value={query.model}
+          />
+          <Input
+            allowClear
+            className="w-48"
+            onChange={(e) =>
+              setQuery((p: LlmCallLogListQuery) => ({ ...p, requestId: e.target.value || undefined, page: 1 }))
+            }
+            placeholder={t('settings.llm.callLogs.table.requestId')}
+            value={query.requestId}
+          />
         </Space>
         <Space>
-          <Button icon={<Trash2 className="size-4" />} onClick={handleDeleteExpired}>{t('settings.llm.callLogs.deleteExpired')}</Button>
-          <Button icon={<RefreshCw className="size-4" />} loading={logsQuery.isFetching} onClick={() => logsQuery.refetch()}>{t('settings.llm.refresh')}</Button>
+          <Button icon={<Trash2 className="size-4" />} onClick={handleDeleteExpired}>
+            {t('settings.llm.callLogs.deleteExpired')}
+          </Button>
+          <Button
+            icon={<RefreshCw className="size-4" />}
+            loading={logsQuery.isFetching}
+            onClick={() => logsQuery.refetch()}
+          >
+            {t('settings.llm.refresh')}
+          </Button>
         </Space>
       </div>
 
@@ -570,7 +738,12 @@ function CallLogsSection() {
         />
       </section>
 
-      <Drawer onClose={() => setDetailLog(null)} open={!!detailLog} title={t('settings.llm.callLogs.detailTitle')} width={600}>
+      <Drawer
+        onClose={() => setDetailLog(null)}
+        open={!!detailLog}
+        size="large"
+        title={t('settings.llm.callLogs.detailTitle')}
+      >
         {detailLog && (
           <div className="space-y-6">
             <section>
@@ -580,11 +753,12 @@ function CallLogsSection() {
             <section>
               <h3 className="mb-3 font-medium text-fg">{t('settings.llm.callLogs.table.provider')}</h3>
               <div className="rounded bg-surface-subtle p-3 text-sm">
-                <div>{detailLog.providerName} ({detailLog.providerType})</div>
+                <div>
+                  {detailLog.providerName} ({detailLog.providerType})
+                </div>
                 <div className="mt-1 text-fg-muted">{detailLog.providerBaseUrl}</div>
                 <div className="mt-2 text-xs">
-                  ID: {detailLog.providerId} &middot;
-                  Exists: {String(detailLog.providerCurrentExists)} &middot;
+                  ID: {detailLog.providerId} &middot; Exists: {String(detailLog.providerCurrentExists)} &middot;
                   Enabled: {String(detailLog.providerCurrentEnabled)}
                 </div>
               </div>
@@ -614,30 +788,30 @@ function CallLogsSection() {
 export function LlmSettings() {
   const { t } = useTranslation()
 
-  const tabs = useMemo(() => [
-    {
-      children: <ProviderSection />,
-      key: 'providers',
-      label: t('settings.llm.tabs.providers'),
-    },
-    {
-      children: <UseCasesSection />,
-      key: 'use-cases',
-      label: t('settings.llm.tabs.useCases'),
-    },
-    {
-      children: <CallLogsSection />,
-      key: 'call-logs',
-      label: t('settings.llm.tabs.callLogs'),
-    },
-  ], [t])
+  const tabs = useMemo(
+    () => [
+      {
+        children: <ProviderSection />,
+        key: 'providers',
+        label: t('settings.llm.tabs.providers'),
+      },
+      {
+        children: <UseCasesSection />,
+        key: 'use-cases',
+        label: t('settings.llm.tabs.useCases'),
+      },
+      {
+        children: <CallLogsSection />,
+        key: 'call-logs',
+        label: t('settings.llm.tabs.callLogs'),
+      },
+    ],
+    [t],
+  )
 
   return (
     <div className="space-y-6">
-      <FifaPageHeader
-        description={t('settings.llm.description')}
-        title={t('settings.llm.title')}
-      />
+      <FifaPageHeader description={t('settings.llm.description')} title={t('settings.llm.title')} />
 
       <Tabs items={tabs} />
     </div>

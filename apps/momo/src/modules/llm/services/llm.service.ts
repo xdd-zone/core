@@ -31,6 +31,7 @@ const POST_META_SOURCE_LIMIT = 4000
 const DEFAULT_USE_CASE: LlmUseCase = 'content.post.meta'
 const ERROR_MESSAGE_LIMIT = 500
 const LOG_TTL_DAYS = 30
+const PROVIDER_API_KEY_REQUIRED_MESSAGE = '启用 LLM Provider 前必须配置 API Key'
 
 const postMetaOutputSchema = z.object({
   excerpt: z.string().optional(),
@@ -65,6 +66,7 @@ export function createLlmService(
 
   async function createProvider(input: CreateLlmProviderRequest): Promise<LlmProviderResponse> {
     ensureRepository()
+    ensureProviderCanBeEnabled(input.enabled, input.apiKey)
     const provider = await repository!.createProvider({
       ...input,
       apiKeyCiphertext: input.apiKey ? encryptLlmSecret(input.apiKey, runtime.env.LLM_SECRET_KEY) : null,
@@ -76,7 +78,8 @@ export function createLlmService(
 
   async function updateProvider(providerId: string, input: UpdateLlmProviderRequest): Promise<LlmProviderResponse> {
     ensureRepository()
-    await requireProvider(providerId)
+    const current = await requireProvider(providerId)
+    ensureProviderCanBeEnabled(input.enabled, input.apiKey ?? current.apiKeyCiphertext)
     const provider = await repository!.updateProvider(providerId, {
       ...input,
       apiKeyCiphertext: input.apiKey ? encryptLlmSecret(input.apiKey, runtime.env.LLM_SECRET_KEY) : undefined,
@@ -122,7 +125,12 @@ export function createLlmService(
         maxOutputTokens: 32,
         responseFormat: {
           name: 'provider_test',
-          schema: { additionalProperties: false, properties: { ok: { type: 'boolean' } }, required: ['ok'], type: 'object' },
+          schema: {
+            additionalProperties: false,
+            properties: { ok: { type: 'boolean' } },
+            required: ['ok'],
+            type: 'object',
+          },
         },
         systemPrompt: '只返回 JSON。',
         temperature: 0,
@@ -183,8 +191,7 @@ export function createLlmService(
 
     const record = await repository!.upsertConfig({
       enabled: input.enabled ?? current.enabled,
-      maxOutputTokens:
-        input.maxOutputTokens === undefined ? (current.maxOutputTokens ?? null) : input.maxOutputTokens,
+      maxOutputTokens: input.maxOutputTokens === undefined ? (current.maxOutputTokens ?? null) : input.maxOutputTokens,
       model: input.model?.trim() ?? current.model,
       providerId: input.providerId === undefined ? (current.providerId ?? null) : input.providerId,
       temperature: input.temperature === undefined ? (current.temperature ?? null) : input.temperature,
@@ -300,6 +307,12 @@ export function createLlmService(
     }
   }
 
+  function ensureProviderCanBeEnabled(enabled: boolean | undefined, apiKey: string | null | undefined): void {
+    if (enabled === true && !apiKey) {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, PROVIDER_API_KEY_REQUIRED_MESSAGE, 409)
+    }
+  }
+
   async function requireProvider(providerId: string) {
     ensureRepository()
     const provider = await repository!.findProviderById(providerId)
@@ -373,7 +386,9 @@ export function createLlmService(
     })
   }
 
-  function toResolvedProvider(provider: Awaited<ReturnType<LlmConfigRepository['findProviderById']>>): ResolvedLlmProviderConfig {
+  function toResolvedProvider(
+    provider: Awaited<ReturnType<LlmConfigRepository['findProviderById']>>,
+  ): ResolvedLlmProviderConfig {
     if (!provider) {
       throw new AppError(BizCode.COMMON_NOT_FOUND, 'LLM Provider 不存在', 404)
     }

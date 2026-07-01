@@ -57,7 +57,7 @@ describe('runtime 创建', () => {
     expect(runtime.llm).toBeInstanceOf(DisabledLlm)
   })
 
-  it('LLM 运行时不从环境变量创建 OpenAI 驱动', () => {
+  it('llm 运行时不从环境变量创建 OpenAI 驱动', () => {
     stubBaseEnv()
 
     const runtime = createRuntime()

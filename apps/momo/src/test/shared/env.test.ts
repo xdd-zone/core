@@ -168,7 +168,7 @@ describe('momo 环境变量', () => {
     ).toThrow()
   })
 
-  it('LLM_SECRET_KEY 不是 32 字节 base64 时抛错', () => {
+  it('llm_secret_key 不是 32 字节 base64 时抛错', () => {
     expect(() => getMomoEnv(baseEnv({ LLM_SECRET_KEY: 'bad-key' }))).toThrow()
   })
 

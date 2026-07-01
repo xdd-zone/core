@@ -274,6 +274,8 @@ openssl rand -base64 32
 
 LLM 运行时只读取数据库配置。Provider 保存名称、OpenAI-compatible 服务地址、接口格式、默认模型、超时时间、启用状态和加密后的 API Key。use case 只保存启用状态、绑定的 Provider、模型和模型参数。接口不会返回 API Key 明文。
 
+旧的 `OPENAI_API_KEY`、`OPENAI_MODEL`、`OPENAI_BASE_URL`、`OPENAI_API_FORMAT` 和 `OPENAI_TIMEOUT_MS` 不再被 Momo 读取。升级后先跑数据库迁移，再进入 Fifa 的 LLM Provider 页面，编辑默认 Provider，重新填写 API Key，保存后再启用。
+
 `STORAGE_PROVIDER` 控制文件存储驱动。默认值是 `local`，使用 `LOCAL_STORAGE_DIR`，未设置时写到 `storage/media`。设成 `cos` 时，`COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION` 必须配置。`COS_KEY_PREFIX` 默认是 `media`，`COS_SIGNED_URL_EXPIRES` 默认是 `600` 秒。
 
 文件存储驱动只保存图片。`save()` 允许 `image/avif`、`image/gif`、`image/jpeg`、`image/png` 和 `image/webp`，单个文件最大 `10 MiB`。`openFile()` 在本地存储时返回 `200` 和文件内容，在 COS 存储时返回 `302` 跳转地址。`stat()` 可以读取文件大小、MIME 和修改时间。

@@ -90,14 +90,19 @@ export function createLlmRoute(runtime: MomoRuntime) {
         return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
       },
     )
-    .get('/rpc/llm/call-logs', requireOwner, zValidator('query', LlmCallLogListQuerySchema, (result) => {
-      if (result.success) return
-      const failure = createValidationFailure(result.error)
-      throw new AppError(failure.code, failure.message, 400, failure.details)
-    }), async (c) => {
-      const result = await service.listCallLogs(c.req.valid('query'))
-      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
-    })
+    .get(
+      '/rpc/llm/call-logs',
+      requireOwner,
+      zValidator('query', LlmCallLogListQuerySchema, (result) => {
+        if (result.success) return
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) => {
+        const result = await service.listCallLogs(c.req.valid('query'))
+        return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
+      },
+    )
     .get('/rpc/llm/call-logs/:logId', requireOwner, async (c) => {
       const result = await service.getCallLog(c.req.param('logId'))
       return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))

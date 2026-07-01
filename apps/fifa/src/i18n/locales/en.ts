@@ -484,6 +484,7 @@ export default {
           apiFormatRequired: 'API format is required',
           apiKey: 'API Key',
           apiKeyHint: 'Leave blank to keep existing key',
+          apiKeyRequiredWhenEnabled: 'API Key is required before enabling the provider.',
           baseUrl: 'Base URL',
           baseUrlRequired: 'Base URL is required',
           defaultModel: 'Default Model',

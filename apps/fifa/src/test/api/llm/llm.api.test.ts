@@ -1,4 +1,12 @@
-import type { ApiResponse, LlmProviderListResponse, LlmUseCaseConfigListResponse, LlmUseCaseConfigResponse } from '@xdd-zone/contracts'
+import type {
+  ApiResponse,
+  DeleteExpiredLlmCallLogsResponse,
+  LlmCallLogListResponse,
+  LlmCallLogResponse,
+  LlmProviderListResponse,
+  LlmUseCaseConfigListResponse,
+  LlmUseCaseConfigResponse,
+} from '@xdd-zone/contracts'
 
 const rpcMocks = vi.hoisted(() => ({
   listProviders: vi.fn(),
@@ -131,5 +139,103 @@ describe('llm api 封装', () => {
         useCase: 'content.post.meta',
       },
     })
+  })
+
+  it('读取调用日志列表时传入查询参数', async () => {
+    const responseBody: ApiResponse<LlmCallLogListResponse> = {
+      ok: true,
+      data: {
+        logs: [],
+        page: 2,
+        pageSize: 20,
+        total: 0,
+      },
+      meta: {
+        requestId: 'request-1',
+        timestamp: '2026-01-01T00:00:00.000Z',
+      },
+    }
+    rpcMocks.listCallLogs.mockResolvedValue({
+      json: () => Promise.resolve(responseBody),
+    })
+    const { listLlmCallLogs } = await import('@fifa/api/llm/llm.api')
+
+    await expect(listLlmCallLogs({ page: 2, pageSize: 20, status: 'error' })).resolves.toEqual(responseBody)
+    expect(rpcMocks.listCallLogs).toHaveBeenCalledWith({
+      query: {
+        page: '2',
+        pageSize: '20',
+        status: 'error',
+      },
+    })
+  })
+
+  it('读取单条调用日志时传入 logId', async () => {
+    const responseBody: ApiResponse<LlmCallLogResponse> = {
+      ok: true,
+      data: {
+        log: {
+          actorId: null,
+          durationMs: 10,
+          endedAt: '2026-01-01T00:00:01.000Z',
+          errorCode: null,
+          errorMessage: null,
+          errorStatus: null,
+          errorType: null,
+          id: 'log-1',
+          inputTokens: null,
+          model: 'gpt-test',
+          operation: 'provider.test',
+          outputTokens: null,
+          providerApiFormat: 'chat_completions',
+          providerBaseUrl: 'https://api.example.com',
+          providerCurrentEnabled: true,
+          providerCurrentExists: true,
+          providerId: 'provider-1',
+          providerName: 'Provider',
+          providerType: 'openai',
+          requestId: null,
+          sourceId: null,
+          sourceType: null,
+          startedAt: '2026-01-01T00:00:00.000Z',
+          status: 'success',
+          totalTokens: null,
+          useCase: null,
+        },
+      },
+      meta: {
+        requestId: 'request-1',
+        timestamp: '2026-01-01T00:00:00.000Z',
+      },
+    }
+    rpcMocks.getCallLog.mockResolvedValue({
+      json: () => Promise.resolve(responseBody),
+    })
+    const { getLlmCallLog } = await import('@fifa/api/llm/llm.api')
+
+    await expect(getLlmCallLog('log-1')).resolves.toEqual(responseBody)
+    expect(rpcMocks.getCallLog).toHaveBeenCalledWith({
+      param: { logId: 'log-1' },
+    })
+  })
+
+  it('删除过期调用日志', async () => {
+    const responseBody: ApiResponse<DeleteExpiredLlmCallLogsResponse> = {
+      ok: true,
+      data: {
+        deleted: 3,
+      },
+      meta: {
+        requestId: 'request-1',
+        timestamp: '2026-01-01T00:00:00.000Z',
+      },
+    }
+    rpcMocks.deleteExpiredCallLogs.mockResolvedValue({
+      json: () => Promise.resolve(responseBody),
+    })
+    const { deleteExpiredLlmCallLogs } = await import('@fifa/api/llm/llm.api')
+
+    await expect(deleteExpiredLlmCallLogs()).resolves.toEqual(responseBody)
+    expect(rpcMocks.deleteExpiredCallLogs).toHaveBeenCalledWith()
   })
 })

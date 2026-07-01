@@ -27,7 +27,11 @@ export function decryptLlmSecret(ciphertext: string, keyBase64: string): string 
 }
 
 export function createApiKeyHint(apiKey: string): string {
-  return apiKey.length <= 8 ? apiKey : apiKey.slice(-4)
+  if (apiKey.length <= 8) {
+    return '****'
+  }
+
+  return `****${apiKey.slice(-4)}`
 }
 
 function decodeLlmSecretKey(keyBase64: string): Buffer {

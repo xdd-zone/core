@@ -484,6 +484,7 @@ export default {
           apiFormatRequired: '请选择接口格式',
           apiKey: 'API Key',
           apiKeyHint: '当前已有配置，留空表示不修改。',
+          apiKeyRequiredWhenEnabled: '启用 Provider 前必须配置 API Key。',
           baseUrl: 'Base URL',
           baseUrlRequired: '请输入 Base URL',
           defaultModel: '默认模型',

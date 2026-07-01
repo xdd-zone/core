@@ -71,7 +71,7 @@ export function updateLlmUseCaseConfig(useCase: LlmUseCase, payload: UpdateLlmUs
 
 export function listLlmCallLogs(query: LlmCallLogListQuery) {
   return readMomoJson<LlmCallLogListResponse>(
-    (momoClient.rpc.llm as any)['call-logs'].$get({
+    momoClient.rpc.llm['call-logs'].$get({
       query: {
         ...query,
         page: query.page.toString(),
@@ -83,12 +83,12 @@ export function listLlmCallLogs(query: LlmCallLogListQuery) {
 
 export function getLlmCallLog(logId: string) {
   return readMomoJson<LlmCallLogResponse>(
-    (momoClient.rpc.llm as any)['call-logs'][':logId'].$get({
+    momoClient.rpc.llm['call-logs'][':logId'].$get({
       param: { logId },
     }),
   )
 }
 
 export function deleteExpiredLlmCallLogs() {
-  return readMomoJson<DeleteExpiredLlmCallLogsResponse>((momoClient.rpc.llm as any)['call-logs'].expired.$delete())
+  return readMomoJson<DeleteExpiredLlmCallLogsResponse>(momoClient.rpc.llm['call-logs'].expired.$delete())
 }

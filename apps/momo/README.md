@@ -177,6 +177,8 @@ pnpm seed:owner
 - `STORAGE_PROVIDER`
   默认 `local`。设成 `cos` 时，需要配置腾讯云 COS 变量。
 
+旧的 `OPENAI_API_KEY` 不再被 Momo 直接读取。升级后进入 Fifa 的 LLM Provider 页面，编辑默认 Provider，重新填写 API Key 后再启用。
+
 完整环境变量说明看 [docs/apps/momo.md](../../docs/apps/momo.md)。
 
 ## 本地服务和测试

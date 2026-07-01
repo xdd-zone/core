@@ -1,6 +1,17 @@
-import type { ApiResponse, LlmProviderListResponse, LlmUseCaseConfigListResponse, LlmUseCaseConfigResponse } from '@xdd-zone/contracts'
+import type {
+  ApiResponse,
+  LlmProviderListResponse,
+  LlmProviderResponse,
+  LlmUseCaseConfigListResponse,
+  LlmUseCaseConfigResponse,
+} from '@xdd-zone/contracts'
 import type app from '#momo/app'
-import { BizCode, LlmProviderListResponseSchema, LlmUseCaseConfigListResponseSchema, LlmUseCaseConfigResponseSchema } from '@xdd-zone/contracts'
+import {
+  BizCode,
+  LlmProviderListResponseSchema,
+  LlmUseCaseConfigListResponseSchema,
+  LlmUseCaseConfigResponseSchema,
+} from '@xdd-zone/contracts'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   bindFifaOwner,
@@ -79,6 +90,89 @@ describe('llm 路由', () => {
       id: 'llm_provider_default',
       providerType: 'openai',
     })
+  })
+
+  it('创建启用 provider 时必须提交 API Key', async () => {
+    const response = await momoApp.request('/rpc/llm/providers', {
+      body: JSON.stringify({
+        apiFormat: 'chat_completions',
+        baseUrl: 'https://api.example.com',
+        defaultModel: 'gpt-test',
+        enabled: true,
+        name: 'No Key Provider',
+        providerType: 'openai',
+        timeoutMs: 15000,
+      }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'POST',
+    })
+    const body = (await response.json()) as ApiResponse<never>
+
+    expect(response.status).toBe(409)
+    expect(body.ok).toBe(false)
+    expect(!body.ok && body.error.code).toBe(BizCode.BIZ_RULE_VIOLATION)
+    expect(!body.ok && body.error.message).toBe('启用 LLM Provider 前必须配置 API Key')
+  })
+
+  it('创建带短 API Key 的 provider 时列表不会返回完整密钥', async () => {
+    const createResponse = await momoApp.request('/rpc/llm/providers', {
+      body: JSON.stringify({
+        apiFormat: 'chat_completions',
+        apiKey: 'short',
+        baseUrl: 'https://api.example.com',
+        defaultModel: 'gpt-test',
+        enabled: true,
+        name: 'Short Key Provider',
+        providerType: 'openai',
+        timeoutMs: 15000,
+      }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'POST',
+    })
+    const createBody = (await createResponse.json()) as ApiResponse<LlmProviderResponse>
+
+    expect(createResponse.status).toBe(201)
+    const created = expectOkData(createBody).provider
+
+    const listResponse = await momoApp.request('/rpc/llm/providers', {
+      headers: { cookie: ownerCookie },
+    })
+    const listBody = (await listResponse.json()) as ApiResponse<LlmProviderListResponse>
+    const providers = expectOkData(listBody).providers
+    const provider = providers.find((item) => item.id === created.id)
+
+    expect(provider?.apiKeyHint).not.toBe('short')
+    expect(provider?.apiKeyHint).toBe('****')
+  })
+
+  it('更新无密钥 provider 为启用时返回 409', async () => {
+    const createResponse = await momoApp.request('/rpc/llm/providers', {
+      body: JSON.stringify({
+        apiFormat: 'chat_completions',
+        baseUrl: 'https://api.example.com',
+        defaultModel: 'gpt-test',
+        enabled: false,
+        name: 'Disabled Provider',
+        providerType: 'openai',
+        timeoutMs: 15000,
+      }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'POST',
+    })
+    const createBody = (await createResponse.json()) as ApiResponse<LlmProviderResponse>
+    const provider = expectOkData(createBody).provider
+
+    const response = await momoApp.request(`/rpc/llm/providers/${provider.id}`, {
+      body: JSON.stringify({ enabled: true }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'PATCH',
+    })
+    const body = (await response.json()) as ApiResponse<never>
+
+    expect(response.status).toBe(409)
+    expect(body.ok).toBe(false)
+    expect(!body.ok && body.error.code).toBe(BizCode.BIZ_RULE_VIOLATION)
+    expect(!body.ok && body.error.message).toBe('启用 LLM Provider 前必须配置 API Key')
   })
 
   it('可以更新 LLM use case 配置', async () => {

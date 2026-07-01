@@ -7,13 +7,18 @@ import type { StorageDriver } from '#momo/infra/storage'
 import type { LlmConfigRepository } from '../../../modules/llm/repositories/llm-config.repository'
 import { BizCode } from '@xdd-zone/contracts'
 import { describe, expect, it, vi } from 'vitest'
-import { DisabledLlm, encryptLlmSecret } from '#momo/infra/llm'
+import { createApiKeyHint, DisabledLlm, encryptLlmSecret } from '#momo/infra/llm'
 
 import { createLlmService, getPostMetaUserPrompt } from '../../../modules/llm/services/llm.service'
 
 const LLM_SECRET_KEY = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
 
 describe('llm service', () => {
+  it('api key hint 不返回完整短密钥', () => {
+    expect(createApiKeyHint('short')).not.toBe('short')
+    expect(createApiKeyHint('abc')).toBe('****')
+  })
+
   it('content.post.meta 会裁剪 source 后生成 user prompt', () => {
     const prompt = JSON.parse(
       getPostMetaUserPrompt({
@@ -128,6 +133,70 @@ describe('llm service', () => {
       status: 409,
     })
   })
+
+  it('创建启用 provider 时必须提交 API Key', async () => {
+    const repository = createRepository({ enabled: true, providerEnabled: false, withApiKey: false })
+    const service = createLlmService(createRuntime(new DisabledLlm()), repository)
+
+    await expect(
+      service.createProvider({
+        apiFormat: 'chat_completions',
+        baseUrl: 'https://api.example.com',
+        defaultModel: 'test-model',
+        enabled: true,
+        name: 'Test Provider',
+        providerType: 'openai',
+        timeoutMs: 15000,
+      }),
+    ).rejects.toMatchObject({
+      code: BizCode.BIZ_RULE_VIOLATION,
+      message: '启用 LLM Provider 前必须配置 API Key',
+      status: 409,
+    })
+    expect(repository.createProvider).not.toHaveBeenCalled()
+  })
+
+  it('更新无密钥 provider 为启用时返回 409', async () => {
+    const repository = createRepository({ enabled: true, providerEnabled: false, withApiKey: false })
+    const service = createLlmService(createRuntime(new DisabledLlm()), repository)
+
+    await expect(service.updateProvider('provider-1', { enabled: true })).rejects.toMatchObject({
+      code: BizCode.BIZ_RULE_VIOLATION,
+      message: '启用 LLM Provider 前必须配置 API Key',
+      status: 409,
+    })
+    expect(repository.updateProvider).not.toHaveBeenCalled()
+  })
+
+  it('已有密钥 provider 更新为启用时允许不重新提交 API Key', async () => {
+    const repository = createRepository({ enabled: true, providerEnabled: false, withApiKey: true })
+    const service = createLlmService(createRuntime(new DisabledLlm()), repository)
+
+    await expect(service.updateProvider('provider-1', { enabled: true })).resolves.toMatchObject({
+      provider: {
+        enabled: true,
+        hasApiKey: true,
+        id: 'provider-1',
+      },
+    })
+    expect(repository.updateProvider).toHaveBeenCalledWith('provider-1', {
+      enabled: true,
+      apiKeyCiphertext: undefined,
+      apiKeyHint: undefined,
+    })
+  })
+
+  it('启用 provider 不能清空 API Key', async () => {
+    const repository = createRepository({ enabled: true, providerEnabled: true, withApiKey: true })
+    const service = createLlmService(createRuntime(new DisabledLlm()), repository)
+
+    await expect(service.clearProviderApiKey('provider-1')).rejects.toMatchObject({
+      code: BizCode.BIZ_RULE_VIOLATION,
+      message: '启用中的 LLM Provider 不能清空 API Key',
+      status: 409,
+    })
+    expect(repository.clearProviderApiKey).not.toHaveBeenCalled()
+  })
 })
 
 function createRepository(overrides: { enabled: boolean; providerEnabled: boolean; withApiKey: boolean }) {
@@ -149,7 +218,12 @@ function createRepository(overrides: { enabled: boolean; providerEnabled: boolea
   const repository = {
     clearProviderApiKey: vi.fn(),
     createCallLog: vi.fn().mockResolvedValue({ id: 'log-1' }),
-    createProvider: vi.fn(),
+    createProvider: vi.fn().mockImplementation(async (input) => ({
+      ...provider,
+      ...input,
+      enabled: input.enabled ? 1 : 0,
+      id: 'provider-created',
+    })),
     deleteExpiredCallLogs: vi.fn(),
     findCallLogById: vi.fn(),
     findConfigByUseCase: vi.fn().mockResolvedValue({
@@ -170,7 +244,13 @@ function createRepository(overrides: { enabled: boolean; providerEnabled: boolea
     listCallLogs: vi.fn(),
     listConfigs: vi.fn(),
     listProviders: vi.fn(),
-    updateProvider: vi.fn(),
+    updateProvider: vi.fn().mockImplementation(async (_providerId, input) => ({
+      ...provider,
+      ...input,
+      apiKeyCiphertext: input.apiKeyCiphertext ?? provider.apiKeyCiphertext,
+      apiKeyHint: input.apiKeyHint ?? provider.apiKeyHint,
+      enabled: input.enabled === undefined ? provider.enabled : input.enabled ? 1 : 0,
+    })),
     upsertConfig: vi.fn(),
   } satisfies Partial<LlmConfigRepository>
 

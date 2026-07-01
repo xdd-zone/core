@@ -82,7 +82,7 @@ describe('request pipeline 中间件', () => {
     expect(!body.ok && body.error.message).toBe('请求体过大')
   })
 
-  it('LLM 生成接口使用更长超时时间', async () => {
+  it('llm 生成接口使用更长超时时间', async () => {
     vi.useFakeTimers()
 
     try {
@@ -95,7 +95,9 @@ describe('request pipeline 中间件', () => {
         return new Response('never')
       })
 
-      const responsePromise = Promise.resolve(timeoutApp.request('/rpc/content/posts/meta-suggestion', { method: 'POST' }))
+      const responsePromise = Promise.resolve(
+        timeoutApp.request('/rpc/content/posts/meta-suggestion', { method: 'POST' }),
+      )
       await vi.advanceTimersByTimeAsync(5000)
 
       let settled = false
