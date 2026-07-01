@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { ThemeToggle } from '@/components/site/theme-toggle'
 
 const footerLinkGroups = [
@@ -11,7 +12,7 @@ const footerLinkGroups = [
   {
     title: '联系',
     links: [
-      { href: '#', label: 'GitHub', internal: false },
+      { href: 'https://github.com/xdd-zone/core', label: 'GitHub', internal: false },
       { href: '#', label: '即刻', internal: false },
     ],
   },
@@ -68,9 +69,27 @@ export function SiteFooter() {
                 <ul className="flex flex-col space-y-3.5">
                   {group.links.map((link) => (
                     <li key={link.label}>
-                      <span className="cursor-not-allowed text-[0.85rem] text-muted-foreground opacity-50 transition-colors duration-300 hover:text-foreground">
-                        {link.label}
-                      </span>
+                      {link.href === '#' ? (
+                        <span className="cursor-not-allowed text-[0.85rem] text-muted-foreground opacity-50 transition-colors duration-300 hover:text-foreground">
+                          {link.label}
+                        </span>
+                      ) : link.internal ? (
+                        <Link
+                          href={link.href}
+                          className="text-[0.85rem] text-muted-foreground transition-colors duration-300 hover:text-foreground"
+                        >
+                          {link.label}
+                        </Link>
+                      ) : (
+                        <a
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[0.85rem] text-muted-foreground transition-colors duration-300 hover:text-foreground"
+                        >
+                          {link.label}
+                        </a>
+                      )}
                     </li>
                   ))}
                 </ul>
