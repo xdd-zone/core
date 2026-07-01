@@ -8,10 +8,11 @@ import {
   useUploadFifaProfileAvatarMutation,
 } from '@fifa/api/profile'
 import { FifaPageHeader, ImageCrop } from '@fifa/components/common'
-import { Alert, App, Avatar, Button, Form, Input, Spin, Tag, Upload } from 'antd'
-import { Camera, KeyRound, Link2, Mail, Save, UploadCloud } from 'lucide-react'
+import { Alert, App, Button, Form, Input, Spin, Tag, Upload } from 'antd'
+import { Camera, KeyRound, Link2, Mail, Save, UploadCloud, UserRound } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { SiGithub, SiGoogle } from 'react-icons/si'
 
 type SocialProvider = 'github' | 'google'
 
@@ -48,14 +49,38 @@ function resolveAvatarUrl(avatarUrl: string | null) {
 
 function getAccountIcon(provider: FifaProfileAccount['provider']) {
   if (provider === 'github') {
-    return <span className="text-sm font-semibold">GH</span>
+    return <SiGithub className="size-4" />
   }
 
   if (provider === 'google') {
-    return <span className="text-sm font-semibold">G</span>
+    return <SiGoogle className="size-4" />
   }
 
   return <KeyRound className="size-4" />
+}
+
+interface ProfileAvatarPreviewProps {
+  avatarUrl: string | null
+  displayName?: string
+}
+
+function ProfileAvatarPreview({ avatarUrl, displayName }: ProfileAvatarPreviewProps) {
+  const resolvedAvatarUrl = resolveAvatarUrl(avatarUrl)
+
+  return (
+    <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-full border border-border-subtle bg-primary text-2xl font-semibold text-surface shadow-sm">
+      {resolvedAvatarUrl ? (
+        <img
+          src={resolvedAvatarUrl}
+          alt=""
+          className="block size-full aspect-square object-cover"
+          referrerPolicy="no-referrer"
+        />
+      ) : (
+        <span>{displayName ? getAvatarInitial(displayName) : <UserRound className="size-8" />}</span>
+      )}
+    </div>
+  )
 }
 
 async function createCroppedAvatarFile(image: HTMLImageElement, crop: PixelCrop): Promise<File> {
@@ -239,25 +264,26 @@ export function ProfileSettings() {
 
       {profile ? (
         <>
-          <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-            <section className="rounded-lg border border-border-subtle bg-surface p-5">
-              <div className="flex items-center gap-3">
-                <Avatar
-                  size={72}
-                  src={resolveAvatarUrl(avatarUrl) ?? undefined}
-                  className="bg-primary text-surface text-2xl"
-                >
-                  {getAvatarInitial(profile?.displayName)}
-                </Avatar>
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-fg">{t('profile.avatarTitle')}</div>
-                  <p className="mt-1 text-sm text-fg-muted">{t('profile.avatarDescription')}</p>
-                </div>
+          <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
+            <section className="overflow-hidden rounded-lg border border-border-subtle bg-surface">
+              <div className="border-b border-border-subtle px-5 py-4">
+                <div className="text-sm font-medium text-fg">{t('profile.avatarTitle')}</div>
+                <p className="mt-1 text-sm text-fg-muted">{t('profile.avatarDescription')}</p>
               </div>
 
-              <div className="mt-5 space-y-4">
+              <div className="space-y-5 p-5">
+                <div className="flex items-center gap-4">
+                  <ProfileAvatarPreview avatarUrl={avatarUrl} displayName={profile?.displayName} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-fg">{profile.displayName}</div>
+                    <div className="mt-1 truncate text-xs text-fg-muted">{profile.email}</div>
+                  </div>
+                </div>
+
                 <Upload accept="image/*" beforeUpload={handleChooseAvatar} maxCount={1} showUploadList={false}>
-                  <Button icon={<UploadCloud className="size-4" />}>{t('profile.chooseAvatar')}</Button>
+                  <Button icon={<UploadCloud className="size-4" />} block>
+                    {t('profile.chooseAvatar')}
+                  </Button>
                 </Upload>
 
                 {cropSource ? (
@@ -277,6 +303,7 @@ export function ProfileSettings() {
                       icon={<Camera className="size-4" />}
                       loading={uploadAvatarMutation.isPending}
                       onClick={handleUploadCroppedAvatar}
+                      block
                     >
                       {t('profile.uploadAvatar')}
                     </Button>
@@ -285,37 +312,39 @@ export function ProfileSettings() {
               </div>
             </section>
 
-            <section className="rounded-lg border border-border-subtle bg-surface p-5">
-              <div className="mb-4">
+            <section className="overflow-hidden rounded-lg border border-border-subtle bg-surface">
+              <div className="border-b border-border-subtle px-5 py-4">
                 <div className="text-sm font-medium text-fg">{t('profile.basicTitle')}</div>
                 <p className="mt-1 text-sm text-fg-muted">{t('profile.basicDescription')}</p>
               </div>
 
-              <Form form={form} layout="vertical" onFinish={handleSave}>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Form.Item
-                    name="displayName"
-                    label={t('profile.displayName')}
-                    rules={[{ required: true, message: t('profile.displayNameRequired') }]}
+              <div className="p-5">
+                <Form form={form} layout="vertical" onFinish={handleSave}>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Form.Item
+                      name="displayName"
+                      label={t('profile.displayName')}
+                      rules={[{ required: true, message: t('profile.displayNameRequired') }]}
+                    >
+                      <Input placeholder={t('profile.displayNamePlaceholder')} />
+                    </Form.Item>
+                    <Form.Item name="email" label={t('profile.email')}>
+                      <Input disabled prefix={<Mail className="size-4" />} />
+                    </Form.Item>
+                  </div>
+                  <Form.Item name="id" label={t('profile.userId')}>
+                    <Input disabled />
+                  </Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    icon={<Save className="size-4" />}
+                    loading={updateProfileMutation.isPending}
                   >
-                    <Input placeholder={t('profile.displayNamePlaceholder')} />
-                  </Form.Item>
-                  <Form.Item name="email" label={t('profile.email')}>
-                    <Input disabled prefix={<Mail className="size-4" />} />
-                  </Form.Item>
-                </div>
-                <Form.Item name="id" label={t('profile.userId')}>
-                  <Input disabled />
-                </Form.Item>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  icon={<Save className="size-4" />}
-                  loading={updateProfileMutation.isPending}
-                >
-                  {t('profile.save')}
-                </Button>
-              </Form>
+                    {t('profile.save')}
+                  </Button>
+                </Form>
+              </div>
             </section>
           </div>
 
@@ -331,18 +360,17 @@ export function ProfileSettings() {
                   className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex size-9 items-center justify-center rounded-full border border-border-subtle bg-surface-muted text-fg">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border-subtle bg-surface-muted text-fg">
                       {getAccountIcon(account.provider)}
                     </span>
                     <div className="min-w-0">
-                      <div className="text-sm font-medium text-fg">{t(getAccountLabelKey(account.provider))}</div>
-                      <div className="mt-1 text-xs text-fg-muted">
-                        {account.bound ? t('profile.bound') : t('profile.notBound')}
+                      <div className="truncate text-sm font-medium text-fg">
+                        {t(getAccountLabelKey(account.provider))}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Tag color={account.bound ? 'success' : 'default'}>
+                  <div className="flex items-center gap-2 sm:justify-end">
+                    <Tag color={account.bound ? 'success' : 'default'} className="m-0">
                       {account.bound ? t('profile.bound') : t('profile.notBound')}
                     </Tag>
                     {account.provider === 'github' || account.provider === 'google' ? (
