@@ -739,7 +739,11 @@ function PostEditContent({ postId }: PostEditContentProps) {
             <div className="grid gap-x-4 md:grid-cols-2">
               <Form.Item label={t('content.postEdit.form.title')} required>
                 <Space.Compact className="w-full">
-                  <Form.Item name="title" noStyle rules={[{ required: true, message: t('content.postEdit.form.titleRequired') }]}>
+                  <Form.Item
+                    name="title"
+                    noStyle
+                    rules={[{ required: true, message: t('content.postEdit.form.titleRequired') }]}
+                  >
                     <Input placeholder={t('content.postEdit.form.titlePlaceholder')} />
                   </Form.Item>
                   <Tooltip
@@ -758,10 +762,16 @@ function PostEditContent({ postId }: PostEditContentProps) {
               </Form.Item>
               <Form.Item label={t('content.postEdit.form.slug')} required>
                 <Space.Compact className="w-full">
-                  <Form.Item name="slug" noStyle rules={[{ required: true, message: t('content.postEdit.form.slugRequired') }]}>
+                  <Form.Item
+                    name="slug"
+                    noStyle
+                    rules={[{ required: true, message: t('content.postEdit.form.slugRequired') }]}
+                  >
                     <Input placeholder={t('content.postEdit.form.slugPlaceholder')} />
                   </Form.Item>
-                  <Tooltip title={metaSuggestionReady ? t('content.postEdit.ai.generateSlug') : metaSuggestionDisabledReason}>
+                  <Tooltip
+                    title={metaSuggestionReady ? t('content.postEdit.ai.generateSlug') : metaSuggestionDisabledReason}
+                  >
                     <Button
                       disabled={!metaSuggestionReady}
                       icon={<Wand2 className="size-4" />}

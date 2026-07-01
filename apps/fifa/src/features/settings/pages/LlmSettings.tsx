@@ -28,10 +28,10 @@ import { FifaPageHeader } from '@fifa/components/common'
 import {
   App,
   Button,
+  Collapse,
   Drawer,
   Form,
   Input,
-  Collapse,
   InputNumber,
   Modal,
   Select,

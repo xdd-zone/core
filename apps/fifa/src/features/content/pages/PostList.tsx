@@ -97,7 +97,9 @@ export function PostList() {
   )
   const tags = useMemo(() => (tagsQuery.data?.ok ? tagsQuery.data.data.tags : []), [tagsQuery.data])
   const loadError = postsQuery.data && !postsQuery.data.ok ? postsQuery.data.error.message : undefined
-  const metaSuggestionStatus = metaSuggestionStatusQuery.data?.ok ? metaSuggestionStatusQuery.data.data.status : undefined
+  const metaSuggestionStatus = metaSuggestionStatusQuery.data?.ok
+    ? metaSuggestionStatusQuery.data.data.status
+    : undefined
   const metaSuggestionReady = metaSuggestionStatus?.ready ?? false
   const metaSuggestionDisabledReason = metaSuggestionStatus?.reason ?? t('content.posts.ai.statusUnknown')
   const categoryOptions = useMemo(
@@ -327,7 +329,11 @@ export function PostList() {
           </Form.Item>
           <Form.Item label={t('content.posts.form.slug')} required>
             <Space.Compact className="w-full">
-              <Form.Item name="slug" noStyle rules={[{ required: true, message: t('content.posts.form.slugRequired') }]}>
+              <Form.Item
+                name="slug"
+                noStyle
+                rules={[{ required: true, message: t('content.posts.form.slugRequired') }]}
+              >
                 <Input placeholder={t('content.posts.form.slugPlaceholder')} />
               </Form.Item>
               <Tooltip title={metaSuggestionReady ? t('content.posts.ai.generateSlug') : metaSuggestionDisabledReason}>
