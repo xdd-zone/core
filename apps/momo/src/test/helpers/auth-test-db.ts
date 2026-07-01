@@ -28,6 +28,7 @@ const migrationFiles = [
   '0004_high_vapor.sql',
   '0005_puzzling_wasp.sql',
   '0006_typical_wither.sql',
+  '0007_smiling_katie_power.sql',
 ]
 let prepareDatabaseQueue = Promise.resolve()
 

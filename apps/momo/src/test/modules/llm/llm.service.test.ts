@@ -73,6 +73,79 @@ describe('llm service', () => {
     )
   })
 
+  it('lLM 第三方错误只写安全摘要', async () => {
+    const repository = createRepository({ enabled: true, providerEnabled: true, withApiKey: true })
+    const error = Object.assign(new Error('provider failed'), {
+      code: 'rate_limit_exceeded',
+      request_id: 'req_123',
+      response: {
+        body: 'third-party error body',
+        headers: {
+          authorization: 'Bearer secret',
+        },
+      },
+      status: 429,
+      type: 'invalid_request_error',
+    })
+    const service = createLlmService(createRuntime(), repository, () => ({
+      generateStructuredJson: vi.fn().mockRejectedValue(error),
+    }))
+
+    await expect(
+      service.generatePostMetaSuggestion({
+        locale: 'zh-CN',
+        mode: 'create',
+        targets: ['title'],
+      }),
+    ).rejects.toMatchObject({
+      details: { logId: 'log-1' },
+      status: 409,
+    })
+
+    expect(repository.createCallLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorCode: 'rate_limit_exceeded',
+        errorDetails: {
+          providerErrorCode: 'rate_limit_exceeded',
+          providerErrorType: 'invalid_request_error',
+          providerRequestId: 'req_123',
+          responseExcerpt: 'third-party error body',
+        },
+        errorStatus: 429,
+        errorType: 'invalid_request_error',
+        status: 'error',
+      }),
+    )
+    expect(JSON.stringify(vi.mocked(repository.createCallLog).mock.calls)).not.toContain('Bearer secret')
+    expect(JSON.stringify(vi.mocked(repository.createCallLog).mock.calls)).not.toContain('authorization')
+  })
+
+  it('lLM 超长错误响应会截断', async () => {
+    const repository = createRepository({ enabled: true, providerEnabled: true, withApiKey: true })
+    const service = createLlmService(createRuntime(), repository, () => ({
+      generateStructuredJson: vi.fn().mockRejectedValue({
+        message: 'provider failed',
+        response: 'x'.repeat(2001),
+      }),
+    }))
+
+    await expect(
+      service.generatePostMetaSuggestion({
+        locale: 'zh-CN',
+        mode: 'create',
+        targets: ['title'],
+      }),
+    ).rejects.toMatchObject({
+      details: { logId: 'log-1' },
+      status: 409,
+    })
+
+    const call = vi.mocked(repository.createCallLog).mock.calls[0]?.[0] as {
+      errorDetails?: { responseExcerpt?: string }
+    }
+    expect(call.errorDetails?.responseExcerpt).toHaveLength(2000)
+  })
+
   it('llm 未启用时返回 409', async () => {
     const service = createLlmService(createRuntime())
 

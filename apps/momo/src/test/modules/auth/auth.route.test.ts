@@ -5,7 +5,7 @@ import { BizCode } from '@xdd-zone/contracts'
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { closeDb, getDb } from '#momo/infra/db/client'
-import { userRoleBindings } from '#momo/infra/db/schema/index'
+import { applicationAuthMethods, applications, userRoleBindings } from '#momo/infra/db/schema/index'
 import { getCurrentAuthUser } from '#momo/modules/auth/services/index'
 import {
   bindFifaOwner,
@@ -133,6 +133,57 @@ describe('auth 路由', () => {
       headers: {
         cookie,
       },
+    })
+    const body = (await response.json()) as ApiResponse<never>
+
+    expect(response.status).toBe(403)
+    expect(body.ok).toBe(false)
+    expect(!body.ok && body.error.code).toBe(BizCode.AUTH_OWNER_REQUIRED)
+  })
+
+  it('fifa 应用停用时 owner 用户被拒绝', async () => {
+    const testUser = await createCredentialUser({ email: 'disabled-app@example.com', name: 'Disabled App' })
+    await bindFifaOwner(testUser.id)
+    const cookie = await signInByEmail(momoApp, testUser.email)
+    await getDb().update(applications).set({ status: 'disabled' }).where(eq(applications.code, 'fifa'))
+
+    const response = await momoApp.request('/rpc/fifa/auth/me', {
+      headers: { cookie },
+    })
+    const body = (await response.json()) as ApiResponse<never>
+
+    expect(response.status).toBe(403)
+    expect(body.ok).toBe(false)
+    expect(!body.ok && body.error.code).toBe(BizCode.AUTH_METHOD_NOT_ALLOWED)
+  })
+
+  it('fifa password 登录方式停用时 owner 用户被拒绝', async () => {
+    const testUser = await createCredentialUser({ email: 'disabled-method@example.com', name: 'Disabled Method' })
+    await bindFifaOwner(testUser.id)
+    const cookie = await signInByEmail(momoApp, testUser.email)
+    await getDb()
+      .update(applicationAuthMethods)
+      .set({ status: 'disabled' })
+      .where(eq(applicationAuthMethods.provider, 'password'))
+
+    const response = await momoApp.request('/rpc/fifa/auth/me', {
+      headers: { cookie },
+    })
+    const body = (await response.json()) as ApiResponse<never>
+
+    expect(response.status).toBe(403)
+    expect(body.ok).toBe(false)
+    expect(!body.ok && body.error.code).toBe(BizCode.AUTH_METHOD_NOT_ALLOWED)
+  })
+
+  it('fifa owner 绑定停用时 owner 用户被拒绝', async () => {
+    const testUser = await createCredentialUser({ email: 'disabled-binding@example.com', name: 'Disabled Binding' })
+    await bindFifaOwner(testUser.id)
+    const cookie = await signInByEmail(momoApp, testUser.email)
+    await getDb().update(userRoleBindings).set({ status: 'disabled' }).where(eq(userRoleBindings.userId, testUser.id))
+
+    const response = await momoApp.request('/rpc/fifa/auth/me', {
+      headers: { cookie },
     })
     const body = (await response.json()) as ApiResponse<never>
 

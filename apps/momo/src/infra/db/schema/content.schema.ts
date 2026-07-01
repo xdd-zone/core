@@ -13,7 +13,7 @@ export const contentAssets = pgTable('content_assets', {
   fileName: text('file_name').notNull(),
   /** 存储驱动里的文件路径。 */
   storagePath: text('storage_path').notNull(),
-  /** 可公开访问的 URL，本地存储时可以为空。 */
+  /** 可公开访问的 URL。COS 存外部地址，本地存读取接口的相对路径。 */
   url: text('url'),
   /** 文件 MIME 类型。 */
   mimeType: text('mime_type').notNull(),

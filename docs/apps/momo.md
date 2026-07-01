@@ -21,6 +21,18 @@
 
 接口请求和响应的 schema、类型、统一响应结构继续放在 `packages/contracts`。
 
+## Auth 单 owner 模型
+
+Fifa 后台目前只有一个 owner 管理员。`fifa.owner` 就是后台管理员身份。
+
+当前不做多人后台权限：
+
+- 不新增 `permissions` 和 `role_permissions`。
+- 不新增 editor、viewer、asset-manager 这类后台角色。
+- Bobo visitor 只是公开站访问用户，不是后台角色。
+
+`permission.guard.ts` 仍然保留。它只是让 content 这类业务 route 继续用统一 guard 写法，当前所有 content 权限最终都检查 `fifa.owner`。
+
 ## 关键目录
 
 ```text

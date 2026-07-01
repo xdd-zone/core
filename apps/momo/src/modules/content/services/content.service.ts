@@ -119,11 +119,6 @@ export function createContentService(
       throw new AppError(BizCode.SYSTEM_INTERNAL_ERROR, '保存文章失败', 500)
     }
 
-    const tagIds = input.tagIds ?? []
-    if (tagIds.length > 0) {
-      await taxonomyRepository.setPostTags(id, tagIds)
-    }
-
     const [category, tags] = await Promise.all([
       post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
       taxonomyRepository.getPostTags(id),
@@ -188,10 +183,6 @@ export function createContentService(
 
     if (!post) {
       throw new AppError(BizCode.COMMON_NOT_FOUND, '文章不存在', 404)
-    }
-
-    if (input.tagIds !== undefined) {
-      await taxonomyRepository.setPostTags(id, input.tagIds)
     }
 
     const [category, tags] = await Promise.all([
@@ -327,6 +318,7 @@ export function createContentService(
     validateMediaFile(file)
 
     const saved = await runtime.storage.save(file)
+    const assetId = randomUUID()
     let asset: ContentAssetRecord
 
     try {
@@ -334,11 +326,11 @@ export function createContentService(
         alt: null,
         createdBy: userId,
         fileName: saved.fileName,
-        id: randomUUID(),
+        id: assetId,
         mimeType: file.type,
         size: file.size,
         storagePath: saved.storagePath,
-        url: saved.publicUrl ?? null,
+        url: saved.publicUrl ?? getLocalAssetFileUrl(assetId),
       })
     } catch (error) {
       await runtime.storage.remove(saved.storagePath).catch(() => undefined)
@@ -530,6 +522,10 @@ function normalizePageSize(value: number | undefined): number {
 
 function normalizeText(value: string | undefined): string | undefined {
   return value?.trim() || undefined
+}
+
+function getLocalAssetFileUrl(assetId: string): string {
+  return `/rpc/content/assets/${assetId}/file`
 }
 
 export function normalizePostSlug(value: string): string {

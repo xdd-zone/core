@@ -32,6 +32,7 @@ import { createDefaultLlmUseCaseConfig } from '../types/llm.types'
 const POST_META_SOURCE_LIMIT = 4000
 const DEFAULT_USE_CASE: LlmUseCase = 'content.post.meta'
 const ERROR_MESSAGE_LIMIT = 500
+const ERROR_RESPONSE_EXCERPT_LIMIT = 2000
 const LOG_TTL_DAYS = 30
 const PROVIDER_API_KEY_REQUIRED_MESSAGE = '启用 LLM Provider 前必须配置 API Key'
 
@@ -593,19 +594,77 @@ export function createLlmService(
 function normalizeLlmError(error: unknown) {
   const maybeError = error as {
     code?: unknown
+    error?: unknown
     message?: unknown
     name?: unknown
+    request_id?: unknown
+    requestId?: unknown
+    response?: unknown
     status?: unknown
     type?: unknown
   }
 
   return {
     errorCode: typeof maybeError.code === 'string' ? maybeError.code : null,
-    errorDetails: null,
+    errorDetails: extractSafeLlmErrorDetails(error),
     errorMessage: String(maybeError.message ?? 'LLM 调用失败').slice(0, ERROR_MESSAGE_LIMIT),
     errorStatus: typeof maybeError.status === 'number' ? maybeError.status : null,
     errorType: typeof maybeError.type === 'string' ? maybeError.type : String(maybeError.name ?? 'Error'),
   }
+}
+
+function extractSafeLlmErrorDetails(error: unknown): Record<string, string> | null {
+  if (!isRecord(error)) {
+    return null
+  }
+
+  const details: Record<string, string> = {}
+  const nestedError = isRecord(error.error) ? error.error : null
+  const providerRequestId = getFirstString(error.request_id, error.requestId, error.requestID)
+  const providerErrorType = getFirstString(error.type, nestedError?.type)
+  const providerErrorCode = getFirstString(error.code, nestedError?.code)
+  const responseExcerpt = extractResponseExcerpt(error.response)
+
+  if (responseExcerpt) {
+    details.responseExcerpt = responseExcerpt
+  }
+
+  if (providerRequestId) {
+    details.providerRequestId = providerRequestId
+  }
+
+  if (providerErrorType) {
+    details.providerErrorType = providerErrorType
+  }
+
+  if (providerErrorCode) {
+    details.providerErrorCode = providerErrorCode
+  }
+
+  return Object.keys(details).length > 0 ? details : null
+}
+
+function extractResponseExcerpt(response: unknown): string | null {
+  if (typeof response === 'string') {
+    return response.slice(0, ERROR_RESPONSE_EXCERPT_LIMIT)
+  }
+
+  if (!isRecord(response)) {
+    return null
+  }
+
+  const text = getFirstString(response.body, response.data, response.text, response.message)
+  return text ? text.slice(0, ERROR_RESPONSE_EXCERPT_LIMIT) : null
+}
+
+function getFirstString(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === 'string' && value.length > 0) {
+      return value
+    }
+  }
+
+  return null
 }
 
 function toAppError(error: unknown, logId: string): AppError {

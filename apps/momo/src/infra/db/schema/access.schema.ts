@@ -1,7 +1,9 @@
 import { relations } from 'drizzle-orm'
-import { pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { user } from './auth.schema'
+
+export const accessStatusEnum = pgEnum('access_status', ['active', 'disabled'])
 
 export const applications = pgTable(
   'applications',
@@ -13,7 +15,7 @@ export const applications = pgTable(
     /** 应用显示名称。 */
     name: text('name').notNull(),
     /** 应用状态，active 表示允许继续登录和授权检查。 */
-    status: text('status').notNull().default('active'),
+    status: accessStatusEnum('status').notNull().default('active'),
     /** 创建时间。 */
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     /** 更新时间。 */
@@ -34,7 +36,7 @@ export const applicationAuthMethods = pgTable(
     /** 登录方式代码，比如 password、github、google。 */
     provider: text('provider').notNull(),
     /** 登录方式状态，active 表示该应用允许使用这个登录方式。 */
-    status: text('status').notNull().default('active'),
+    status: accessStatusEnum('status').notNull().default('active'),
     /** 创建时间。 */
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     /** 更新时间。 */
@@ -78,7 +80,7 @@ export const userRoleBindings = pgTable(
       .notNull()
       .references(() => roles.id, { onDelete: 'cascade' }),
     /** 绑定状态，active 表示当前用户拥有这个角色。 */
-    status: text('status').notNull().default('active'),
+    status: accessStatusEnum('status').notNull().default('active'),
     /** 创建时间。 */
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     /** 更新时间。 */

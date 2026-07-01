@@ -41,6 +41,36 @@ describe('content service', () => {
       status: 409,
     } satisfies Partial<AppError>)
   })
+
+  it('本地存储上传图片时写入素材读取 URL', async () => {
+    const repository = createRepository({
+      createAsset: vi.fn(async (input) => ({
+        ...createAssetRecord(),
+        id: input.id,
+        url: input.url,
+      })),
+    })
+    const runtime = createRuntime({
+      save: vi.fn(async () => ({
+        fileName: 'photo.png',
+        storagePath: 'content/images/photo.png',
+      })),
+    })
+    const service = createContentService(runtime, repository, createTaxonomyRepository())
+
+    const asset = await service.uploadImage(
+      new File([Buffer.from('png-data')], 'photo.png', { type: 'image/png' }),
+      'user-id',
+    )
+
+    expect(asset.url).toBe(`/rpc/content/assets/${asset.id}/file`)
+    expect(repository.createAsset).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: asset.id,
+        url: `/rpc/content/assets/${asset.id}/file`,
+      }),
+    )
+  })
 })
 
 function createRepository(overrides: Partial<ContentRepository> = {}): ContentRepository {
@@ -96,11 +126,12 @@ function createTaxonomyRepository(overrides: Partial<TaxonomyRepository> = {}): 
   } as TaxonomyRepository
 }
 
-function createRuntime(): MomoRuntime {
+function createRuntime(storageOverrides: Partial<MomoRuntime['storage']> = {}): MomoRuntime {
   return {
     storage: {
       remove: vi.fn(),
       save: vi.fn(),
+      ...storageOverrides,
     },
   } as unknown as MomoRuntime
 }

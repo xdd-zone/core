@@ -15,6 +15,7 @@ export function createRequirePermission(runtime: MomoRuntime, permissionCode: Co
   const auth = createMomoAuth(runtime)
 
   return createMiddleware<HonoEnv>(async (c, next) => {
+    // 当前是单 owner 后台。这里保留 permission guard，是为了让业务 route 的写法稳定。
     if (!contentPermissionSet.has(permissionCode)) {
       throw new AppError(BizCode.AUTH_FORBIDDEN, '当前账号没有操作权限', 403)
     }

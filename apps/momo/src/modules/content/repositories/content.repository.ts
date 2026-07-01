@@ -76,6 +76,16 @@ export function createContentRepository(db: DbClient) {
           source: input.source,
           title: input.title,
         })
+
+        if (input.tagIds && input.tagIds.length > 0) {
+          await tx.insert(contentPostTags).values(
+            input.tagIds.map((tagId) => ({
+              createdAt: now,
+              postId: input.id,
+              tagId,
+            })),
+          )
+        }
       })
     } catch (error) {
       if (isUniqueConstraintError(error, CONTENT_POSTS_SLUG_UNIQUE)) {
@@ -289,6 +299,20 @@ export function createContentRepository(db: DbClient) {
         })
         .where(eq(contentPosts.id, input.id))
         .returning()
+
+      if (input.tagIds !== undefined) {
+        await tx.delete(contentPostTags).where(eq(contentPostTags.postId, input.id))
+
+        if (input.tagIds.length > 0) {
+          await tx.insert(contentPostTags).values(
+            input.tagIds.map((tagId) => ({
+              createdAt: now,
+              postId: input.id,
+              tagId,
+            })),
+          )
+        }
+      }
 
       return post
     })

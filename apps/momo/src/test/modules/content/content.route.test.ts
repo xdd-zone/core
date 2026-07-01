@@ -27,7 +27,7 @@ import {
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { getDb } from '#momo/infra/db/client'
-import { contentPosts, contentPreviewTokens } from '#momo/infra/db/schema/index'
+import { contentPostRevisions, contentPosts, contentPreviewTokens } from '#momo/infra/db/schema/index'
 import {
   bindFifaOwner,
   createCredentialUser,
@@ -239,6 +239,76 @@ describe('content 路由', () => {
     const tagsData = expectOkData((await tagsResponse.json()) as ApiResponse<unknown>)
     const tags = PublicTagListResponseSchema.parse(tagsData)
     expect(tags.tags.some((item) => item.slug === 'typescript')).toBe(true)
+  })
+
+  it('创建文章带标签时返回文章包含标签', async () => {
+    const tag = await createTag('TypeScript', 'typescript-create')
+
+    const created = await createPost({
+      slug: 'post-with-tags',
+      source: '# Post with tags',
+      tagIds: [tag.id],
+      title: 'Post With Tags',
+    })
+
+    expect(created.status).toBe(201)
+    const data = expectOkData(created.body)
+    expect(data.post.tags.map((item) => item.id)).toEqual([tag.id])
+  })
+
+  it('保存草稿时 tagIds 保留 undefined、空数组和替换语义', async () => {
+    const firstTag = await createTag('First', 'first-tag')
+    const secondTag = await createTag('Second', 'second-tag')
+    const created = await createPost({
+      slug: 'draft-tag-semantics',
+      source: '# Draft tag semantics',
+      tagIds: [firstTag.id],
+      title: 'Draft Tag Semantics',
+    })
+    const postId = expectOkData(created.body).post.id
+
+    const keepResponse = await momoApp.request(`/rpc/content/posts/${postId}/draft`, {
+      body: JSON.stringify({ source: '# Keep tags' }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'PATCH',
+    })
+    const keepData = expectOkData((await keepResponse.json()) as ApiResponse<PostDetailResponse>)
+    expect(keepData.post.tags.map((item) => item.id)).toEqual([firstTag.id])
+
+    const clearResponse = await momoApp.request(`/rpc/content/posts/${postId}/draft`, {
+      body: JSON.stringify({ source: '# Clear tags', tagIds: [] }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'PATCH',
+    })
+    const clearData = expectOkData((await clearResponse.json()) as ApiResponse<PostDetailResponse>)
+    expect(clearData.post.tags).toEqual([])
+
+    const replaceResponse = await momoApp.request(`/rpc/content/posts/${postId}/draft`, {
+      body: JSON.stringify({ source: '# Replace tags', tagIds: [secondTag.id] }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'PATCH',
+    })
+    const replaceData = expectOkData((await replaceResponse.json()) as ApiResponse<PostDetailResponse>)
+    expect(replaceData.post.tags.map((item) => item.id)).toEqual([secondTag.id])
+  })
+
+  it('创建文章传不存在的 tag id 时不会写入文章和 revision', async () => {
+    const beforeRevisions = await getDb().select().from(contentPostRevisions)
+
+    const response = await createPost({
+      slug: 'missing-tag-post',
+      source: '# Missing tag',
+      tagIds: ['missing-tag'],
+      title: 'Missing Tag',
+    })
+    const postRows = await getDb().select().from(contentPosts).where(eq(contentPosts.slug, 'missing-tag-post'))
+    const afterRevisions = await getDb().select().from(contentPostRevisions)
+
+    expect(response.status).toBe(404)
+    expect(response.body.ok).toBe(false)
+    expect(!response.body.ok && response.body.error.code).toBe(BizCode.COMMON_NOT_FOUND)
+    expect(postRows).toEqual([])
+    expect(afterRevisions).toHaveLength(beforeRevisions.length)
   })
 
   it('保存草稿时 null 会清空可空字段', async () => {
@@ -538,6 +608,7 @@ describe('content 路由', () => {
     ImageAssetResponseSchema.parse(data)
     expect(data.asset.mimeType).toBe('image/png')
     expect(data.asset.size).toBe(8)
+    expect(data.asset.url).toBe(`/rpc/content/assets/${data.asset.id}/file`)
   })
 
   it('返回 MDX 组件清单', async () => {
@@ -595,6 +666,18 @@ async function uploadImage(fileName: string) {
     body,
     status: response.status,
   }
+}
+
+async function createTag(name: string, slug: string): Promise<{ id: string }> {
+  const response = await momoApp.request('/rpc/content/tags', {
+    body: JSON.stringify({ name, slug }),
+    headers: jsonHeaders(ownerCookie),
+    method: 'POST',
+  })
+  const body = (await response.json()) as ApiResponse<{ tag: { id: string } }>
+
+  expect(response.status).toBe(201)
+  return expectOkData(body).tag
 }
 
 function expectOkData<T>(body: ApiResponse<T>): T {
