@@ -29,6 +29,7 @@ export const llmQueryKeys = {
   callLogsList: (query: LlmCallLogListQuery) => [...llmQueryKeys.callLogs(), 'list', query] as const,
   configs: () => [...llmQueryKeys.all, 'use-cases'] as const,
   providers: () => [...llmQueryKeys.all, 'providers'] as const,
+  // eslint-disable-next-line react/no-unnecessary-use-prefix
   useCaseStatus: (useCase: LlmUseCase) => [...llmQueryKeys.configs(), useCase, 'status'] as const,
 }
 
