@@ -1,8 +1,22 @@
 import type { FifaRouteRecord } from '@fifa/app/router/types'
 import { lazyRouteComponent } from '@tanstack/react-router'
-import { Bot } from 'lucide-react'
+import { Bot, UserRound } from 'lucide-react'
 
 export const settingsRoutes: FifaRouteRecord[] = [
+  {
+    component: lazyRouteComponent(() => import('./pages/ProfileSettings'), 'ProfileSettings'),
+    icon: UserRound,
+    id: 'settings.profile',
+    layout: {
+      contentWidth: 'full',
+    },
+    menu: {
+      group: 'settings',
+      order: 5,
+    },
+    path: '/settings/profile',
+    title: 'menu.profileSettings',
+  },
   {
     component: lazyRouteComponent(() => import('./pages/LlmSettings'), 'LlmSettings'),
     icon: Bot,

@@ -20,6 +20,13 @@ export function createMomoAuth(runtime: Pick<MomoRuntime, 'env' | 'logger'>) {
       enabled: true,
       minPasswordLength: 8,
     },
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ['github', 'google'],
+        updateUserInfoOnLink: false,
+      },
+    },
     logger: createBetterAuthLogger(runtime.env, authLogger),
     rateLimit: {
       enabled: runtime.env.APP_ENV !== 'test',

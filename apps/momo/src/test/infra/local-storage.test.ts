@@ -46,6 +46,27 @@ describe('local 存储', () => {
       expect(written).toBe('jpg-data')
     })
 
+    it('保存到指定目录', async () => {
+      const file = createTestFile('avatar.webp', 'webp-data', 'image/webp')
+      const result = await storage.save(file, { directory: 'avatars' })
+
+      expect(result.fileName).toMatch(/^[a-f0-9-]+\.webp$/)
+      expect(result.storagePath).toBe(`avatars/${result.fileName}`)
+      expect(result.publicUrl).toBeUndefined()
+
+      const written = await readFile(join(tmpDir, result.storagePath), 'utf-8')
+      expect(written).toBe('webp-data')
+    })
+
+    it.each(['', '/avatars', '../avatars', 'avatars//files', 'avatars/../files', 'avatars\\files'])(
+      '保存目录 %s 非法时抛错',
+      async (directory) => {
+        const file = createTestFile('avatar.webp', 'webp-data', 'image/webp')
+
+        await expect(storage.save(file, { directory })).rejects.toThrow('文件不存在')
+      },
+    )
+
     it('mime 非法类型被拒绝', async () => {
       const file = createTestFile('document.pdf', 'pdf-data', 'application/pdf')
 
@@ -98,7 +119,7 @@ describe('local 存储', () => {
       ).rejects.toThrow('文件不存在')
     })
 
-    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])(
+    it.each(['', '/tmp/file.png', 'nested//file.png', 'nested/../file.png', 'nested\\file.png'])(
       'invalid path %s 时抛错',
       async (storagePath) => {
         await expect(
@@ -132,7 +153,7 @@ describe('local 存储', () => {
       await expect(storage.remove('nonexistent-file.png')).resolves.not.toThrow()
     })
 
-    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])(
+    it.each(['', '/tmp/file.png', 'nested//file.png', 'nested/../file.png', 'nested\\file.png'])(
       'invalid path %s 时抛错',
       async (storagePath) => {
         await expect(storage.remove(storagePath)).rejects.toThrow('文件不存在')
@@ -157,7 +178,7 @@ describe('local 存储', () => {
       await expect(storage.stat('nonexistent.png')).rejects.toThrow('文件不存在')
     })
 
-    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])(
+    it.each(['', '/tmp/file.png', 'nested//file.png', 'nested/../file.png', 'nested\\file.png'])(
       'invalid path %s 时抛错',
       async (storagePath) => {
         await expect(storage.stat(storagePath)).rejects.toThrow('文件不存在')

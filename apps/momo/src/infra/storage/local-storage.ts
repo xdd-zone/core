@@ -1,11 +1,17 @@
-import type { StorageDriver, StorageFileStat, StorageOpenFileOptions, StorageSaveResult } from './storage.types'
+import type {
+  StorageDriver,
+  StorageFileStat,
+  StorageOpenFileOptions,
+  StorageSaveOptions,
+  StorageSaveResult,
+} from './storage.types'
 import { access, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
-import { join, relative, resolve } from 'node:path'
+import { dirname, relative, resolve } from 'node:path'
 import { BizCode } from '@xdd-zone/contracts'
 import { AppError } from '#momo/shared/app-error'
 
 import { createMediaFileName, validateMediaFile } from './media-file'
-import { validateStoragePath } from './storage-path'
+import { joinStoragePath, validateStorageDirectory, validateStoragePath } from './storage-path'
 
 /** 防止路径遍历：resolve 后必须仍在 rootDir 内 */
 function resolveAndValidatePath(rootDir: string, storagePath: string): string {
@@ -24,13 +30,20 @@ function resolveAndValidatePath(rootDir: string, storagePath: string): string {
 export class LocalStorage implements StorageDriver {
   constructor(private readonly rootDir: string) {}
 
-  async save(file: File): Promise<StorageSaveResult> {
+  async save(file: File, options?: StorageSaveOptions): Promise<StorageSaveResult> {
     validateMediaFile(file)
-    await mkdir(this.rootDir, { recursive: true })
+
+    if (options?.directory !== undefined) {
+      validateStorageDirectory(options.directory)
+    }
+
     const fileName = createMediaFileName(file)
-    const filePath = join(this.rootDir, fileName)
+    const storagePath = options?.directory !== undefined ? joinStoragePath(options.directory, fileName) : fileName
+    const filePath = resolveAndValidatePath(this.rootDir, storagePath)
+
+    await mkdir(dirname(filePath), { recursive: true })
     await writeFile(filePath, new Uint8Array(await file.arrayBuffer()))
-    return { fileName, storagePath: fileName }
+    return { fileName, storagePath }
   }
 
   async openFile(storagePath: string, options: StorageOpenFileOptions): Promise<Response> {

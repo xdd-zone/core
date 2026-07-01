@@ -3,7 +3,7 @@ import type { MenuProps } from 'antd'
 import { useFifaAuthMeQuery, useSignOutMutation } from '@fifa/api/auth'
 import { useNavigate } from '@tanstack/react-router'
 import { App, Avatar, Dropdown } from 'antd'
-import { LogOut } from 'lucide-react'
+import { LogOut, UserRound } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -42,6 +42,11 @@ export function AccountMenuButton() {
         type: 'divider',
       },
       {
+        key: 'profile',
+        icon: <UserRound size={14} />,
+        label: t('auth.profile'),
+      },
+      {
         key: 'sign-out',
         danger: true,
         icon: <LogOut size={14} />,
@@ -52,6 +57,11 @@ export function AccountMenuButton() {
   )
 
   const handleMenuClick: MenuProps['onClick'] = async ({ key }) => {
+    if (key === 'profile') {
+      await navigate({ to: '/settings/profile' as never })
+      return
+    }
+
     if (key !== 'sign-out') {
       return
     }

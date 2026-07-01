@@ -278,7 +278,7 @@ LLM 运行时只读取数据库配置。Provider 保存名称、OpenAI-compatibl
 
 `STORAGE_PROVIDER` 控制文件存储驱动。默认值是 `local`，使用 `LOCAL_STORAGE_DIR`，未设置时写到 `storage/media`。设成 `cos` 时，`COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION` 必须配置。`COS_KEY_PREFIX` 默认是 `media`，`COS_SIGNED_URL_EXPIRES` 默认是 `600` 秒。
 
-文件存储驱动只保存图片。`save()` 允许 `image/avif`、`image/gif`、`image/jpeg`、`image/png` 和 `image/webp`，单个文件最大 `10 MiB`。`openFile()` 在本地存储时返回 `200` 和文件内容，在 COS 存储时返回 `302` 跳转地址。`stat()` 可以读取文件大小、MIME 和修改时间。
+文件存储驱动只保存图片。`save()` 允许 `image/avif`、`image/gif`、`image/jpeg`、`image/png` 和 `image/webp`，单个文件最大 `10 MiB`。调用 `save(file, { directory: 'avatars' })` 时，文件会保存到存储根目录下的 `avatars/` 子目录。`openFile()` 在本地存储时返回 `200` 和文件内容，在 COS 存储时返回 `302` 跳转地址。`stat()` 可以读取文件大小、MIME 和修改时间。
 
 请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`。
 
@@ -566,6 +566,25 @@ apps/momo/src/modules/auth
   要求当前请求已登录、用户状态是 `active`、用户有 password 登录记录，并且绑定了 `fifa.owner`。
 - `GET /rpc/bobo/auth/me`
   未登录时返回 `user: null`。已登录时要求用户状态是 `active`，并补上 `bobo.visitor`。
+
+### profile 模块
+
+个人资料模块放在：
+
+```text
+apps/momo/src/modules/profile
+```
+
+当前接口：
+
+- `GET /rpc/fifa/profile`
+  返回当前 `fifa.owner` 的显示名、邮箱、头像地址和密码、GitHub、Google 的绑定状态。
+- `PATCH /rpc/fifa/profile`
+  修改当前 `fifa.owner` 的显示名和头像地址。
+- `POST /rpc/fifa/profile/avatar`
+  上传当前 `fifa.owner` 的头像文件，单个文件最大 `2 MiB`。接口会把头像地址写入 `user.image`，并返回同一个头像地址。这个接口只保存文件，不写 `content_assets`。
+- `GET /rpc/fifa/profile/avatar/:storagePathToken`
+  读取头像上传接口返回的本地头像文件。响应会带 `Cross-Origin-Resource-Policy: cross-origin`，允许 Fifa 从不同域名显示头像。COS 有公开地址时，头像会直接使用 COS 公开地址。
 
 当前认证表放在：
 
@@ -1094,7 +1113,7 @@ apps/momo/src/infra/search
 apps/momo/src/infra/storage
 ```
 
-本地存储和 COS 存储都在这里。存储路径会拒绝空路径、绝对路径、反斜杠和 `..` 路径段。图片上传接口在 `apps/momo/src/modules/content/content.route.ts`。
+本地存储和 COS 存储都在这里。存储路径会拒绝空路径、绝对路径、反斜杠、连续斜杠和 `..` 路径段。图片上传接口在 `apps/momo/src/modules/content/content.route.ts`。
 
 ## 共用代码
 

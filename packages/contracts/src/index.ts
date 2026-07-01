@@ -160,6 +160,20 @@ export type {
   UpdateLlmProviderRequest,
   UpdateLlmUseCaseConfigRequest,
 } from './llm/llm.contract'
+export {
+  FifaProfileAccountProviderSchema,
+  FifaProfileAccountSchema,
+  FifaProfileResponseSchema,
+  UpdateFifaProfileRequestSchema,
+  UploadFifaProfileAvatarResponseSchema,
+} from './profile/profile.contract'
+export type {
+  FifaProfileAccount,
+  FifaProfileAccountProvider,
+  FifaProfileResponse,
+  UpdateFifaProfileRequest,
+  UploadFifaProfileAvatarResponse,
+} from './profile/profile.contract'
 export { HealthResponseSchema } from './system/health.contract'
 export type { HealthResponse } from './system/health.contract'
 export { PingRequestSchema, PingResponseSchema } from './system/ping.contract'

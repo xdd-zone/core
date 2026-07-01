@@ -6,4 +6,10 @@ export {
   MAX_MEDIA_FILE_SIZE_BYTES,
   validateMediaFile,
 } from './media-file'
-export type { StorageDriver, StorageFileStat, StorageOpenFileOptions, StorageSaveResult } from './storage.types'
+export type {
+  StorageDriver,
+  StorageFileStat,
+  StorageOpenFileOptions,
+  StorageSaveOptions,
+  StorageSaveResult,
+} from './storage.types'

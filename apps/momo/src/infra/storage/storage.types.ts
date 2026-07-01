@@ -8,6 +8,12 @@ export interface StorageSaveResult {
   storagePath: string
 }
 
+/** 保存文件时的可选参数 */
+export interface StorageSaveOptions {
+  /** 保存到存储根目录下的相对目录 */
+  directory?: string
+}
+
 /** 读取文件时需要的元信息 */
 export interface StorageOpenFileOptions {
   originalName: string
@@ -26,7 +32,7 @@ export interface StorageFileStat {
 /** 存储驱动统一接口 */
 export interface StorageDriver {
   /** 保存文件，返回存储路径和文件名 */
-  save: (file: File) => Promise<StorageSaveResult>
+  save: (file: File, options?: StorageSaveOptions) => Promise<StorageSaveResult>
   /** 打开文件，返回 Response。本地返回 200 和文件内容，COS 返回 302 跳转 */
   openFile: (storagePath: string, options: StorageOpenFileOptions) => Promise<Response>
   /** 删除文件 */

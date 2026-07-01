@@ -8,6 +8,7 @@ import { createMeta } from '#momo/shared/meta'
 const RPC_BODY_LIMIT_BYTES = 1024 * 1024
 const AUTH_BODY_LIMIT_BYTES = 64 * 1024
 const CONTENT_IMAGE_BODY_LIMIT_BYTES = 10 * 1024 * 1024
+const PROFILE_AVATAR_BODY_LIMIT_BYTES = 3 * 1024 * 1024
 
 function createBodyLimitMiddleware(maxSize: number, excludePaths: string[] = []) {
   const limit = bodyLimit({
@@ -41,6 +42,10 @@ function createBodyLimitMiddleware(maxSize: number, excludePaths: string[] = [])
 
 export function registerBodyLimit(app: Hono<HonoEnv>): void {
   app.use('/rpc/content/assets/images', createBodyLimitMiddleware(CONTENT_IMAGE_BODY_LIMIT_BYTES))
-  app.use('/rpc/*', createBodyLimitMiddleware(RPC_BODY_LIMIT_BYTES, ['/rpc/content/assets/images']))
+  app.use('/rpc/fifa/profile/avatar', createBodyLimitMiddleware(PROFILE_AVATAR_BODY_LIMIT_BYTES))
+  app.use(
+    '/rpc/*',
+    createBodyLimitMiddleware(RPC_BODY_LIMIT_BYTES, ['/rpc/content/assets/images', '/rpc/fifa/profile/avatar']),
+  )
   app.use('/api/auth/*', createBodyLimitMiddleware(AUTH_BODY_LIMIT_BYTES))
 }

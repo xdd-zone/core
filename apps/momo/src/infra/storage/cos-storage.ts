@@ -1,10 +1,16 @@
-import type { StorageDriver, StorageFileStat, StorageOpenFileOptions, StorageSaveResult } from './storage.types'
+import type {
+  StorageDriver,
+  StorageFileStat,
+  StorageOpenFileOptions,
+  StorageSaveOptions,
+  StorageSaveResult,
+} from './storage.types'
 import { BizCode } from '@xdd-zone/contracts'
 import COS from 'cos-nodejs-sdk-v5'
 import { AppError } from '#momo/shared/app-error'
 
 import { createMediaFileName, validateMediaFile } from './media-file'
-import { validateStoragePath } from './storage-path'
+import { joinStoragePath, validateStorageDirectory, validateStoragePath } from './storage-path'
 
 /** COS 存储配置 */
 export interface CosStorageConfig {
@@ -22,12 +28,6 @@ export interface CosStorageClient {
   deleteObject: (params: COS.DeleteObjectParams) => Promise<unknown>
   getObjectUrl: (params: COS.GetObjectUrlParams) => string
   headObject: (params: COS.HeadObjectParams) => Promise<COS.HeadObjectResult>
-}
-
-/** 拼接 COS 对象 key */
-function joinCosKey(prefix: string, fileName: string): string {
-  const normalizedPrefix = prefix.replace(/^\/+/, '').replace(/\/+$/, '')
-  return normalizedPrefix ? `${normalizedPrefix}/${fileName}` : fileName
 }
 
 /** 判断是否为 COS SDK 错误 */
@@ -68,10 +68,16 @@ export class CosStorage implements StorageDriver {
       })
   }
 
-  async save(file: File): Promise<StorageSaveResult> {
+  async save(file: File, options?: StorageSaveOptions): Promise<StorageSaveResult> {
     validateMediaFile(file)
+
+    if (options?.directory !== undefined) {
+      validateStorageDirectory(options.directory)
+    }
+
     const fileName = createMediaFileName(file)
-    const storagePath = joinCosKey(this.config.keyPrefix, fileName)
+    const relativePath = options?.directory !== undefined ? joinStoragePath(options.directory, fileName) : fileName
+    const storagePath = this.config.keyPrefix ? joinStoragePath(this.config.keyPrefix, relativePath) : relativePath
 
     try {
       await this.client.putObject({

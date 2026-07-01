@@ -70,6 +70,33 @@ describe('cos 存储', () => {
       expect(result.publicUrl).toBe(`https://cdn.example.com/media/${result.storagePath}`)
     })
 
+    it('保存到指定目录', async () => {
+      const storage = new CosStorage(createConfig(), client)
+      const file = createTestFile('avatar.webp', 'webp-data', 'image/webp')
+
+      const result = await storage.save(file, { directory: 'avatars' })
+
+      expect(result.fileName).toMatch(/^[a-f0-9-]+\.webp$/)
+      expect(result.storagePath).toBe(`media/avatars/${result.fileName}`)
+      expect(client.putObject).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Key: result.storagePath,
+          ContentLength: file.size,
+          ContentType: 'image/webp',
+        }),
+      )
+    })
+
+    it.each(['', '/avatars', '../avatars', 'avatars//files', 'avatars/../files', 'avatars\\files'])(
+      '保存目录 %s 非法时抛错',
+      async (directory) => {
+        const storage = new CosStorage(createConfig(), client)
+
+        await expect(storage.save(createTestFile(), { directory })).rejects.toThrow('文件不存在')
+        expect(client.putObject).not.toHaveBeenCalled()
+      },
+    )
+
     it('mime 非法类型被拒绝', async () => {
       const storage = new CosStorage(createConfig(), client)
 
@@ -182,7 +209,7 @@ describe('cos 存储', () => {
       await expect(storage.stat('media/file.png')).rejects.toThrow('文件存储访问失败')
     })
 
-    it.each(['', '/tmp/file.png', 'nested/../file.png', 'nested\\file.png'])(
+    it.each(['', '/tmp/file.png', 'nested//file.png', 'nested/../file.png', 'nested\\file.png'])(
       'invalid path %s 时抛错',
       async (storagePath) => {
         const storage = new CosStorage(createConfig(), client)

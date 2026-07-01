@@ -12,9 +12,9 @@
 - Catppuccin 主题。
 - 登录页、首页、404 页面和几个示例页。
 - 内容模块，当前提供文章列表、创建、编辑、媒体库、分类和标签管理页。
-- 系统设置模块，当前提供 LLM 配置页。
+- 系统设置模块，当前提供个人资料页和 LLM 配置页。
 
-当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。当前系统设置模块接入了 Momo 的 LLM 配置接口。
+当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。当前系统设置模块接入了 Momo 的个人资料和 LLM 配置接口。
 
 ## 开始改 UI 前先看
 
@@ -62,6 +62,7 @@ apps/fifa/src/
 - `/content/posts/$postId`
 - `/content/assets`
 - `/content/taxonomy`
+- `/settings/profile`
 - `/settings/llm`
 - `/env-example`
 - `/ui-showcase`
@@ -115,6 +116,9 @@ apps/fifa/src/api/system/index.ts
 apps/fifa/src/api/content/posts.api.ts
 apps/fifa/src/api/content/content.query.ts
 apps/fifa/src/api/content/index.ts
+apps/fifa/src/api/profile/profile.api.ts
+apps/fifa/src/api/profile/profile.query.ts
+apps/fifa/src/api/profile/index.ts
 apps/fifa/src/api/llm/llm.api.ts
 apps/fifa/src/api/llm/llm.query.ts
 apps/fifa/src/api/llm/index.ts
@@ -136,6 +140,10 @@ apps/fifa/src/api/llm/index.ts
   调 Momo content RPC。页面不要直接 import `momoClient`。
 - `api/content/content.query.ts`
   放 content 模块的 query key 和 hooks。页面不要手写 content query key。
+- `api/profile/*.api.ts`
+  调 Momo 的个人资料接口和 Better Auth 账号绑定接口。
+- `api/profile/profile.query.ts`
+  放 profile 模块的 query key 和 hooks。页面不要手写 profile query key。
 - `api/llm/*.api.ts`
   调 Momo LLM 配置接口。页面不要直接 import `momoClient`。
 - `api/llm/llm.query.ts`
@@ -170,6 +178,9 @@ apps/fifa/.env.example
 ```text
 POST /api/auth/sign-in/email
 GET /rpc/fifa/auth/me
+GET /rpc/fifa/profile
+PATCH /rpc/fifa/profile
+POST /rpc/fifa/profile/avatar
 GET /health
 POST /rpc/system/ping
 GET /rpc/content/posts
