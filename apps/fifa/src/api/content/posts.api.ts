@@ -13,6 +13,7 @@ import type {
   GeneratePostMetaRequest,
   GeneratePostMetaResponse,
   ImageAssetResponse,
+  LlmUseCaseStatusResponse,
   MdxComponentsResponse,
   PostDetailResponse,
   PostListResponse,
@@ -26,7 +27,8 @@ import type {
 } from '@xdd-zone/contracts'
 
 import { momoClient } from '../client'
-import { readMomoJson } from '../rpc'
+import { resolveMomoHttpUrl } from '../momo-url'
+import { readMomoFetchJson, readMomoJson } from '../rpc'
 
 export function listContentPosts() {
   return readMomoJson<PostListResponse>(momoClient.rpc.content.posts.$get())
@@ -123,6 +125,14 @@ export function generateContentPostMetaSuggestion(payload: GeneratePostMetaReque
   return readMomoJson<GeneratePostMetaResponse>(
     momoClient.rpc.content.posts['meta-suggestion'].$post({
       json: payload,
+    }),
+  )
+}
+
+export function getContentPostMetaSuggestionStatus() {
+  return readMomoFetchJson<LlmUseCaseStatusResponse>(
+    fetch(resolveMomoHttpUrl('/rpc/llm/use-cases/content.post.meta/status'), {
+      credentials: 'include',
     }),
   )
 }

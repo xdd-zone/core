@@ -6,6 +6,7 @@ import type { TabsProps } from 'antd'
 import {
   useContentAssetsQuery,
   useContentCategoriesQuery,
+  useContentPostMetaSuggestionStatusQuery,
   useContentPostQuery,
   useContentTagsQuery,
   useCreateContentPreviewTokenMutation,
@@ -21,7 +22,7 @@ import { buildBoboPreviewUrl } from '@fifa/features/content/utils/preview-url'
 import { ignoreAntdUploadRequest } from '@fifa/features/content/utils/upload'
 import { useTabBarStore } from '@fifa/stores'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
-import { App, Button, Form, Input, Modal, Select, Tabs, Tag, Upload } from 'antd'
+import { App, Button, Form, Input, Modal, Select, Space, Tabs, Tag, Tooltip, Upload } from 'antd'
 import { ExternalLink, ImagePlus, PackagePlus, Save, Send, SquareArrowOutUpRight, Wand2 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -141,6 +142,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
   const saveDraftMutation = useSaveContentPostDraftMutation(postId)
   const previewTokenMutation = useCreateContentPreviewTokenMutation(postId)
   const publishMutation = usePublishContentPostMutation(postId)
+  const metaSuggestionStatusQuery = useContentPostMetaSuggestionStatusQuery()
   const metaSuggestionMutation = useGenerateContentPostMetaSuggestionMutation()
   const uploadImageMutation = useUploadContentImageMutation()
   const [assetPickerOpen, setAssetPickerOpen] = useState(false)
@@ -169,6 +171,11 @@ function PostEditContent({ postId }: PostEditContentProps) {
   const sidebarAssets = useMemo(() => (sidebarQuery.data?.ok ? sidebarQuery.data.data.assets : []), [sidebarQuery.data])
   const pickerAssets = useMemo(() => (pickerQuery.data?.ok ? pickerQuery.data.data.assets : []), [pickerQuery.data])
   const currentCoverAssetId = Form.useWatch('coverAssetId', form)
+  const metaSuggestionStatus = metaSuggestionStatusQuery.data?.ok
+    ? metaSuggestionStatusQuery.data.data.status
+    : undefined
+  const metaSuggestionReady = metaSuggestionStatus?.ready ?? false
+  const metaSuggestionDisabledReason = metaSuggestionStatus?.reason ?? t('content.postEdit.ai.statusUnknown')
 
   useEffect(() => {
     if (!post || loadedPostIdRef.current === post.id) {
@@ -254,6 +261,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
         excerpt: values.excerpt?.trim() || null,
         locale: 'zh-CN',
         mode: 'edit',
+        postId,
         slug: values.slug?.trim(),
         source: values.source,
         targets,
@@ -321,7 +329,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
         title: t('content.postEdit.ai.applyTitle'),
       })
     },
-    [form, message, metaSuggestionMutation, modal, t],
+    [form, message, metaSuggestionMutation, modal, postId, t],
   )
 
   const handlePreview = useCallback(async () => {
@@ -721,52 +729,75 @@ function PostEditContent({ postId }: PostEditContentProps) {
                 <div className="text-sm font-medium text-fg">{t('content.postEdit.postInfo')}</div>
                 <div className="mt-1 text-xs text-fg-muted">{t('content.postEdit.postInfoDescription')}</div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  icon={<Wand2 className="size-4" />}
-                  loading={metaSuggestionMutation.isPending}
-                  onClick={() => void handleGenerateMeta(['slug'])}
-                  size="small"
-                >
-                  {t('content.postEdit.ai.generateSlug')}
-                </Button>
-                <Button
-                  loading={metaSuggestionMutation.isPending}
-                  onClick={() => void handleGenerateMeta(['excerpt'])}
-                  size="small"
-                >
-                  {t('content.postEdit.ai.generateExcerpt')}
-                </Button>
-                <Button
-                  loading={metaSuggestionMutation.isPending}
-                  onClick={() => void handleGenerateMeta(['slug', 'excerpt'])}
-                  size="small"
-                >
-                  {t('content.postEdit.ai.generateSlugAndExcerpt')}
-                </Button>
-              </div>
+              <Tag color={metaSuggestionReady ? 'success' : 'default'}>
+                {metaSuggestionReady ? t('content.postEdit.ai.ready') : metaSuggestionDisabledReason}
+              </Tag>
             </div>
           </div>
 
           <div className="px-5 py-4">
             <div className="grid gap-x-4 md:grid-cols-2">
-              <Form.Item
-                name="title"
-                label={t('content.postEdit.form.title')}
-                rules={[{ required: true, message: t('content.postEdit.form.titleRequired') }]}
-              >
-                <Input placeholder={t('content.postEdit.form.titlePlaceholder')} />
+              <Form.Item label={t('content.postEdit.form.title')} required>
+                <Space.Compact className="w-full">
+                  <Form.Item name="title" noStyle rules={[{ required: true, message: t('content.postEdit.form.titleRequired') }]}>
+                    <Input placeholder={t('content.postEdit.form.titlePlaceholder')} />
+                  </Form.Item>
+                  <Tooltip
+                    title={metaSuggestionReady ? t('content.postEdit.ai.generateTitle') : metaSuggestionDisabledReason}
+                  >
+                    <Button
+                      disabled={!metaSuggestionReady}
+                      icon={<Wand2 className="size-4" />}
+                      loading={metaSuggestionMutation.isPending}
+                      onClick={() => void handleGenerateMeta(['title'])}
+                    >
+                      {t('content.postEdit.ai.generateTitle')}
+                    </Button>
+                  </Tooltip>
+                </Space.Compact>
               </Form.Item>
-              <Form.Item
-                name="slug"
-                label={t('content.postEdit.form.slug')}
-                rules={[{ required: true, message: t('content.postEdit.form.slugRequired') }]}
-              >
-                <Input placeholder={t('content.postEdit.form.slugPlaceholder')} />
+              <Form.Item label={t('content.postEdit.form.slug')} required>
+                <Space.Compact className="w-full">
+                  <Form.Item name="slug" noStyle rules={[{ required: true, message: t('content.postEdit.form.slugRequired') }]}>
+                    <Input placeholder={t('content.postEdit.form.slugPlaceholder')} />
+                  </Form.Item>
+                  <Tooltip title={metaSuggestionReady ? t('content.postEdit.ai.generateSlug') : metaSuggestionDisabledReason}>
+                    <Button
+                      disabled={!metaSuggestionReady}
+                      icon={<Wand2 className="size-4" />}
+                      loading={metaSuggestionMutation.isPending}
+                      onClick={() => void handleGenerateMeta(['slug'])}
+                    >
+                      {t('content.postEdit.ai.generateSlug')}
+                    </Button>
+                  </Tooltip>
+                </Space.Compact>
               </Form.Item>
             </div>
 
-            <Form.Item name="excerpt" label={t('content.postEdit.form.excerpt')}>
+            <Form.Item
+              name="excerpt"
+              label={t('content.postEdit.form.excerpt')}
+              extra={
+                <div className="mt-2 flex justify-end">
+                  <Tooltip
+                    title={
+                      metaSuggestionReady ? t('content.postEdit.ai.generateExcerpt') : metaSuggestionDisabledReason
+                    }
+                  >
+                    <Button
+                      disabled={!metaSuggestionReady}
+                      icon={<Wand2 className="size-4" />}
+                      loading={metaSuggestionMutation.isPending}
+                      onClick={() => void handleGenerateMeta(['excerpt'])}
+                      size="small"
+                    >
+                      {t('content.postEdit.ai.generateExcerpt')}
+                    </Button>
+                  </Tooltip>
+                </div>
+              }
+            >
               <Input.TextArea
                 autoSize={{ minRows: 2, maxRows: 4 }}
                 placeholder={t('content.postEdit.form.excerptPlaceholder')}
@@ -793,15 +824,13 @@ function PostEditContent({ postId }: PostEditContentProps) {
               </Form.Item>
             </div>
 
-            <Form.Item className="mb-0" name="coverAssetId" label={t('content.postEdit.coverAssetId')}>
-              <Input
-                addonAfter={
-                  <Button onClick={() => setAssetPickerOpen(true)} type="link">
-                    {t('content.postEdit.chooseCoverAsset')}
-                  </Button>
-                }
-                placeholder={t('content.postEdit.coverAssetIdPlaceholder')}
-              />
+            <Form.Item className="mb-0" label={t('content.postEdit.coverAssetId')}>
+              <Space.Compact className="w-full">
+                <Form.Item name="coverAssetId" noStyle>
+                  <Input placeholder={t('content.postEdit.coverAssetIdPlaceholder')} />
+                </Form.Item>
+                <Button onClick={() => setAssetPickerOpen(true)}>{t('content.postEdit.chooseCoverAsset')}</Button>
+              </Space.Compact>
             </Form.Item>
             {currentCoverAssetId ? (
               <div className="mt-3 text-xs text-fg-muted">

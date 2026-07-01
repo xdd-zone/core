@@ -20,6 +20,7 @@ import {
   useLlmProvidersQuery,
   useLlmUseCaseConfigsQuery,
   useTestLlmProviderMutation,
+  useTestLlmUseCaseMutation,
   useUpdateLlmProviderMutation,
   useUpdateLlmUseCaseConfigMutation,
 } from '@fifa/api/llm'
@@ -30,6 +31,7 @@ import {
   Drawer,
   Form,
   Input,
+  Collapse,
   InputNumber,
   Modal,
   Select,
@@ -50,6 +52,37 @@ interface DialogState<T> {
 }
 
 type LlmCallLogTablePagination = Parameters<NonNullable<TableProps<LlmCallLog>['onChange']>>[0]
+
+const providerPresets = [
+  {
+    apiFormat: 'responses' as const,
+    baseUrl: 'https://api.openai.com/v1',
+    defaultModel: 'gpt-5-mini',
+    key: 'openai',
+    name: 'OpenAI',
+  },
+  {
+    apiFormat: 'chat_completions' as const,
+    baseUrl: 'https://api.deepseek.com',
+    defaultModel: 'deepseek-chat',
+    key: 'deepseek',
+    name: 'DeepSeek',
+  },
+  {
+    apiFormat: 'chat_completions' as const,
+    baseUrl: 'https://api.siliconflow.cn/v1',
+    defaultModel: 'Qwen/Qwen2.5-72B-Instruct',
+    key: 'siliconflow',
+    name: '硅基流动',
+  },
+  {
+    apiFormat: 'chat_completions' as const,
+    baseUrl: 'https://openrouter.ai/api/v1',
+    defaultModel: 'openai/gpt-4o-mini',
+    key: 'openrouter',
+    name: 'OpenRouter',
+  },
+]
 
 function ProviderSection() {
   const { t } = useTranslation()
@@ -77,6 +110,13 @@ function ProviderSection() {
   )
 
   const providerTypeOptions = useMemo(() => [{ label: t('settings.llm.providerType.openai'), value: 'openai' }], [t])
+  const presetOptions = useMemo(
+    () => [
+      { label: t('settings.llm.providers.form.customPreset'), value: '' },
+      ...providerPresets.map((preset) => ({ label: preset.name, value: preset.key })),
+    ],
+    [t],
+  )
 
   useEffect(() => {
     if (!dialog.open) return
@@ -98,6 +138,7 @@ function ProviderSection() {
     form.setFieldsValue({
       apiFormat: 'chat_completions',
       enabled: false,
+      providerPreset: '',
       providerType: 'openai',
       timeoutMs: 15000,
     })
@@ -111,10 +152,27 @@ function ProviderSection() {
     setDialog({ open: true, record })
   }, [])
 
+  const handlePresetChange = useCallback(
+    (presetKey: string) => {
+      const preset = providerPresets.find((item) => item.key === presetKey)
+      if (!preset) return
+
+      form.setFieldsValue({
+        apiFormat: preset.apiFormat,
+        baseUrl: preset.baseUrl,
+        defaultModel: preset.defaultModel,
+        name: preset.name,
+        providerType: 'openai',
+      })
+    },
+    [form],
+  )
+
   const handleSave = useCallback(async () => {
     const values = await form.validateFields()
+    const { providerPreset: _providerPreset, ...restValues } = values
     const payload = {
-      ...values,
+      ...restValues,
       apiKey: values.apiKey?.trim() || undefined,
     }
 
@@ -309,19 +367,17 @@ function ProviderSection() {
           >
             <Input />
           </Form.Item>
+          {!dialog.record ? (
+            <Form.Item label={t('settings.llm.providers.form.providerPreset')} name="providerPreset">
+              <Select options={presetOptions} onChange={handlePresetChange} />
+            </Form.Item>
+          ) : null}
           <Form.Item
             label={t('settings.llm.providers.form.providerType')}
             name="providerType"
             rules={[{ message: t('settings.llm.providers.form.providerTypeRequired'), required: true }]}
           >
             <Select disabled={!!dialog.record} options={providerTypeOptions} />
-          </Form.Item>
-          <Form.Item
-            label={t('settings.llm.providers.form.apiFormat')}
-            name="apiFormat"
-            rules={[{ message: t('settings.llm.providers.form.apiFormatRequired'), required: true }]}
-          >
-            <Select options={apiFormatOptions} />
           </Form.Item>
           <Form.Item
             label={t('settings.llm.providers.form.baseUrl')}
@@ -360,13 +416,33 @@ function ProviderSection() {
           >
             <Input />
           </Form.Item>
-          <Form.Item
-            label={t('settings.llm.providers.form.timeoutMs')}
-            name="timeoutMs"
-            rules={[{ message: t('settings.llm.providers.form.timeoutMsRequired'), required: true }]}
-          >
-            <InputNumber className="w-full" max={120000} min={1000} step={1000} />
-          </Form.Item>
+          <Collapse
+            ghost
+            items={[
+              {
+                children: (
+                  <>
+                    <Form.Item
+                      label={t('settings.llm.providers.form.apiFormat')}
+                      name="apiFormat"
+                      rules={[{ message: t('settings.llm.providers.form.apiFormatRequired'), required: true }]}
+                    >
+                      <Select options={apiFormatOptions} />
+                    </Form.Item>
+                    <Form.Item
+                      label={t('settings.llm.providers.form.timeoutMs')}
+                      name="timeoutMs"
+                      rules={[{ message: t('settings.llm.providers.form.timeoutMsRequired'), required: true }]}
+                    >
+                      <InputNumber className="w-full" max={120000} min={1000} step={1000} />
+                    </Form.Item>
+                  </>
+                ),
+                key: 'advanced',
+                label: t('settings.llm.providers.form.advanced'),
+              },
+            ]}
+          />
         </Form>
       </Modal>
     </div>
@@ -382,6 +458,7 @@ function UseCasesSection() {
   const configsQuery = useLlmUseCaseConfigsQuery()
   const providersQuery = useLlmProvidersQuery()
   const updateMutation = useUpdateLlmUseCaseConfigMutation()
+  const testMutation = useTestLlmUseCaseMutation()
 
   const configs = useMemo(() => (configsQuery.data?.ok ? configsQuery.data.data.configs : []), [configsQuery.data])
   const providers = useMemo(
@@ -412,6 +489,18 @@ function UseCasesSection() {
   const handleOpenEdit = useCallback((record: LlmUseCaseConfig) => {
     setDialog({ open: true, record })
   }, [])
+
+  const handleTest = useCallback(
+    async (record: LlmUseCaseConfig) => {
+      const res = await testMutation.mutateAsync(record.useCase)
+      if (!res.ok) {
+        message.error(res.error.message)
+        return
+      }
+      message.success(t('settings.llm.useCases.testSuccess'))
+    },
+    [message, t, testMutation],
+  )
 
   const handleSave = useCallback(async () => {
     if (!dialog.record) return
@@ -481,18 +570,31 @@ function UseCasesSection() {
       {
         key: 'actions',
         title: t('settings.llm.useCases.table.actions'),
-        width: 100,
+        width: 120,
         render: (_, record) => (
-          <Button
-            icon={<Pencil className="size-4" />}
-            onClick={() => handleOpenEdit(record)}
-            size="small"
-            type="text"
-          />
+          <Space size="small">
+            <Tooltip title={t('settings.llm.useCases.test')}>
+              <Button
+                icon={<Zap className="size-4" />}
+                loading={testMutation.isPending}
+                onClick={() => handleTest(record)}
+                size="small"
+                type="text"
+              />
+            </Tooltip>
+            <Tooltip title={t('settings.llm.useCases.edit')}>
+              <Button
+                icon={<Pencil className="size-4" />}
+                onClick={() => handleOpenEdit(record)}
+                size="small"
+                type="text"
+              />
+            </Tooltip>
+          </Space>
         ),
       },
     ],
-    [handleOpenEdit, t],
+    [handleOpenEdit, handleTest, t, testMutation.isPending],
   )
 
   return (

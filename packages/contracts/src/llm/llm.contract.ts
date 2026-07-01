@@ -97,6 +97,23 @@ export const TestLlmProviderResponseSchema = z.object({
   usage: LlmUsageSchema.optional(),
 })
 
+export const LlmUseCaseStatusSchema = z.object({
+  config: LlmUseCaseConfigSchema,
+  ready: z.boolean(),
+  reason: z.string().nullable(),
+  useCase: LlmUseCaseSchema,
+})
+
+export const LlmUseCaseStatusResponseSchema = z.object({
+  status: LlmUseCaseStatusSchema,
+})
+
+export const TestLlmUseCaseResponseSchema = z.object({
+  logId: z.string(),
+  status: LlmCallStatusSchema,
+  usage: LlmUsageSchema.optional(),
+})
+
 export const LlmCallLogSchema = z.object({
   actorId: z.string().nullable(),
   durationMs: z.number().int().nonnegative().nullable(),
@@ -168,6 +185,9 @@ export type UpdateLlmUseCaseConfigRequest = z.infer<typeof UpdateLlmUseCaseConfi
 export type LlmUseCaseConfigResponse = z.infer<typeof LlmUseCaseConfigResponseSchema>
 export type LlmUseCaseConfigListResponse = z.infer<typeof LlmUseCaseConfigListResponseSchema>
 export type TestLlmProviderResponse = z.infer<typeof TestLlmProviderResponseSchema>
+export type LlmUseCaseStatus = z.infer<typeof LlmUseCaseStatusSchema>
+export type LlmUseCaseStatusResponse = z.infer<typeof LlmUseCaseStatusResponseSchema>
+export type TestLlmUseCaseResponse = z.infer<typeof TestLlmUseCaseResponseSchema>
 export type LlmCallLog = z.infer<typeof LlmCallLogSchema>
 export type LlmCallLogListQuery = z.infer<typeof LlmCallLogListQuerySchema>
 export type LlmCallLogListResponse = z.infer<typeof LlmCallLogListResponseSchema>

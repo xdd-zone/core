@@ -72,6 +72,28 @@ export function createLlmRoute(runtime: MomoRuntime) {
       const result = await service.listUseCaseConfigs()
       return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
     })
+    .get('/rpc/llm/use-cases/:useCase/status', requireOwner, async (c) => {
+      const parsedUseCase = LlmUseCaseSchema.safeParse(c.req.param('useCase'))
+      if (!parsedUseCase.success) {
+        throw new AppError(BizCode.COMMON_INVALID_REQUEST, 'LLM 用例不存在', 400)
+      }
+
+      const result = await service.getUseCaseStatus(parsedUseCase.data)
+      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
+    })
+    .post('/rpc/llm/use-cases/:useCase/test', requireOwner, async (c) => {
+      const parsedUseCase = LlmUseCaseSchema.safeParse(c.req.param('useCase'))
+      if (!parsedUseCase.success) {
+        throw new AppError(BizCode.COMMON_INVALID_REQUEST, 'LLM 用例不存在', 400)
+      }
+
+      const result = await service.testUseCase({
+        actorId: c.var.user?.id,
+        requestId: c.var.requestId,
+        useCase: parsedUseCase.data,
+      })
+      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
+    })
     .patch(
       '/rpc/llm/use-cases/:useCase',
       requireOwner,

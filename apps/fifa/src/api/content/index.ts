@@ -3,6 +3,7 @@ export {
   useContentAssetQuery,
   useContentAssetsQuery,
   useContentCategoriesQuery,
+  useContentPostMetaSuggestionStatusQuery,
   useContentPostQuery,
   useContentPostsQuery,
   useContentTagsQuery,

@@ -3,6 +3,7 @@ import type { TableProps } from 'antd'
 
 import {
   useContentCategoriesQuery,
+  useContentPostMetaSuggestionStatusQuery,
   useContentPostsQuery,
   useContentTagsQuery,
   useCreateContentPostMutation,
@@ -11,7 +12,7 @@ import {
 import { FifaPageHeader } from '@fifa/components/common'
 import { filterContentPosts } from '@fifa/features/content/utils/post-list'
 import { useNavigate } from '@tanstack/react-router'
-import { App, Button, Form, Input, Modal, Select, Table, Tag } from 'antd'
+import { App, Button, Form, Input, Modal, Select, Space, Table, Tag, Tooltip } from 'antd'
 import { FilePlus2, Pencil, RefreshCw, Search, Wand2 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -72,6 +73,7 @@ export function PostList() {
   const categoriesQuery = useContentCategoriesQuery()
   const tagsQuery = useContentTagsQuery()
   const createPostMutation = useCreateContentPostMutation()
+  const metaSuggestionStatusQuery = useContentPostMetaSuggestionStatusQuery()
   const metaSuggestionMutation = useGenerateContentPostMetaSuggestionMutation()
   const [form] = Form.useForm<CreatePostFormValue>()
   const [createOpen, setCreateOpen] = useState(false)
@@ -95,6 +97,9 @@ export function PostList() {
   )
   const tags = useMemo(() => (tagsQuery.data?.ok ? tagsQuery.data.data.tags : []), [tagsQuery.data])
   const loadError = postsQuery.data && !postsQuery.data.ok ? postsQuery.data.error.message : undefined
+  const metaSuggestionStatus = metaSuggestionStatusQuery.data?.ok ? metaSuggestionStatusQuery.data.data.status : undefined
+  const metaSuggestionReady = metaSuggestionStatus?.ready ?? false
+  const metaSuggestionDisabledReason = metaSuggestionStatus?.reason ?? t('content.posts.ai.statusUnknown')
   const categoryOptions = useMemo(
     () => categories.map((category) => ({ label: category.name, value: category.id })),
     [categories],
@@ -320,24 +325,22 @@ export function PostList() {
           >
             <Input placeholder={t('content.posts.form.titlePlaceholder')} />
           </Form.Item>
-          <Form.Item
-            name="slug"
-            label={t('content.posts.form.slug')}
-            rules={[{ required: true, message: t('content.posts.form.slugRequired') }]}
-          >
-            <Input
-              addonAfter={
+          <Form.Item label={t('content.posts.form.slug')} required>
+            <Space.Compact className="w-full">
+              <Form.Item name="slug" noStyle rules={[{ required: true, message: t('content.posts.form.slugRequired') }]}>
+                <Input placeholder={t('content.posts.form.slugPlaceholder')} />
+              </Form.Item>
+              <Tooltip title={metaSuggestionReady ? t('content.posts.ai.generateSlug') : metaSuggestionDisabledReason}>
                 <Button
+                  disabled={!metaSuggestionReady}
                   icon={<Wand2 className="size-4" />}
                   loading={metaSuggestionMutation.isPending}
                   onClick={() => void handleGenerateSlug()}
-                  type="link"
                 >
                   {t('content.posts.ai.generateSlug')}
                 </Button>
-              }
-              placeholder={t('content.posts.form.slugPlaceholder')}
-            />
+              </Tooltip>
+            </Space.Compact>
           </Form.Item>
           <Form.Item name="categoryId" label={t('content.posts.form.category')}>
             <Select

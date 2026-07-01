@@ -11,6 +11,7 @@ import {
   LlmProviderListResponseSchema,
   LlmUseCaseConfigListResponseSchema,
   LlmUseCaseConfigResponseSchema,
+  LlmUseCaseStatusResponseSchema,
 } from '@xdd-zone/contracts'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
@@ -173,6 +174,20 @@ describe('llm 路由', () => {
     expect(body.ok).toBe(false)
     expect(!body.ok && body.error.code).toBe(BizCode.BIZ_RULE_VIOLATION)
     expect(!body.ok && body.error.message).toBe('启用 LLM Provider 前必须配置 API Key')
+  })
+
+  it('可以读取 LLM use case 状态', async () => {
+    const response = await momoApp.request('/rpc/llm/use-cases/content.post.meta/status', {
+      headers: { cookie: ownerCookie },
+    })
+    const body = (await response.json()) as ApiResponse<unknown>
+
+    expect(response.status).toBe(200)
+    const data = expectOkData(body)
+    const parsed = LlmUseCaseStatusResponseSchema.parse(data)
+    expect(parsed.status.useCase).toBe('content.post.meta')
+    expect(parsed.status.ready).toBe(false)
+    expect(parsed.status.reason).toBe('LLM 用例未启用')
   })
 
   it('可以更新 LLM use case 配置', async () => {

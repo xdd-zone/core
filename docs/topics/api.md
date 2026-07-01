@@ -55,6 +55,8 @@ apps/momo/src/modules/content/public-content.route.ts
 | `DELETE` | `/rpc/llm/providers/:providerId/api-key` | 清空未启用 Provider 的 API Key |
 | `POST` | `/rpc/llm/providers/:providerId/test` | 测试 Provider 并写入调用日志 |
 | `GET` | `/rpc/llm/use-cases` | LLM use case 配置列表 |
+| `GET` | `/rpc/llm/use-cases/:useCase/status` | 检查单个 LLM use case 是否可调用 |
+| `POST` | `/rpc/llm/use-cases/:useCase/test` | 用单个 LLM use case 的真实配置发起测试调用 |
 | `PATCH` | `/rpc/llm/use-cases/:useCase` | 更新单个 LLM use case 配置 |
 | `GET` | `/rpc/llm/call-logs` | LLM 调用日志列表 |
 | `GET` | `/rpc/llm/call-logs/:logId` | 单条 LLM 调用日志 |

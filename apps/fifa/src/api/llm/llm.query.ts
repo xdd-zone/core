@@ -12,10 +12,12 @@ import {
   deleteExpiredLlmCallLogs,
   deleteLlmProviderApiKey,
   getLlmCallLog,
+  getLlmUseCaseStatus,
   listLlmCallLogs,
   listLlmProviders,
   listLlmUseCaseConfigs,
   testLlmProvider,
+  testLlmUseCase,
   updateLlmProvider,
   updateLlmUseCaseConfig,
 } from './llm.api'
@@ -27,6 +29,7 @@ export const llmQueryKeys = {
   callLogsList: (query: LlmCallLogListQuery) => [...llmQueryKeys.callLogs(), 'list', query] as const,
   configs: () => [...llmQueryKeys.all, 'use-cases'] as const,
   providers: () => [...llmQueryKeys.all, 'providers'] as const,
+  useCaseStatus: (useCase: LlmUseCase) => [...llmQueryKeys.configs(), useCase, 'status'] as const,
 }
 
 export function useLlmProvidersQuery() {
@@ -91,8 +94,28 @@ export function useUpdateLlmUseCaseConfigMutation() {
   return useMutation({
     mutationFn: (input: { payload: UpdateLlmUseCaseConfigRequest; useCase: LlmUseCase }) =>
       updateLlmUseCaseConfig(input.useCase, input.payload),
-    onSuccess: async () => {
+    onSuccess: async (_response, input) => {
       await queryClient.invalidateQueries({ queryKey: llmQueryKeys.configs() })
+      await queryClient.invalidateQueries({ queryKey: llmQueryKeys.useCaseStatus(input.useCase) })
+    },
+  })
+}
+
+export function useLlmUseCaseStatusQuery(useCase: LlmUseCase) {
+  return useQuery({
+    queryKey: llmQueryKeys.useCaseStatus(useCase),
+    queryFn: () => getLlmUseCaseStatus(useCase),
+  })
+}
+
+export function useTestLlmUseCaseMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (useCase: LlmUseCase) => testLlmUseCase(useCase),
+    onSuccess: async (_response, useCase) => {
+      await queryClient.invalidateQueries({ queryKey: llmQueryKeys.callLogs() })
+      await queryClient.invalidateQueries({ queryKey: llmQueryKeys.useCaseStatus(useCase) })
     },
   })
 }

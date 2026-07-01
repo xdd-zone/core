@@ -11,16 +11,30 @@ export async function readMomoJson<TData>(request: Promise<MomoJsonResponse<TDat
 
     return await response.json()
   } catch (error) {
-    return {
-      ok: false,
-      error: {
-        code: BizCode.SYSTEM_UPSTREAM_TIMEOUT,
-        message: error instanceof Error ? error.message : 'Momo 请求失败',
-      },
-      meta: {
-        requestId: 'unavailable',
-        timestamp: new Date().toISOString(),
-      },
-    }
+    return createMomoRequestFailure(error)
+  }
+}
+
+export async function readMomoFetchJson<TData>(request: Promise<Response>): Promise<ApiResponse<TData>> {
+  try {
+    const response = await request
+
+    return (await response.json()) as ApiResponse<TData>
+  } catch (error) {
+    return createMomoRequestFailure(error)
+  }
+}
+
+function createMomoRequestFailure<TData>(error: unknown): ApiResponse<TData> {
+  return {
+    ok: false,
+    error: {
+      code: BizCode.SYSTEM_UPSTREAM_TIMEOUT,
+      message: error instanceof Error ? error.message : 'Momo 请求失败',
+    },
+    meta: {
+      requestId: 'unavailable',
+      timestamp: new Date().toISOString(),
+    },
   }
 }

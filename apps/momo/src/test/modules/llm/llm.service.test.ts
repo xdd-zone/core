@@ -1,13 +1,12 @@
 import type { Logger } from 'pino'
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { CacheDriver } from '#momo/infra/cache'
-import type { LlmDriver } from '#momo/infra/llm'
 import type { SearchDriver } from '#momo/infra/search'
 import type { StorageDriver } from '#momo/infra/storage'
 import type { LlmConfigRepository } from '../../../modules/llm/repositories/llm-config.repository'
 import { BizCode } from '@xdd-zone/contracts'
 import { describe, expect, it, vi } from 'vitest'
-import { createApiKeyHint, DisabledLlm, encryptLlmSecret } from '#momo/infra/llm'
+import { createApiKeyHint, encryptLlmSecret } from '#momo/infra/llm'
 
 import { createLlmService, getPostMetaUserPrompt } from '../../../modules/llm/services/llm.service'
 
@@ -34,7 +33,7 @@ describe('llm service', () => {
 
   it('content.post.meta 会校验模型返回格式并写错误日志', async () => {
     const repository = createRepository({ enabled: true, providerEnabled: true, withApiKey: true })
-    const service = createLlmService(createRuntime(new DisabledLlm()), repository, () => ({
+    const service = createLlmService(createRuntime(), repository, () => ({
       generateStructuredJson: vi.fn().mockResolvedValue({
         data: {
           title: 123,
@@ -43,21 +42,39 @@ describe('llm service', () => {
     }))
 
     await expect(
-      service.generatePostMetaSuggestion({
-        locale: 'zh-CN',
-        mode: 'create',
-        targets: ['title'],
-      }),
+      service.generatePostMetaSuggestion(
+        {
+          locale: 'zh-CN',
+          mode: 'create',
+          postId: 'post-1',
+          targets: ['title'],
+        },
+        {
+          actorId: 'user-1',
+          requestId: 'request-1',
+          sourceId: 'post-1',
+          sourceType: 'content.post',
+        },
+      ),
     ).rejects.toMatchObject({
       code: BizCode.BIZ_RULE_VIOLATION,
+      details: { logId: 'log-1' },
       message: 'LLM 返回的文章字段建议格式不正确',
       status: 409,
     })
-    expect(repository.createCallLog).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }))
+    expect(repository.createCallLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: 'user-1',
+        requestId: 'request-1',
+        sourceId: 'post-1',
+        sourceType: 'content.post',
+        status: 'error',
+      }),
+    )
   })
 
   it('llm 未启用时返回 409', async () => {
-    const service = createLlmService(createRuntime(new DisabledLlm()))
+    const service = createLlmService(createRuntime())
 
     await expect(
       service.generatePostMetaSuggestion({
@@ -73,9 +90,7 @@ describe('llm service', () => {
 
   it('use case 禁用时返回 409', async () => {
     const service = createLlmService(
-      createRuntime({
-        generateStructuredJson: vi.fn(),
-      }),
+      createRuntime(),
       createRepository({ enabled: false, providerEnabled: true, withApiKey: true }),
     )
 
@@ -94,9 +109,7 @@ describe('llm service', () => {
 
   it('provider 禁用时返回 409', async () => {
     const service = createLlmService(
-      createRuntime({
-        generateStructuredJson: vi.fn(),
-      }),
+      createRuntime(),
       createRepository({ enabled: true, providerEnabled: false, withApiKey: true }),
     )
 
@@ -115,9 +128,7 @@ describe('llm service', () => {
 
   it('provider 无 API Key 时返回 409', async () => {
     const service = createLlmService(
-      createRuntime({
-        generateStructuredJson: vi.fn(),
-      }),
+      createRuntime(),
       createRepository({ enabled: true, providerEnabled: true, withApiKey: false }),
     )
 
@@ -136,7 +147,7 @@ describe('llm service', () => {
 
   it('创建启用 provider 时必须提交 API Key', async () => {
     const repository = createRepository({ enabled: true, providerEnabled: false, withApiKey: false })
-    const service = createLlmService(createRuntime(new DisabledLlm()), repository)
+    const service = createLlmService(createRuntime(), repository)
 
     await expect(
       service.createProvider({
@@ -158,7 +169,7 @@ describe('llm service', () => {
 
   it('更新无密钥 provider 为启用时返回 409', async () => {
     const repository = createRepository({ enabled: true, providerEnabled: false, withApiKey: false })
-    const service = createLlmService(createRuntime(new DisabledLlm()), repository)
+    const service = createLlmService(createRuntime(), repository)
 
     await expect(service.updateProvider('provider-1', { enabled: true })).rejects.toMatchObject({
       code: BizCode.BIZ_RULE_VIOLATION,
@@ -170,7 +181,7 @@ describe('llm service', () => {
 
   it('已有密钥 provider 更新为启用时允许不重新提交 API Key', async () => {
     const repository = createRepository({ enabled: true, providerEnabled: false, withApiKey: true })
-    const service = createLlmService(createRuntime(new DisabledLlm()), repository)
+    const service = createLlmService(createRuntime(), repository)
 
     await expect(service.updateProvider('provider-1', { enabled: true })).resolves.toMatchObject({
       provider: {
@@ -188,7 +199,7 @@ describe('llm service', () => {
 
   it('启用 provider 不能清空 API Key', async () => {
     const repository = createRepository({ enabled: true, providerEnabled: true, withApiKey: true })
-    const service = createLlmService(createRuntime(new DisabledLlm()), repository)
+    const service = createLlmService(createRuntime(), repository)
 
     await expect(service.clearProviderApiKey('provider-1')).rejects.toMatchObject({
       code: BizCode.BIZ_RULE_VIOLATION,
@@ -257,7 +268,7 @@ function createRepository(overrides: { enabled: boolean; providerEnabled: boolea
   return repository as LlmConfigRepository
 }
 
-function createRuntime(llm: LlmDriver, envOverrides: Partial<MomoRuntime['env']> = {}): MomoRuntime {
+function createRuntime(envOverrides: Partial<MomoRuntime['env']> = {}): MomoRuntime {
   return {
     cache: {} as CacheDriver,
     env: {
@@ -293,7 +304,6 @@ function createRuntime(llm: LlmDriver, envOverrides: Partial<MomoRuntime['env']>
       COS_SIGNED_URL_EXPIRES: 600,
       ...envOverrides,
     },
-    llm,
     logger: {} as Logger,
     search: {} as SearchDriver,
     storage: {} as StorageDriver,

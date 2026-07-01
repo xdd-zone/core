@@ -201,6 +201,8 @@ PATCH /rpc/llm/providers/:providerId
 DELETE /rpc/llm/providers/:providerId/api-key
 POST /rpc/llm/providers/:providerId/test
 GET /rpc/llm/use-cases
+GET /rpc/llm/use-cases/:useCase/status
+POST /rpc/llm/use-cases/:useCase/test
 PATCH /rpc/llm/use-cases/:useCase
 GET /rpc/llm/call-logs
 GET /rpc/llm/call-logs/:logId

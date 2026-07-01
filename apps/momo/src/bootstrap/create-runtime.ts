@@ -1,12 +1,10 @@
 import type { Logger } from 'pino'
 import type { CacheDriver } from '#momo/infra/cache'
-import type { LlmDriver } from '#momo/infra/llm'
 import type { SearchDriver } from '#momo/infra/search'
 import type { StorageDriver } from '#momo/infra/storage/storage.types'
 import type { MomoEnv } from '#momo/shared/env'
 import { resolve } from 'node:path'
 import { MemoryCache, RedisCache } from '#momo/infra/cache'
-import { DisabledLlm } from '#momo/infra/llm'
 import { createChildLogger, createLogger } from '#momo/infra/logger'
 import { DisabledSearch, MeilisearchSearch } from '#momo/infra/search'
 import { CosStorage } from '#momo/infra/storage/cos-storage'
@@ -16,17 +14,9 @@ import { getMomoEnv } from '#momo/shared/env'
 export interface MomoRuntime {
   cache: CacheDriver
   env: ReturnType<typeof getMomoEnv>
-  llm: LlmDriver
   logger: Logger
   search: SearchDriver
   storage: StorageDriver
-}
-
-function createLlmDriver(_env: MomoEnv, logger: Logger): LlmDriver {
-  const llmLogger = createChildLogger(logger, 'llm')
-  llmLogger.info({ provider: 'database' }, 'LLM 运行时配置从数据库读取')
-
-  return new DisabledLlm()
 }
 
 function createCacheDriver(env: MomoEnv, logger: Logger): CacheDriver {
@@ -116,7 +106,6 @@ export function createRuntime(): MomoRuntime {
   return {
     cache: createCacheDriver(env, logger),
     env,
-    llm: createLlmDriver(env, logger),
     logger,
     search: createSearchDriver(env, logger),
     storage: createStorageDriver(env, logger),

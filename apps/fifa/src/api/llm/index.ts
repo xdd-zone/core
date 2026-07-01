@@ -7,7 +7,9 @@ export {
   useLlmCallLogsQuery,
   useLlmProvidersQuery,
   useLlmUseCaseConfigsQuery,
+  useLlmUseCaseStatusQuery,
   useTestLlmProviderMutation,
+  useTestLlmUseCaseMutation,
   useUpdateLlmProviderMutation,
   useUpdateLlmUseCaseConfigMutation,
 } from './llm.query'

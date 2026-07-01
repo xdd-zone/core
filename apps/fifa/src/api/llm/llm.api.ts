@@ -9,13 +9,16 @@ import type {
   LlmUseCase,
   LlmUseCaseConfigListResponse,
   LlmUseCaseConfigResponse,
+  LlmUseCaseStatusResponse,
   TestLlmProviderResponse,
+  TestLlmUseCaseResponse,
   UpdateLlmProviderRequest,
   UpdateLlmUseCaseConfigRequest,
 } from '@xdd-zone/contracts'
 
 import { momoClient } from '../client'
-import { readMomoJson } from '../rpc'
+import { resolveMomoHttpUrl } from '../momo-url'
+import { readMomoFetchJson, readMomoJson } from '../rpc'
 
 export function listLlmProviders() {
   return readMomoJson<LlmProviderListResponse>(momoClient.rpc.llm.providers.$get())
@@ -65,6 +68,23 @@ export function updateLlmUseCaseConfig(useCase: LlmUseCase, payload: UpdateLlmUs
       param: {
         useCase,
       },
+    }),
+  )
+}
+
+export function getLlmUseCaseStatus(useCase: LlmUseCase) {
+  return readMomoFetchJson<LlmUseCaseStatusResponse>(
+    fetch(resolveMomoHttpUrl(`/rpc/llm/use-cases/${useCase}/status`), {
+      credentials: 'include',
+    }),
+  )
+}
+
+export function testLlmUseCase(useCase: LlmUseCase) {
+  return readMomoFetchJson<TestLlmUseCaseResponse>(
+    fetch(resolveMomoHttpUrl(`/rpc/llm/use-cases/${useCase}/test`), {
+      credentials: 'include',
+      method: 'POST',
     }),
   )
 }

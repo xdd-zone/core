@@ -128,7 +128,10 @@ export {
   LlmUseCaseConfigResponseSchema,
   LlmUseCaseConfigSchema,
   LlmUseCaseSchema,
+  LlmUseCaseStatusResponseSchema,
+  LlmUseCaseStatusSchema,
   TestLlmProviderResponseSchema,
+  TestLlmUseCaseResponseSchema,
   UpdateLlmProviderRequestSchema,
   UpdateLlmUseCaseConfigRequestSchema,
 } from './llm/llm.contract'
@@ -150,7 +153,10 @@ export type {
   LlmUseCaseConfig,
   LlmUseCaseConfigListResponse,
   LlmUseCaseConfigResponse,
+  LlmUseCaseStatus,
+  LlmUseCaseStatusResponse,
   TestLlmProviderResponse,
+  TestLlmUseCaseResponse,
   UpdateLlmProviderRequest,
   UpdateLlmUseCaseConfigRequest,
 } from './llm/llm.contract'

@@ -11,7 +11,9 @@ import type {
   LlmUseCaseConfig,
   LlmUseCaseConfigListResponse,
   LlmUseCaseConfigResponse,
+  LlmUseCaseStatusResponse,
   TestLlmProviderResponse,
+  TestLlmUseCaseResponse,
   UpdateLlmProviderRequest,
   UpdateLlmUseCaseConfigRequest,
 } from '@xdd-zone/contracts'
@@ -178,6 +180,74 @@ export function createLlmService(
     }
   }
 
+  async function getUseCaseStatus(useCase: LlmUseCase): Promise<LlmUseCaseStatusResponse> {
+    const config = await resolveUseCaseConfig(useCase)
+
+    return {
+      status: {
+        config: await toUseCaseConfigResponse(config),
+        ready: getUseCaseUnavailableReason(config) === null,
+        reason: getUseCaseUnavailableReason(config),
+        useCase,
+      },
+    }
+  }
+
+  async function testUseCase(input: {
+    actorId?: string | null
+    requestId?: string | null
+    useCase: LlmUseCase
+  }): Promise<TestLlmUseCaseResponse> {
+    const config = await resolveUseCaseConfig(input.useCase)
+    const provider = requireUsableProvider(config)
+    const startedAt = new Date()
+
+    try {
+      const driver = createDriverForProvider(provider, config.model)
+      const result = await driver.generateStructuredJson({
+        maxOutputTokens: config.maxOutputTokens,
+        responseFormat: {
+          name: 'use_case_test',
+          schema: postMetaJsonSchema,
+        },
+        systemPrompt: getPostMetaSystemPrompt(),
+        temperature: config.temperature,
+        userPrompt: getPostMetaUserPrompt({
+          locale: 'zh-CN',
+          mode: 'create',
+          targets: ['title'],
+          title: 'LLM 用例测试',
+        }),
+      })
+      const log = await writeCallLog({
+        actorId: input.actorId,
+        model: config.model,
+        operation: 'content.post.meta',
+        provider,
+        requestId: input.requestId,
+        result,
+        startedAt,
+        status: 'success',
+        useCase: input.useCase,
+      })
+
+      return { logId: log.id, status: 'success', usage: result.usage }
+    } catch (error) {
+      const log = await writeCallLog({
+        actorId: input.actorId,
+        error,
+        model: config.model,
+        operation: 'content.post.meta',
+        provider,
+        requestId: input.requestId,
+        startedAt,
+        status: 'error',
+        useCase: input.useCase,
+      })
+      throw toAppError(error, log.id)
+    }
+  }
+
   async function updateUseCaseConfig(
     useCase: LlmUseCase,
     input: UpdateLlmUseCaseConfigRequest,
@@ -204,7 +274,15 @@ export function createLlmService(
     }
   }
 
-  async function generatePostMetaSuggestion(input: GeneratePostMetaRequest): Promise<GeneratePostMetaResponse> {
+  async function generatePostMetaSuggestion(
+    input: GeneratePostMetaRequest,
+    context: {
+      actorId?: string | null
+      requestId?: string | null
+      sourceId?: string | null
+      sourceType?: string | null
+    } = {},
+  ): Promise<GeneratePostMetaResponse> {
     const config = await resolveUseCaseConfig(DEFAULT_USE_CASE)
     const provider = requireUsableProvider(config)
     const startedAt = new Date()
@@ -230,10 +308,14 @@ export function createLlmService(
       }
 
       await writeCallLog({
+        actorId: context.actorId,
         model: config.model,
         operation: 'content.post.meta',
         provider,
+        requestId: context.requestId,
         result,
+        sourceId: context.sourceId,
+        sourceType: context.sourceType,
         startedAt,
         status: 'success',
         useCase: DEFAULT_USE_CASE,
@@ -244,16 +326,20 @@ export function createLlmService(
         usage: result.usage,
       }
     } catch (error) {
-      await writeCallLog({
+      const log = await writeCallLog({
+        actorId: context.actorId,
         error,
         model: config.model,
         operation: 'content.post.meta',
         provider,
+        requestId: context.requestId,
+        sourceId: context.sourceId,
+        sourceType: context.sourceType,
         startedAt,
         status: 'error',
         useCase: DEFAULT_USE_CASE,
       })
-      throw error
+      throw toAppError(error, log.id)
     }
   }
 
@@ -293,10 +379,12 @@ export function createLlmService(
     deleteExpiredCallLogs,
     generatePostMetaSuggestion,
     getCallLog,
+    getUseCaseStatus,
     listCallLogs,
     listProviders,
     listUseCaseConfigs,
     testProvider,
+    testUseCase,
     updateProvider,
     updateUseCaseConfig,
   }
@@ -340,6 +428,36 @@ export function createLlmService(
       temperature: row.config.temperature === null ? undefined : Number(row.config.temperature),
       useCase,
     }
+  }
+
+  async function toUseCaseConfigResponse(config: ResolvedLlmUseCaseConfig): Promise<LlmUseCaseConfig> {
+    const row = repository ? await repository.findConfigByUseCase(config.useCase) : null
+
+    if (row) {
+      return toLlmUseCaseConfig(row)
+    }
+
+    return toDefaultUseCaseConfig(config.useCase)
+  }
+
+  function getUseCaseUnavailableReason(config: ResolvedLlmUseCaseConfig): string | null {
+    if (!config.enabled) {
+      return 'LLM 用例未启用'
+    }
+
+    if (!config.providerId || !config.provider) {
+      return 'LLM 用例未绑定 Provider'
+    }
+
+    if (!config.provider.enabled) {
+      return 'LLM Provider 未启用'
+    }
+
+    if (!config.provider.apiKeyCiphertext) {
+      return 'LLM Provider 未配置 API Key'
+    }
+
+    return null
   }
 
   function requireUsableProvider(config: ResolvedLlmUseCaseConfig): ResolvedLlmProviderConfig {
@@ -414,6 +532,8 @@ export function createLlmService(
     provider: ResolvedLlmProviderConfig
     requestId?: string | null
     result?: GenerateStructuredJsonResponse
+    sourceId?: string | null
+    sourceType?: string | null
     startedAt: Date
     status: 'success' | 'error'
     useCase?: LlmUseCase | null
@@ -442,6 +562,8 @@ export function createLlmService(
       providerName: input.provider.name,
       providerType: input.provider.providerType,
       requestId: input.requestId,
+      sourceId: input.sourceId,
+      sourceType: input.sourceType,
       startedAt: input.startedAt,
       status: input.status,
       totalTokens: input.result?.usage?.totalTokens,
@@ -488,11 +610,16 @@ function normalizeLlmError(error: unknown) {
 
 function toAppError(error: unknown, logId: string): AppError {
   if (error instanceof AppError) {
-    return error
+    const details = isRecord(error.details) ? { ...error.details, logId } : { logId }
+    return new AppError(error.code, error.message, error.status, details)
   }
 
   const normalized = normalizeLlmError(error)
   return new AppError(BizCode.BIZ_RULE_VIOLATION, normalized.errorMessage, 409, { logId })
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value))
 }
 
 export function getPostMetaSystemPrompt(): string {

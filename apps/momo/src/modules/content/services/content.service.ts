@@ -132,8 +132,16 @@ export function createContentService(
     return toPostDetail(post, input.source, category ?? null, tags)
   }
 
-  async function generatePostMetaSuggestion(input: GeneratePostMetaRequest): Promise<GeneratePostMetaResponse> {
-    const result = await (llmService ?? createLlmService(runtime)).generatePostMetaSuggestion(input)
+  async function generatePostMetaSuggestion(
+    input: GeneratePostMetaRequest,
+    context: { actorId?: string | null; requestId?: string | null } = {},
+  ): Promise<GeneratePostMetaResponse> {
+    const result = await (llmService ?? createLlmService(runtime)).generatePostMetaSuggestion(input, {
+      actorId: context.actorId,
+      requestId: context.requestId,
+      sourceId: input.postId ?? null,
+      sourceType: input.postId ? 'content.post' : null,
+    })
     const findPostBySlug = (slug: string) => repository.findPostBySlug(slug)
     const suggestion = await normalizePostMetaSuggestion(input, result.suggestion, findPostBySlug)
 

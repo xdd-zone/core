@@ -106,6 +106,10 @@ pnpm seed:owner
   用 Provider 默认模型发起测试调用，并写入调用日志。
 - `GET /rpc/llm/use-cases`
   返回 LLM use case 配置列表。
+- `GET /rpc/llm/use-cases/:useCase/status`
+  返回单个 LLM use case 是否可调用，以及不能调用的原因。
+- `POST /rpc/llm/use-cases/:useCase/test`
+  用单个 LLM use case 的真实配置发起测试调用。
 - `PATCH /rpc/llm/use-cases/:useCase`
   更新单个 LLM use case 配置。
 - `GET /rpc/llm/call-logs`
@@ -203,7 +207,7 @@ const response = await app.request('/health')
 
 - 缓存代码放在 `src/infra/cache`。本地 Redis 协议缓存使用 Valkey，地址是 `redis://localhost:56379`。
 - 搜索代码放在 `src/infra/search`。当前还没有业务模块调用搜索驱动。
-- LLM provider 调用代码放在 `src/infra/llm`。Provider、use case 和调用日志接口放在 `src/modules/llm`。内容模块通过 `POST /rpc/content/posts/meta-suggestion` 生成文章字段建议。
+- LLM provider 调用代码放在 `src/infra/llm`。Provider、use case 和调用日志接口放在 `src/modules/llm`。内容模块通过 `POST /rpc/content/posts/meta-suggestion` 生成文章字段建议。调用日志会记录请求 ID、用户 ID 和文章 ID。
 - 文件存储代码放在 `src/infra/storage`。内容模块通过 `POST /rpc/content/assets/images` 保存图片素材。验证当前存储配置时，运行 `pnpm storage:test`。
 
 更多说明看：

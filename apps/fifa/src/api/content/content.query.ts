@@ -22,6 +22,7 @@ import {
   generateContentPostMetaSuggestion,
   getContentAsset,
   getContentPost,
+  getContentPostMetaSuggestionStatus,
   listContentAssets,
   listContentCategories,
   listContentPosts,
@@ -42,6 +43,7 @@ export const contentQueryKeys = {
   categories: () => [...contentQueryKeys.all, 'categories'] as const,
   mdxComponents: () => [...contentQueryKeys.all, 'mdx-components'] as const,
   post: (id: string) => [...contentQueryKeys.posts(), id] as const,
+  postMetaSuggestionStatus: () => [...contentQueryKeys.posts(), 'meta-suggestion', 'status'] as const,
   posts: () => [...contentQueryKeys.all, 'posts'] as const,
   tags: () => [...contentQueryKeys.all, 'tags'] as const,
 }
@@ -120,6 +122,13 @@ export function useCreateContentPostMutation() {
 export function useGenerateContentPostMetaSuggestionMutation() {
   return useMutation({
     mutationFn: (payload: GeneratePostMetaRequest) => generateContentPostMetaSuggestion(payload),
+  })
+}
+
+export function useContentPostMetaSuggestionStatusQuery() {
+  return useQuery({
+    queryKey: contentQueryKeys.postMetaSuggestionStatus(),
+    queryFn: getContentPostMetaSuggestionStatus,
   })
 }
 

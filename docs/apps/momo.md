@@ -293,13 +293,13 @@ apps/momo/src/bootstrap
 当前文件：
 
 - `create-runtime.ts`
-  读取 `shared/env.ts`，创建 logger、cache、search、llm 和 storage，返回 `MomoRuntime`。
+  读取 `shared/env.ts`，创建 logger、cache、search 和 storage，返回 `MomoRuntime`。
 - `create-app.ts`
   创建 `new Hono<HonoEnv>()`，注册全局中间件、错误处理、404 和一级路由。
 - `index.ts`
   统一导出 `createRuntime()`、`createMomoApp()` 和 `MomoRuntime`。
 
-`MomoRuntime` 当前有 `env`、`logger`、`cache`、`search`、`llm` 和 `storage`。后续如果加数据库或其他外部资源，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
+`MomoRuntime` 当前有 `env`、`logger`、`cache`、`search` 和 `storage`。后续如果加数据库或其他外部资源，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
 
 不要把 env、db、cache 写进 `c.var`。`c.var` 只放当前请求的数据。
 
@@ -752,6 +752,8 @@ apps/momo/src/infra/llm
 - `DELETE /rpc/llm/providers/:providerId/api-key`
 - `POST /rpc/llm/providers/:providerId/test`
 - `GET /rpc/llm/use-cases`
+- `GET /rpc/llm/use-cases/:useCase/status`
+- `POST /rpc/llm/use-cases/:useCase/test`
 - `PATCH /rpc/llm/use-cases/:useCase`
 - `GET /rpc/llm/call-logs`
 - `GET /rpc/llm/call-logs/:logId`
@@ -765,7 +767,7 @@ apps/momo/src/infra/db/schema/llm.schema.ts
 
 当前有 `llm_providers`、`llm_use_case_configs` 和 `llm_call_logs`。Provider 表保存 OpenAI-compatible 服务地址、接口格式、默认模型、超时时间、启用状态和加密后的 API Key。use case 表保存启停状态、绑定的 Provider、model、temperature 和输出 token 上限。调用日志表保存调用状态、耗时、token 数、Provider 快照和截断后的错误信息。
 
-`POST /rpc/content/posts/meta-suggestion` 仍然是内容模块接口，只返回建议值，不写数据库。
+`POST /rpc/content/posts/meta-suggestion` 仍然是内容模块接口，只返回建议值，不写数据库。请求体可带 `postId`，调用日志会记录请求 ID、用户 ID 和文章 ID。失败响应的 `details.logId` 可用于查看调用日志。
 
 ### 多个 service 和 repository
 

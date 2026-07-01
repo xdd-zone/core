@@ -67,7 +67,10 @@ export function createContentRoute(runtime: MomoRuntime) {
         throw new AppError(failure.code, failure.message, 400, failure.details)
       }),
       async (c) => {
-        const result = await service.generatePostMetaSuggestion(c.req.valid('json'))
+        const result = await service.generatePostMetaSuggestion(c.req.valid('json'), {
+          actorId: c.var.user?.id,
+          requestId: c.var.requestId,
+        })
         return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
       },
     )

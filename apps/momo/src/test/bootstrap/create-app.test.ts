@@ -1,7 +1,6 @@
 import type { Logger } from 'pino'
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { CacheDriver } from '#momo/infra/cache'
-import type { LlmDriver } from '#momo/infra/llm'
 import type { SearchDriver } from '#momo/infra/search'
 import type { StorageDriver } from '#momo/infra/storage'
 import { BizCode } from '@xdd-zone/contracts'
@@ -52,9 +51,6 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
       STORAGE_PROVIDER: 'local',
     },
     logger: mockLogger as unknown as Logger,
-    llm: {
-      generateStructuredJson: vi.fn(),
-    } as unknown as LlmDriver,
     cache: {
       close: vi.fn(),
       delete: vi.fn(),

@@ -27,6 +27,7 @@ export const GeneratePostMetaRequestSchema = z.object({
   excerpt: z.string().trim().max(500).nullable().optional(),
   locale: z.enum(['zh-CN', 'en-US']).default('zh-CN'),
   mode: z.enum(['create', 'edit']),
+  postId: z.string().trim().min(1).optional(),
   slug: z.string().trim().max(160).optional(),
   source: z.string().optional(),
   targets: z.array(GeneratePostMetaTargetSchema).min(1).max(3),
