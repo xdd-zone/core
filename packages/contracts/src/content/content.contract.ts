@@ -169,6 +169,7 @@ export const ImageAssetSchema = z.object({
   alt: z.string().nullable(),
   createdAt: z.string(),
   fileName: z.string(),
+  fileUrl: z.string().url(),
   id: z.string(),
   mimeType: z.string(),
   size: z.number().int().nonnegative(),

@@ -324,7 +324,7 @@ export function createContentRepository(db: DbClient) {
     return revision
   }
 
-  async function findAssetReferences(id: string): Promise<ContentAssetReferenceRecord[]> {
+  async function findAssetReferences(id: string, fileUrl?: string): Promise<ContentAssetReferenceRecord[]> {
     const asset = await getAssetById(id)
     if (!asset) {
       return []
@@ -340,11 +340,13 @@ export function createContentRepository(db: DbClient) {
       .from(contentPosts)
       .where(eq(contentPosts.coverAssetId, id))
 
-    if (!asset.url) {
+    const sourceUrls = [...new Set([asset.url, fileUrl].filter((url): url is string => Boolean(url)))]
+
+    if (sourceUrls.length === 0) {
       return coverRefs
     }
 
-    const sourceClause = ilike(contentPostRevisions.source, `%${asset.url}%`)
+    const sourceClause = or(...sourceUrls.map((url) => ilike(contentPostRevisions.source, `%${url}%`)))
 
     const draftRefs = await db
       .select({

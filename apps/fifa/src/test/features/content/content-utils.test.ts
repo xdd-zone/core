@@ -49,6 +49,7 @@ const imageAsset: ImageAsset = {
   alt: null,
   createdAt: '2026-01-01T00:00:00.000Z',
   fileName: 'cover.png',
+  fileUrl: 'https://cdn.example.com/cover.png',
   id: 'asset-1',
   mimeType: 'image/png',
   size: 1024,

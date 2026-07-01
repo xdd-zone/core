@@ -2,7 +2,6 @@ import type { ImageAsset } from '@xdd-zone/contracts'
 import type { TableProps } from 'antd'
 
 import { useContentAssetsQuery, useDeleteContentAssetMutation, useUpdateContentAssetMutation } from '@fifa/api/content'
-import { resolveMomoHttpUrl } from '@fifa/api/momo-url'
 import { FifaPageHeader } from '@fifa/components/common'
 import { useNavigate } from '@tanstack/react-router'
 import { App, Button, Input, Modal, Select, Table, Tag } from 'antd'
@@ -32,7 +31,7 @@ function formatSize(size: number) {
 }
 
 function resolveAssetUrl(asset: ImageAsset) {
-  return asset.url ?? resolveMomoHttpUrl(`/rpc/content/assets/${asset.id}/file`).toString()
+  return asset.fileUrl
 }
 
 export function AssetList() {

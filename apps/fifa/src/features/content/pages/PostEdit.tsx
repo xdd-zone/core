@@ -579,7 +579,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                       <img
                         alt={asset.alt ?? asset.fileName}
                         className="size-12 rounded-lg object-cover"
-                        src={asset.url ?? ''}
+                        src={asset.fileUrl}
                       />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium text-fg">{asset.fileName}</div>
@@ -922,11 +922,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
                   type="button"
                 >
                   <div className="aspect-square overflow-hidden bg-surface-subtle">
-                    <img
-                      alt={asset.alt ?? asset.fileName}
-                      className="h-full w-full object-cover"
-                      src={asset.url ?? ''}
-                    />
+                    <img alt={asset.alt ?? asset.fileName} className="h-full w-full object-cover" src={asset.fileUrl} />
                   </div>
                   <div className="space-y-1 px-3 py-2.5">
                     <div className="truncate text-sm font-medium text-fg">{asset.fileName}</div>

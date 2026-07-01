@@ -504,6 +504,7 @@ describe('content 路由', () => {
     const fileResponse = await momoApp.request(`/rpc/content/assets/${firstAssetData.asset.id}/file`)
     expect(fileResponse.status).toBe(200)
     expect(fileResponse.headers.get('content-type')).toBe('image/png')
+    expect(fileResponse.headers.get('cross-origin-resource-policy')).toBe('cross-origin')
 
     const updateResponse = await momoApp.request(`/rpc/content/assets/${firstAssetData.asset.id}`, {
       body: JSON.stringify({ alt: 'cover alt' }),
@@ -578,11 +579,7 @@ describe('content 路由', () => {
   it('素材被草稿正文引用时不能删除', async () => {
     const uploaded = await uploadImage('referenced.png')
     const assetData = expectOkData(uploaded.body)
-    const assetUrl = assetData.asset.url
-
-    if (!assetUrl) {
-      return
-    }
+    const assetUrl = assetData.asset.fileUrl
 
     await createPost({
       slug: 'url-in-draft',
@@ -608,7 +605,8 @@ describe('content 路由', () => {
     ImageAssetResponseSchema.parse(data)
     expect(data.asset.mimeType).toBe('image/png')
     expect(data.asset.size).toBe(8)
-    expect(data.asset.url).toBe(`/rpc/content/assets/${data.asset.id}/file`)
+    expect(data.asset.fileUrl).toBe(`http://localhost:7788/rpc/content/assets/${data.asset.id}/file`)
+    expect(data.asset.url).toBeNull()
   })
 
   it('返回 MDX 组件清单', async () => {

@@ -114,11 +114,12 @@ export function toPreviewTokenResponse(input: PreviewTokenSource): PreviewTokenR
   return PreviewTokenResponseSchema.parse(response)
 }
 
-export function toImageAsset(asset: ContentAssetRecord): ImageAsset {
+export function toImageAsset(asset: ContentAssetRecord, momoPublicBaseUrl: string): ImageAsset {
   const imageAsset = {
     alt: asset.alt,
     createdAt: toIsoString(asset.createdAt),
     fileName: asset.fileName,
+    fileUrl: resolveAssetFileUrl(asset, momoPublicBaseUrl),
     id: asset.id,
     mimeType: asset.mimeType,
     size: asset.size,
@@ -128,6 +129,22 @@ export function toImageAsset(asset: ContentAssetRecord): ImageAsset {
   } satisfies ImageAsset
 
   return ImageAssetSchema.parse(imageAsset)
+}
+
+function resolveAssetFileUrl(asset: ContentAssetRecord, momoPublicBaseUrl: string): string {
+  if (asset.url && isAbsoluteUrl(asset.url)) {
+    return asset.url
+  }
+
+  return buildMomoAssetFileUrl(momoPublicBaseUrl, asset.id)
+}
+
+function buildMomoAssetFileUrl(momoPublicBaseUrl: string, assetId: string): string {
+  return `${momoPublicBaseUrl.replace(/\/+$/, '')}/rpc/content/assets/${assetId}/file`
+}
+
+function isAbsoluteUrl(value: string): boolean {
+  return URL.canParse(value)
 }
 
 function toIsoString(date: Date): string {

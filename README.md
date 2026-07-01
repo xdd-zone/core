@@ -238,7 +238,7 @@ pnpm dev:bobo
 - `/rpc/content/mdx-components`
   返回 MDX 组件清单。
 - `/rpc/content/assets/images`
-  上传图片素材。
+  上传图片素材。响应里的 `asset.fileUrl` 是浏览器可直接加载的图片地址。
 - `/rpc/content/assets`
   后台素材列表。
 - `/rpc/content/assets/:id`

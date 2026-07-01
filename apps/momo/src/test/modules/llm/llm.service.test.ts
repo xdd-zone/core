@@ -362,6 +362,7 @@ function createRuntime(envOverrides: Partial<MomoRuntime['env']> = {}): MomoRunt
       MEILI_API_KEY: undefined,
       MEILI_HOST: undefined,
       MEILI_INDEX_PREFIX: 'momo',
+      MOMO_PUBLIC_BASE_URL: 'http://localhost:7788',
       LOG_LEVEL: 'silent',
       LOG_SQL: false,
       PORT: 7788,

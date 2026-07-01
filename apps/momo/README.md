@@ -131,7 +131,7 @@ pnpm seed:owner
 - `GET /rpc/content/assets/:id`
   返回素材详情。
 - `POST /rpc/content/assets/images`
-  上传图片素材。
+  上传图片素材。响应里的 `asset.fileUrl` 是浏览器可直接加载的图片地址。
 - `GET /rpc/content/assets/:id/file`
   读取素材文件。
 - `GET /rpc/content/categories`

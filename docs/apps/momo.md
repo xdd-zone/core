@@ -228,6 +228,7 @@ APP_ENV
 PORT
 LOG_LEVEL
 LOG_SQL
+MOMO_PUBLIC_BASE_URL
 CORS_ORIGINS
 DATABASE_URL
 BETTER_AUTH_SECRET
@@ -272,6 +273,8 @@ OWNER_DISPLAY_NAME
 
 `LOG_SQL` 只在开发环境生效。设成 `true` 时会打印 SQL 和 `paramsCount`，不会打印参数原值。
 
+`MOMO_PUBLIC_BASE_URL` 填 Momo 给浏览器访问的地址。内容图片用本地存储时，素材响应里的 `fileUrl` 会按这个地址拼 `/rpc/content/assets/:id/file`。本地开发通常填 `http://localhost:7788`。
+
 `BETTER_AUTH_URL` 填 Momo 的对外地址，Momo 会按这个地址拼 `/api/auth`。本地开发通常填 `http://localhost:7788`。code-server Web IDE 里使用个人 dev 域名时，配置入口看 [code-server 内开发](../development/code-server.md)。`CORS_ORIGINS` 需要包含实际访问 Fifa 和 Bobo 的地址。
 
 `CACHE_PROVIDER` 控制缓存驱动。默认值是 `memory`，数据只存在当前 Node.js 进程里。设成 `redis` 时，需要配置 `CACHE_URL`，本地 Valkey 地址是 `redis://localhost:56379`。`CACHE_KEY_PREFIX` 默认是 `momo`，`CACHE_DEFAULT_TTL_SECONDS` 默认是 `300` 秒。
@@ -291,6 +294,8 @@ LLM 运行时只读取数据库配置。Provider 保存名称、OpenAI-compatibl
 `STORAGE_PROVIDER` 控制文件存储驱动。默认值是 `local`，使用 `LOCAL_STORAGE_DIR`，未设置时写到 `storage/media`。设成 `cos` 时，`COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION` 必须配置。`COS_KEY_PREFIX` 默认是 `media`，`COS_SIGNED_URL_EXPIRES` 默认是 `600` 秒。
 
 文件存储驱动只保存图片。`save()` 允许 `image/avif`、`image/gif`、`image/jpeg`、`image/png` 和 `image/webp`，单个文件最大 `10 MiB`。调用 `save(file, { directory: 'avatars' })` 时，文件会保存到存储根目录下的 `avatars/` 子目录。`openFile()` 在本地存储时返回 `200` 和文件内容，在 COS 存储时返回 `302` 跳转地址。`stat()` 可以读取文件大小、MIME 和修改时间。
+
+内容素材响应里的 `fileUrl` 是浏览器可直接加载的图片地址。COS 配了 `COS_PUBLIC_BASE_URL` 时，`fileUrl` 使用 COS 地址；本地存储或 COS 未返回公开地址时，`fileUrl` 使用 `MOMO_PUBLIC_BASE_URL` 拼出的 Momo 文件接口地址。数据库里的 `content_assets.url` 只保存外部公开地址，本地存储时是 `null`。
 
 请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`。
 

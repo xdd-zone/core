@@ -63,13 +63,65 @@ describe('content service', () => {
       'user-id',
     )
 
-    expect(asset.url).toBe(`/rpc/content/assets/${asset.id}/file`)
+    expect(asset.fileUrl).toBe(`http://localhost:7788/rpc/content/assets/${asset.id}/file`)
+    expect(asset.url).toBeNull()
     expect(repository.createAsset).toHaveBeenCalledWith(
       expect.objectContaining({
         id: asset.id,
-        url: `/rpc/content/assets/${asset.id}/file`,
+        url: null,
       }),
     )
+  })
+
+  it('cOS 公开地址会作为素材文件 URL 返回', async () => {
+    const repository = createRepository({
+      createAsset: vi.fn(async (input) => ({
+        ...createAssetRecord(),
+        id: input.id,
+        url: input.url,
+      })),
+    })
+    const runtime = createRuntime({
+      save: vi.fn(async () => ({
+        fileName: 'photo.png',
+        publicUrl: 'https://media.example.com/content/images/photo.png',
+        storagePath: 'content/images/photo.png',
+      })),
+    })
+    const service = createContentService(runtime, repository, createTaxonomyRepository())
+
+    const asset = await service.uploadImage(
+      new File([Buffer.from('png-data')], 'photo.png', { type: 'image/png' }),
+      'user-id',
+    )
+
+    expect(asset.fileUrl).toBe('https://media.example.com/content/images/photo.png')
+    expect(asset.url).toBe('https://media.example.com/content/images/photo.png')
+    expect(repository.createAsset).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: asset.id,
+        url: 'https://media.example.com/content/images/photo.png',
+      }),
+    )
+  })
+
+  it('旧的相对素材 URL 会转成当前 Momo 文件 URL 返回', async () => {
+    const repository = createRepository({
+      listAssets: vi.fn(async () => [
+        {
+          ...createAssetRecord(),
+          id: 'legacy-asset-id',
+          url: '/rpc/content/assets/legacy-asset-id/file',
+        },
+      ]),
+      countAssets: vi.fn(async () => 1),
+    })
+    const service = createContentService(createRuntime(), repository, createTaxonomyRepository())
+
+    const result = await service.listAssets({ page: 1, pageSize: 24 })
+
+    expect(result.assets[0]?.fileUrl).toBe('http://localhost:7788/rpc/content/assets/legacy-asset-id/file')
+    expect(result.assets[0]?.url).toBe('/rpc/content/assets/legacy-asset-id/file')
   })
 })
 
@@ -128,6 +180,9 @@ function createTaxonomyRepository(overrides: Partial<TaxonomyRepository> = {}): 
 
 function createRuntime(storageOverrides: Partial<MomoRuntime['storage']> = {}): MomoRuntime {
   return {
+    env: {
+      MOMO_PUBLIC_BASE_URL: 'http://localhost:7788',
+    },
     storage: {
       remove: vi.fn(),
       save: vi.fn(),

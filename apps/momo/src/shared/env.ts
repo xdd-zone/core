@@ -34,6 +34,7 @@ const momoEnvSchema = z
     MEILI_API_KEY: optionalStringSchema,
     MEILI_HOST: optionalUrlSchema,
     MEILI_INDEX_PREFIX: z.string().min(1).default('momo'),
+    MOMO_PUBLIC_BASE_URL: z.string().url(),
     LOG_LEVEL: logLevelSchema.optional(),
     LOG_SQL: z.preprocess((value) => {
       if (value === undefined) {
@@ -121,6 +122,7 @@ export function getMomoEnv(source: NodeJS.ProcessEnv = process.env): MomoEnv {
     MEILI_API_KEY: source.MEILI_API_KEY,
     MEILI_HOST: source.MEILI_HOST,
     MEILI_INDEX_PREFIX: source.MEILI_INDEX_PREFIX,
+    MOMO_PUBLIC_BASE_URL: source.MOMO_PUBLIC_BASE_URL,
     LOG_LEVEL: source.LOG_LEVEL,
     LOG_SQL: source.LOG_SQL,
     PORT: source.PORT,

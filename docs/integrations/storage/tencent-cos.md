@@ -47,6 +47,7 @@ COS_SECRET_ID=
 COS_SECRET_KEY=
 COS_BUCKET=
 COS_REGION=ap-shanghai
+MOMO_PUBLIC_BASE_URL=http://localhost:7788
 COS_PUBLIC_BASE_URL=
 COS_KEY_PREFIX=media
 COS_SIGNED_URL_EXPIRES=600
@@ -56,7 +57,8 @@ COS_SIGNED_URL_EXPIRES=600
 - `LOCAL_STORAGE_DIR` 只在本地存储时使用。未设置时写到 `storage/media`。
 - `STORAGE_PROVIDER=cos` 时，`COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET` 和 `COS_REGION` 必须配置。
 - `COS_BUCKET` 使用带 APPID 的桶名。
-- `COS_PUBLIC_BASE_URL` 配置后，读取文件时直接返回公开地址。未配置时，读取文件会返回带签名的临时地址。
+- `MOMO_PUBLIC_BASE_URL` 用来给本地素材拼 Momo 文件接口地址。
+- `COS_PUBLIC_BASE_URL` 配置后，素材响应里的 `fileUrl` 使用公开地址。未配置时，`fileUrl` 使用 Momo 文件接口地址，读取文件时会跳到 COS 临时地址。
 - `COS_KEY_PREFIX` 默认是 `media`。
 - `COS_SIGNED_URL_EXPIRES` 默认是 `600` 秒，最小值是 `60`。
 

@@ -26,6 +26,7 @@ const baseEnv: MomoEnv = {
   MEILI_API_KEY: undefined,
   MEILI_HOST: undefined,
   MEILI_INDEX_PREFIX: 'momo',
+  MOMO_PUBLIC_BASE_URL: 'http://localhost:7788',
   COS_BUCKET: undefined,
   COS_KEY_PREFIX: 'media',
   COS_PUBLIC_BASE_URL: undefined,

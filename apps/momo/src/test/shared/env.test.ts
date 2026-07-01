@@ -15,6 +15,7 @@ function baseEnv(overrides: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
     GOOGLE_CLIENT_ID: 'google-client-id',
     GOOGLE_CLIENT_SECRET: 'google-client-secret',
     LLM_SECRET_KEY,
+    MOMO_PUBLIC_BASE_URL: 'http://localhost:7788',
     PORT: '7788',
     ...overrides,
   }
@@ -32,6 +33,7 @@ describe('momo 环境变量', () => {
           APP_ENV: 'production',
           BETTER_AUTH_URL: 'https://api.xdd.zone',
           CORS_ORIGINS: 'https://fifa.xdd.zone, https://bobo.xdd.zone',
+          MOMO_PUBLIC_BASE_URL: 'https://api.xdd.zone',
           PORT: '8080',
         }),
       ),
@@ -53,6 +55,7 @@ describe('momo 环境变量', () => {
       MEILI_API_KEY: undefined,
       MEILI_HOST: undefined,
       MEILI_INDEX_PREFIX: 'momo',
+      MOMO_PUBLIC_BASE_URL: 'https://api.xdd.zone',
       COS_BUCKET: undefined,
       COS_KEY_PREFIX: 'media',
       COS_PUBLIC_BASE_URL: undefined,

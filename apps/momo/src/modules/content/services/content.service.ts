@@ -60,7 +60,7 @@ export function createContentService(
     ])
 
     return {
-      assets: assets.map((asset) => toImageAsset(asset)),
+      assets: assets.map((asset) => toImageAsset(asset, runtime.env.MOMO_PUBLIC_BASE_URL)),
       page,
       pageSize,
       total,
@@ -289,9 +289,9 @@ export function createContentService(
       throw new AppError(BizCode.COMMON_NOT_FOUND, '素材不存在', 404)
     }
 
-    const references = await repository.findAssetReferences(id)
+    const references = await repository.findAssetReferences(id, buildAssetFileUrl(id))
     return {
-      asset: toImageAsset(asset),
+      asset: toImageAsset(asset, runtime.env.MOMO_PUBLIC_BASE_URL),
       references: references.map((reference) => toAssetReference(reference)),
     }
   }
@@ -330,14 +330,14 @@ export function createContentService(
         mimeType: file.type,
         size: file.size,
         storagePath: saved.storagePath,
-        url: saved.publicUrl ?? getLocalAssetFileUrl(assetId),
+        url: saved.publicUrl ?? null,
       })
     } catch (error) {
       await runtime.storage.remove(saved.storagePath).catch(() => undefined)
       throw error
     }
 
-    return toImageAsset(asset)
+    return toImageAsset(asset, runtime.env.MOMO_PUBLIC_BASE_URL)
   }
 
   async function updateAsset(id: string, input: UpdateAssetRequest): Promise<ImageAsset> {
@@ -351,11 +351,11 @@ export function createContentService(
       throw new AppError(BizCode.COMMON_NOT_FOUND, '素材不存在', 404)
     }
 
-    return toImageAsset(updated)
+    return toImageAsset(updated, runtime.env.MOMO_PUBLIC_BASE_URL)
   }
 
   async function deleteAsset(id: string): Promise<{ assetId: string }> {
-    const references = await repository.findAssetReferences(id)
+    const references = await repository.findAssetReferences(id, buildAssetFileUrl(id))
 
     if (references.length > 0) {
       throw new AppError(BizCode.BIZ_RULE_VIOLATION, '素材正在被文章使用，先移除引用再删除', 409, {
@@ -457,6 +457,10 @@ export function createContentService(
     })
   }
 
+  function buildAssetFileUrl(assetId: string): string {
+    return `${runtime.env.MOMO_PUBLIC_BASE_URL.replace(/\/+$/, '')}/rpc/content/assets/${assetId}/file`
+  }
+
   return {
     createPost,
     createPreviewToken,
@@ -522,10 +526,6 @@ function normalizePageSize(value: number | undefined): number {
 
 function normalizeText(value: string | undefined): string | undefined {
   return value?.trim() || undefined
-}
-
-function getLocalAssetFileUrl(assetId: string): string {
-  return `/rpc/content/assets/${assetId}/file`
 }
 
 export function normalizePostSlug(value: string): string {
