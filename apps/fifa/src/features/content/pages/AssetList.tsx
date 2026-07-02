@@ -1,7 +1,7 @@
 import type { ImageAsset } from '@xdd-zone/contracts'
 import type { TableProps } from 'antd'
 
-import { useContentAssetsQuery, useDeleteContentAssetMutation, useUpdateContentAssetMutation } from '@fifa/api/content'
+import { useAssetsQuery, useDeleteAssetMutation, useUpdateAssetMutation } from '@fifa/api/assets'
 import { FifaPageHeader } from '@fifa/components/common'
 import { useNavigate } from '@tanstack/react-router'
 import { App, Button, Input, Modal, Select, Table, Tag } from 'antd'
@@ -43,7 +43,7 @@ export function AssetList() {
   const [page, setPage] = useState(1)
   const [editAsset, setEditAsset] = useState<ImageAsset | null>(null)
   const [editAlt, setEditAlt] = useState('')
-  const query = useContentAssetsQuery({ keyword, mimeType: mimeType || undefined, page, pageSize })
+  const query = useAssetsQuery({ keyword, mimeType: mimeType || undefined, page, pageSize })
 
   const mimeOptions = useMemo(
     () => [
@@ -56,8 +56,8 @@ export function AssetList() {
     ],
     [t],
   )
-  const deleteAssetMutation = useDeleteContentAssetMutation()
-  const updateAssetMutation = useUpdateContentAssetMutation()
+  const deleteAssetMutation = useDeleteAssetMutation()
+  const updateAssetMutation = useUpdateAssetMutation()
 
   const assetsResponse = query.data?.ok ? query.data.data : undefined
   const loadError = query.data && !query.data.ok ? query.data.error.message : undefined

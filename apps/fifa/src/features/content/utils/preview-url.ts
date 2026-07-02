@@ -7,3 +7,16 @@ export function buildBoboPreviewUrl(postId: string, token: string, baseUrlValue 
 
   return url.toString()
 }
+
+export function buildBoboTargetPreviewUrl(
+  targetType: 'projects',
+  targetId: string,
+  token: string,
+  baseUrlValue = fifaEnv.VITE_BOBO_BASE_URL,
+) {
+  const baseUrl = baseUrlValue.replace(/\/+$/, '')
+  const url = new URL(`${baseUrl}/preview/${targetType}/${targetId}`)
+  url.searchParams.set('token', token)
+
+  return url.toString()
+}

@@ -234,7 +234,9 @@ pnpm dev:bobo
 - `/rpc/content/posts/:id/preview-token`
   生成文章预览 token。
 - `/rpc/content/posts/:id/publish`
-  发布文章。
+  发布文章。发布成功后会刷新 Bobo cache tag；刷新失败时响应带 `warnings`。
+- `/rpc/content/posts/:id/archive`
+  归档文章，并从公开站点和搜索索引移除。
 - `/rpc/content/mdx-components`
   返回 MDX 组件清单。
 - `/rpc/content/assets/images`
@@ -245,6 +247,14 @@ pnpm dev:bobo
   后台素材详情、更新和删除。
 - `/rpc/content/assets/:id/file`
   读取素材文件。
+- `/rpc/assets`
+  独立素材列表。旧的 `/rpc/content/assets` 仍保留。
+- `/rpc/assets/:id`
+  独立素材详情、更新和删除。
+- `/rpc/assets/:id/file`
+  独立素材文件读取。
+- `/rpc/assets/images`
+  独立图片素材上传。
 - `/rpc/content/categories`
   后台分类列表和创建分类。
 - `/rpc/content/categories/:id`
@@ -254,7 +264,9 @@ pnpm dev:bobo
 - `/rpc/content/tags/:id`
   后台标签详情、更新和删除。
 - `/rpc/content/previews/:token`
-  使用预览 token 读取文章 revision。
+  使用旧文章预览 token 读取文章 revision。
+- `/rpc/previews/:token`
+  使用通用预览 token 读取文章或项目预览数据。
 - `/rpc/bobo/content/posts`
   公开文章列表。
 - `/rpc/bobo/content/posts/:slug`
@@ -263,6 +275,34 @@ pnpm dev:bobo
   公开分类列表，带已发布文章数量。
 - `/rpc/bobo/content/tags`
   公开标签列表。
+- `/rpc/bobo/profile`
+  公开个人资料。
+- `/rpc/profile/public`
+  后台读取和修改公开个人资料。
+- `/rpc/site/config`
+  后台读取和修改 Bobo 站点配置。
+- `/rpc/bobo/site/config`
+  公开读取 Bobo 站点配置。
+- `/rpc/projects`
+  后台项目列表和创建项目草稿。
+- `/rpc/projects/:id`
+  后台项目详情。
+- `/rpc/projects/:id/draft`
+  保存项目草稿。
+- `/rpc/projects/:id/publish`
+  发布项目。
+- `/rpc/projects/:id/preview-token`
+  生成项目预览 token。
+- `/rpc/projects/:id/archive`
+  归档项目，并从公开站点和搜索索引移除。
+- `/rpc/bobo/projects`
+  公开项目列表。
+- `/rpc/bobo/projects/:slug`
+  公开项目详情。
+- `/rpc/bobo/search`
+  公开站点搜索。
+- `/rpc/events/outbox/retry`
+  处理 pending outbox 任务。
 
 ## 文档入口
 

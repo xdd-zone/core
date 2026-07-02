@@ -1,7 +1,8 @@
 import { relations } from 'drizzle-orm'
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
 import { user } from './auth.schema'
+import { contentAssets } from './content.schema'
 
 export const userProfiles = pgTable('user_profiles', {
   /** better-auth 的用户 id。 */
@@ -24,3 +25,26 @@ export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
     references: [user.id],
   }),
 }))
+
+export const publicProfiles = pgTable('public_profiles', {
+  /** 公开资料主键，当前固定为 bobo。 */
+  id: text('id').primaryKey(),
+  /** 公开显示名。 */
+  displayName: text('display_name').notNull(),
+  /** 公开头像素材 id。 */
+  avatarAssetId: text('avatar_asset_id').references(() => contentAssets.id, { onDelete: 'set null' }),
+  /** 公开简介。 */
+  bio: text('bio'),
+  /** 公开联系邮箱。 */
+  contactEmail: text('contact_email'),
+  /** 公开所在地。 */
+  location: text('location'),
+  /** 是否展示可接新项目状态。 */
+  availableForWork: boolean('available_for_work').notNull().default(false),
+  /** 社交链接 JSON。 */
+  socialLinks: jsonb('social_links').notNull().default([]),
+  /** 创建时间。 */
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  /** 更新时间。 */
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})

@@ -18,7 +18,13 @@ apps/momo/src/modules/system/system.route.ts
 apps/momo/src/modules/auth/auth.route.ts
 apps/momo/src/modules/content/content.route.ts
 apps/momo/src/modules/content/public-content.route.ts
+apps/momo/src/modules/assets/assets.route.ts
 apps/momo/src/modules/profile/profile.route.ts
+apps/momo/src/modules/site/site.route.ts
+apps/momo/src/modules/projects/projects.route.ts
+apps/momo/src/modules/preview/preview.route.ts
+apps/momo/src/modules/search/search.route.ts
+apps/momo/src/modules/events/events.route.ts
 ```
 
 相关入口：
@@ -75,6 +81,7 @@ apps/momo/src/modules/profile/profile.route.ts
 | `PATCH` | `/rpc/content/posts/:id/draft` | 保存文章草稿并写入新 revision |
 | `POST` | `/rpc/content/posts/:id/preview-token` | 生成 30 分钟有效的预览 token |
 | `POST` | `/rpc/content/posts/:id/publish` | 发布当前草稿 revision |
+| `POST` | `/rpc/content/posts/:id/archive` | 归档文章，并从公开站点和搜索索引移除 |
 | `GET` | `/rpc/content/assets` | 素材列表 |
 | `GET` | `/rpc/content/assets/:id` | 素材详情和引用信息 |
 | `GET` | `/rpc/content/assets/:id/file` | 读取素材文件 |
@@ -82,6 +89,12 @@ apps/momo/src/modules/profile/profile.route.ts
 | `DELETE` | `/rpc/content/assets/:id` | 删除素材 |
 | `GET` | `/rpc/content/mdx-components` | MDX 组件清单 |
 | `POST` | `/rpc/content/assets/images` | 上传图片素材 |
+| `GET` | `/rpc/assets` | 独立素材列表，旧 content 路径仍可用 |
+| `GET` | `/rpc/assets/:id` | 独立素材详情和引用信息 |
+| `GET` | `/rpc/assets/:id/file` | 独立素材文件读取 |
+| `PATCH` | `/rpc/assets/:id` | 独立素材说明更新 |
+| `DELETE` | `/rpc/assets/:id` | 独立素材删除 |
+| `POST` | `/rpc/assets/images` | 独立图片素材上传 |
 | `GET` | `/rpc/content/categories` | 后台分类列表 |
 | `POST` | `/rpc/content/categories` | 创建分类 |
 | `GET` | `/rpc/content/categories/:id` | 后台分类详情 |
@@ -92,11 +105,29 @@ apps/momo/src/modules/profile/profile.route.ts
 | `GET` | `/rpc/content/tags/:id` | 后台标签详情 |
 | `PATCH` | `/rpc/content/tags/:id` | 更新标签 |
 | `DELETE` | `/rpc/content/tags/:id` | 删除标签 |
-| `GET` | `/rpc/content/previews/:token` | 使用预览 token 读取文章 revision |
+| `GET` | `/rpc/content/previews/:token` | 使用旧文章预览 token 读取文章 revision |
+| `GET` | `/rpc/previews/:token` | 使用通用预览 token 读取文章或项目预览数据 |
 | `GET` | `/rpc/bobo/content/posts` | 个人站文章列表，可按分类和标签筛选 |
 | `GET` | `/rpc/bobo/content/posts/:slug` | 个人站文章详情，只返回已发布文章 |
 | `GET` | `/rpc/bobo/content/categories` | 个人站分类列表，返回每个分类的已发布文章数量 |
 | `GET` | `/rpc/bobo/content/tags` | 个人站标签列表 |
+| `GET` | `/rpc/bobo/profile` | 公开个人资料 |
+| `GET` | `/rpc/profile/public` | 后台读取公开个人资料，需要 fifa owner |
+| `PATCH` | `/rpc/profile/public` | 修改公开个人资料，需要 fifa owner |
+| `GET` | `/rpc/site/config` | 后台读取 Bobo 站点配置 |
+| `PATCH` | `/rpc/site/config` | 后台修改 Bobo 站点配置 |
+| `GET` | `/rpc/bobo/site/config` | 公开读取 Bobo 站点配置 |
+| `GET` | `/rpc/projects` | 后台项目列表 |
+| `POST` | `/rpc/projects` | 创建项目草稿 |
+| `GET` | `/rpc/projects/:id` | 后台项目详情 |
+| `PATCH` | `/rpc/projects/:id/draft` | 保存项目草稿 |
+| `POST` | `/rpc/projects/:id/publish` | 发布项目 |
+| `POST` | `/rpc/projects/:id/preview-token` | 生成项目预览 token |
+| `POST` | `/rpc/projects/:id/archive` | 归档项目，并从公开站点和搜索索引移除 |
+| `GET` | `/rpc/bobo/projects` | 公开项目列表 |
+| `GET` | `/rpc/bobo/projects/:slug` | 公开项目详情 |
+| `GET` | `/rpc/bobo/search?q=关键词` | 公开站点搜索，搜索未启用时返回空数组 |
+| `POST` | `/rpc/events/outbox/retry` | 处理 pending 或 failed outbox 任务，需要 fifa owner |
 
 公开邮箱注册被禁用：
 

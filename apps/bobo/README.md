@@ -13,6 +13,8 @@ Bobo 负责页面结构、交互、metadata、RSS 和 sitemap。业务数据从 
 - 文稿详情在 `app/(site)/writing/[slug]/page.tsx`，URL 是 `/writing/<slug>`。
 - 样式演示和临时页面放在 `app/(lab)/lab`，URL 仍然是 `/lab`。
 - 文章预览页在 `app/(preview)/preview/posts/[postId]/page.tsx`。
+- 项目预览页在 `app/(preview)/preview/[targetType]/[targetId]/page.tsx`，当前 URL 是 `/preview/projects/<id>`。
+- Next cache 刷新接口在 `app/api/revalidate/route.ts`，路径是 `POST /api/revalidate`。
 - 全局布局、字体、metadata 和主题初始化放在 `app/layout.tsx`。
 - Catppuccin 主题从 `@xdd-zone/catppuccin-theme/styles/bobo.css` 引入。
 - Next 服务端代码通过 `MOMO_BASE_URL` 读取 Momo 地址。
@@ -51,6 +53,10 @@ pnpm --filter @xdd-zone/bobo start
   公开站点共用导航、分类菜单和底部区域。
 - `app/(preview)/preview/posts/[postId]/page.tsx`
   文章预览页，读取 `MOMO_BASE_URL` 指向的 Momo 预览接口。
+- `app/(preview)/preview/[targetType]/[targetId]/page.tsx`
+  通用预览页，当前读取项目预览接口。
+- `app/api/revalidate/route.ts`
+  用 `BOBO_REVALIDATE_SECRET` 校验请求，再按 `tags` 或 `paths` 刷新 Next cache。
 - `app/layout.tsx`
   全局布局、字体、metadata 和主题初始化脚本。
 - `app/globals.css`
@@ -69,9 +75,12 @@ pnpm --filter @xdd-zone/bobo start
 ```text
 MOMO_BASE_URL=http://localhost:7788
 BOBO_ALLOWED_DEV_ORIGINS=localhost,127.0.0.1
+BOBO_REVALIDATE_SECRET=
 ```
 
 本地开发配置放在 `apps/bobo/.env.development`。`MOMO_BASE_URL` 只给 Next 服务端代码读取，启动配置和服务端请求都会校验它。
+
+`BOBO_REVALIDATE_SECRET` 用来校验 `POST /api/revalidate`。请求头传 `x-bobo-revalidate-secret`，请求体传 `tags` 或 `paths` 字符串数组。
 
 ## 改动前看哪里
 

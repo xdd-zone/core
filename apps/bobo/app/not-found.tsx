@@ -1,16 +1,20 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 
 import { SiteFooter } from '@/app/(site)/_components/site/site-footer'
 import { SiteNav } from '@/app/(site)/_components/site/site-nav'
 import { Button } from '@/components/ui/button'
 import { getPublicCategoryMenu } from '@/lib/content/public-content'
+import { getSiteShellData } from '@/lib/site'
 
 export default async function NotFound() {
-  const categories = await getPublicCategoryMenu().catch(() => [])
+  const [shell, categories] = await Promise.all([getSiteShellData(), getPublicCategoryMenu().catch(() => [])])
 
   return (
     <div className="flex min-h-[100dvh] flex-col text-foreground">
-      <SiteNav categories={categories} />
+      <Suspense fallback={null}>
+        <SiteNav categories={categories} contactEmail={shell.profile.contactEmail} navItems={shell.navigation} />
+      </Suspense>
 
       <div className="flex flex-1 flex-col">
         <div className="relative flex flex-1 flex-col items-center justify-center w-full overflow-hidden py-20">
@@ -53,7 +57,7 @@ export default async function NotFound() {
         </div>
       </div>
 
-      <SiteFooter />
+      <SiteFooter profile={shell.profile} site={shell.site} />
     </div>
   )
 }

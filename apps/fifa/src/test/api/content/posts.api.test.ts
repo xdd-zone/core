@@ -1,21 +1,22 @@
+import type { PublishContentPostResponse } from '@fifa/api/content/posts.api'
 import type { ApiResponse, PostDetailResponse, PostListResponse } from '@xdd-zone/contracts'
 
 const rpcMocks = vi.hoisted(() => ({
   createPost: vi.fn(),
   listPosts: vi.fn(),
-  uploadImage: vi.fn(),
+  publishPost: vi.fn(),
 }))
 
 vi.mock('@fifa/api/client', () => ({
   momoClient: {
     rpc: {
       content: {
-        assets: {
-          images: {
-            $post: rpcMocks.uploadImage,
-          },
-        },
         posts: {
+          ':id': {
+            publish: {
+              $post: rpcMocks.publishPost,
+            },
+          },
           $get: rpcMocks.listPosts,
           $post: rpcMocks.createPost,
         },
@@ -28,7 +29,7 @@ describe('content api 封装', () => {
   afterEach(() => {
     rpcMocks.createPost.mockReset()
     rpcMocks.listPosts.mockReset()
-    rpcMocks.uploadImage.mockReset()
+    rpcMocks.publishPost.mockReset()
   })
 
   it('读取文章列表时返回 Momo 统一响应', async () => {
@@ -59,10 +60,14 @@ describe('content api 封装', () => {
           coverAssetId: null,
           createdAt: '2026-01-01T00:00:00.000Z',
           draftRevisionId: 'revision-1',
+          draftSlug: 'hello-world',
+          draftTitle: 'Hello World',
           excerpt: null,
           id: 'post-1',
           publishedAt: null,
           publishedRevisionId: null,
+          publishedSlug: null,
+          publishedTitle: null,
           slug: 'hello-world',
           source: '# Hello World\n',
           status: 'draft',
@@ -92,35 +97,51 @@ describe('content api 封装', () => {
     })
   })
 
-  it('上传图片时使用 file 字段', async () => {
-    const file = new File(['image'], 'cover.png', { type: 'image/png' })
-    rpcMocks.uploadImage.mockResolvedValue({
-      json: () =>
-        Promise.resolve({
-          ok: true,
-          data: {
-            asset: {
-              alt: null,
-              fileName: 'cover.png',
-              id: 'asset-1',
-              mimeType: 'image/png',
-              size: 5,
-              storagePath: 'content/images/cover.png',
-              url: null,
-            },
+  it('发布文章时保留成功响应里的 warnings', async () => {
+    const responseBody: ApiResponse<PublishContentPostResponse> = {
+      ok: true,
+      data: {
+        post: {
+          category: null,
+          coverAssetId: null,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          draftRevisionId: 'revision-1',
+          draftSlug: 'hello-world',
+          draftTitle: 'Hello World',
+          excerpt: null,
+          id: 'post-1',
+          publishedAt: '2026-01-01T00:00:00.000Z',
+          publishedRevisionId: 'revision-1',
+          publishedSlug: 'hello-world',
+          publishedTitle: 'Hello World',
+          slug: 'hello-world',
+          source: '# Hello World\n',
+          status: 'published',
+          tags: [],
+          title: 'Hello World',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+        warnings: [
+          {
+            code: 'revalidate_failed',
+            message: '站点缓存刷新失败',
           },
-          meta: {
-            requestId: 'request-1',
-            timestamp: '2026-01-01T00:00:00.000Z',
-          },
-        }),
+        ],
+      },
+      meta: {
+        requestId: 'request-1',
+        timestamp: '2026-01-01T00:00:00.000Z',
+      },
+    }
+    rpcMocks.publishPost.mockResolvedValue({
+      json: () => Promise.resolve(responseBody),
     })
-    const { uploadContentImage } = await import('@fifa/api/content/posts.api')
+    const { publishContentPost } = await import('@fifa/api/content/posts.api')
 
-    await uploadContentImage(file)
-    expect(rpcMocks.uploadImage).toHaveBeenCalledWith({
-      form: {
-        file,
+    await expect(publishContentPost('post-1')).resolves.toEqual(responseBody)
+    expect(rpcMocks.publishPost).toHaveBeenCalledWith({
+      param: {
+        id: 'post-1',
       },
     })
   })

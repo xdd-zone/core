@@ -1,18 +1,13 @@
 import type {
-  AssetDetailResponse,
-  AssetListQuery,
-  AssetListResponse,
   CategoryListResponse,
   CategoryResponse,
   CreateCategoryRequest,
   CreatePostRequest,
   CreateTagRequest,
-  DeleteAssetResponse,
   DeleteCategoryResponse,
   DeleteTagResponse,
   GeneratePostMetaRequest,
   GeneratePostMetaResponse,
-  ImageAssetResponse,
   LlmUseCaseStatusResponse,
   MdxComponentsResponse,
   PostDetailResponse,
@@ -21,7 +16,6 @@ import type {
   SavePostDraftRequest,
   TagListResponse,
   TagResponse,
-  UpdateAssetRequest,
   UpdateCategoryRequest,
   UpdateTagRequest,
 } from '@xdd-zone/contracts'
@@ -29,6 +23,9 @@ import type {
 import { momoClient } from '../client'
 import { resolveMomoHttpUrl } from '../momo-url'
 import { readMomoFetchJson, readMomoJson } from '../rpc'
+
+export type PublishContentPostWarning = NonNullable<PostDetailResponse['warnings']>[number]
+export type PublishContentPostResponse = PostDetailResponse
 
 export function listContentPosts() {
   return readMomoJson<PostListResponse>(momoClient.rpc.content.posts.$get())
@@ -100,19 +97,6 @@ export function deleteContentTag(id: string) {
   )
 }
 
-export function listContentAssets(query: AssetListQuery) {
-  return readMomoJson<AssetListResponse>(
-    momoClient.rpc.content.assets.$get({
-      query: {
-        keyword: query.keyword,
-        mimeType: query.mimeType,
-        page: String(query.page),
-        pageSize: String(query.pageSize),
-      },
-    }),
-  )
-}
-
 export function createContentPost(payload: CreatePostRequest) {
   return readMomoJson<PostDetailResponse>(
     momoClient.rpc.content.posts.$post({
@@ -147,16 +131,6 @@ export function getContentPost(id: string) {
   )
 }
 
-export function getContentAsset(id: string) {
-  return readMomoJson<AssetDetailResponse>(
-    momoClient.rpc.content.assets[':id'].$get({
-      param: {
-        id,
-      },
-    }),
-  )
-}
-
 export function saveContentPostDraft(id: string, payload: SavePostDraftRequest) {
   return readMomoJson<PostDetailResponse>(
     momoClient.rpc.content.posts[':id'].draft.$patch({
@@ -179,7 +153,7 @@ export function createContentPreviewToken(id: string) {
 }
 
 export function publishContentPost(id: string) {
-  return readMomoJson<PostDetailResponse>(
+  return readMomoJson<PublishContentPostResponse>(
     momoClient.rpc.content.posts[':id'].publish.$post({
       param: {
         id,
@@ -188,37 +162,15 @@ export function publishContentPost(id: string) {
   )
 }
 
+export function archiveContentPost(id: string) {
+  return readMomoFetchJson<PostDetailResponse>(
+    fetch(resolveMomoHttpUrl(`/rpc/content/posts/${encodeURIComponent(id)}/archive`), {
+      credentials: 'include',
+      method: 'POST',
+    }),
+  )
+}
+
 export function listMdxComponents() {
   return readMomoJson<MdxComponentsResponse>(momoClient.rpc.content['mdx-components'].$get())
-}
-
-export function updateContentAsset(id: string, payload: UpdateAssetRequest) {
-  return readMomoJson<ImageAssetResponse>(
-    momoClient.rpc.content.assets[':id'].$patch({
-      json: payload,
-      param: {
-        id,
-      },
-    }),
-  )
-}
-
-export function deleteContentAsset(id: string) {
-  return readMomoJson<DeleteAssetResponse>(
-    momoClient.rpc.content.assets[':id'].$delete({
-      param: {
-        id,
-      },
-    }),
-  )
-}
-
-export function uploadContentImage(file: File) {
-  return readMomoJson<ImageAssetResponse>(
-    momoClient.rpc.content.assets.images.$post({
-      form: {
-        file,
-      },
-    }),
-  )
 }

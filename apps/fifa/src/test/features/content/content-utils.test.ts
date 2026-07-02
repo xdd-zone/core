@@ -2,7 +2,7 @@ import type { ImageAsset, PostSummary } from '@xdd-zone/contracts'
 
 import { buildImageSnippet, insertTextAtSelection } from '@fifa/features/content/utils/editor'
 import { filterContentPosts } from '@fifa/features/content/utils/post-list'
-import { buildBoboPreviewUrl } from '@fifa/features/content/utils/preview-url'
+import { buildBoboPreviewUrl, buildBoboTargetPreviewUrl } from '@fifa/features/content/utils/preview-url'
 import { ignoreAntdUploadRequest } from '@fifa/features/content/utils/upload'
 
 const posts: PostSummary[] = [
@@ -15,9 +15,13 @@ const posts: PostSummary[] = [
     },
     coverAssetId: null,
     createdAt: '2026-01-01T00:00:00.000Z',
+    draftSlug: 'hello-world',
+    draftTitle: 'Hello World',
     excerpt: null,
     id: 'post-1',
     publishedAt: null,
+    publishedSlug: null,
+    publishedTitle: null,
     slug: 'hello-world',
     status: 'draft',
     tags: [],
@@ -28,9 +32,13 @@ const posts: PostSummary[] = [
     category: null,
     coverAssetId: null,
     createdAt: '2026-01-02T00:00:00.000Z',
+    draftSlug: 'theme-preview',
+    draftTitle: 'Theme Preview',
     excerpt: null,
     id: 'post-2',
     publishedAt: '2026-01-03T00:00:00.000Z',
+    publishedSlug: 'theme-preview',
+    publishedTitle: 'Theme Preview',
     slug: 'theme-preview',
     status: 'published',
     tags: [
@@ -71,6 +79,12 @@ describe('content 工具函数', () => {
   it('bobo 地址带路径前缀时保留前缀', () => {
     expect(buildBoboPreviewUrl('post-1', 'token-1', 'https://example.xdd.ink/bobo')).toBe(
       'https://example.xdd.ink/bobo/preview/posts/post-1?token=token-1',
+    )
+  })
+
+  it('按目标类型拼通用预览地址', () => {
+    expect(buildBoboTargetPreviewUrl('projects', 'project-1', 'token-1', 'https://example.xdd.ink/bobo')).toBe(
+      'https://example.xdd.ink/bobo/preview/projects/project-1?token=token-1',
     )
   })
 

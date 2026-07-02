@@ -1,5 +1,6 @@
 'use client'
 
+import type { PublicProfile } from '@xdd-zone/contracts'
 import Image from 'next/image'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -8,6 +9,8 @@ import { cn } from '@/lib/utils'
 import { makePlaceholder } from '../../_lib/placeholder'
 
 const HERO_ROLES = ['独立开发者', 'TS 全栈开发者', '工具作者', '内容记录者']
+const DEFAULT_HERO_BIO =
+  '我做 Web 产品、Agent 工具和内容系统。这里放近期文章、代表作品、碎碎念，以及一些正在打磨的技术实验。'
 const EXPLORATION_CARDS = [
   { key: 'e1', alt: '碎碎念卡片', rotate: -3, col: 0 },
   { key: 'e2', alt: '技术实验卡片', rotate: 2, col: 0 },
@@ -17,9 +20,10 @@ const EXPLORATION_CARDS = [
   { key: 'e6', alt: '阅读摘记卡片', rotate: 3, col: 1 },
 ]
 
-export function HeroContent() {
+export function HeroContent({ profile }: { profile: PublicProfile }) {
   const [ready, setReady] = useState(false)
   const [roleIndex, setRoleIndex] = useState(0)
+  const contactHref = profile.contactEmail ? `mailto:${profile.contactEmail}` : '#contact'
 
   useEffect(() => {
     const motionAllowed = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -58,7 +62,7 @@ export function HeroContent() {
         )}
         style={ready ? { animationDelay: '0.13s' } : {}}
       >
-        喜东东
+        {profile.displayName}
       </h1>
       <p
         className={cn(
@@ -80,7 +84,7 @@ export function HeroContent() {
         )}
         style={ready ? { animationDelay: '0.35s' } : {}}
       >
-        我做 Web 产品、Agent 工具和内容系统。这里放近期文章、代表作品、碎碎念，以及一些正在打磨的技术实验。
+        {profile.bio ?? DEFAULT_HERO_BIO}
       </p>
       <div
         className={cn(
@@ -97,7 +101,7 @@ export function HeroContent() {
         </a>
         <a
           className="relative rounded-full text-[0.9rem] px-7 py-3.5 inline-block text-center transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1 border-2 border-border bg-background text-foreground"
-          href="#contact"
+          href={contactHref}
         >
           联系我
         </a>

@@ -1,21 +1,19 @@
 import type { SQL } from 'drizzle-orm'
 import type { DbClient } from '#momo/infra/db/client'
 import type {
+  ArchiveContentPostInput,
   ContentAssetRecord,
-  ContentAssetReferenceRecord,
   ContentPostRecord,
   ContentPreviewTokenRecord,
   ContentRevisionRecord,
-  CreateContentAssetInput,
   CreateContentPostInput,
   CreateContentPreviewTokenInput,
   ListPublicPostsInput,
   PublishContentPostInput,
   PublishContentPostResult,
   SaveContentDraftInput,
-  UpdateContentAssetInput,
 } from '../types/content.types'
-import { and, desc, eq, ilike, inArray, ne, or, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, ne, or, sql } from 'drizzle-orm'
 import {
   contentAssets,
   contentCategories,
@@ -24,9 +22,11 @@ import {
   contentPostTags,
   contentPreviewTokens,
   contentTags,
+  eventOutbox,
 } from '#momo/infra/db/schema/index'
 
 const CONTENT_POSTS_SLUG_UNIQUE = 'content_posts_slug_unique'
+const CONTENT_POSTS_PUBLISHED_SLUG_UNIQUE = 'content_posts_published_slug_unique'
 const CONTENT_POSTS_COVER_ASSET_ID_FK = 'content_posts_cover_asset_id_content_assets_id_fk'
 const CONTENT_POST_REVISIONS_POST_REVISION_UNIQUE = 'content_post_revisions_post_revision_unique'
 const FOREIGN_KEY_VIOLATION_CODE = '23503'
@@ -56,7 +56,11 @@ export function createContentRepository(db: DbClient) {
           coverAssetId: input.coverAssetId ?? null,
           createdAt: now,
           createdBy: input.userId,
+          draftCoverAssetId: input.coverAssetId ?? null,
+          draftExcerpt: input.excerpt ?? null,
           draftRevisionId: input.revisionId,
+          draftSlug: input.slug,
+          draftTitle: input.title,
           excerpt: input.excerpt ?? null,
           id: input.id,
           slug: input.slug,
@@ -88,7 +92,10 @@ export function createContentRepository(db: DbClient) {
         }
       })
     } catch (error) {
-      if (isUniqueConstraintError(error, CONTENT_POSTS_SLUG_UNIQUE)) {
+      if (
+        isUniqueConstraintError(error, CONTENT_POSTS_SLUG_UNIQUE) ||
+        isUniqueConstraintError(error, CONTENT_POSTS_PUBLISHED_SLUG_UNIQUE)
+      ) {
         throw new ContentSlugConflictError()
       }
 
@@ -108,7 +115,7 @@ export function createContentRepository(db: DbClient) {
   }
 
   async function findPostBySlug(slug: string, excludePostId?: string): Promise<ContentPostRecord | undefined> {
-    const conditions = [eq(contentPosts.slug, slug)]
+    const conditions = [or(eq(contentPosts.draftSlug, slug), eq(contentPosts.publishedSlug, slug))!]
 
     if (excludePostId) {
       conditions.push(ne(contentPosts.id, excludePostId))
@@ -128,37 +135,13 @@ export function createContentRepository(db: DbClient) {
   }
 
   async function getPostBySlug(slug: string): Promise<ContentPostRecord | undefined> {
-    const [post] = await db.select().from(contentPosts).where(eq(contentPosts.slug, slug)).limit(1)
+    const [post] = await db.select().from(contentPosts).where(eq(contentPosts.publishedSlug, slug)).limit(1)
     return post
   }
 
   async function listPosts(): Promise<ContentPostRecord[]> {
     const posts = await db.select().from(contentPosts).orderBy(desc(contentPosts.updatedAt))
     return posts
-  }
-
-  async function listAssets(options: {
-    keyword?: string
-    mimeType?: string
-    offset: number
-    limit: number
-  }): Promise<ContentAssetRecord[]> {
-    const whereClause = buildAssetWhereClause(options)
-    const query = db
-      .select()
-      .from(contentAssets)
-      .orderBy(desc(contentAssets.createdAt), desc(contentAssets.id))
-      .limit(options.limit)
-      .offset(options.offset)
-
-    return whereClause ? query.where(whereClause) : query
-  }
-
-  async function countAssets(options: { keyword?: string; mimeType?: string }): Promise<number> {
-    const whereClause = buildAssetWhereClause(options)
-    const query = db.select({ count: sql<number>`count(*)::int` }).from(contentAssets)
-    const [result] = whereClause ? await query.where(whereClause) : await query
-    return result?.count ?? 0
   }
 
   async function listPublicPosts(input: ListPublicPostsInput = {}): Promise<ContentPostRecord[]> {
@@ -225,7 +208,10 @@ export function createContentRepository(db: DbClient) {
       try {
         return await saveDraftOnce(input)
       } catch (error) {
-        if (isUniqueConstraintError(error, CONTENT_POSTS_SLUG_UNIQUE)) {
+        if (
+          isUniqueConstraintError(error, CONTENT_POSTS_SLUG_UNIQUE) ||
+          isUniqueConstraintError(error, CONTENT_POSTS_PUBLISHED_SLUG_UNIQUE)
+        ) {
           throw new ContentSlugConflictError()
         }
 
@@ -267,11 +253,11 @@ export function createContentRepository(db: DbClient) {
       const revisionNo = (lastRevision?.revisionNo ?? 0) + 1
       const nextPost = {
         categoryId: input.categoryId === undefined ? currentPost.categoryId : input.categoryId,
-        coverAssetId: input.coverAssetId === undefined ? currentPost.coverAssetId : input.coverAssetId,
-        excerpt: input.excerpt === undefined ? currentPost.excerpt : input.excerpt,
-        slug: input.slug ?? currentPost.slug,
+        coverAssetId: input.coverAssetId === undefined ? currentPost.draftCoverAssetId : input.coverAssetId,
+        excerpt: input.excerpt === undefined ? currentPost.draftExcerpt : input.excerpt,
+        slug: input.slug ?? currentPost.draftSlug,
         source: input.source,
-        title: input.title ?? currentPost.title,
+        title: input.title ?? currentPost.draftTitle,
       }
 
       await tx.insert(contentPostRevisions).values({
@@ -290,7 +276,11 @@ export function createContentRepository(db: DbClient) {
         .set({
           categoryId: nextPost.categoryId,
           coverAssetId: nextPost.coverAssetId,
+          draftCoverAssetId: nextPost.coverAssetId,
+          draftExcerpt: nextPost.excerpt,
           draftRevisionId: input.revisionId,
+          draftSlug: nextPost.slug,
+          draftTitle: nextPost.title,
           excerpt: nextPost.excerpt,
           slug: nextPost.slug,
           title: nextPost.title,
@@ -324,101 +314,95 @@ export function createContentRepository(db: DbClient) {
     return revision
   }
 
-  async function findAssetReferences(id: string, fileUrl?: string): Promise<ContentAssetReferenceRecord[]> {
-    const asset = await getAssetById(id)
-    if (!asset) {
-      return []
+  async function publishPost(input: PublishContentPostInput): Promise<PublishContentPostResult> {
+    try {
+      return await db.transaction(async (tx) => {
+        const now = new Date()
+        const [currentPost] = await tx.select().from(contentPosts).where(eq(contentPosts.id, input.postId)).limit(1)
+
+        if (!currentPost) {
+          return { status: 'not_found' }
+        }
+
+        if (!currentPost.draftRevisionId) {
+          return { status: 'no_draft' }
+        }
+
+        const [revision] = await tx
+          .select()
+          .from(contentPostRevisions)
+          .where(eq(contentPostRevisions.id, currentPost.draftRevisionId))
+          .limit(1)
+
+        if (!revision) {
+          return { status: 'missing_draft_revision' }
+        }
+
+        const [post] = await tx
+          .update(contentPosts)
+          .set({
+            publishedAt: now,
+            publishedBy: input.userId,
+            publishedCoverAssetId: currentPost.draftCoverAssetId,
+            publishedExcerpt: currentPost.draftExcerpt,
+            publishedRevisionId: revision.id,
+            publishedSlug: currentPost.draftSlug,
+            publishedTitle: currentPost.draftTitle,
+            status: 'published',
+            updatedAt: now,
+            updatedBy: input.userId,
+          })
+          .where(eq(contentPosts.id, input.postId))
+          .returning()
+
+        if (!post) {
+          return { status: 'not_found' }
+        }
+
+        await tx.insert(eventOutbox).values({
+          createdAt: now,
+          eventType: 'content.post.published',
+          id: input.eventId,
+          nextRunAt: now,
+          payload: {
+            postId: post.id,
+            publishedAt: post.publishedAt?.toISOString() ?? null,
+            publishedSlug: post.publishedSlug,
+            summary: post.publishedExcerpt,
+            title: post.publishedTitle,
+          },
+          status: 'pending',
+          updatedAt: now,
+        })
+
+        return {
+          eventId: input.eventId,
+          post,
+          revision,
+          status: 'published',
+        }
+      })
+    } catch (error) {
+      if (isUniqueConstraintError(error, CONTENT_POSTS_PUBLISHED_SLUG_UNIQUE)) {
+        throw new ContentSlugConflictError()
+      }
+
+      throw error
     }
-
-    const coverRefs = await db
-      .select({
-        postId: contentPosts.id,
-        postSlug: contentPosts.slug,
-        postTitle: contentPosts.title,
-        relation: sql<'cover'>`'cover'`.as('relation'),
-      })
-      .from(contentPosts)
-      .where(eq(contentPosts.coverAssetId, id))
-
-    const sourceUrls = [...new Set([asset.url, fileUrl].filter((url): url is string => Boolean(url)))]
-
-    if (sourceUrls.length === 0) {
-      return coverRefs
-    }
-
-    const sourceClause = or(...sourceUrls.map((url) => ilike(contentPostRevisions.source, `%${url}%`)))
-
-    const draftRefs = await db
-      .select({
-        postId: contentPosts.id,
-        postSlug: contentPosts.slug,
-        postTitle: contentPosts.title,
-        relation: sql<'draft-source'>`'draft-source'`.as('relation'),
-      })
-      .from(contentPosts)
-      .innerJoin(contentPostRevisions, eq(contentPosts.draftRevisionId, contentPostRevisions.id))
-      .where(and(eq(contentPosts.status, 'draft'), sourceClause))
-
-    const publishedRefs = await db
-      .select({
-        postId: contentPosts.id,
-        postSlug: contentPosts.slug,
-        postTitle: contentPosts.title,
-        relation: sql<'published-source'>`'published-source'`.as('relation'),
-      })
-      .from(contentPosts)
-      .innerJoin(contentPostRevisions, eq(contentPosts.publishedRevisionId, contentPostRevisions.id))
-      .where(and(eq(contentPosts.status, 'published'), sourceClause))
-
-    return [...coverRefs, ...draftRefs, ...publishedRefs]
   }
 
-  async function publishPost(input: PublishContentPostInput): Promise<PublishContentPostResult> {
-    return db.transaction(async (tx) => {
-      const now = new Date()
-      const [currentPost] = await tx.select().from(contentPosts).where(eq(contentPosts.id, input.postId)).limit(1)
+  async function archivePost(input: ArchiveContentPostInput): Promise<ContentPostRecord | undefined> {
+    const [post] = await db
+      .update(contentPosts)
+      .set({
+        status: 'archived',
+        updatedAt: new Date(),
+        updatedBy: input.userId,
+      })
+      .where(eq(contentPosts.id, input.postId))
+      .returning()
 
-      if (!currentPost) {
-        return { status: 'not_found' }
-      }
-
-      if (!currentPost.draftRevisionId) {
-        return { status: 'no_draft' }
-      }
-
-      const [revision] = await tx
-        .select()
-        .from(contentPostRevisions)
-        .where(eq(contentPostRevisions.id, currentPost.draftRevisionId))
-        .limit(1)
-
-      if (!revision) {
-        return { status: 'missing_draft_revision' }
-      }
-
-      const [post] = await tx
-        .update(contentPosts)
-        .set({
-          publishedAt: now,
-          publishedBy: input.userId,
-          publishedRevisionId: revision.id,
-          status: 'published',
-          updatedAt: now,
-          updatedBy: input.userId,
-        })
-        .where(eq(contentPosts.id, input.postId))
-        .returning()
-
-      if (!post) {
-        return { status: 'not_found' }
-      }
-
-      return {
-        post,
-        revision,
-        status: 'published',
-      }
-    })
+    return post
   }
 
   async function createPreviewToken(input: CreateContentPreviewTokenInput): Promise<void> {
@@ -427,8 +411,10 @@ export function createContentRepository(db: DbClient) {
       createdBy: input.createdBy,
       expiresAt: input.expiresAt,
       id: input.id,
-      postId: input.postId,
-      revisionId: input.revisionId,
+      postId: input.postId ?? null,
+      revisionId: input.revisionId ?? null,
+      targetId: input.targetId,
+      targetType: input.targetType,
       tokenHash: input.tokenHash,
     })
   }
@@ -445,43 +431,6 @@ export function createContentRepository(db: DbClient) {
 
   async function markPreviewTokenUsed(id: string) {
     await db.update(contentPreviewTokens).set({ usedAt: new Date() }).where(eq(contentPreviewTokens.id, id))
-  }
-
-  async function createAsset(input: CreateContentAssetInput): Promise<ContentAssetRecord> {
-    const now = new Date()
-    await db.insert(contentAssets).values({
-      alt: input.alt ?? null,
-      createdAt: now,
-      createdBy: input.createdBy,
-      fileName: input.fileName,
-      id: input.id,
-      mimeType: input.mimeType,
-      size: input.size,
-      storagePath: input.storagePath,
-      updatedAt: now,
-      url: input.url ?? null,
-    })
-
-    const [asset] = await db.select().from(contentAssets).where(eq(contentAssets.id, input.id)).limit(1)
-    return asset as ContentAssetRecord
-  }
-
-  async function updateAsset(input: UpdateContentAssetInput): Promise<ContentAssetRecord | undefined> {
-    const [asset] = await db
-      .update(contentAssets)
-      .set({
-        alt: input.alt,
-        updatedAt: input.updatedAt,
-      })
-      .where(eq(contentAssets.id, input.id))
-      .returning()
-
-    return asset
-  }
-
-  async function deleteAsset(id: string): Promise<ContentAssetRecord | undefined> {
-    const [asset] = await db.delete(contentAssets).where(eq(contentAssets.id, id)).returning()
-    return asset
   }
 
   async function getCategoriesByPostIds(postIds: string[]): Promise<Map<string, string>> {
@@ -508,12 +457,9 @@ export function createContentRepository(db: DbClient) {
   }
 
   return {
-    countAssets,
-    createAsset,
     createPost,
     createPreviewToken,
-    deleteAsset,
-    findAssetReferences,
+    archivePost,
     findPostBySlug,
     getAssetById,
     getCategoriesByPostIds,
@@ -521,13 +467,11 @@ export function createContentRepository(db: DbClient) {
     getPostBySlug,
     getPreviewToken,
     getRevisionById,
-    listAssets,
     listPosts,
     listPublicPosts,
     markPreviewTokenUsed,
     publishPost,
     saveDraft,
-    updateAsset,
   }
 }
 
@@ -539,27 +483,6 @@ function isUniqueConstraintError(error: unknown, constraintName: string): boolea
 
 function isForeignKeyConstraintError(error: unknown, constraintName: string): boolean {
   return isConstraintError(error, FOREIGN_KEY_VIOLATION_CODE, constraintName)
-}
-
-function buildAssetWhereClause(options: { keyword?: string; mimeType?: string }): SQL<unknown> | undefined {
-  const conditions: SQL<unknown>[] = []
-
-  if (options.keyword) {
-    const keyword = `%${options.keyword}%`
-    conditions.push(
-      or(
-        ilike(contentAssets.fileName, keyword),
-        ilike(contentAssets.storagePath, keyword),
-        ilike(contentAssets.alt, keyword),
-      )!,
-    )
-  }
-
-  if (options.mimeType) {
-    conditions.push(eq(contentAssets.mimeType, options.mimeType))
-  }
-
-  return conditions.length > 0 ? and(...conditions) : undefined
 }
 
 function isConstraintError(error: unknown, code: string, constraintName: string): boolean {

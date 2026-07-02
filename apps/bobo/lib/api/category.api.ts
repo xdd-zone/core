@@ -4,6 +4,7 @@ import { http } from '@/lib/http'
 const publicContentInit = {
   next: {
     revalidate: 60,
+    tags: ['categories:list'],
   },
 } as RequestInit
 

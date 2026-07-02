@@ -18,10 +18,15 @@ function createRuntime(appEnv: MomoRuntime['env']['APP_ENV'] = 'test'): MomoRunt
   }
 
   return {
+    boboRevalidate: {
+      revalidate: vi.fn(),
+    },
     env: {
       APP_ENV: appEnv,
       BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       BETTER_AUTH_URL: 'http://localhost:7788',
+      BOBO_BASE_URL: undefined,
+      BOBO_REVALIDATE_SECRET: undefined,
       CACHE_DEFAULT_TTL_SECONDS: 300,
       CACHE_KEY_PREFIX: 'momo',
       CACHE_PROVIDER: 'memory',

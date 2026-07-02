@@ -3,8 +3,8 @@ import type { TextSelection } from '@fifa/features/content/utils/editor'
 import type { MdxComponent, PostDetail, PostStatus, SavePostDraftRequest } from '@xdd-zone/contracts'
 import type { TabsProps } from 'antd'
 
+import { useAssetsQuery, useUploadAssetImageMutation } from '@fifa/api/assets'
 import {
-  useContentAssetsQuery,
   useContentCategoriesQuery,
   useContentPostMetaSuggestionStatusQuery,
   useContentPostQuery,
@@ -14,16 +14,16 @@ import {
   useMdxComponentsQuery,
   usePublishContentPostMutation,
   useSaveContentPostDraftMutation,
-  useUploadContentImageMutation,
 } from '@fifa/api/content'
+import { useRetryEventsOutboxMutation } from '@fifa/api/events'
 import { FifaPageHeader } from '@fifa/components/common'
 import { buildImageSnippet, insertTextAtSelection } from '@fifa/features/content/utils/editor'
 import { buildBoboPreviewUrl } from '@fifa/features/content/utils/preview-url'
 import { ignoreAntdUploadRequest } from '@fifa/features/content/utils/upload'
 import { useTabBarStore } from '@fifa/stores'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
-import { App, Button, Form, Input, Modal, Select, Space, Tabs, Tag, Tooltip, Upload } from 'antd'
-import { ExternalLink, ImagePlus, PackagePlus, Save, Send, SquareArrowOutUpRight, Wand2 } from 'lucide-react'
+import { Alert, App, Button, Form, Input, Modal, Select, Space, Tabs, Tag, Tooltip, Upload } from 'antd'
+import { ExternalLink, ImagePlus, PackagePlus, RefreshCw, Save, Send, SquareArrowOutUpRight, Wand2 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -73,6 +73,54 @@ function getStatusColor(status: PostStatus) {
   }
 
   return 'warning'
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function readWarningText(warning: unknown) {
+  if (typeof warning === 'string') {
+    return warning.trim()
+  }
+
+  if (!isRecord(warning)) {
+    return ''
+  }
+
+  const message = warning.message
+  if (typeof message === 'string' && message.trim()) {
+    return message.trim()
+  }
+
+  const reason = warning.reason
+  if (typeof reason === 'string' && reason.trim()) {
+    return reason.trim()
+  }
+
+  const code = warning.code
+  if (typeof code === 'string' && code.trim()) {
+    return code.trim()
+  }
+
+  const type = warning.type
+  if (typeof type === 'string' && type.trim()) {
+    return type.trim()
+  }
+
+  return ''
+}
+
+function normalizePublishWarnings(warnings: unknown) {
+  if (!Array.isArray(warnings)) {
+    return []
+  }
+
+  return warnings.map(readWarningText).filter((warning) => warning.length > 0)
+}
+
+function hasRevalidateWarning(warnings: string[]) {
+  return warnings.some((warning) => /revalidate|cache|缓存|刷新/i.test(warning))
 }
 
 function toFormValue(post: PostDetail): PostEditFormValue {
@@ -135,6 +183,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
   const [draftSaving, setDraftSaving] = useState(false)
   const [previewUrl, setPreviewUrl] = useState('')
   const [selection, setSelection] = useState<TextSelection>({ end: 0, start: 0 })
+  const [lastPublishWarnings, setLastPublishWarnings] = useState<string[]>([])
   const postQuery = useContentPostQuery(postId)
   const categoriesQuery = useContentCategoriesQuery()
   const tagsQuery = useContentTagsQuery()
@@ -144,14 +193,12 @@ function PostEditContent({ postId }: PostEditContentProps) {
   const publishMutation = usePublishContentPostMutation(postId)
   const metaSuggestionStatusQuery = useContentPostMetaSuggestionStatusQuery()
   const metaSuggestionMutation = useGenerateContentPostMetaSuggestionMutation()
-  const uploadImageMutation = useUploadContentImageMutation()
+  const uploadImageMutation = useUploadAssetImageMutation()
+  const retryOutboxMutation = useRetryEventsOutboxMutation()
   const [assetPickerOpen, setAssetPickerOpen] = useState(false)
   const [pickerKeyword, setPickerKeyword] = useState('')
-  const sidebarQuery = useContentAssetsQuery({ page: 1, pageSize: 12 })
-  const pickerQuery = useContentAssetsQuery(
-    { keyword: pickerKeyword, page: 1, pageSize: 24 },
-    { enabled: assetPickerOpen },
-  )
+  const sidebarQuery = useAssetsQuery({ page: 1, pageSize: 12 })
+  const pickerQuery = useAssetsQuery({ keyword: pickerKeyword, page: 1, pageSize: 24 }, { enabled: assetPickerOpen })
 
   const post = postQuery.data?.ok ? postQuery.data.data.post : undefined
   const loadError = postQuery.data && !postQuery.data.ok ? postQuery.data.error.message : undefined
@@ -176,6 +223,10 @@ function PostEditContent({ postId }: PostEditContentProps) {
     : undefined
   const metaSuggestionReady = metaSuggestionStatus?.ready ?? false
   const metaSuggestionDisabledReason = metaSuggestionStatus?.reason ?? t('content.postEdit.ai.statusUnknown')
+  const lastPublishHasRevalidateWarning = useMemo(
+    () => hasRevalidateWarning(lastPublishWarnings),
+    [lastPublishWarnings],
+  )
 
   useEffect(() => {
     if (!post || loadedPostIdRef.current === post.id) {
@@ -381,10 +432,37 @@ function PostEditContent({ postId }: PostEditContentProps) {
         }
 
         setDirty(false)
+        const warnings = normalizePublishWarnings(response.data.warnings)
+        setLastPublishWarnings(warnings)
+
+        if (warnings.length > 0) {
+          message.warning(t('content.postEdit.publishWarningToast'))
+          return
+        }
+
         message.success(t('content.postEdit.publishSuccess'))
       },
     })
   }, [dirty, message, modal, publishMutation, saveDraft, t])
+
+  const handleRetrySiteCache = useCallback(async () => {
+    const response = await retryOutboxMutation.mutateAsync()
+
+    if (!response.ok) {
+      message.error(response.error.message)
+      return
+    }
+
+    const warnings = normalizePublishWarnings(response.data.warnings)
+    setLastPublishWarnings(warnings)
+
+    if (warnings.length > 0) {
+      message.warning(t('content.postEdit.retryCacheWarningToast'))
+      return
+    }
+
+    message.success(t('content.postEdit.retryCacheSuccess', { count: response.data.handled }))
+  }, [message, retryOutboxMutation, t])
 
   const updateSource = useCallback(
     (nextSource: string) => {
@@ -702,6 +780,13 @@ function PostEditContent({ postId }: PostEditContentProps) {
                 {t('content.postEdit.previewInNewTab')}
               </Button>
               <Button
+                icon={<RefreshCw className="size-4" />}
+                loading={retryOutboxMutation.isPending}
+                onClick={() => void handleRetrySiteCache()}
+              >
+                {t('content.postEdit.retrySiteCache')}
+              </Button>
+              <Button
                 icon={<Send className="size-4" />}
                 loading={publishMutation.isPending}
                 onClick={handlePublish}
@@ -714,6 +799,38 @@ function PostEditContent({ postId }: PostEditContentProps) {
         }
         summaryItems={summaryItems}
       />
+
+      {lastPublishWarnings.length > 0 ? (
+        <Alert
+          closable
+          description={
+            <div className="space-y-2">
+              {lastPublishHasRevalidateWarning ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>{t('content.postEdit.publishRevalidateWarning')}</span>
+                  <Button
+                    size="small"
+                    icon={<RefreshCw className="size-4" />}
+                    loading={retryOutboxMutation.isPending}
+                    onClick={() => void handleRetrySiteCache()}
+                  >
+                    {t('content.postEdit.retrySiteCache')}
+                  </Button>
+                </div>
+              ) : null}
+              <ul className="m-0 list-disc space-y-1 pl-4">
+                {lastPublishWarnings.map((warning, index) => (
+                  <li key={`${warning}-${index}`}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          }
+          message={t('content.postEdit.publishWarningsTitle')}
+          onClose={() => setLastPublishWarnings([])}
+          showIcon
+          type="warning"
+        />
+      ) : null}
 
       <Form<PostEditFormValue>
         className="space-y-5"

@@ -29,10 +29,24 @@
   文稿列表页，读取 `MOMO_BASE_URL` 指向的 Momo 公开文章接口。
 - `apps/bobo/app/(site)/writing/[slug]/page.tsx`
   文稿详情页，按 slug 读取已发布文章。
+- `apps/bobo/app/(site)/projects/page.tsx`
+  项目列表页，读取 Momo 公开项目接口。
+- `apps/bobo/app/(site)/projects/[slug]/page.tsx`
+  项目详情页，按 slug 读取已发布项目。
+- `apps/bobo/app/(site)/search/page.tsx`
+  搜索页，读取 Momo 公开搜索接口。
 - `apps/bobo/app/(site)/layout.tsx`
   给公开站点页面统一加底部区域，不改 URL。
+- `apps/bobo/app/rss.xml/route.ts`
+  输出 RSS。当前输出公开文章和公开项目。
+- `apps/bobo/app/sitemap.ts`
+  输出 sitemap，读取公开文章和公开项目。
 - `apps/bobo/app/(preview)/preview/posts/[postId]/page.tsx`
   文章预览页，读取 `MOMO_BASE_URL` 指向的 Momo 预览接口。
+- `apps/bobo/app/(preview)/preview/[targetType]/[targetId]/page.tsx`
+  通用预览页，当前用于项目预览，URL 是 `/preview/projects/<id>`。
+- `apps/bobo/app/api/revalidate/route.ts`
+  接收 `POST /api/revalidate`，用 `BOBO_REVALIDATE_SECRET` 校验后刷新 Next cache tag 或 path。
 - `apps/bobo/app/(lab)/lab`
   放样式演示、主题验证和临时页面。
 - `apps/bobo/app/globals.css`
@@ -48,7 +62,7 @@
 - `apps/bobo/lib`
   放主题函数、工具函数、环境变量校验、Momo HTTP 请求封装和 Bobo 公开内容 API 调用。
 - `apps/bobo/lib/env.server.ts`
-  校验服务端环境变量，当前读取 `MOMO_BASE_URL` 和 `BOBO_ALLOWED_DEV_ORIGINS`。
+  校验服务端环境变量，当前读取 `MOMO_BASE_URL`、`BOBO_ALLOWED_DEV_ORIGINS` 和 `BOBO_REVALIDATE_SECRET`。
 - `apps/bobo/lib/env.client.ts`
   校验浏览器环境变量。当前没有 `NEXT_PUBLIC_` 变量，所以结构为空。
 - `apps/bobo/lib/http.ts`
@@ -89,6 +103,7 @@ Bobo 通过环境变量读取 Momo 地址：
 ```text
 MOMO_BASE_URL=http://localhost:7788
 BOBO_ALLOWED_DEV_ORIGINS=localhost,127.0.0.1
+BOBO_REVALIDATE_SECRET=
 ```
 
 示例文件在：
@@ -107,6 +122,8 @@ apps/bobo/.env.development
 
 `BOBO_ALLOWED_DEV_ORIGINS` 用来放 Next 开发服务允许访问的 hostname，多个值用英文逗号隔开。
 
+`BOBO_REVALIDATE_SECRET` 用来校验 `POST /api/revalidate`。请求头传 `x-bobo-revalidate-secret`，请求体传 `tags` 或 `paths` 字符串数组。
+
 ## 页面规则
 
 - 公开站点页面放在 `apps/bobo/app/(site)/<route>/page.tsx`。
@@ -123,7 +140,7 @@ Bobo 页面不要直接拼 Momo URL，也不要直接在页面里处理 Momo RPC
 
 推荐写法：
 
-1. 在 `apps/bobo/lib` 里写领域读取函数，比如 `getPublishedPosts()`、`getPostBySlug()`、`getHomePageData()`。
+1. 在 `apps/bobo/lib` 里写领域读取函数，比如 `getPublishedPosts()`、`getPostBySlug()`、`getSiteShellData()`、`getHomePageData()`、`getPublicProjects()`。
 2. 读取函数调用 Momo 公开接口，处理 `ApiResponse`、not found 和预览 token 失效。
 3. 页面只调用这些读取函数，再组合组件和 metadata。
 

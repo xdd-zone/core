@@ -11,6 +11,8 @@ const momoEnvSchema = z
     APP_ENV: z.enum(['development', 'test', 'production']),
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: z.string().url(),
+    BOBO_BASE_URL: optionalUrlSchema,
+    BOBO_REVALIDATE_SECRET: optionalStringSchema,
     CACHE_DEFAULT_TTL_SECONDS: z.coerce.number().int().positive().default(300),
     CACHE_KEY_PREFIX: z.string().min(1).default('momo'),
     CACHE_PROVIDER: z.enum(['memory', 'redis']).default('memory'),
@@ -95,6 +97,14 @@ const momoEnvSchema = z
         path: ['LLM_SECRET_KEY'],
       })
     }
+
+    if ((env.BOBO_BASE_URL && !env.BOBO_REVALIDATE_SECRET) || (!env.BOBO_BASE_URL && env.BOBO_REVALIDATE_SECRET)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'BOBO_BASE_URL 和 BOBO_REVALIDATE_SECRET 必须同时配置',
+        path: ['BOBO_BASE_URL'],
+      })
+    }
   })
   .transform((env) => ({
     ...env,
@@ -108,6 +118,8 @@ export function getMomoEnv(source: NodeJS.ProcessEnv = process.env): MomoEnv {
     APP_ENV: source.APP_ENV,
     BETTER_AUTH_SECRET: source.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: source.BETTER_AUTH_URL,
+    BOBO_BASE_URL: source.BOBO_BASE_URL,
+    BOBO_REVALIDATE_SECRET: source.BOBO_REVALIDATE_SECRET,
     CACHE_DEFAULT_TTL_SECONDS: source.CACHE_DEFAULT_TTL_SECONDS,
     CACHE_KEY_PREFIX: source.CACHE_KEY_PREFIX,
     CACHE_PROVIDER: source.CACHE_PROVIDER,

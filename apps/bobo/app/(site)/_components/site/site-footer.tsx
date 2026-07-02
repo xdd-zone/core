@@ -1,35 +1,33 @@
+import type { PublicProfile, SiteConfig } from '@xdd-zone/contracts'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/site/theme-toggle'
 
-const footerLinkGroups = [
-  {
-    title: '关于',
-    links: [
-      { href: '#', label: '关于本站', internal: false },
-      { href: '/writing', label: '博客', internal: true },
-    ],
-  },
-  {
-    title: '联系',
-    links: [
-      { href: 'https://github.com/xdd-zone/core', label: 'GitHub', internal: false },
-      { href: '#', label: '即刻', internal: false },
-    ],
-  },
-  {
-    title: '更多',
-    links: [
-      { href: '#', label: 'RSS', internal: false },
-      { href: '#', label: '站点地图', internal: false },
-    ],
-  },
-] as const
-
-const bottomLinks = [{ href: '#', label: '订阅' }] as const
-
 const currentYear = new Date().getFullYear()
 
-export function SiteFooter() {
+export function SiteFooter({ profile, site }: { profile: PublicProfile; site: SiteConfig }) {
+  const visibleNavigation = site.navigation.filter((item) => item.visible).sort((a, b) => a.order - b.order)
+  const contactLinks = [
+    ...profile.socialLinks.map((link) => ({ ...link, internal: false })),
+    ...(profile.contactEmail ? [{ href: `mailto:${profile.contactEmail}`, label: '邮箱', internal: false }] : []),
+  ]
+  const footerLinkGroups = [
+    {
+      title: '站点',
+      links: visibleNavigation.map((item) => ({ href: item.href, label: item.label, internal: true })),
+    },
+    {
+      title: '联系',
+      links: contactLinks.length > 0 ? contactLinks : [{ href: '#contact', label: '联系入口', internal: true }],
+    },
+    {
+      title: '更多',
+      links: [
+        { href: '/rss.xml', label: 'RSS', internal: true },
+        { href: '/sitemap.xml', label: '站点地图', internal: true },
+      ],
+    },
+  ]
+
   return (
     <footer className="relative mt-20 overflow-hidden pb-8 pt-20 transition-colors duration-300">
       {/* 底部雾气光晕背景：使用 mask-image 避免透明过渡产生灰线（死区） */}
@@ -41,13 +39,13 @@ export function SiteFooter() {
           {/* 左侧品牌与描述 */}
           <div className="flex max-w-xs flex-col items-start space-y-8">
             <div>
-              <h2 className="mb-2 text-xl font-bold tracking-tight text-foreground">Bobo</h2>
-              <p className="text-[0.9rem] italic text-muted-foreground">Stay hungry. Stay foolish.</p>
+              <h2 className="mb-2 text-xl font-bold tracking-tight text-foreground">{profile.displayName}</h2>
+              <p className="text-[0.9rem] italic text-muted-foreground">{site.seo.description ?? profile.bio}</p>
             </div>
 
             <div className="space-y-1 text-[0.85rem] text-muted-foreground">
               <p>
-                © 2024-{currentYear} Powered by Bobo &{' '}
+                © 2024-{currentYear} Powered by {site.seo.title} &{' '}
                 <span className="cursor-not-allowed opacity-50 transition-colors duration-300 hover:text-foreground">
                   XDD Zone
                 </span>
@@ -80,6 +78,13 @@ export function SiteFooter() {
                         >
                           {link.label}
                         </Link>
+                      ) : link.href.startsWith('mailto:') ? (
+                        <a
+                          href={link.href}
+                          className="text-[0.85rem] text-muted-foreground transition-colors duration-300 hover:text-foreground"
+                        >
+                          {link.label}
+                        </a>
                       ) : (
                         <a
                           href={link.href}
@@ -102,14 +107,9 @@ export function SiteFooter() {
         <div className="flex flex-col items-start justify-between gap-4 pt-8 text-[0.85rem] text-muted-foreground sm:flex-row sm:items-center">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
             <div className="flex flex-wrap items-center gap-x-3">
-              {bottomLinks.map((link, index) => (
-                <div key={link.label} className="flex items-center gap-3">
-                  <span className="cursor-not-allowed opacity-50 transition-colors duration-300 hover:text-foreground">
-                    {link.label}
-                  </span>
-                  {index < bottomLinks.length - 1 && <span className="opacity-30">·</span>}
-                </div>
-              ))}
+              <Link href="/rss.xml" className="transition-colors duration-300 hover:text-foreground">
+                订阅
+              </Link>
             </div>
 
             <span className="hidden opacity-30 sm:inline">|</span>

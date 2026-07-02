@@ -28,8 +28,9 @@ Momo 保存个人站业务数据，并给 Fifa 和 Bobo 提供接口。
 - Fifa 使用管理端接口，能读取草稿、保存草稿、生成预览 token 和发布内容。
 - Bobo 使用公开接口，只读取已发布、可公开的数据。
 - `content` 是文稿模块，不是所有站点内容的总称。
-- 后续站点配置、个人资料、项目和素材能力按 `site`、`profile`、`projects`、`assets` 这类独立模块维护。
+- 站点配置、个人资料、项目、预览、搜索、发布任务和素材能力按 `site`、`profile`、`projects`、`preview`、`search`、`events`、`assets` 这类独立模块维护。
 - 管理端接口和公开接口可以共用 service、repository 和查询代码，但 route、响应 DTO 和 presenter 要分开。
+- 发布文章和项目会写 `event_outbox`，再刷新 Bobo cache tag，并按配置写搜索索引。刷新失败不回滚发布，接口响应会带 `warnings`。
 
 ## Auth 单 owner 模型
 
@@ -65,7 +66,7 @@ apps/momo/src/
 - `bootstrap`
   创建 runtime，组装 Hono app，注册全局中间件、错误处理和路由。
 - `modules`
-  业务模块。当前有 `system`、`auth`、`content` 和 `llm`。文件较少的模块可以先平铺；文件变多后，把 service、repository 和内部类型分别放到 `services`、`repositories` 和 `types` 目录。
+  业务模块。当前有 `system`、`auth`、`content`、`assets`、`profile`、`preview`、`site`、`projects`、`search`、`events` 和 `llm`。文件较少的模块可以先平铺；文件变多后，把 service、repository 和内部类型分别放到 `services`、`repositories` 和 `types` 目录。
 - `middleware`
   request context、请求日志、CORS 这类通用 middleware。
 - `infra`
@@ -239,6 +240,8 @@ PORT
 LOG_LEVEL
 LOG_SQL
 MOMO_PUBLIC_BASE_URL
+BOBO_BASE_URL
+BOBO_REVALIDATE_SECRET
 CORS_ORIGINS
 DATABASE_URL
 BETTER_AUTH_SECRET
@@ -285,11 +288,13 @@ OWNER_DISPLAY_NAME
 
 `MOMO_PUBLIC_BASE_URL` 填 Momo 给浏览器访问的地址。内容图片用本地存储时，素材响应里的 `fileUrl` 会按这个地址拼 `/rpc/content/assets/:id/file`。本地开发通常填 `http://localhost:7788`。
 
+`BOBO_BASE_URL` 和 `BOBO_REVALIDATE_SECRET` 要一起配置。发布文章后，Momo 用它们调用 Bobo 的 `POST /api/revalidate`。本地不需要主动刷新 Bobo cache 时，两个变量都留空。
+
 `BETTER_AUTH_URL` 填 Momo 的对外地址，Momo 会按这个地址拼 `/api/auth`。本地开发通常填 `http://localhost:7788`。code-server Web IDE 里使用个人 dev 域名时，配置入口看 [code-server 内开发](../development/code-server.md)。`CORS_ORIGINS` 需要包含实际访问 Fifa 和 Bobo 的地址。
 
 `CACHE_PROVIDER` 控制缓存驱动。默认值是 `memory`，数据只存在当前 Node.js 进程里。设成 `redis` 时，需要配置 `CACHE_URL`，本地 Valkey 地址是 `redis://localhost:56379`。`CACHE_KEY_PREFIX` 默认是 `momo`，`CACHE_DEFAULT_TTL_SECONDS` 默认是 `300` 秒。
 
-`SEARCH_PROVIDER` 控制搜索驱动。默认值是 `none`，不会连接外部搜索服务。设成 `meilisearch` 时，需要配置 `MEILI_HOST` 和 `MEILI_API_KEY`，本地 Meilisearch 地址是 `http://localhost:57700`。`MEILI_INDEX_PREFIX` 默认是 `momo`，驱动会把逻辑索引名 `posts` 拼成真实索引名 `momo_posts`。当前还没有业务模块调用搜索驱动。
+`SEARCH_PROVIDER` 控制搜索驱动。默认值是 `none`，不会连接外部搜索服务。设成 `meilisearch` 时，需要配置 `MEILI_HOST` 和 `MEILI_API_KEY`，本地 Meilisearch 地址是 `http://localhost:57700`。`MEILI_INDEX_PREFIX` 默认是 `momo`，驱动会把逻辑索引名 `site` 拼成真实索引名 `momo_site`。公开搜索接口是 `GET /rpc/bobo/search?q=关键词`，文章和项目发布后会写入 `site` 索引。
 
 `LLM_SECRET_KEY` 是 32 字节 base64 字符串，只用来加密数据库里的 LLM Provider API Key。生成命令：
 
@@ -326,7 +331,7 @@ apps/momo/src/bootstrap
 - `index.ts`
   统一导出 `createRuntime()`、`createMomoApp()` 和 `MomoRuntime`。
 
-`MomoRuntime` 当前有 `env`、`logger`、`cache`、`search` 和 `storage`。后续如果加数据库或其他外部资源，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
+`MomoRuntime` 当前有 `env`、`logger`、`cache`、`search`、`storage` 和 `boboRevalidate`。后续如果加数据库或其他外部资源，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
 
 不要把 env、db、cache 写进 `c.var`。`c.var` 只放当前请求的数据。
 
@@ -700,6 +705,7 @@ packages/contracts/src/content/content.contract.ts
 - `PATCH /rpc/content/posts/:id/draft`
 - `POST /rpc/content/posts/:id/preview-token`
 - `POST /rpc/content/posts/:id/publish`
+- `POST /rpc/content/posts/:id/archive`
 - `GET /rpc/content/assets`
 - `GET /rpc/content/assets/:id`
 - `GET /rpc/content/assets/:id/file`
@@ -708,6 +714,7 @@ packages/contracts/src/content/content.contract.ts
 - `GET /rpc/content/mdx-components`
 - `POST /rpc/content/assets/images`
 - `GET /rpc/content/previews/:token`
+- `GET /rpc/previews/:token`
 - `GET /rpc/bobo/content/posts`
 - `GET /rpc/bobo/content/posts/:slug`
 - `GET /rpc/bobo/content/categories`
@@ -728,7 +735,7 @@ apps/momo/src/infra/db/schema/content.schema.ts
 - `content_post_revisions`
   保存 MDX 源码快照。
 - `content_preview_tokens`
-  保存预览 token 的 SHA-256 hash、文章 id、版本 id 和过期时间。
+  保存预览 token 的 SHA-256 hash、目标类型、目标 id 和过期时间。文章预览会额外保存文章 id 和版本 id；项目预览不写这两个字段。
 - `content_assets`
   保存图片素材的存储路径、文件名、MIME、大小、说明和时间戳。
 
@@ -1134,7 +1141,7 @@ apps/momo/src/infra/cache
 apps/momo/src/infra/search
 ```
 
-当前有禁用搜索驱动和 Meilisearch 搜索驱动。`SEARCH_PROVIDER=none` 时使用禁用搜索驱动，数据方法会抛出“搜索服务未启用”。`SEARCH_PROVIDER=meilisearch` 时使用 Meilisearch 搜索驱动。调用方只传逻辑索引名，驱动会加上 `MEILI_INDEX_PREFIX`。当前还没有搜索接口，也没有业务索引。
+当前有禁用搜索驱动和 Meilisearch 搜索驱动。`SEARCH_PROVIDER=none` 时使用禁用搜索驱动。公开搜索接口是 `GET /rpc/bobo/search?q=关键词`，搜索未启用时返回空结果。`SEARCH_PROVIDER=meilisearch` 时使用 Meilisearch 搜索驱动，调用方只传逻辑索引名，驱动会加上 `MEILI_INDEX_PREFIX`。文章发布后会把文章写入 `site` 索引。
 
 文件存储相关代码放在：
 

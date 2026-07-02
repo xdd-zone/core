@@ -4,7 +4,7 @@ import type { LucideProps } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { fifaRouteRecords } from '@fifa/app/router/records'
 import { renderIcon } from '@fifa/utils/pathUtils'
-import { FileText, FolderOpen, Settings } from 'lucide-react'
+import { FileText, FolderOpen, Globe2, Settings } from 'lucide-react'
 
 type MenuItem = Required<MenuProps>['items'][number]
 
@@ -32,6 +32,11 @@ export const navigationGroups: Record<string, NavigationGroup> = {
     icon: FolderOpen,
     label: 'menu.examples',
     order: 30,
+  },
+  site: {
+    icon: Globe2,
+    label: 'menu.site',
+    order: 15,
   },
   settings: {
     icon: Settings,
