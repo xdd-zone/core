@@ -21,6 +21,16 @@
 
 接口请求和响应的 schema、类型、统一响应结构继续放在 `packages/contracts`。
 
+## 系统职责
+
+Momo 保存个人站业务数据，并给 Fifa 和 Bobo 提供接口。
+
+- Fifa 使用管理端接口，能读取草稿、保存草稿、生成预览 token 和发布内容。
+- Bobo 使用公开接口，只读取已发布、可公开的数据。
+- `content` 是文稿模块，不是所有站点内容的总称。
+- 后续站点配置、个人资料、项目和素材能力按 `site`、`profile`、`projects`、`assets` 这类独立模块维护。
+- 管理端接口和公开接口可以共用 service、repository 和查询代码，但 route、响应 DTO 和 presenter 要分开。
+
 ## Auth 单 owner 模型
 
 Fifa 后台目前只有一个 owner 管理员。`fifa.owner` 就是后台管理员身份。

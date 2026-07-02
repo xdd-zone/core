@@ -1,242 +1,313 @@
-# 项目结构
+# 系统设计
 
-这份文档只说明当前代码怎么放。
+这份文档只写 `xdd/core` 的系统方向和模块边界。
 
-## 当前包
+## 项目方向
 
-仓库是 `pnpm + Turborepo` 的 monorepo，当前有六个包：
+`xdd/core` 是一个面向个人站点的内容管理系统。
 
-- `apps/fifa`
-  前端控制台，包名是 `@xdd-zone/fifa`。
-- `apps/momo`
-  Hono API 服务，包名是 `@xdd-zone/momo`。
-- `apps/bobo`
-  个人站点，包名是 `@xdd-zone/bobo`。
-- `packages/eslint-config`
-  共享 ESLint / Prettier 配置，包名是 `@xdd-zone/eslint-config`。
-- `packages/contracts`
-  Fifa 和 Momo 共用的接口类型、schema 和响应结构，包名是 `@xdd-zone/contracts`。
-- `packages/catppuccin-theme`
-  Fifa 和 Bobo 共用的 Catppuccin 主题，包名是 `@xdd-zone/catppuccin-theme`。
+当前公开站点是 Bobo。Momo 保存业务数据并提供接口。Fifa 是后台管理入口。`packages/contracts` 放跨应用 API 的请求 schema、响应类型和错误码。
 
-## 根目录
+文章只是第一类内容。后续还会有个人资料、项目、首页配置、导航、页面配置和其他个性化页面数据。系统不要按“博客”设计，也不要做通用页面搭建器。
+
+## 应用职责
+
+### Momo
+
+`apps/momo` 是 Hono API 服务。这里以数据库里的业务数据为准。
+
+Momo 负责：
+
+- 登录、session 和后台 owner 检查。
+- 文稿、分类、标签、预览 token 和发布状态。
+- 站点配置、个人资料、项目、素材和后续站点级数据。
+- 管理端接口和公开站点接口。
+- 发布后的任务，比如刷新 Bobo 缓存、更新搜索索引。
+- 文件存储、缓存、搜索、LLM、数据库这类外部资源接入。
+
+Momo 不负责渲染 Bobo 页面，不负责决定 Bobo 的页面视觉，也不直接生成前台 HTML。
+
+### Fifa
+
+`apps/fifa` 是后台管理端。
+
+Fifa 页面和菜单按管理工作组织。比如写文章、管素材、改首页、管项目。Fifa 的 `api` 目录按 Momo 模块组织，页面只调用 query 或 mutation hook，不直接 import `momoClient`。
+
+Fifa 负责：
+
+- 登录后台。
+- 编辑草稿和配置。
+- 触发预览、发布和重新刷新缓存。
+- 展示保存、发布、刷新失败等操作结果。
+
+Fifa 不保存业务副本。表单状态和 TanStack Query cache 都是临时状态。
+
+### Bobo
+
+`apps/bobo` 是公开个人站点。
+
+Bobo 负责页面结构、交互、metadata、RSS、sitemap 和公开渲染。Bobo 页面不直接拼 Momo RPC 请求，页面调用 `apps/bobo/lib` 里的领域读取函数。这些函数负责请求 Momo、处理错误、整理公开页面需要的数据。
+
+Bobo 可以缓存公开数据。缓存只是 Momo 数据的派生结果，不是新的业务数据来源。
+
+### Contracts
+
+`packages/contracts` 是跨应用 API 的约定包。
+
+Momo 给 Fifa 和 Bobo 用的请求 schema、响应 DTO、错误码和通用响应结构都放这里。Momo 内部 service 类型、数据库 record、Fifa 页面 view model、Bobo 页面组件类型不要放进这里。
+
+### 共享主题和配置
+
+`packages/catppuccin-theme` 放 Fifa 和 Bobo 共用的主题变量、色板和主题工具。
+
+`packages/eslint-config` 放当前所有子包共用的 ESLint 和 Prettier 配置。
+
+## 领域模块
+
+### content
+
+`content` 是文稿模块，不是所有公开内容的统称。
+
+这里放：
+
+- 文章草稿、已发布文章和预览 token。
+- 分类和标签。
+- MDX 组件清单。
+- 和文稿直接绑定的发布流程。
+
+后续个人资料、项目、首页配置、导航和站点设置不要塞进 `content`。
+
+### site
+
+`site` 用来放站点级配置。
+
+适合放：
+
+- `siteKey = "bobo"`。
+- 导航项。
+- 首页模块开关和排序。
+- SEO 默认值。
+- RSS、sitemap 和搜索需要的站点配置。
+
+当前只支持 Bobo 一个公开站点。`siteKey` 只是给数据一个明确范围，不代表现在要做多站点管理。
+
+### profile
+
+`profile` 放个人身份信息。
+
+适合放：
+
+- 显示名。
+- 头像。
+- 简介。
+- 社交链接。
+- 联系方式展示配置。
+
+Fifa 可以管理这些数据，Bobo 公开页面从 Momo 读取。
+
+### projects
+
+`projects` 放项目和作品集这类结构化内容。
+
+项目不是文章。它可以有自己的字段、排序、发布状态、截图和链接。项目截图引用 `assets`，不自己处理文件存储。
+
+### assets
+
+`assets` 应该是独立模块，不属于 `content`。
+
+Momo 负责资产元数据，文件本体由存储驱动保存。文章封面、正文图片、项目截图、头像、首页图片都可以引用资产。
+
+Bobo 代码里的固定图标、布局装饰和不可运营替换的图片继续放在 Bobo 代码仓库，不进素材库。
+
+当前代码里素材接口还在 `content` 模块下。新增非文章资产使用方时，优先把素材能力迁到独立 `assets` 模块。
+
+### search
+
+搜索是站点级能力。
+
+第一期可以只搜文章，但接口和结果类型按跨内容类型设计。搜索结果至少应该有 `type`、`title`、`summary`、`url` 和 `publishedAt`。文章、项目和页面配置发布后，各自触发搜索索引更新。
+
+## 接口边界
+
+Momo 给 Fifa 和 Bobo 的接口分开。
+
+管理端接口用于 Fifa：
 
 ```text
-.
-├── apps/
-│   ├── fifa/
-│   ├── momo/
-│   └── bobo/
-├── docs/
-│   ├── apps/
-│   ├── topics/
-│   └── integrations/
-├── packages/
-│   ├── catppuccin-theme/
-│   ├── contracts/
-│   └── eslint-config/
-├── package.json
-├── pnpm-workspace.yaml
-├── turbo.json
-└── tsconfig.base.json
+/rpc/content/posts
+/rpc/content/posts/:id
 ```
 
-## `apps/momo`
+公开站点接口用于 Bobo：
 
-当前 Momo 是 Hono API 服务。
+```text
+/rpc/bobo/content/posts
+/rpc/bobo/content/posts/:slug
+```
 
-主要文件：
+这两类接口可以共用 service、repository 和查询代码，但 route、contracts DTO 和 presenter 要分开。公开接口默认只返回已发布、可公开、适合缓存的数据。管理接口可以返回草稿、后台字段和操作状态。
 
-- `apps/momo/src/index.ts`
-  直接运行 Momo 时启动 Node 服务。
-- `apps/momo/src/app.ts`
-  创建运行时 app，给测试和包导出使用。
-- `apps/momo/src/bootstrap`
-  创建 runtime，注册全局中间件、错误处理、404 和一级路由。
-- `apps/momo/src/rpc.ts`
-  只导出 `AppType` 类型，给 Fifa 的 Hono RPC client 使用。
-- `apps/momo/src/routes/index.ts`
-  挂载一级路由。
-- `apps/momo/src/modules`
-  放业务模块。当前系统接口在 `apps/momo/src/modules/system`，认证接口在 `apps/momo/src/modules/auth`，内容接口在 `apps/momo/src/modules/content`，LLM 用例在 `apps/momo/src/modules/llm`。
-- `apps/momo/src/middleware`
-  放 request context、安全响应头、请求日志、CORS、请求耗时、请求体大小和超时 middleware。
-- `apps/momo/src/infra`
-  放 Pino logger、PostgreSQL 连接、Drizzle schema 入口、migration 目录、缓存驱动、搜索驱动和文件存储驱动。
-- `apps/momo/src/shared`
-  放 Momo 内部共用的错误类型、环境变量读取、Hono 类型和响应 meta 生成函数。
+不要用一个接口加参数同时服务后台和公开站点。这样容易把草稿字段或后台字段返回给公开页面。
 
-后续目录和新增接口规则看：
+## Bobo 读取 Momo 的方式
 
-- [apps/momo.md](./apps/momo.md)
+Bobo 页面调用 `apps/bobo/lib` 里的领域函数。
 
-当前接口：
+推荐写法：
 
-- `GET /`
-- `GET /health`
-- `POST /rpc/system/ping`
-- `GET` 或 `POST /api/auth/*`
-- `POST /api/auth/sign-up/email`
-- `GET /rpc/fifa/auth/me`
-- `GET /rpc/bobo/auth/me`
-- `GET` 或 `POST /rpc/content/posts`
-- `GET /rpc/content/posts/:id`
-- `PATCH /rpc/content/posts/:id/draft`
-- `POST /rpc/content/posts/:id/preview-token`
-- `POST /rpc/content/posts/:id/publish`
-- `GET /rpc/content/assets`
-- `GET /rpc/content/assets/:id`
-- `GET /rpc/content/assets/:id/file`
-- `PATCH /rpc/content/assets/:id`
-- `DELETE /rpc/content/assets/:id`
-- `POST /rpc/content/assets/images`
-- `GET /rpc/content/mdx-components`
-- `GET /rpc/content/previews/:token`
-- `GET` 或 `POST /rpc/content/categories`
-- `GET`、`PATCH` 或 `DELETE /rpc/content/categories/:id`
-- `GET` 或 `POST /rpc/content/tags`
-- `GET`、`PATCH` 或 `DELETE /rpc/content/tags/:id`
-- `GET /rpc/bobo/content/posts`
-- `GET /rpc/bobo/content/posts/:slug`
-- `GET /rpc/bobo/content/categories`
-- `GET /rpc/bobo/content/tags`
+```text
+page.tsx -> getPublishedPosts() -> Momo 公开接口
+page.tsx -> getPostBySlug() -> Momo 公开接口
+page.tsx -> getHomePageData() -> Momo 公开接口
+```
 
-新增接口按模块放到 `apps/momo/src/modules/<module>`，再到 `apps/momo/src/routes/index.ts` 用 `route()` 挂载。模块路由用链式写法注册。
+浏览器端确实需要写入时，再考虑 Bobo route handler 或公开端接口。普通公开页面不要直接在组件里拼 Momo URL。
 
-模块里有多个 service 或 repository 时，按 `apps/momo.md` 的规则迁到 `services/`、`repositories/`，并通过目录下的 `index.ts` 导出。
+## 发布和预览
 
-## `apps/fifa`
+### 草稿和已发布数据
 
-当前 Fifa 保留基础控制台框架和示例页。
+可公开内容先使用 draft/published 快照分离。
 
-主要目录：
+Fifa 编辑 draft。Bobo 只读 published。预览接口读 draft。发布时把 draft 提升为 published。
 
-- `apps/fifa/src/app/router`
-  路由类型、页面记录汇总和路由树。
-- `apps/fifa/src/app/navigation`
-  左侧菜单生成。
-- `apps/fifa/src/features`
-  页面模块。每个模块有自己的 `pages/` 和 `routes.tsx`。
-- `apps/fifa/src/layout`
-  控制台布局。
-- `apps/fifa/src/assets/styles`
-  全局样式和主题变量。
-- `apps/fifa/src/stores`
-  前端本地状态。
-- `apps/fifa/src/api`
-  Fifa 调 Momo 的请求入口和 TanStack Query hooks。
+常查、需要唯一约束或排序的字段放独立列。展示内容、SEO 补充、封面配置、页面 sections 和其他页面配置可以放 snapshot。snapshot 必须用 schema 校验。
 
-Fifa 从 `@xdd-zone/momo/rpc` 通过 `import type` 引入 `AppType`，再用 `hono/client` 创建 Momo RPC client。
+slug 也按 draft/published 分离。Fifa 编辑 `draftSlug`，Bobo 只认 `publishedSlug`。发布后才更新公开 URL。
 
-当前 Fifa 请求相关文件：
+### 发布状态
 
-- `apps/fifa/src/api/client.ts`
-  创建 `momoClient`，读取 `VITE_MOMO_BASE_URL`。
-- `apps/fifa/src/api/rpc.ts`
-  读取 Momo 返回的 JSON。网络失败时返回 `ApiResponse` 失败结构。
-- `apps/fifa/src/api/system/health.api.ts`
-  调 `GET /health`。
-- `apps/fifa/src/api/system/ping.api.ts`
-  调 `POST /rpc/system/ping`。
-- `apps/fifa/src/api/system/system.query.ts`
-  放 system 模块的 query key 和 hooks。
-- `apps/fifa/src/api/content/posts.api.ts`
-  调 Momo content RPC。
-- `apps/fifa/src/api/content/content.query.ts`
-  放 content 模块的 query key 和 hooks。
+可公开内容使用同一套最小状态语义：
 
-当前前端首页会自动请求 Momo 的 `GET /health`。点击 Ping 按钮时才请求 `POST /rpc/system/ping`。
-内容模块会请求 Momo 的文章、素材、分类和标签接口。
-页面不直接 import `momoClient`，也不手写 query key。
+```text
+draft
+published
+archived
+```
 
-## `apps/bobo`
+每个模块自己建表和 service，不做一张通用内容表。字段语义保持一致，比如 `status`、`publishedAt`、`updatedAt`。
 
-当前 Bobo 是个人站点，使用 Next.js App Router。
+### 预览
 
-主要文件：
+预览走独立通路。
 
-- `apps/bobo/app/layout.tsx`
-  全局布局、字体、metadata 和主题初始化。
-- `apps/bobo/app/(site)/page.tsx`
-  首页。
-- `apps/bobo/app/(site)/writing/page.tsx`
-  文稿列表页。
-- `apps/bobo/app/(site)/writing/[slug]/page.tsx`
-  文稿详情页。
-- `apps/bobo/app/(site)/layout.tsx`
-  给公开站点页面统一加底部区域。
-- `apps/bobo/app/(preview)/preview/posts/[postId]/page.tsx`
-  文章预览页。
-- `apps/bobo/app/(lab)/lab`
-  样式演示、主题验证和临时页面。
-- `apps/bobo/app/globals.css`
-  全局样式入口。
-- `apps/bobo/components`
-  站点组件。
-- `apps/bobo/lib`
-  主题函数、className 工具函数、环境变量校验和 Momo 请求封装。
+```text
+Fifa 创建 preview token
+  -> 打开 Bobo 预览页面
+  -> Bobo 用 token 调 Momo preview 接口
+  -> Bobo 用真实前台组件渲染草稿
+```
 
-后续维护规则看：
+preview token 不要只绑定文章。模型上保留 `targetType`、`targetId` 和 `expiresAt`，后续项目、页面配置也能复用。
 
-- [apps/bobo.md](./apps/bobo.md)
+### 发布后的任务
 
-## `packages/contracts`
+发布成功后会有派生任务：
 
-这里放 Fifa 和 Momo 都会引用的接口约定。
-这里只放 Fifa 和 Momo 都要用的接口 schema、请求类型、响应类型和错误码。页面代码、前端组件、业务 hooks 和只服务单个应用的函数继续放在对应 app 里。
-这里不能调用 Node.js 或浏览器 API。需要读文件、读环境变量、操作 DOM 或读浏览器存储时，把代码放回对应 app。
+- 刷新 Bobo 缓存。
+- 更新搜索索引。
+- 刷新 sitemap 和 RSS。
+- 让相关预览 token 失效。
 
-主要目录：
+发布动作只负责修改数据库里的业务状态。派生任务通过内部事件触发。第一阶段可以用进程内 handler；正式发布流程建议加 DB outbox 表。发布事务同时写业务数据和 outbox 记录，worker 再处理刷新缓存、更新搜索索引这类任务。
 
-- `packages/contracts/src/common`
-  放 `BizCode`、`ApiResponse`、`buildSuccess()` 和 `buildFailure()`。
-- `packages/contracts/src/system`
-  放系统接口的 schema 和类型。
-- `packages/contracts/src/index.ts`
-  聚合导出。
+派生任务失败不回滚发布。Momo 记录失败原因，接口返回 warning，Fifa 显示可重试操作。
 
-Momo 用这里的 schema 校验请求。Fifa 用这里的类型构造请求和读取返回值。
+## 缓存和刷新
 
-## `packages/eslint-config`
+Bobo 公开页面默认可以缓存 Momo 公开数据。
 
-这里放共享 ESLint / Prettier 配置。
+推荐策略：
 
-子包通过 `workspace:*` 引用它。
+- 公开文章详情按 slug 缓存。
+- 首页、文稿列表、分类页和标签页按路径或 tag 缓存。
+- 站点配置、导航、RSS 和 sitemap 发布后刷新。
+- 预览页面不缓存，或只用很短缓存。
 
-## `packages/catppuccin-theme`
+Fifa 不直接调用 Bobo 刷新缓存。Fifa 调 Momo 发布，Momo 发布成功后调用 Bobo 的 revalidate endpoint。刷新失败时，发布仍然成功，Fifa 展示 warning 和重试入口。
 
-这里放 Fifa 和 Bobo 共用的 Catppuccin 主题。
+## URL、SEO、RSS 和 sitemap
 
-主要内容：
+Bobo 是公开路由的代码来源。Momo 不决定 Bobo 的 Next.js 路由结构。
 
-- `styles/core.css`
-  放 `data-theme` 会切换的 Catppuccin 颜色变量。
-- `styles/fifa.css`
-  给 Fifa 用，包含 Tailwind 语义 token。
-- `styles/bobo.css`
-  给 Bobo 用，包含 Tailwind 语义 token 和 Bobo 背景变量。
-- `src`
-  放主题名、色板、颜色工具函数和 Ant Design 主题配置。
+Momo 可以在公开 DTO 或搜索索引里提供 `type`、`slug` 和必要的 `path`，但路径生成规则要集中在 mapper 里，不要散在多个 service 里。完整 canonical URL 由 Bobo 或站点配置生成。
 
-## 依赖版本
+SEO metadata、RSS 和 sitemap 由 Bobo 生成。Momo 提供已发布内容、更新时间、摘要、slug 和站点配置。发布后由 Momo 触发 Bobo 刷新相关页面或 tag。
 
-依赖版本主要放在根目录 `pnpm-workspace.yaml`：
+## 权限
 
-- `catalog`
-- `catalogs.react`
-- `catalogs.vite`
-- `catalogs.shiki`
-- `catalogs.next`
+当前是单 owner 后台。
 
-子包依赖优先写 `catalog:`、`catalog:react`、`catalog:vite`、`catalog:shiki` 或 `workspace:*`。
+- Fifa 管理接口必须登录。
+- 登录用户通过 owner 检查后拥有全部后台能力。
+- Bobo 公开接口不要求登录，只返回 published 数据。
+- Preview 接口不要求后台登录，但必须有合法 token。
 
-## TypeScript 配置
+当前不做 editor、viewer、资源级权限和多人协作。不要提前在业务表里散落 `role`、`ownerId`、`permission` 这类暂时用不到的字段。
 
-- `tsconfig.base.json`
-  放所有包都会用的 TypeScript 检查规则。
-- `tsconfig.browser.json`
-  给浏览器代码用，包含 DOM 类型。
-- `tsconfig.node.json`
-  给 Node.js 代码和 Vite 配置用，包含 Node 类型。
-- `tsconfig.package.json`
-  给可复用包用，不包含 DOM 类型，也不包含 Node 类型。
+## 模块依赖
+
+Momo 领域模块管理自己的数据和规则。跨模块流程放到明确的编排层或事件 handler。
+
+推荐方向：
+
+```text
+route -> service/orchestrator -> domain services -> repositories
+                         |
+                         -> event/outbox handlers
+```
+
+不要让普通 service 随意互相 import。repository 不跨模块访问别的模块表细节。比如 `content` 可以引用稳定的 `assets` service 检查资产是否存在，但不要直接操作 `assets` repository。
+
+## 个性化页面数据
+
+个性化页面采用混合模型。
+
+- 高价值、会查询、会复用的数据强类型建模，比如 `projects`、`profile`、`assets`。
+- 首页 sections、导航项、显示开关、展示排序和少量文案可以用 JSON 配置。
+- JSON 配置必须有 schema 和版本字段。
+- Bobo 不直接读取数据库原始 JSON。Momo presenter 或 Bobo lib 先整理成公开 DTO。
+
+Fifa 编辑策略也按内容类型区分：
+
+- 文稿和长内容支持草稿、预览和发布。
+- 项目详情如果内容较长，也可以支持草稿和发布。
+- 站点配置、社交链接、短 profile 字段先用显式保存。
+- 不做所有表单自动保存。
+
+## 文件存储
+
+Momo 通过存储驱动保存文件。
+
+当前可以使用本地存储或腾讯云 COS。业务代码不要直接依赖本地文件路径。上传、读取、删除和公开 URL 生成都走存储驱动或 assets service。
+
+推荐能力保持简单：
+
+- 保存文件。
+- 读取文件。
+- 删除文件。
+- 生成公开地址或读取地址。
+
+不要提前做分片上传、多 bucket、图片处理队列和复杂 CDN 签名。
+
+## 错误处理
+
+不同入口按不同方式处理错误。
+
+- Fifa：保存、发布、刷新失败都要显示明确原因。发布成功但刷新失败时，显示 warning 和重试入口。
+- Bobo published 页面：数据不存在返回 404。Momo 短暂失败但有缓存时，继续使用缓存。
+- Bobo preview 页面：token 过期、目标不存在或 token 无效时，显示专门的预览不可用状态。
+- Momo API：继续使用统一 `ApiResponse` 和错误码。
+- outbox/job：失败原因写入任务状态，方便重试。
+
+## 测试策略
+
+测试按模块边界写，不把所有正确性都压到端到端测试上。
+
+推荐覆盖：
+
+- `packages/contracts`：schema parse、DTO 类型和错误码。
+- Momo route/service：发布状态、draft/published 快照、预览 token、公开接口不会返回草稿字段。
+- Bobo lib：公开读取函数、错误处理、not found 和 preview 失败。
+- Fifa API/query：RPC 包装、query key 和错误结构。
+- 少量 E2E：发布文章后 Bobo 可访问，草稿预览 token 可访问，刷新缓存失败时 Fifa 能显示 warning。

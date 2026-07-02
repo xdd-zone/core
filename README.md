@@ -1,6 +1,6 @@
 # XDD Zone Core
 
-XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前维护一个前端控制台、一个 Hono API 服务、一个个人站点、一份接口约定包和一份共享 ESLint / Prettier 配置。
+XDD Zone Core 是一个面向个人站点的内容管理系统，使用 pnpm workspace 和 Turborepo 维护前端控制台、Hono API 服务、公开个人站点、接口约定包和共享配置。
 
 ## 现在有哪些包
 
@@ -11,7 +11,7 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 - `@xdd-zone/bobo`
   个人站点，放在 `apps/bobo`。
 - `@xdd-zone/contracts`
-  Fifa 和 Momo 共用的接口 schema、请求类型、响应类型和错误码，放在 `packages/contracts`。
+  Momo、Fifa 和 Bobo 共用的接口 schema、请求类型、响应类型和错误码，放在 `packages/contracts`。
 - `@xdd-zone/catppuccin-theme`
   Fifa 和 Bobo 共用的 Catppuccin 主题，放在 `packages/catppuccin-theme`。
 - `@xdd-zone/eslint-config`
@@ -55,7 +55,7 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 - `apps/momo/src/modules`
   Momo 接口模块。
 - `packages/contracts`
-  Fifa 和 Momo 共用的接口约定。
+  Momo、Fifa 和 Bobo 共用的接口约定。
 - `packages/catppuccin-theme`
   Fifa 和 Bobo 共用的 Catppuccin 主题。
 - `packages/eslint-config`
@@ -79,7 +79,7 @@ XDD Zone Core 是一个基于 pnpm workspace 和 Turborepo 的 monorepo，当前
 - workspace 范围写在根目录 `pnpm-workspace.yaml` 的 `packages`。
 - 公共依赖版本写在根目录 `pnpm-workspace.yaml` 的 `catalog` 和 `catalogs`。
 - 子包通过 `catalog:`、`catalog:react`、`catalog:vite`、`catalog:shiki` 引用统一版本。
-- 内部包通过 `workspace:*` 引用，例如 Fifa 和 Momo 都引用 `@xdd-zone/contracts`。
+- 内部包通过 `workspace:*` 引用，例如 Momo、Fifa 和 Bobo 都可以引用 `@xdd-zone/contracts`。
 
 当前仓库用 Turborepo 管理任务：
 
@@ -268,7 +268,6 @@ pnpm dev:bobo
 
 按任务读文档：
 
-- 改仓库结构或模块职责，看 [docs/architecture.md](./docs/architecture.md)。
 - 改开发流程，看 [docs/development.md](./docs/development.md)。
 - 改后端接口，看 [docs/apps/momo.md](./docs/apps/momo.md) 和 [docs/topics/api.md](./docs/topics/api.md)。
 - 改前端页面，看 [docs/apps/fifa.md](./docs/apps/fifa.md) 和 [docs/topics/theme.md](./docs/topics/theme.md)。

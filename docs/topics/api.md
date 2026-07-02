@@ -40,6 +40,8 @@ apps/momo/src/modules/profile/profile.route.ts
 
 后续新增接口按 [apps/momo.md](../apps/momo.md) 放到 `apps/momo/src/modules/<module>`。content 模块的文件职责和类型写法也看这份文档。
 
+管理端接口和公开站点接口分开写。Fifa 使用 `/rpc/<module>/*` 这类管理接口，Bobo 使用 `/rpc/bobo/*` 这类公开接口。两类接口可以共用 service、repository 和查询代码，但 route、响应 DTO 和 presenter 要分开。
+
 ## 当前接口
 
 | 方法 | 路径 | 返回 |
@@ -332,4 +334,4 @@ apps/momo/src/modules/<module>/<module>.route.ts
 
 再到 `apps/momo/src/routes/index.ts` 挂载。
 
-如果接口有请求体或返回体，先在 `packages/contracts/src/<module>` 增加 schema 和类型。
+如果接口有请求体或返回体，先在 `packages/contracts/src/<module>` 增加 schema 和类型。Momo 给 Fifa 和 Bobo 用的接口都要有 contracts 类型；Momo 内部 service 类型和数据库 record 不放进 contracts。

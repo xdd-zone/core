@@ -1,8 +1,10 @@
 # @xdd-zone/bobo
 
-`@xdd-zone/bobo` 是 XDD Zone Core 的个人站点，代码放在 `apps/bobo`。
+`@xdd-zone/bobo` 是 XDD Zone Core 的公开个人站点，代码放在 `apps/bobo`。
 
 技术栈是 `Next.js 16 + React 19 + Tailwind CSS 4 + TypeScript`。开发服务默认使用 `4399` 端口。
+
+Bobo 负责页面结构、交互、metadata、RSS 和 sitemap。业务数据从 Momo 公开接口读取，页面通过 `apps/bobo/lib` 里的领域读取函数拿数据，不直接拼 Momo URL。
 
 ## 现在能做什么
 

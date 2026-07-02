@@ -2,6 +2,8 @@
 
 `@xdd-zone/momo` 是 XDD Zone Core 的 Hono API 服务，代码放在 `apps/momo`，运行在 Node.js 上。
 
+Momo 保存个人站业务数据，并给 Fifa 后台和 Bobo 公开站点提供接口。Fifa 走管理端接口，Bobo 走公开接口。`content` 只表示文稿模块，后续站点配置、个人资料、项目和素材能力按独立模块维护。
+
 ## 现在能做什么
 
 - 启动 Node HTTP 服务。

@@ -1,6 +1,8 @@
 # @xdd-zone/contracts
 
-`@xdd-zone/contracts` 放 Fifa 和 Momo 共用的接口类型、schema 和响应结构。
+`@xdd-zone/contracts` 放 Momo、Fifa 和 Bobo 共用的接口类型、schema、响应结构和错误码。
+
+Momo 给 Fifa 和 Bobo 用的请求体、响应 DTO 和错误码放这里。Momo 内部 service 类型、数据库 record、Fifa 页面 view model 和 Bobo 页面组件类型不要放进这里。
 
 这个包不能调用 Node.js 或浏览器 API。不要在这里 import `node:*`，也不要直接使用 `window`、`document`、`localStorage` 或 `sessionStorage`。
 
@@ -23,7 +25,7 @@ Momo 用 schema 校验请求：
 import { PingRequestSchema } from '@xdd-zone/contracts'
 ```
 
-Fifa 用类型构造请求和读取返回：
+Fifa 和 Bobo 用类型构造请求和读取返回：
 
 ```ts
 import type { PingRequest, PingResponse } from '@xdd-zone/contracts'

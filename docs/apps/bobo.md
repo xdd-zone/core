@@ -117,6 +117,18 @@ apps/bobo/.env.development
 - App Router 默认写服务端组件。
 - 只有需要浏览器 API、交互状态或事件处理时，才加 `'use client'`。
 
+## 公开数据读取
+
+Bobo 页面不要直接拼 Momo URL，也不要直接在页面里处理 Momo RPC 细节。
+
+推荐写法：
+
+1. 在 `apps/bobo/lib` 里写领域读取函数，比如 `getPublishedPosts()`、`getPostBySlug()`、`getHomePageData()`。
+2. 读取函数调用 Momo 公开接口，处理 `ApiResponse`、not found 和预览 token 失效。
+3. 页面只调用这些读取函数，再组合组件和 metadata。
+
+Momo 数据库里的业务数据为准。Bobo 的缓存、metadata、RSS 和 sitemap 都是公开站点的生成结果。
+
 ## 组件规则
 
 - 没有明确复用前，先在当前页面里写。
@@ -179,7 +191,6 @@ apps/bobo/.env.development
 - `docs/index.md`
 - `docs/development.md`
 - `docs/testing.md`
-- `docs/architecture.md`
 - `docs/skills.md`
 - `apps/bobo/README.md`
 

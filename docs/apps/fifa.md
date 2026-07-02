@@ -98,6 +98,12 @@ apps/fifa/src/app/navigation/navigation.ts
 页面记录里的 `tab: false` 表示不生成标签页。
 页面记录里的 `layout.contentWidth: 'full'` 表示内容区使用全宽。
 
+## 页面和 API 分工
+
+Fifa 是后台管理端。页面和菜单按管理任务组织，比如写文稿、管素材、改站点配置、管项目。`apps/fifa/src/api` 按 Momo 模块组织，比如 `content`、`profile`、`llm`，后续可以继续加 `site`、`projects`、`assets`。
+
+页面只调用 query 或 mutation hook，不直接 import `momoClient`，也不手写 query key。
+
 ## Momo 请求
 
 Fifa 使用 Hono RPC 调 Momo 的 `/rpc/*` 接口。`/api/auth/*` 由 Better Auth 处理，按原始 HTTP 响应和 cookie 处理。

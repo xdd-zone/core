@@ -6,7 +6,7 @@
 
 | 目录 | 包名 | 用途 | 使用方 |
 | ---- | ---- | ---- | ------ |
-| `packages/contracts` | `@xdd-zone/contracts` | 接口 schema、请求类型、响应类型和业务错误码 | Momo、Fifa |
+| `packages/contracts` | `@xdd-zone/contracts` | 接口 schema、请求类型、响应类型和业务错误码 | Momo、Fifa、Bobo |
 | `packages/catppuccin-theme` | `@xdd-zone/catppuccin-theme` | Catppuccin 主题变量、色板、颜色工具函数和 Ant Design 主题配置 | Fifa、Bobo |
 | `packages/eslint-config` | `@xdd-zone/eslint-config` | 共享 ESLint 和 Prettier 配置 | 当前所有子包 |
 
@@ -25,7 +25,7 @@
 
 ## `packages/contracts`
 
-`@xdd-zone/contracts` 放 Fifa 和 Momo 都要用的接口约定。
+`@xdd-zone/contracts` 放 Momo、Fifa 和 Bobo 都要用的接口约定。
 
 主要文件：
 
@@ -44,13 +44,13 @@ Momo 用这里的 schema 校验请求：
 import { PingRequestSchema } from '@xdd-zone/contracts'
 ```
 
-Fifa 用这里的类型构造请求和读取返回：
+Fifa 和 Bobo 用这里的类型构造请求和读取返回：
 
 ```ts
 import type { PingRequest, PingResponse } from '@xdd-zone/contracts'
 ```
 
-改接口请求体、返回体或错误码时，先改这里，再改 Momo route 和 Fifa 调用代码。
+改接口请求体、返回体或错误码时，先改这里，再改 Momo route 和对应的 Fifa 或 Bobo 调用代码。
 
 检查命令：
 

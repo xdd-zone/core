@@ -2,6 +2,16 @@
 
 这份文档写当前仓库的测试文件放在哪里、怎么写和可直接跑的检查命令。
 
+## 测试边界
+
+测试按包和模块职责写，不把所有问题都放到端到端测试里找。
+
+- `packages/contracts` 测 schema parse、DTO 类型和错误码。
+- Momo 测 route、service、发布状态、预览 token、公开接口和错误响应。
+- Bobo 测 `apps/bobo/lib` 里的公开读取函数、not found、预览失败和页面渲染。
+- Fifa 测 API/query 包装、query key、登录判断和复杂页面交互。
+- 关键流程再补少量端到端测试，比如发布文章后 Bobo 能访问、预览 token 能打开、刷新缓存失败时 Fifa 能显示 warning。
+
 ## 测试目录设计
 
 Momo 和 Fifa 使用 `src/test/`。Bobo 使用 Next.js App Router，没有 `src/` 目录，测试文件和被测文件放在同一层。

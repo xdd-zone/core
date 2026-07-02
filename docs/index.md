@@ -7,9 +7,8 @@
 按这个顺序读：
 
 1. [README.md](../README.md)
-2. [architecture.md](./architecture.md)
-3. [development.md](./development.md)
-4. [topics/api.md](./topics/api.md)
+2. [development.md](./development.md)
+3. [topics/api.md](./topics/api.md)
 
 ## 要改后端接口
 
