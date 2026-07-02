@@ -1,12 +1,14 @@
 import type {
   FifaProfileAccount,
   FifaProfileResponse,
+  PublicProfile,
   UpdateFifaProfileRequest,
+  UpdatePublicProfileRequest,
   UploadFifaProfileAvatarResponse,
 } from '@xdd-zone/contracts'
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { ProfileRepository } from './profile.repository'
-import { BizCode } from '@xdd-zone/contracts'
+import { BizCode, PublicProfileSchema } from '@xdd-zone/contracts'
 import { validateStoragePath } from '#momo/infra/storage/storage-path'
 import { AppError } from '#momo/shared/app-error'
 
@@ -42,6 +44,24 @@ export function createProfileService(runtime: MomoRuntime, repository: ProfileRe
   async function updateProfile(userId: string, input: UpdateFifaProfileRequest): Promise<FifaProfileResponse> {
     await repository.updateUserProfile(userId, input)
     return getProfile(userId)
+  }
+
+  async function getPublicProfile(): Promise<PublicProfile> {
+    const profile = await repository.getPublicProfile('bobo')
+    if (!profile) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '公开资料不存在', 404)
+    }
+
+    return toPublicProfile(profile)
+  }
+
+  async function updatePublicProfile(input: UpdatePublicProfileRequest): Promise<PublicProfile> {
+    const profile = await repository.updatePublicProfile('bobo', input)
+    if (!profile) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '公开资料不存在', 404)
+    }
+
+    return toPublicProfile(profile)
   }
 
   async function uploadAvatar(userId: string, file: File): Promise<UploadFifaProfileAvatarResponse> {
@@ -82,10 +102,34 @@ export function createProfileService(runtime: MomoRuntime, repository: ProfileRe
 
   return {
     getProfile,
+    getPublicProfile,
     openAvatarFile,
     updateProfile,
+    updatePublicProfile,
     uploadAvatar,
   }
+}
+
+function toPublicProfile(profile: {
+  availableForWork: boolean
+  avatarAssetId: string | null
+  bio: string | null
+  contactEmail: string | null
+  displayName: string
+  location: string | null
+  socialLinks: unknown
+  updatedAt: Date
+}): PublicProfile {
+  return PublicProfileSchema.parse({
+    availableForWork: profile.availableForWork,
+    avatarAssetId: profile.avatarAssetId,
+    bio: profile.bio,
+    contactEmail: profile.contactEmail,
+    displayName: profile.displayName,
+    location: profile.location,
+    socialLinks: profile.socialLinks,
+    updatedAt: profile.updatedAt.toISOString(),
+  })
 }
 
 function decodeAvatarStoragePath(storagePathToken: string): string {

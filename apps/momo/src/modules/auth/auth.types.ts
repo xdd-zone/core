@@ -18,6 +18,13 @@ export const CONTENT_PERMISSION_CODES = [
   'content.tag.create',
   'content.tag.edit',
   'content.tag.delete',
+  'events.outbox.retry',
+  'projects.read',
+  'projects.create',
+  'projects.edit',
+  'projects.publish',
+  'site.config.read',
+  'site.config.edit',
 ] as const
 
 export type ContentPermissionCode = (typeof CONTENT_PERMISSION_CODES)[number]

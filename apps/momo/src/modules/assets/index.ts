@@ -1,0 +1,5 @@
+export { createAssetsRepository } from './assets.repository'
+export type { AssetsRepository } from './assets.repository'
+export { createAssetsRoute } from './assets.route'
+export { createAssetsService } from './assets.service'
+export type { AssetsService } from './assets.service'

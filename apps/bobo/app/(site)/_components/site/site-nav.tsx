@@ -1,5 +1,6 @@
 'use client'
 
+import type { SiteNavigationItem } from '@xdd-zone/contracts'
 import type { PublicCategoryMenuItem } from '@/lib/content/public-content'
 
 import { ChevronDown, Menu, X } from 'lucide-react'
@@ -9,18 +10,20 @@ import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 import { CategoryMenu } from './category-menu'
-import { SITE_NAV_ITEMS } from './site-nav-items'
 
 interface SiteNavProps {
   categories?: PublicCategoryMenuItem[]
+  contactEmail?: null | string
+  navItems: SiteNavigationItem[]
 }
 
-export function SiteNav({ categories = [] }: SiteNavProps) {
+export function SiteNav({ categories = [], contactEmail, navItems }: SiteNavProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const currentCategory = searchParams.get('category')
   const totalPostCount = categories.reduce((total, category) => total + category.postCount, 0)
   const pillRef = useRef<HTMLDivElement>(null)
+  const contactHref = contactEmail ? `mailto:${contactEmail}` : '#contact'
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobileCategoriesExpanded, setIsMobileCategoriesExpanded] = useState(false)
@@ -97,11 +100,11 @@ export function SiteNav({ categories = [] }: SiteNavProps) {
         <span className="w-px h-5 bg-border mx-1 shrink-0" />
 
         <div className="max-md:hidden flex items-center gap-0.5">
-          {SITE_NAV_ITEMS.map((item) =>
-            'menu' in item && item.menu === 'categories' && categories.length > 0 ? (
+          {navItems.map((item) =>
+            item.href === '/writing' && categories.length > 0 ? (
               <div
                 className="relative group/nav after:absolute after:top-full after:left-1/2 after:w-[min(720px,calc(100vw-32px))] after:h-8 after:-translate-x-1/2"
-                key={item.href}
+                key={item.id}
               >
                 <Link
                   className={cn(
@@ -118,7 +121,7 @@ export function SiteNav({ categories = [] }: SiteNavProps) {
               </div>
             ) : (
               <Link
-                key={item.href}
+                key={item.id}
                 className={cn(
                   'text-[0.85rem] rounded-full px-4 py-2 transition-[color,background-color,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1',
                   isActive(item.href)
@@ -134,7 +137,7 @@ export function SiteNav({ categories = [] }: SiteNavProps) {
           <span className="w-px h-5 bg-border mx-1" />
           <a
             className="relative inline-flex items-center gap-1 text-[0.85rem] rounded-full group/hi focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ld-accent-1"
-            href="mailto:hi@xidongdong.dev"
+            href={contactHref}
           >
             <span className="absolute -inset-0.5 rounded-full opacity-0 bg-[linear-gradient(90deg,var(--color-ld-accent-1),var(--color-ld-accent-2))] transition-opacity duration-300 ease-out group-hover/hi:opacity-100" />
             <span className="relative z-1 inline-flex items-center gap-1 bg-surface backdrop-blur-md rounded-full px-4 py-2">
@@ -160,9 +163,9 @@ export function SiteNav({ categories = [] }: SiteNavProps) {
               : 'opacity-0 -translate-y-4 scale-y-95 pointer-events-none',
           )}
         >
-          {SITE_NAV_ITEMS.map((item) => {
-            return 'menu' in item && item.menu === 'categories' && categories.length > 0 ? (
-              <div key={item.href} className="flex flex-col border-b border-border/40">
+          {navItems.map((item) => {
+            return item.href === '/writing' && categories.length > 0 ? (
+              <div key={item.id} className="flex flex-col border-b border-border/40">
                 <div className="flex items-center justify-between">
                   <Link
                     href={item.href}
@@ -234,7 +237,7 @@ export function SiteNav({ categories = [] }: SiteNavProps) {
               </div>
             ) : (
               <Link
-                key={item.href}
+                key={item.id}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={cn(
                   'py-4 text-[0.95rem] transition-colors border-b border-border/40',
@@ -250,7 +253,7 @@ export function SiteNav({ categories = [] }: SiteNavProps) {
           <a
             onClick={() => setIsMobileMenuOpen(false)}
             className="py-4 text-[0.95rem] text-muted-foreground hover:text-foreground transition-colors inline-flex items-center justify-between group/contact"
-            href="mailto:hi@xidongdong.dev"
+            href={contactHref}
           >
             <span>联系开发者</span>
             <span className="text-xs transition-transform duration-300 group-hover/contact:translate-x-1 group-hover/contact:-translate-y-1">

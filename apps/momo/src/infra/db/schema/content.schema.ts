@@ -1,10 +1,11 @@
-import { POST_STATUS_VALUES } from '@xdd-zone/contracts'
+import { POST_STATUS_VALUES, PREVIEW_TARGET_TYPE_VALUES } from '@xdd-zone/contracts'
 import { relations } from 'drizzle-orm'
 import { index, integer, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { user } from './auth.schema'
 
 export const contentPostStatusEnum = pgEnum('content_post_status', POST_STATUS_VALUES)
+export const previewTargetTypeEnum = pgEnum('preview_target_type', PREVIEW_TARGET_TYPE_VALUES)
 
 export const contentAssets = pgTable('content_assets', {
   /** 素材主键。 */
@@ -76,16 +77,34 @@ export const contentPosts = pgTable(
     id: text('id').primaryKey(),
     /** URL 使用的文章标识。 */
     slug: text('slug').notNull(),
+    /** 草稿 URL 标识，Fifa 保存草稿时更新。 */
+    draftSlug: text('draft_slug').notNull(),
+    /** 已发布 URL 标识，发布时从草稿写入。 */
+    publishedSlug: text('published_slug'),
     /** 文章标题。 */
     title: text('title').notNull(),
+    /** 草稿标题，Fifa 保存草稿时更新。 */
+    draftTitle: text('draft_title').notNull(),
+    /** 已发布标题，发布时从草稿写入。 */
+    publishedTitle: text('published_title'),
     /** 文章摘要。 */
     excerpt: text('excerpt'),
+    /** 草稿摘要，Fifa 保存草稿时更新。 */
+    draftExcerpt: text('draft_excerpt'),
+    /** 已发布摘要，发布时从草稿写入。 */
+    publishedExcerpt: text('published_excerpt'),
     /** 文章状态，draft、published 或 archived。 */
     status: contentPostStatusEnum('status').notNull().default('draft'),
     /** 所属分类 id，删除分类时置空。 */
     categoryId: text('category_id').references(() => contentCategories.id, { onDelete: 'set null' }),
     /** 封面素材 id。 */
     coverAssetId: text('cover_asset_id').references(() => contentAssets.id, { onDelete: 'set null' }),
+    /** 草稿封面素材 id。 */
+    draftCoverAssetId: text('draft_cover_asset_id').references(() => contentAssets.id, { onDelete: 'set null' }),
+    /** 已发布封面素材 id。 */
+    publishedCoverAssetId: text('published_cover_asset_id').references(() => contentAssets.id, {
+      onDelete: 'set null',
+    }),
     /** 当前草稿版本 id。 */
     draftRevisionId: text('draft_revision_id'),
     /** 当前发布版本 id。 */
@@ -105,6 +124,7 @@ export const contentPosts = pgTable(
   },
   (table) => [
     uniqueIndex('content_posts_slug_unique').on(table.slug),
+    uniqueIndex('content_posts_published_slug_unique').on(table.publishedSlug),
     index('content_posts_status_idx').on(table.status),
     index('content_posts_category_idx').on(table.categoryId),
   ],
@@ -162,13 +182,15 @@ export const contentPreviewTokens = pgTable(
     id: text('id').primaryKey(),
     /** token 的 SHA-256 hash，不保存明文 token。 */
     tokenHash: text('token_hash').notNull(),
-    /** 预览文章 id。 */
+    /** 预览目标类型，当前文章使用 post。 */
+    targetType: previewTargetTypeEnum('target_type').notNull().default('post'),
+    /** 预览目标 id。 */
+    targetId: text('target_id'),
+    /** 文章预览的文章 id。项目和站点页面预览不使用。 */
     postId: text('post_id')
-      .notNull()
       .references(() => contentPosts.id, { onDelete: 'cascade' }),
-    /** 预览版本 id。 */
+    /** 文章预览的版本 id。项目和站点页面预览不使用。 */
     revisionId: text('revision_id')
-      .notNull()
       .references(() => contentPostRevisions.id, { onDelete: 'cascade' }),
     /** 过期时间。 */
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
@@ -182,6 +204,7 @@ export const contentPreviewTokens = pgTable(
   (table) => [
     uniqueIndex('content_preview_tokens_token_hash_unique').on(table.tokenHash),
     index('content_preview_tokens_post_idx').on(table.postId),
+    index('content_preview_tokens_target_idx').on(table.targetType, table.targetId),
     index('content_preview_tokens_expires_at_idx').on(table.expiresAt),
   ],
 )

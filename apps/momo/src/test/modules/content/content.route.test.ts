@@ -627,6 +627,57 @@ describe('content 路由', () => {
       'ThemePreview',
     ])
   })
+
+  it('已发布文章保存草稿不会提前改公开 slug 和标题', async () => {
+    const created = await createPost({
+      excerpt: '公开摘要',
+      slug: 'published-slug',
+      source: '# Published',
+      title: 'Published Title',
+    })
+    const postId = expectOkData(created.body).post.id
+
+    const firstPublishResponse = await momoApp.request(`/rpc/content/posts/${postId}/publish`, {
+      headers: { cookie: ownerCookie },
+      method: 'POST',
+    })
+    expect(firstPublishResponse.status).toBe(200)
+
+    const draftResponse = await momoApp.request(`/rpc/content/posts/${postId}/draft`, {
+      body: JSON.stringify({
+        excerpt: '草稿摘要',
+        slug: 'draft-slug',
+        source: '# Draft',
+        title: 'Draft Title',
+      }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'PATCH',
+    })
+    expect(draftResponse.status).toBe(200)
+
+    const oldPublicResponse = await momoApp.request('/rpc/bobo/content/posts/published-slug')
+    const oldPublicData = expectOkData((await oldPublicResponse.json()) as ApiResponse<unknown>)
+    const oldPublicPost = PublicPostResponseSchema.parse(oldPublicData).post
+    expect(oldPublicPost.title).toBe('Published Title')
+    expect(oldPublicPost.excerpt).toBe('公开摘要')
+    expect(oldPublicPost.source).toBe('# Published')
+
+    const newPublicResponseBeforePublish = await momoApp.request('/rpc/bobo/content/posts/draft-slug')
+    expect(newPublicResponseBeforePublish.status).toBe(404)
+
+    const secondPublishResponse = await momoApp.request(`/rpc/content/posts/${postId}/publish`, {
+      headers: { cookie: ownerCookie },
+      method: 'POST',
+    })
+    expect(secondPublishResponse.status).toBe(200)
+
+    const newPublicResponse = await momoApp.request('/rpc/bobo/content/posts/draft-slug')
+    const newPublicData = expectOkData((await newPublicResponse.json()) as ApiResponse<unknown>)
+    const newPublicPost = PublicPostResponseSchema.parse(newPublicData).post
+    expect(newPublicPost.title).toBe('Draft Title')
+    expect(newPublicPost.excerpt).toBe('草稿摘要')
+    expect(newPublicPost.source).toBe('# Draft')
+  })
 })
 
 async function createPost(input: CreatePostRequest) {

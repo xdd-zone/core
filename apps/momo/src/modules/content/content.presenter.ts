@@ -1,17 +1,15 @@
 import type {
   CategorySummary,
-  ImageAsset,
   PostDetail,
   PostRevision,
   PostSummary,
   PreviewTokenResponse,
   TagSummary,
 } from '@xdd-zone/contracts'
-import type { ContentAssetRecord, ContentPostRecord, ContentRevisionRecord } from './types/content.types'
+import type { ContentPostRecord, ContentRevisionRecord } from './types/content.types'
 import type { ContentCategoryRecord, ContentTagRecord } from './types/taxonomy.types'
 import {
   CategorySummarySchema,
-  ImageAssetSchema,
   PostDetailSchema,
   PostRevisionSchema,
   PostSummarySchema,
@@ -21,18 +19,38 @@ import {
 
 export type PostSummarySource = Pick<
   ContentPostRecord,
-  'coverAssetId' | 'createdAt' | 'excerpt' | 'id' | 'publishedAt' | 'slug' | 'status' | 'title' | 'updatedAt'
+  | 'coverAssetId'
+  | 'createdAt'
+  | 'draftCoverAssetId'
+  | 'draftExcerpt'
+  | 'draftSlug'
+  | 'draftTitle'
+  | 'excerpt'
+  | 'id'
+  | 'publishedAt'
+  | 'publishedSlug'
+  | 'publishedTitle'
+  | 'slug'
+  | 'status'
+  | 'title'
+  | 'updatedAt'
 >
 
 export type PostDetailSource = Pick<
   ContentPostRecord,
   | 'coverAssetId'
   | 'createdAt'
+  | 'draftCoverAssetId'
+  | 'draftExcerpt'
   | 'draftRevisionId'
+  | 'draftSlug'
+  | 'draftTitle'
   | 'excerpt'
   | 'id'
   | 'publishedAt'
   | 'publishedRevisionId'
+  | 'publishedSlug'
+  | 'publishedTitle'
   | 'slug'
   | 'status'
   | 'title'
@@ -46,8 +64,10 @@ export type PostRevisionSource = Pick<
 
 export interface PreviewTokenSource {
   expiresAt: Date
-  postId: string
-  revisionId: string
+  postId?: string | null
+  revisionId?: string | null
+  targetId: string
+  targetType: 'post' | 'project' | 'site-page'
   token: string
 }
 
@@ -58,15 +78,19 @@ export function toPostSummary(
 ): PostSummary {
   const summary = {
     category: category ? toCategorySummary(category) : null,
-    coverAssetId: post.coverAssetId,
+    coverAssetId: post.draftCoverAssetId ?? post.coverAssetId,
     createdAt: toIsoString(post.createdAt),
-    excerpt: post.excerpt,
+    draftSlug: post.draftSlug,
+    draftTitle: post.draftTitle,
+    excerpt: post.draftExcerpt ?? post.excerpt,
     id: post.id,
     publishedAt: toNullableIsoString(post.publishedAt),
-    slug: post.slug,
+    publishedSlug: post.publishedSlug,
+    publishedTitle: post.publishedTitle,
+    slug: post.draftSlug,
     status: post.status,
     tags: tags.map((tag) => toTagSummary(tag)),
-    title: post.title,
+    title: post.draftTitle,
     updatedAt: toIsoString(post.updatedAt),
   } satisfies PostSummary
 
@@ -106,45 +130,14 @@ export function toPostRevision(revision: PostRevisionSource): PostRevision {
 export function toPreviewTokenResponse(input: PreviewTokenSource): PreviewTokenResponse {
   const response = {
     expiresAt: toIsoString(input.expiresAt),
-    postId: input.postId,
-    revisionId: input.revisionId,
+    postId: input.postId ?? null,
+    revisionId: input.revisionId ?? null,
+    targetId: input.targetId,
+    targetType: input.targetType,
     token: input.token,
   } satisfies PreviewTokenResponse
 
   return PreviewTokenResponseSchema.parse(response)
-}
-
-export function toImageAsset(asset: ContentAssetRecord, momoPublicBaseUrl: string): ImageAsset {
-  const imageAsset = {
-    alt: asset.alt,
-    createdAt: toIsoString(asset.createdAt),
-    fileName: asset.fileName,
-    fileUrl: resolveAssetFileUrl(asset, momoPublicBaseUrl),
-    id: asset.id,
-    mimeType: asset.mimeType,
-    size: asset.size,
-    storagePath: asset.storagePath,
-    updatedAt: toIsoString(asset.updatedAt),
-    url: asset.url,
-  } satisfies ImageAsset
-
-  return ImageAssetSchema.parse(imageAsset)
-}
-
-function resolveAssetFileUrl(asset: ContentAssetRecord, momoPublicBaseUrl: string): string {
-  if (asset.url && isAbsoluteUrl(asset.url)) {
-    return asset.url
-  }
-
-  return buildMomoAssetFileUrl(momoPublicBaseUrl, asset.id)
-}
-
-function buildMomoAssetFileUrl(momoPublicBaseUrl: string, assetId: string): string {
-  return `${momoPublicBaseUrl.replace(/\/+$/, '')}/rpc/content/assets/${assetId}/file`
-}
-
-function isAbsoluteUrl(value: string): boolean {
-  return URL.canParse(value)
 }
 
 function toIsoString(date: Date): string {

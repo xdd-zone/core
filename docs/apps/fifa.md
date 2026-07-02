@@ -12,9 +12,10 @@
 - Catppuccin 主题。
 - 登录页、首页、404 页面和几个示例页。
 - 内容模块，当前提供文章列表、创建、编辑、媒体库、分类和标签管理页。
+- 站点模块，当前提供站点配置、公开资料和项目管理页。
 - 系统设置模块，当前提供个人资料页和 LLM 配置页。
 
-当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。当前系统设置模块接入了 Momo 的个人资料和 LLM 配置接口。
+当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。当前站点模块接入了 Momo 的站点配置、公开资料和项目接口。当前系统设置模块接入了 Momo 的个人资料和 LLM 配置接口。
 
 ## 开始改 UI 前先看
 
@@ -62,6 +63,9 @@ apps/fifa/src/
 - `/content/posts/$postId`
 - `/content/assets`
 - `/content/taxonomy`
+- `/site/config`
+- `/site/profile`
+- `/site/projects`
 - `/settings/profile`
 - `/settings/llm`
 - `/env-example`
@@ -100,7 +104,7 @@ apps/fifa/src/app/navigation/navigation.ts
 
 ## 页面和 API 分工
 
-Fifa 是后台管理端。页面和菜单按管理任务组织，比如写文稿、管素材、改站点配置、管项目。`apps/fifa/src/api` 按 Momo 模块组织，比如 `content`、`profile`、`llm`，后续可以继续加 `site`、`projects`、`assets`。
+Fifa 是后台管理端。页面和菜单按管理任务组织，比如写文稿、管素材、改站点配置、管项目。`apps/fifa/src/api` 按 Momo 模块组织，比如 `content`、`assets`、`profile`、`site`、`projects`、`events`、`llm`。
 
 页面只调用 query 或 mutation hook，不直接 import `momoClient`，也不手写 query key。
 
@@ -122,9 +126,21 @@ apps/fifa/src/api/system/index.ts
 apps/fifa/src/api/content/posts.api.ts
 apps/fifa/src/api/content/content.query.ts
 apps/fifa/src/api/content/index.ts
+apps/fifa/src/api/assets/assets.api.ts
+apps/fifa/src/api/assets/assets.query.ts
+apps/fifa/src/api/assets/index.ts
 apps/fifa/src/api/profile/profile.api.ts
 apps/fifa/src/api/profile/profile.query.ts
 apps/fifa/src/api/profile/index.ts
+apps/fifa/src/api/site/site.api.ts
+apps/fifa/src/api/site/site.query.ts
+apps/fifa/src/api/site/index.ts
+apps/fifa/src/api/projects/projects.api.ts
+apps/fifa/src/api/projects/projects.query.ts
+apps/fifa/src/api/projects/index.ts
+apps/fifa/src/api/events/events.api.ts
+apps/fifa/src/api/events/events.query.ts
+apps/fifa/src/api/events/index.ts
 apps/fifa/src/api/llm/llm.api.ts
 apps/fifa/src/api/llm/llm.query.ts
 apps/fifa/src/api/llm/index.ts
@@ -146,10 +162,18 @@ apps/fifa/src/api/llm/index.ts
   调 Momo content RPC。页面不要直接 import `momoClient`。
 - `api/content/content.query.ts`
   放 content 模块的 query key 和 hooks。页面不要手写 content query key。
+- `api/assets/*.api.ts`
+  调 Momo 独立素材接口。页面不要直接 import `momoClient`。
 - `api/profile/*.api.ts`
   调 Momo 的个人资料接口和 Better Auth 账号绑定接口。
 - `api/profile/profile.query.ts`
   放 profile 模块的 query key 和 hooks。页面不要手写 profile query key。
+- `api/site/*.api.ts`
+  调 Momo 站点配置接口。页面不要直接 import `momoClient`。
+- `api/projects/*.api.ts`
+  调 Momo 项目接口。页面不要直接 import `momoClient`。
+- `api/events/*.api.ts`
+  调 Momo outbox 重试接口。页面不要直接 import `momoClient`。
 - `api/llm/*.api.ts`
   调 Momo LLM 配置接口。页面不要直接 import `momoClient`。
 - `api/llm/llm.query.ts`
@@ -195,6 +219,7 @@ GET /rpc/content/posts/:id
 PATCH /rpc/content/posts/:id/draft
 POST /rpc/content/posts/:id/preview-token
 POST /rpc/content/posts/:id/publish
+POST /rpc/content/posts/:id/archive
 GET /rpc/content/mdx-components
 POST /rpc/content/assets/images
 GET /rpc/content/assets
@@ -202,6 +227,24 @@ GET /rpc/content/assets/:id
 GET /rpc/content/assets/:id/file
 PATCH /rpc/content/assets/:id
 DELETE /rpc/content/assets/:id
+GET /rpc/assets
+GET /rpc/assets/:id
+GET /rpc/assets/:id/file
+PATCH /rpc/assets/:id
+DELETE /rpc/assets/:id
+POST /rpc/assets/images
+GET /rpc/profile/public
+PATCH /rpc/profile/public
+GET /rpc/site/config
+PATCH /rpc/site/config
+GET /rpc/projects
+POST /rpc/projects
+GET /rpc/projects/:id
+PATCH /rpc/projects/:id/draft
+POST /rpc/projects/:id/publish
+POST /rpc/projects/:id/preview-token
+POST /rpc/projects/:id/archive
+POST /rpc/events/outbox/retry
 GET /rpc/content/categories
 POST /rpc/content/categories
 GET /rpc/content/categories/:id

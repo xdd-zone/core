@@ -1,70 +1,40 @@
 import type {
-  AssetDetailResponse,
-  AssetListResponse,
-  AssetReference,
   CreatePostRequest,
   GeneratePostMetaRequest,
   GeneratePostMetaResponse,
-  ImageAsset,
+  OperationWarning,
   PostDetail,
-  PostRevision,
   PostSummary,
   PreviewTokenResponse,
   SavePostDraftRequest,
-  UpdateAssetRequest,
 } from '@xdd-zone/contracts'
 import type { MomoRuntime } from '#momo/bootstrap'
+import type { EventsService } from '#momo/modules/events/index'
 import type { LlmService } from '#momo/modules/llm/index'
 import type { ContentRepository } from '../repositories/content.repository'
 import type { TaxonomyRepository } from '../repositories/taxonomy.repository'
-import type { ContentAssetRecord, ContentAssetReferenceRecord, ContentPostRecord } from '../types/content.types'
-import { createHash, randomUUID } from 'node:crypto'
+import type { ContentPostRecord } from '../types/content.types'
+import { randomUUID } from 'node:crypto'
 import { BizCode } from '@xdd-zone/contracts'
-import { validateMediaFile } from '#momo/infra/storage'
 import { createLlmService } from '#momo/modules/llm/index'
 import { AppError } from '#momo/shared/app-error'
 
-import { toImageAsset, toPostDetail, toPostRevision, toPostSummary, toPreviewTokenResponse } from '../content.presenter'
+import { toPostDetail, toPostSummary } from '../content.presenter'
 import { findUnknownMdxComponents, MDX_COMPONENTS } from '../mdx-components'
 import { ContentAssetNotFoundError, ContentSlugConflictError } from '../repositories/content.repository'
-
-const PREVIEW_TOKEN_TTL_MS = 30 * 60 * 1000
-const ASSET_LIST_DEFAULT_PAGE_SIZE = 24
-const ASSET_LIST_MAX_PAGE_SIZE = 100
+import { createPreviewService } from './preview.service'
 
 export function createContentService(
   runtime: MomoRuntime,
   repository: ContentRepository,
   taxonomyRepository: TaxonomyRepository,
   llmService?: LlmService,
+  eventsService?: EventsService,
 ) {
+  const previewService = createPreviewService(repository, taxonomyRepository)
   async function listPosts(): Promise<PostSummary[]> {
     const posts = await repository.listPosts()
     return enrichPostsWithTaxonomy(posts)
-  }
-
-  async function listAssets(params: {
-    keyword?: string
-    mimeType?: string
-    page?: number
-    pageSize?: number
-  }): Promise<AssetListResponse> {
-    const page = normalizePage(params.page)
-    const pageSize = normalizePageSize(params.pageSize)
-    const keyword = normalizeText(params.keyword)
-    const mimeType = normalizeText(params.mimeType)
-    const offset = (page - 1) * pageSize
-    const [assets, total] = await Promise.all([
-      repository.listAssets({ keyword, limit: pageSize, mimeType, offset }),
-      repository.countAssets({ keyword, mimeType }),
-    ])
-
-    return {
-      assets: assets.map((asset) => toImageAsset(asset, runtime.env.MOMO_PUBLIC_BASE_URL)),
-      page,
-      pageSize,
-      total,
-    }
   }
 
   async function getPostById(id: string): Promise<PostDetail> {
@@ -193,11 +163,15 @@ export function createContentService(
     return toPostDetail(post, source, category ?? null, tags)
   }
 
-  async function publishPost(id: string, userId: string): Promise<PostDetail> {
-    const result = await repository.publishPost({
-      postId: id,
-      userId,
-    })
+  async function publishPost(id: string, userId: string): Promise<{ post: PostDetail; warnings?: OperationWarning[] }> {
+    const eventId = randomUUID()
+    const result = await runContentRepositoryAction(() =>
+      repository.publishPost({
+        eventId,
+        postId: id,
+        userId,
+      }),
+    )
 
     if (result.status === 'not_found') {
       throw new AppError(BizCode.COMMON_NOT_FOUND, '文章不存在', 404)
@@ -216,161 +190,57 @@ export function createContentService(
       taxonomyRepository.getPostTags(id),
     ])
 
-    return toPostDetail(result.post, result.revision.source, category ?? null, tags)
+    const warnings = eventsService?.handleContentPostPublished
+      ? await eventsService.handleContentPostPublished(result.eventId, {
+          postId: result.post.id,
+          publishedAt: result.post.publishedAt?.toISOString() ?? null,
+          publishedSlug: result.post.publishedSlug,
+          summary: result.post.publishedExcerpt,
+          title: result.post.publishedTitle,
+        })
+      : []
+
+    return {
+      post: toPostDetail(result.post, result.revision.source, category ?? null, tags),
+      warnings: warnings.length > 0 ? warnings : undefined,
+    }
   }
 
   async function createPreviewToken(id: string, userId: string): Promise<PreviewTokenResponse> {
-    const post = await repository.getPostById(id)
-    if (!post) {
-      throw new AppError(BizCode.COMMON_NOT_FOUND, '文章不存在', 404)
-    }
-
-    if (!post.draftRevisionId) {
-      throw new AppError(BizCode.BIZ_RULE_VIOLATION, '没有可预览的草稿', 409)
-    }
-
-    const revision = await getRequiredRevisionById(post.draftRevisionId, '文章草稿版本不存在')
-
-    const token = randomUUID().replaceAll('-', '')
-    const tokenHash = hashToken(token)
-    const expiresAt = new Date(Date.now() + PREVIEW_TOKEN_TTL_MS)
-
-    await repository.createPreviewToken({
-      createdBy: userId,
-      expiresAt,
-      id: randomUUID(),
-      postId: id,
-      revisionId: revision.id,
-      tokenHash,
-    })
-
-    return toPreviewTokenResponse({
-      expiresAt,
-      postId: id,
-      revisionId: revision.id,
-      token,
-    })
+    return previewService.createPostPreviewToken(id, userId)
   }
 
-  async function getPreviewPost(token: string): Promise<{ post: PostDetail; revision: PostRevision }> {
-    const previewToken = await repository.getPreviewToken(hashToken(token))
-    if (!previewToken) {
-      throw new AppError(BizCode.CONTENT_PREVIEW_TOKEN_EXPIRED, '预览 token 已失效', 401)
-    }
+  async function getPreviewPost(token: string) {
+    return previewService.getPreviewPost(token)
+  }
 
-    if (previewToken.expiresAt.getTime() < Date.now()) {
-      throw new AppError(BizCode.CONTENT_PREVIEW_TOKEN_EXPIRED, '预览 token 已失效', 401)
-    }
-
-    const post = await repository.getPostById(previewToken.postId)
+  async function archivePost(id: string, userId: string): Promise<PostDetail> {
+    const post = await runContentRepositoryAction(() =>
+      repository.archivePost({
+        postId: id,
+        userId,
+      }),
+    )
     if (!post) {
       throw new AppError(BizCode.COMMON_NOT_FOUND, '文章不存在', 404)
     }
 
-    const revision = await getRequiredRevisionById(previewToken.revisionId, '文章预览版本不存在')
-
-    await repository.markPreviewTokenUsed(previewToken.id)
-
-    const [category, tags] = await Promise.all([
+    const [category, tags, source] = await Promise.all([
       post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
-      taxonomyRepository.getPostTags(previewToken.postId),
+      taxonomyRepository.getPostTags(id),
+      post.draftRevisionId ? getRequiredRevisionById(post.draftRevisionId, '文章草稿版本不存在') : Promise.resolve(null),
     ])
 
-    return {
-      post: toPostDetail(post, revision.source, category ?? null, tags),
-      revision: toPostRevision(revision),
-    }
-  }
-
-  async function getAssetById(id: string): Promise<AssetDetailResponse> {
-    const asset = await repository.getAssetById(id)
-
-    if (!asset) {
-      throw new AppError(BizCode.COMMON_NOT_FOUND, '素材不存在', 404)
-    }
-
-    const references = await repository.findAssetReferences(id, buildAssetFileUrl(id))
-    return {
-      asset: toImageAsset(asset, runtime.env.MOMO_PUBLIC_BASE_URL),
-      references: references.map((reference) => toAssetReference(reference)),
-    }
-  }
-
-  async function openAssetFile(id: string): Promise<Response> {
-    const asset = await repository.getAssetById(id)
-
-    if (!asset) {
-      throw new AppError(BizCode.COMMON_NOT_FOUND, '素材不存在', 404)
-    }
-
-    return runtime.storage.openFile(asset.storagePath, {
-      originalName: asset.fileName,
-      mimeType: asset.mimeType,
-      size: asset.size,
+    await eventsService?.handleContentPostArchived({
+      postId: post.id,
+      publishedSlug: post.publishedSlug,
     })
+
+    return toPostDetail(post, source?.source ?? '', category ?? null, tags)
   }
 
   function getMdxComponents() {
     return { components: MDX_COMPONENTS }
-  }
-
-  async function uploadImage(file: File, userId: string): Promise<ImageAsset> {
-    validateMediaFile(file)
-
-    const saved = await runtime.storage.save(file)
-    const assetId = randomUUID()
-    let asset: ContentAssetRecord
-
-    try {
-      asset = await repository.createAsset({
-        alt: null,
-        createdBy: userId,
-        fileName: saved.fileName,
-        id: assetId,
-        mimeType: file.type,
-        size: file.size,
-        storagePath: saved.storagePath,
-        url: saved.publicUrl ?? null,
-      })
-    } catch (error) {
-      await runtime.storage.remove(saved.storagePath).catch(() => undefined)
-      throw error
-    }
-
-    return toImageAsset(asset, runtime.env.MOMO_PUBLIC_BASE_URL)
-  }
-
-  async function updateAsset(id: string, input: UpdateAssetRequest): Promise<ImageAsset> {
-    const updated = await repository.updateAsset({
-      alt: input.alt,
-      id,
-      updatedAt: new Date(),
-    })
-
-    if (!updated) {
-      throw new AppError(BizCode.COMMON_NOT_FOUND, '素材不存在', 404)
-    }
-
-    return toImageAsset(updated, runtime.env.MOMO_PUBLIC_BASE_URL)
-  }
-
-  async function deleteAsset(id: string): Promise<{ assetId: string }> {
-    const references = await repository.findAssetReferences(id, buildAssetFileUrl(id))
-
-    if (references.length > 0) {
-      throw new AppError(BizCode.BIZ_RULE_VIOLATION, '素材正在被文章使用，先移除引用再删除', 409, {
-        references,
-      })
-    }
-
-    const asset = await repository.deleteAsset(id)
-
-    if (!asset) {
-      throw new AppError(BizCode.COMMON_NOT_FOUND, '素材不存在', 404)
-    }
-
-    await runtime.storage.remove(asset.storagePath).catch(() => undefined)
-    return { assetId: id }
   }
 
   async function getDraftSource(post: ContentPostRecord): Promise<string> {
@@ -457,26 +327,17 @@ export function createContentService(
     })
   }
 
-  function buildAssetFileUrl(assetId: string): string {
-    return `${runtime.env.MOMO_PUBLIC_BASE_URL.replace(/\/+$/, '')}/rpc/content/assets/${assetId}/file`
-  }
-
   return {
     createPost,
     createPreviewToken,
-    deleteAsset,
     generatePostMetaSuggestion,
-    getAssetById,
     getMdxComponents,
     getPostById,
     getPreviewPost,
-    listAssets,
+    archivePost,
     listPosts,
-    openAssetFile,
     publishPost,
     saveDraft,
-    updateAsset,
-    uploadImage,
   }
 }
 
@@ -502,30 +363,6 @@ async function runContentRepositoryAction<T>(action: () => Promise<T>): Promise<
 
     throw error
   }
-}
-
-function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex')
-}
-
-function normalizePage(value: number | undefined): number {
-  if (!value || Number.isNaN(value)) {
-    return 1
-  }
-
-  return Math.max(1, Math.floor(value))
-}
-
-function normalizePageSize(value: number | undefined): number {
-  if (!value || Number.isNaN(value)) {
-    return ASSET_LIST_DEFAULT_PAGE_SIZE
-  }
-
-  return Math.min(ASSET_LIST_MAX_PAGE_SIZE, Math.max(1, Math.floor(value)))
-}
-
-function normalizeText(value: string | undefined): string | undefined {
-  return value?.trim() || undefined
 }
 
 export function normalizePostSlug(value: string): string {
@@ -565,15 +402,6 @@ export async function normalizePostMetaSuggestion(
   }
 
   return normalized
-}
-
-function toAssetReference(reference: ContentAssetReferenceRecord): AssetReference {
-  return {
-    postId: reference.postId,
-    postSlug: reference.postSlug,
-    postTitle: reference.postTitle,
-    relation: reference.relation,
-  }
 }
 
 export type ContentService = ReturnType<typeof createContentService>

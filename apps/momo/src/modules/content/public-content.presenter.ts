@@ -22,13 +22,13 @@ export function toPublicPostSummary(
 ): PublicPostSummary {
   const summary = {
     category: category ? toPublicCategory(category) : null,
-    coverAssetId: post.coverAssetId,
-    excerpt: post.excerpt,
+    coverAssetId: post.publishedCoverAssetId,
+    excerpt: post.publishedExcerpt,
     id: post.id,
     publishedAt: toNullableIsoString(post.publishedAt),
-    slug: post.slug,
+    slug: post.publishedSlug ?? post.slug,
     tags: tags.map((tag) => toPublicTag(tag)),
-    title: post.title,
+    title: post.publishedTitle ?? post.title,
     updatedAt: toIsoString(post.updatedAt),
   } satisfies PublicPostSummary
 

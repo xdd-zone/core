@@ -1,9 +1,11 @@
 import type { Logger } from 'pino'
+import type { BoboRevalidateClient } from '#momo/infra/bobo'
 import type { CacheDriver } from '#momo/infra/cache'
 import type { SearchDriver } from '#momo/infra/search'
 import type { StorageDriver } from '#momo/infra/storage/storage.types'
 import type { MomoEnv } from '#momo/shared/env'
 import { resolve } from 'node:path'
+import { DisabledBoboRevalidateClient, HttpBoboRevalidateClient } from '#momo/infra/bobo'
 import { MemoryCache, RedisCache } from '#momo/infra/cache'
 import { createChildLogger, createLogger } from '#momo/infra/logger'
 import { DisabledSearch, MeilisearchSearch } from '#momo/infra/search'
@@ -12,6 +14,7 @@ import { LocalStorage } from '#momo/infra/storage/local-storage'
 import { getMomoEnv } from '#momo/shared/env'
 
 export interface MomoRuntime {
+  boboRevalidate: BoboRevalidateClient
   cache: CacheDriver
   env: ReturnType<typeof getMomoEnv>
   logger: Logger
@@ -99,11 +102,29 @@ function createStorageDriver(env: MomoEnv, logger: Logger): StorageDriver {
   return new LocalStorage(rootDir)
 }
 
+function createBoboRevalidateClient(env: MomoEnv, logger: Logger): BoboRevalidateClient {
+  const boboLogger = createChildLogger(logger, 'bobo')
+
+  if (!env.BOBO_BASE_URL || !env.BOBO_REVALIDATE_SECRET) {
+    boboLogger.info('未配置 Bobo 缓存刷新')
+    return new DisabledBoboRevalidateClient()
+  }
+
+  return new HttpBoboRevalidateClient(
+    {
+      baseUrl: env.BOBO_BASE_URL,
+      secret: env.BOBO_REVALIDATE_SECRET,
+    },
+    boboLogger,
+  )
+}
+
 export function createRuntime(): MomoRuntime {
   const env = getMomoEnv()
   const logger = createLogger(env)
 
   return {
+    boboRevalidate: createBoboRevalidateClient(env, logger),
     cache: createCacheDriver(env, logger),
     env,
     logger,

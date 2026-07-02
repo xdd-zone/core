@@ -4,8 +4,18 @@ import { http } from '@/lib/http'
 const publicContentInit = {
   next: {
     revalidate: 60,
+    tags: ['posts:list'],
   },
 } as RequestInit
+
+function publicPostInit(slug: string) {
+  return {
+    next: {
+      revalidate: 60,
+      tags: [`post:${slug}`],
+    },
+  } as RequestInit
+}
 
 export function getPublicPosts(filters: {
   categorySlug?: string
@@ -24,7 +34,7 @@ export function getPublicPosts(filters: {
 
 export function getPublicPost(slug: string): Promise<ApiResponse<PublicPostResponse>> {
   return http.get<PublicPostResponse>(`/rpc/bobo/content/posts/${encodeURIComponent(slug)}`, {
-    init: publicContentInit,
+    init: publicPostInit(slug),
   })
 }
 

@@ -343,11 +343,16 @@ function createRepository(overrides: { enabled: boolean; providerEnabled: boolea
 
 function createRuntime(envOverrides: Partial<MomoRuntime['env']> = {}): MomoRuntime {
   return {
+    boboRevalidate: {
+      revalidate: vi.fn(),
+    },
     cache: {} as CacheDriver,
     env: {
       APP_ENV: 'test',
       BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       BETTER_AUTH_URL: 'http://localhost:7788',
+      BOBO_BASE_URL: undefined,
+      BOBO_REVALIDATE_SECRET: undefined,
       CACHE_DEFAULT_TTL_SECONDS: 300,
       CACHE_KEY_PREFIX: 'momo',
       CACHE_PROVIDER: 'memory',

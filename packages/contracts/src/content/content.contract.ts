@@ -1,8 +1,14 @@
 import { z } from 'zod'
 
 export const POST_STATUS_VALUES = ['draft', 'published', 'archived'] as const
+export const PREVIEW_TARGET_TYPE_VALUES = ['post', 'project', 'site-page'] as const
 
 export const PostStatusSchema = z.enum(POST_STATUS_VALUES)
+export const PreviewTargetTypeSchema = z.enum(PREVIEW_TARGET_TYPE_VALUES)
+export const OperationWarningSchema = z.object({
+  code: z.string().trim().min(1),
+  message: z.string().trim().min(1),
+})
 
 export const TaxonomySlugSchema = z.string().trim().min(1).max(160)
 
@@ -69,9 +75,13 @@ export const PostSummarySchema = z.object({
   category: CategorySummarySchema.nullable(),
   coverAssetId: z.string().nullable(),
   createdAt: z.string(),
+  draftSlug: z.string(),
+  draftTitle: z.string(),
   excerpt: z.string().nullable(),
   id: z.string(),
   publishedAt: z.string().nullable(),
+  publishedSlug: z.string().nullable(),
+  publishedTitle: z.string().nullable(),
   slug: z.string(),
   status: PostStatusSchema,
   tags: z.array(TagSummarySchema),
@@ -125,12 +135,15 @@ export const PostListResponseSchema = z.object({
 
 export const PostDetailResponseSchema = z.object({
   post: PostDetailSchema,
+  warnings: z.array(OperationWarningSchema).optional(),
 })
 
 export const PreviewTokenResponseSchema = z.object({
   expiresAt: z.string(),
-  postId: z.string(),
-  revisionId: z.string(),
+  postId: z.string().nullable().optional(),
+  revisionId: z.string().nullable().optional(),
+  targetId: z.string(),
+  targetType: PreviewTargetTypeSchema,
   token: z.string(),
 })
 
@@ -163,57 +176,6 @@ export const MdxComponentSchema = z.object({
 
 export const MdxComponentsResponseSchema = z.object({
   components: z.array(MdxComponentSchema),
-})
-
-export const ImageAssetSchema = z.object({
-  alt: z.string().nullable(),
-  createdAt: z.string(),
-  fileName: z.string(),
-  fileUrl: z.string().url(),
-  id: z.string(),
-  mimeType: z.string(),
-  size: z.number().int().nonnegative(),
-  storagePath: z.string(),
-  updatedAt: z.string(),
-  url: z.string().nullable(),
-})
-
-export const ImageAssetResponseSchema = z.object({
-  asset: ImageAssetSchema,
-})
-
-export const AssetListQuerySchema = z.object({
-  keyword: z.string().trim().optional(),
-  mimeType: z.string().trim().optional(),
-  page: z.coerce.number().int().positive().default(1),
-  pageSize: z.coerce.number().int().positive().max(100).default(24),
-})
-
-export const AssetListResponseSchema = z.object({
-  assets: z.array(ImageAssetSchema),
-  page: z.number().int().positive(),
-  pageSize: z.number().int().positive(),
-  total: z.number().int().nonnegative(),
-})
-
-export const AssetReferenceSchema = z.object({
-  postId: z.string(),
-  postSlug: z.string(),
-  postTitle: z.string(),
-  relation: z.enum(['cover', 'draft-source', 'published-source']),
-})
-
-export const AssetDetailResponseSchema = z.object({
-  asset: ImageAssetSchema,
-  references: z.array(AssetReferenceSchema),
-})
-
-export const UpdateAssetRequestSchema = z.object({
-  alt: z.string().trim().max(200).nullable(),
-})
-
-export const DeleteAssetResponseSchema = z.object({
-  assetId: z.string(),
 })
 
 export const CreateCategoryRequestSchema = z.object({
@@ -288,10 +250,6 @@ export const PublicPostListQuerySchema = z.object({
   tagSlug: z.string().trim().optional(),
 })
 
-export type AssetDetailResponse = z.infer<typeof AssetDetailResponseSchema>
-export type AssetListQuery = z.infer<typeof AssetListQuerySchema>
-export type AssetListResponse = z.infer<typeof AssetListResponseSchema>
-export type AssetReference = z.infer<typeof AssetReferenceSchema>
 export type Category = z.infer<typeof CategorySchema>
 export type CategoryListResponse = z.infer<typeof CategoryListResponseSchema>
 export type CategoryResponse = z.infer<typeof CategoryResponseSchema>
@@ -303,18 +261,17 @@ export type GeneratePostMetaResponse = z.infer<typeof GeneratePostMetaResponseSc
 export type GeneratePostMetaSuggestion = z.infer<typeof GeneratePostMetaSuggestionSchema>
 export type GeneratePostMetaTarget = z.infer<typeof GeneratePostMetaTargetSchema>
 export type CreateTagRequest = z.infer<typeof CreateTagRequestSchema>
-export type DeleteAssetResponse = z.infer<typeof DeleteAssetResponseSchema>
 export type DeleteCategoryResponse = z.infer<typeof DeleteCategoryResponseSchema>
 export type DeleteTagResponse = z.infer<typeof DeleteTagResponseSchema>
-export type ImageAsset = z.infer<typeof ImageAssetSchema>
-export type ImageAssetResponse = z.infer<typeof ImageAssetResponseSchema>
 export type MdxComponent = z.infer<typeof MdxComponentSchema>
 export type MdxComponentsResponse = z.infer<typeof MdxComponentsResponseSchema>
+export type OperationWarning = z.infer<typeof OperationWarningSchema>
 export type PostDetail = z.infer<typeof PostDetailSchema>
 export type PostDetailResponse = z.infer<typeof PostDetailResponseSchema>
 export type PostListResponse = z.infer<typeof PostListResponseSchema>
 export type PostRevision = z.infer<typeof PostRevisionSchema>
 export type PostStatus = z.infer<typeof PostStatusSchema>
+export type PreviewTargetType = z.infer<typeof PreviewTargetTypeSchema>
 export type PostSummary = z.infer<typeof PostSummarySchema>
 export type PreviewPostResponse = z.infer<typeof PreviewPostResponseSchema>
 export type PreviewTokenResponse = z.infer<typeof PreviewTokenResponseSchema>
@@ -333,6 +290,5 @@ export type Tag = z.infer<typeof TagSchema>
 export type TagListResponse = z.infer<typeof TagListResponseSchema>
 export type TagResponse = z.infer<typeof TagResponseSchema>
 export type TagSummary = z.infer<typeof TagSummarySchema>
-export type UpdateAssetRequest = z.infer<typeof UpdateAssetRequestSchema>
 export type UpdateCategoryRequest = z.infer<typeof UpdateCategoryRequestSchema>
 export type UpdateTagRequest = z.infer<typeof UpdateTagRequestSchema>

@@ -1,7 +1,7 @@
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
 import { zValidator } from '@hono/zod-validator'
-import { BizCode, UpdateFifaProfileRequestSchema } from '@xdd-zone/contracts'
+import { BizCode, UpdateFifaProfileRequestSchema, UpdatePublicProfileRequestSchema } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 import { getDb } from '#momo/infra/db/client'
 import { createRequireFifaOwner } from '#momo/modules/auth/index'
@@ -51,6 +51,35 @@ export function createProfileRoute(runtime: MomoRuntime) {
     .get('/rpc/fifa/profile/avatar/:storagePathToken', async (c) => {
       return service.openAvatarFile(c.req.param('storagePathToken'))
     })
+    .get('/rpc/bobo/profile', async (c) => {
+      const profile = await service.getPublicProfile()
+      return c.json(createSuccessResponse({ profile }, createMeta(c.var.requestId)))
+    })
+    .get('/rpc/profile/public', createRequireFifaOwner(runtime), async (c) => {
+      const profile = await service.getPublicProfile()
+      return c.json(createSuccessResponse({ profile }, createMeta(c.var.requestId)))
+    })
+    .patch(
+      '/rpc/profile/public',
+      createRequireFifaOwner(runtime),
+      zValidator('json', UpdatePublicProfileRequestSchema, (result) => {
+        if (result.success) {
+          return
+        }
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) => {
+        const profile = await service.updatePublicProfile(c.req.valid('json'))
+        await runtime.boboRevalidate
+          .revalidate({
+            paths: ['/', '/about'],
+            tags: ['profile:public', 'site:home', 'site:config'],
+          })
+          .catch(() => undefined)
+        return c.json(createSuccessResponse({ profile }, createMeta(c.var.requestId)))
+      },
+    )
 }
 
 export default createProfileRoute

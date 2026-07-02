@@ -9,7 +9,9 @@ import {
   applications,
   llmProviders,
   llmUseCaseConfigs,
+  publicProfiles,
   roles,
+  siteConfigs,
   user,
   userProfiles,
   userRoleBindings,
@@ -31,6 +33,9 @@ const migrationFiles = [
   '0006_typical_wither.sql',
   '0007_smiling_katie_power.sql',
   '0008_user_profiles.sql',
+  '0009_site_cms_foundation.sql',
+  '0010_public_profile_site_fields.sql',
+  '0011_generic_preview_tokens.sql',
 ]
 let prepareDatabaseQueue = Promise.resolve()
 
@@ -58,11 +63,12 @@ export async function prepareAuthTestDatabase(): Promise<void> {
 
 export async function resetAuthTestData(): Promise<void> {
   await getDb().execute(
-    'TRUNCATE TABLE "llm_call_logs", "llm_use_case_configs", "llm_providers", "content_preview_tokens", "content_post_revisions", "content_post_tags", "content_posts", "content_tags", "content_categories", "content_assets", "rate_limit", "verification", "session", "account", "user_profiles", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
+    'TRUNCATE TABLE "event_outbox", "projects", "public_profiles", "site_configs", "llm_call_logs", "llm_use_case_configs", "llm_providers", "content_preview_tokens", "content_post_revisions", "content_post_tags", "content_posts", "content_tags", "content_categories", "content_assets", "rate_limit", "verification", "session", "account", "user_profiles", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
   )
 
   await seedAccessRecords()
   await seedLlmUseCaseConfigs()
+  await seedSiteCmsDefaults()
 }
 
 export async function createCredentialUser(input: {
@@ -237,6 +243,34 @@ async function seedLlmUseCaseConfigs(): Promise<void> {
     model: 'gpt-5-mini',
     providerId: 'llm_provider_default',
     useCase: 'content.post.meta',
+  })
+}
+
+async function seedSiteCmsDefaults(): Promise<void> {
+  await getDb()
+    .insert(siteConfigs)
+    .values({
+      homeSections: [
+        { id: 'profile', order: 0, type: 'profile', visible: true },
+        { id: 'writing', order: 10, type: 'writing', visible: true },
+        { id: 'projects', order: 20, type: 'projects', visible: true },
+      ],
+      navigation: [
+        { href: '/', id: 'home', label: '首页', order: 0, visible: true },
+        { href: '/writing', id: 'writing', label: '文稿', order: 10, visible: true },
+        { href: '/projects', id: 'projects', label: '项目', order: 20, visible: true },
+      ],
+      seo: {
+        description: '喜东东的个人站',
+        title: 'XDD Zone',
+      },
+      siteKey: 'bobo',
+    })
+
+  await getDb().insert(publicProfiles).values({
+    displayName: '喜东东',
+    id: 'bobo',
+    socialLinks: [],
   })
 }
 

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 
+import { getSiteShellData } from '@/lib/site'
 import { FALLBACK_DARK, THEME_STORAGE_KEY } from '@/lib/theme'
 
 import './globals.css'
@@ -54,12 +55,16 @@ const mapleMono = localFont({
   ],
 })
 
-export const metadata: Metadata = {
-  title: {
-    default: 'bobo',
-    template: '%s | bobo',
-  },
-  description: 'bobo 个人站点。',
+export async function generateMetadata(): Promise<Metadata> {
+  const { site } = await getSiteShellData()
+
+  return {
+    title: {
+      default: site.seo.title,
+      template: `%s | ${site.seo.title}`,
+    },
+    description: site.seo.description ?? 'bobo 个人站点。',
+  }
 }
 
 const themeInitScript = `

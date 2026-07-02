@@ -1,11 +1,13 @@
 import type {
   FifaProfileResponse,
+  PublicProfileResponse,
   UpdateFifaProfileRequest,
+  UpdatePublicProfileRequest,
   UploadFifaProfileAvatarResponse,
 } from '@xdd-zone/contracts'
 import { momoClient } from '@fifa/api/client'
 import { resolveMomoHttpUrl } from '@fifa/api/momo-url'
-import { readMomoJson } from '@fifa/api/rpc'
+import { readMomoFetchJson, readMomoJson } from '@fifa/api/rpc'
 
 interface BetterAuthLinkSocialResponse {
   url?: string
@@ -36,6 +38,27 @@ export function uploadFifaProfileAvatar(file: File) {
       form: {
         file,
       },
+    }),
+  )
+}
+
+export function getPublicProfile() {
+  return readMomoFetchJson<PublicProfileResponse>(
+    fetch(resolveMomoHttpUrl('/rpc/profile/public'), {
+      credentials: 'include',
+    }),
+  )
+}
+
+export function updatePublicProfile(payload: UpdatePublicProfileRequest) {
+  return readMomoFetchJson<PublicProfileResponse>(
+    fetch(resolveMomoHttpUrl('/rpc/profile/public'), {
+      body: JSON.stringify(payload),
+      credentials: 'include',
+      headers: {
+        'content-type': 'application/json',
+      },
+      method: 'PATCH',
     }),
   )
 }
