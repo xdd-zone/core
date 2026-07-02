@@ -50,7 +50,7 @@ apps/momo/src/modules/profile/profile.route.ts
 | `GET` | `/rpc/fifa/auth/me` | 当前 fifa 用户 |
 | `GET` | `/rpc/fifa/profile` | 当前 fifa owner 的个人资料和账号绑定状态 |
 | `PATCH` | `/rpc/fifa/profile` | 修改当前 fifa owner 的显示名和头像地址 |
-| `POST` | `/rpc/fifa/profile/avatar` | 上传当前 fifa owner 的头像文件，单个文件最大 `2 MiB`，并写入 `user.image` |
+| `POST` | `/rpc/fifa/profile/avatar` | 上传当前 fifa owner 的头像文件，单个文件最大 `2 MiB`，并写入 `user_profiles.avatar_url` |
 | `GET` | `/rpc/fifa/profile/avatar/:storagePathToken` | 读取头像上传接口返回的本地头像文件，允许跨域显示 |
 | `GET` | `/rpc/bobo/auth/me` | 当前 bobo 用户，未登录时 `user` 为 `null` |
 | `GET`/`POST` | `/api/auth/*` | `better-auth` 登录、登出、OAuth callback 和 session cookie |

@@ -553,11 +553,11 @@ apps/momo/src/modules/auth
 - `auth.route.ts`
   挂载 `/api/auth/*`、`/rpc/fifa/auth/me` 和 `/rpc/bobo/auth/me`。
 - `auth.config.ts`
-  初始化 `better-auth`，配置邮箱密码、GitHub、Google、session cookie 和 Drizzle adapter。
+  初始化 `better-auth`，配置邮箱密码、GitHub、Google、session cookie、Drizzle adapter 和用户 profile 创建 hook。
 - `auth.generate.ts`
   给 `pnpm --filter @xdd-zone/momo auth:generate` 使用。这里创建 Better Auth 实例，让 CLI 能生成 `auth.schema.ts`。
 - `services/auth.service.ts`
-  调用 `better-auth` handler，读取当前 session，并从 `user` 表整理当前用户返回值。
+  调用 `better-auth` handler，读取当前 session，并从 `user` 和 `user_profiles` 表整理当前用户返回值。
 - `services/access.service.ts`
   判断当前用户能不能进入 `fifa`，以及给已登录的 `bobo` 用户补 `bobo.visitor`。
 - `guards/auth.guard.ts`
@@ -599,7 +599,7 @@ apps/momo/src/modules/profile
 - `PATCH /rpc/fifa/profile`
   修改当前 `fifa.owner` 的显示名和头像地址。
 - `POST /rpc/fifa/profile/avatar`
-  上传当前 `fifa.owner` 的头像文件，单个文件最大 `2 MiB`。接口会把头像地址写入 `user.image`，并返回同一个头像地址。这个接口只保存文件，不写 `content_assets`。
+  上传当前 `fifa.owner` 的头像文件，单个文件最大 `2 MiB`。接口会把头像地址写入 `user_profiles.avatar_url`，并返回同一个头像地址。这个接口只保存文件，不写 `content_assets`。
 - `GET /rpc/fifa/profile/avatar/:storagePathToken`
   读取头像上传接口返回的本地头像文件。响应会带 `Cross-Origin-Resource-Policy: cross-origin`，允许 Fifa 从不同域名显示头像。COS 有公开地址时，头像会直接使用 COS 公开地址。
 
@@ -608,10 +608,12 @@ apps/momo/src/modules/profile
 ```text
 apps/momo/src/infra/db/schema/auth.schema.ts
 apps/momo/src/infra/db/schema/access.schema.ts
+apps/momo/src/infra/db/schema/profile.schema.ts
 ```
 
 `auth.schema.ts` 由 `better-auth generate` 生成，当前包含 `user`、`session`、`account`、`verification` 和 `rateLimit`。`rateLimit` 对应数据库表 `rate_limit`，用于 Better Auth 的 database rate limit。
 `access.schema.ts` 是 Momo 自己维护的访问表，当前包含 `applications`、`application_auth_methods`、`roles` 和 `user_role_bindings`。
+`profile.schema.ts` 是 Momo 自己维护的个人资料表，当前包含 `user_profiles`。`display_name` 和 `avatar_url` 从这里读写，不写 Better Auth 生成的 `user.name` 和 `user.image`。
 
 Better Auth rate limit 当前配置：
 

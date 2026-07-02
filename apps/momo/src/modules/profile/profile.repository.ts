@@ -1,7 +1,7 @@
 import type { FifaProfileAccountProvider } from '@xdd-zone/contracts'
 import type { DbClient } from '#momo/infra/db/client'
 import { and, eq, inArray } from 'drizzle-orm'
-import { account, user } from '#momo/infra/db/schema/index'
+import { account, user, userProfiles } from '#momo/infra/db/schema/index'
 
 const PROFILE_ACCOUNT_PROVIDERS = ['credential', 'github', 'google'] as const satisfies FifaProfileAccountProvider[]
 
@@ -25,12 +25,13 @@ export function createProfileRepository(db: DbClient) {
   async function getUserById(userId: string): Promise<FifaProfileUserRecord | null> {
     const rows = await db
       .select({
-        avatarUrl: user.image,
-        displayName: user.name,
+        avatarUrl: userProfiles.avatarUrl,
+        displayName: userProfiles.displayName,
         email: user.email,
         id: user.id,
       })
       .from(user)
+      .innerJoin(userProfiles, eq(userProfiles.userId, user.id))
       .where(eq(user.id, userId))
       .limit(1)
 
@@ -50,23 +51,15 @@ export function createProfileRepository(db: DbClient) {
     }))
   }
 
-  async function updateUserProfile(userId: string, input: UpdateFifaProfileInput): Promise<FifaProfileUserRecord> {
-    const rows = await db
-      .update(user)
+  async function updateUserProfile(userId: string, input: UpdateFifaProfileInput): Promise<void> {
+    await db
+      .update(userProfiles)
       .set({
-        image: input.avatarUrl,
-        name: input.displayName,
+        avatarUrl: input.avatarUrl,
+        displayName: input.displayName,
         updatedAt: new Date(),
       })
-      .where(eq(user.id, userId))
-      .returning({
-        avatarUrl: user.image,
-        displayName: user.name,
-        email: user.email,
-        id: user.id,
-      })
-
-    return rows[0]!
+      .where(eq(userProfiles.userId, userId))
   }
 
   return {

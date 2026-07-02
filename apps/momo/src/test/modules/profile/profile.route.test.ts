@@ -1,15 +1,18 @@
 import type { ApiResponse, FifaProfileResponse, UploadFifaProfileAvatarResponse } from '@xdd-zone/contracts'
 import type app from '#momo/app'
 import { BizCode } from '@xdd-zone/contracts'
+import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { closeDb, getDb } from '#momo/infra/db/client'
-import { account } from '#momo/infra/db/schema/index'
+import { account, user } from '#momo/infra/db/schema/index'
 import {
   bindFifaOwner,
   createCredentialUser,
+  getUserProfile,
   prepareAuthTestDatabase,
   resetAuthTestData,
   signInByEmail,
+  updateBetterAuthUserProfile,
 } from '#momo/test/helpers/auth-test-db'
 
 const MAX_PROFILE_AVATAR_FILE_SIZE_BYTES = 2 * 1024 * 1024
@@ -58,6 +61,10 @@ describe('profile 路由', () => {
   it('owner 获取 profile 返回资料和登录方式', async () => {
     const testUser = await createCredentialUser({ email: 'profile-owner@example.com', name: 'Owner' })
     await bindFifaOwner(testUser.id)
+    await updateBetterAuthUserProfile(testUser.id, {
+      image: 'https://example.com/auth-user-avatar.png',
+      name: 'Better Auth Owner',
+    })
     await getDb().insert(account).values({
       accountId: 'github-account-id',
       id: 'account_profile_owner_github',
@@ -115,6 +122,12 @@ describe('profile 路由', () => {
     const authBody = (await authResponse.json()) as ApiResponse<{
       user: { avatarUrl: string | null; displayName: string; id: string }
     }>
+    const profileRecord = await getUserProfile(testUser.id)
+    const authUserRows = await getDb()
+      .select({ image: user.image, name: user.name })
+      .from(user)
+      .where(eq(user.id, testUser.id))
+      .limit(1)
 
     expect(updateResponse.status).toBe(200)
     expect(updateBody.ok).toBe(true)
@@ -124,6 +137,14 @@ describe('profile 路由', () => {
       avatarUrl: '/rpc/fifa/profile/avatar/avatar.webp',
       displayName: 'New Name',
       id: testUser.id,
+    })
+    expect(profileRecord).toEqual({
+      avatarUrl: '/rpc/fifa/profile/avatar/avatar.webp',
+      displayName: 'New Name',
+    })
+    expect(authUserRows[0]).toEqual({
+      image: null,
+      name: 'Old Name',
     })
   })
 
@@ -184,6 +205,11 @@ describe('profile 路由', () => {
     const authBody = (await authResponse.json()) as ApiResponse<{
       user: { avatarUrl: string | null; displayName: string; id: string }
     }>
+    const authUserRows = await getDb()
+      .select({ image: user.image, name: user.name })
+      .from(user)
+      .where(eq(user.id, testUser.id))
+      .limit(1)
 
     expect(avatarResponse.status).toBe(200)
     expect(avatarResponse.headers.get('content-type')).toBe('image/png')
@@ -191,6 +217,10 @@ describe('profile 路由', () => {
     await expect(avatarResponse.arrayBuffer()).resolves.toHaveProperty('byteLength', 3)
     expect(profileBody.ok && profileBody.data.avatarUrl).toBe(avatarUrl)
     expect(authBody.ok && authBody.data.user.avatarUrl).toBe(avatarUrl)
+    expect(authUserRows[0]).toEqual({
+      image: null,
+      name: 'Avatar Owner',
+    })
   })
 
   it('头像上传允许超过通用 rpc 1 MiB 限制', async () => {

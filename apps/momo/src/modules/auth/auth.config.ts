@@ -2,6 +2,7 @@ import type { MomoRuntime } from '#momo/bootstrap'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { getDb } from '#momo/infra/db/client'
+import { userProfiles } from '#momo/infra/db/schema/index'
 import { createBetterAuthLogger, createChildLogger } from '#momo/infra/logger'
 
 const AUTH_BASE_PATH = '/api/auth'
@@ -16,6 +17,22 @@ export function createMomoAuth(runtime: Pick<MomoRuntime, 'env' | 'logger'>) {
     database: drizzleAdapter(getDb(), {
       provider: 'pg',
     }),
+    databaseHooks: {
+      user: {
+        create: {
+          async after(user) {
+            await getDb()
+              .insert(userProfiles)
+              .values({
+                avatarUrl: typeof user.image === 'string' ? user.image : null,
+                displayName: user.name,
+                userId: user.id,
+              })
+              .onConflictDoNothing()
+          },
+        },
+      },
+    },
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 8,

@@ -3,7 +3,7 @@ import type { AuthUserView } from '../auth.types'
 import { BizCode } from '@xdd-zone/contracts'
 import { eq } from 'drizzle-orm'
 import { getDb } from '#momo/infra/db/client'
-import { user } from '#momo/infra/db/schema/index'
+import { user, userProfiles } from '#momo/infra/db/schema/index'
 import { AppError } from '#momo/shared/app-error'
 
 export async function getCurrentAuthUser(auth: MomoAuth, headers: Headers): Promise<AuthUserView | null> {
@@ -21,11 +21,12 @@ export async function getCurrentAuthUser(auth: MomoAuth, headers: Headers): Prom
 
   const rows = await getDb()
     .select({
-      avatarUrl: user.image,
-      displayName: user.name,
+      avatarUrl: userProfiles.avatarUrl,
+      displayName: userProfiles.displayName,
       id: user.id,
     })
     .from(user)
+    .innerJoin(userProfiles, eq(userProfiles.userId, user.id))
     .where(eq(user.id, session.user.id))
     .limit(1)
 

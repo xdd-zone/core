@@ -11,6 +11,7 @@ import {
   llmUseCaseConfigs,
   roles,
   user,
+  userProfiles,
   userRoleBindings,
 } from '#momo/infra/db/schema/index'
 import { createLogger } from '#momo/infra/logger'
@@ -29,6 +30,7 @@ const migrationFiles = [
   '0005_puzzling_wasp.sql',
   '0006_typical_wither.sql',
   '0007_smiling_katie_power.sql',
+  '0008_user_profiles.sql',
 ]
 let prepareDatabaseQueue = Promise.resolve()
 
@@ -56,7 +58,7 @@ export async function prepareAuthTestDatabase(): Promise<void> {
 
 export async function resetAuthTestData(): Promise<void> {
   await getDb().execute(
-    'TRUNCATE TABLE "llm_call_logs", "llm_use_case_configs", "llm_providers", "content_preview_tokens", "content_post_revisions", "content_post_tags", "content_posts", "content_tags", "content_categories", "content_assets", "rate_limit", "verification", "session", "account", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
+    'TRUNCATE TABLE "llm_call_logs", "llm_use_case_configs", "llm_providers", "content_preview_tokens", "content_post_revisions", "content_post_tags", "content_posts", "content_tags", "content_categories", "content_assets", "rate_limit", "verification", "session", "account", "user_profiles", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
   )
 
   await seedAccessRecords()
@@ -87,6 +89,31 @@ export async function createCredentialUser(input: {
     id: result.user.id,
     name: result.user.name,
   }
+}
+
+export async function updateBetterAuthUserProfile(
+  userId: string,
+  input: { image: string | null; name: string },
+): Promise<void> {
+  await getDb()
+    .update(user)
+    .set({ image: input.image, name: input.name, updatedAt: new Date() })
+    .where(eq(user.id, userId))
+}
+
+export async function getUserProfile(
+  userId: string,
+): Promise<{ avatarUrl: string | null; displayName: string } | null> {
+  const rows = await getDb()
+    .select({
+      avatarUrl: userProfiles.avatarUrl,
+      displayName: userProfiles.displayName,
+    })
+    .from(userProfiles)
+    .where(eq(userProfiles.userId, userId))
+    .limit(1)
+
+  return rows[0] ?? null
 }
 
 export async function signInByEmail(app: AppRequestTarget, email: string): Promise<string> {

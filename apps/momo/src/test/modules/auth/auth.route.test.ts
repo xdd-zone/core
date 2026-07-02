@@ -11,10 +11,12 @@ import {
   bindFifaOwner,
   createCredentialUser,
   disableUser,
+  getUserProfile,
   prepareAuthTestDatabase,
   removeCredentialAccount,
   resetAuthTestData,
   signInByEmail,
+  updateBetterAuthUserProfile,
 } from '#momo/test/helpers/auth-test-db'
 
 let momoApp: typeof app
@@ -84,6 +86,15 @@ describe('auth 路由', () => {
     await expect(getCurrentAuthUser(auth, new Headers())).rejects.toMatchObject({
       code: BizCode.AUTH_SESSION_INVALID,
       status: 401,
+    })
+  })
+
+  it('创建邮箱用户时会创建 profile 记录', async () => {
+    const testUser = await createCredentialUser({ email: 'profile-created@example.com', name: 'Profile Created' })
+
+    await expect(getUserProfile(testUser.id)).resolves.toEqual({
+      avatarUrl: null,
+      displayName: 'Profile Created',
     })
   })
 
@@ -195,6 +206,10 @@ describe('auth 路由', () => {
   it('current fifa owner 用户被返回', async () => {
     const testUser = await createCredentialUser({ email: 'owner@example.com', name: 'Owner' })
     await bindFifaOwner(testUser.id)
+    await updateBetterAuthUserProfile(testUser.id, {
+      image: 'https://example.com/auth-user-avatar.png',
+      name: 'Better Auth Owner',
+    })
     const cookie = await signInByEmail(momoApp, testUser.email)
 
     const response = await momoApp.request('/rpc/fifa/auth/me', {
