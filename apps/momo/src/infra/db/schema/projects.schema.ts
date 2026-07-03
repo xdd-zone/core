@@ -1,8 +1,8 @@
 import { POST_STATUS_VALUES } from '@xdd-zone/contracts'
 import { index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
+import { assets } from './assets.schema'
 import { user } from './auth.schema'
-import { contentAssets } from './content.schema'
 
 export const projectStatusEnum = pgEnum('project_status', POST_STATUS_VALUES)
 
@@ -24,9 +24,9 @@ export const projects = pgTable(
     /** 已发布描述。 */
     publishedDescription: text('published_description'),
     /** 草稿封面素材 id。 */
-    draftCoverAssetId: text('draft_cover_asset_id').references(() => contentAssets.id, { onDelete: 'set null' }),
+    draftCoverAssetId: text('draft_cover_asset_id').references(() => assets.id, { onDelete: 'set null' }),
     /** 已发布封面素材 id。 */
-    publishedCoverAssetId: text('published_cover_asset_id').references(() => contentAssets.id, {
+    publishedCoverAssetId: text('published_cover_asset_id').references(() => assets.id, {
       onDelete: 'set null',
     }),
     /** 草稿链接 JSON。 */

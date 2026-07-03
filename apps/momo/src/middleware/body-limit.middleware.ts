@@ -41,11 +41,8 @@ function createBodyLimitMiddleware(maxSize: number, excludePaths: string[] = [])
 }
 
 export function registerBodyLimit(app: Hono<HonoEnv>): void {
-  app.use('/rpc/content/assets/images', createBodyLimitMiddleware(CONTENT_IMAGE_BODY_LIMIT_BYTES))
+  app.use('/rpc/assets/images', createBodyLimitMiddleware(CONTENT_IMAGE_BODY_LIMIT_BYTES))
   app.use('/rpc/fifa/profile/avatar', createBodyLimitMiddleware(PROFILE_AVATAR_BODY_LIMIT_BYTES))
-  app.use(
-    '/rpc/*',
-    createBodyLimitMiddleware(RPC_BODY_LIMIT_BYTES, ['/rpc/content/assets/images', '/rpc/fifa/profile/avatar']),
-  )
+  app.use('/rpc/*', createBodyLimitMiddleware(RPC_BODY_LIMIT_BYTES, ['/rpc/assets/images', '/rpc/fifa/profile/avatar']))
   app.use('/api/auth/*', createBodyLimitMiddleware(AUTH_BODY_LIMIT_BYTES))
 }

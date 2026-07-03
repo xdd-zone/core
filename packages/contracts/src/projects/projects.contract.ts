@@ -3,7 +3,7 @@ import { OperationWarningSchema, POST_STATUS_VALUES } from '../content/content.c
 
 export const ProjectStatusSchema = z.enum(POST_STATUS_VALUES)
 
-export const ProjectBaseSchema = z.object({
+export const ProjectDraftInputSchema = z.object({
   coverAssetId: z.string().trim().min(1).nullable().optional(),
   description: z.string().trim().max(1200).nullable().optional(),
   links: z
@@ -20,10 +20,42 @@ export const ProjectBaseSchema = z.object({
   title: z.string().trim().min(1).max(160),
 })
 
-export const CreateProjectRequestSchema = ProjectBaseSchema
-export const SaveProjectDraftRequestSchema = ProjectBaseSchema.partial()
+export const ProjectBaseSchema = ProjectDraftInputSchema
+
+export const CreateProjectRequestSchema = z.object({
+  draft: ProjectDraftInputSchema,
+})
+export const SaveProjectDraftRequestSchema = z.object({
+  draft: ProjectDraftInputSchema.partial(),
+})
+
+export const ProjectDraftSchema = z.object({
+  coverAssetId: z.string().nullable(),
+  description: z.string().nullable(),
+  links: z.array(z.object({ href: z.string().url(), label: z.string() })),
+  order: z.number().int().nonnegative(),
+  slug: z.string(),
+  title: z.string(),
+})
+
+export const ProjectPublishedSchema = z.object({
+  coverAssetId: z.string().nullable(),
+  description: z.string().nullable(),
+  links: z.array(z.object({ href: z.string().url(), label: z.string() })),
+  publishedAt: z.string().nullable(),
+  slug: z.string().nullable(),
+  title: z.string().nullable(),
+})
 
 export const ProjectSummarySchema = z.object({
+  draft: ProjectDraftSchema,
+  id: z.string(),
+  published: ProjectPublishedSchema,
+  status: ProjectStatusSchema,
+  updatedAt: z.string(),
+})
+
+export const PublicProjectSummarySchema = z.object({
   coverAssetId: z.string().nullable(),
   description: z.string().nullable(),
   id: z.string(),
@@ -31,13 +63,8 @@ export const ProjectSummarySchema = z.object({
   order: z.number().int().nonnegative(),
   publishedAt: z.string().nullable(),
   slug: z.string(),
-  status: ProjectStatusSchema,
   title: z.string(),
   updatedAt: z.string(),
-})
-
-export const PublicProjectSummarySchema = ProjectSummarySchema.omit({
-  status: true,
 })
 
 export const ProjectListResponseSchema = z.object({

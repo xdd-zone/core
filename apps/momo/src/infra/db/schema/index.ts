@@ -1,4 +1,5 @@
 export * from './access.schema'
+export * from './assets.schema'
 export * from './auth.schema'
 export * from './content.schema'
 export * from './events.schema'

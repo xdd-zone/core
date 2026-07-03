@@ -236,25 +236,17 @@ pnpm dev:bobo
 - `/rpc/content/posts/:id/publish`
   发布文章。发布成功后会刷新 Bobo cache tag；刷新失败时响应带 `warnings`。
 - `/rpc/content/posts/:id/archive`
-  归档文章，并从公开站点和搜索索引移除。
+  归档文章，并从公开站点和搜索索引移除；处理失败时响应带 `warnings`。
 - `/rpc/content/mdx-components`
   返回 MDX 组件清单。
-- `/rpc/content/assets/images`
-  上传图片素材。响应里的 `asset.fileUrl` 是浏览器可直接加载的图片地址。
-- `/rpc/content/assets`
-  后台素材列表。
-- `/rpc/content/assets/:id`
-  后台素材详情、更新和删除。
-- `/rpc/content/assets/:id/file`
-  读取素材文件。
 - `/rpc/assets`
-  独立素材列表。旧的 `/rpc/content/assets` 仍保留。
+  后台素材列表。
 - `/rpc/assets/:id`
-  独立素材详情、更新和删除。
+  后台素材详情、更新和删除。
 - `/rpc/assets/:id/file`
-  独立素材文件读取。
+  读取素材文件。
 - `/rpc/assets/images`
-  独立图片素材上传。
+  上传图片素材。响应里的 `asset.fileUrl` 是浏览器可直接加载的图片地址。
 - `/rpc/content/categories`
   后台分类列表和创建分类。
 - `/rpc/content/categories/:id`
@@ -263,8 +255,6 @@ pnpm dev:bobo
   后台标签列表和创建标签。
 - `/rpc/content/tags/:id`
   后台标签详情、更新和删除。
-- `/rpc/content/previews/:token`
-  使用旧文章预览 token 读取文章 revision。
 - `/rpc/previews/:token`
   使用通用预览 token 读取文章或项目预览数据。
 - `/rpc/bobo/content/posts`

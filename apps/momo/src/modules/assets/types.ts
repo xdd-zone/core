@@ -1,16 +1,17 @@
 import type { InferSelectModel } from 'drizzle-orm'
-import type { contentAssets } from '#momo/infra/db/schema/index'
+import type { assets } from '#momo/infra/db/schema/index'
 
 export type AssetRecord = Pick<
-  InferSelectModel<typeof contentAssets>,
+  InferSelectModel<typeof assets>,
   'alt' | 'createdAt' | 'fileName' | 'id' | 'mimeType' | 'size' | 'storagePath' | 'updatedAt' | 'url'
 >
 
 export interface AssetReferenceRecord {
-  postId: string
-  postSlug: string
-  postTitle: string
-  relation: 'cover' | 'draft-source' | 'published-source'
+  relation: 'draft-cover' | 'published-cover' | 'draft-source' | 'published-source'
+  targetId: string
+  targetSlug: string | null
+  targetTitle: string | null
+  targetType: 'post' | 'project'
 }
 
 export type CreateAssetInput = Pick<AssetRecord, 'alt' | 'fileName' | 'mimeType' | 'size' | 'storagePath' | 'url'> & {

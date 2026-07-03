@@ -52,8 +52,6 @@ describe('projects service', () => {
     const result = await service.createPreviewToken('project-id', 'user-id')
 
     expect(result).toMatchObject({
-      postId: null,
-      revisionId: null,
       targetId: 'project-id',
       targetType: 'project',
     })
@@ -76,11 +74,33 @@ describe('projects service', () => {
 
     const result = await service.archiveProject('project-id', 'user-id')
 
-    expect(result.status).toBe('archived')
+    expect(result.project.status).toBe('archived')
     expect(eventsService.handleProjectArchived).toHaveBeenCalledWith({
+      eventId: expect.any(String),
       projectId: 'project-id',
       publishedSlug: 'momo-project',
     })
+  })
+
+  it('归档项目时返回事件处理 warning', async () => {
+    const warnings: OperationWarning[] = [
+      {
+        code: 'project.archive.side_effect_failed',
+        message: '项目已归档，但 Bobo 缓存刷新或搜索索引删除失败。稍后可以重试刷新。',
+      },
+    ]
+    const service = createProjectsService(
+      createRepository({
+        archiveProject: vi.fn(async () => createProjectRecord({ status: 'archived' })),
+      }),
+      createEventsService({
+        handleProjectArchived: vi.fn(async () => warnings),
+      }),
+    )
+
+    const result = await service.archiveProject('project-id', 'user-id')
+
+    expect(result.warnings).toEqual(warnings)
   })
 })
 
@@ -103,7 +123,7 @@ function createEventsService(overrides: Partial<EventsService> = {}): EventsServ
   return {
     handleContentPostPublished: vi.fn(),
     handleContentPostArchived: vi.fn(),
-    handleProjectArchived: vi.fn(),
+    handleProjectArchived: vi.fn(async () => []),
     handleProjectPublished: vi.fn(async () => []),
     retryEvent: vi.fn(),
     retryPending: vi.fn(),

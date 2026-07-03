@@ -54,6 +54,7 @@ describe('events service', () => {
     const service = createEventsService(runtime, createRepository())
 
     await service.handleContentPostArchived({
+      eventId: 'event-id',
       postId: 'post-id',
       publishedSlug: 'hello-momo',
     })

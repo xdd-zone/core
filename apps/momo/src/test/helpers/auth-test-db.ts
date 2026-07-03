@@ -36,6 +36,7 @@ const migrationFiles = [
   '0009_site_cms_foundation.sql',
   '0010_public_profile_site_fields.sql',
   '0011_generic_preview_tokens.sql',
+  '0012_site_cms_final_shape.sql',
 ]
 let prepareDatabaseQueue = Promise.resolve()
 
@@ -63,7 +64,7 @@ export async function prepareAuthTestDatabase(): Promise<void> {
 
 export async function resetAuthTestData(): Promise<void> {
   await getDb().execute(
-    'TRUNCATE TABLE "event_outbox", "projects", "public_profiles", "site_configs", "llm_call_logs", "llm_use_case_configs", "llm_providers", "content_preview_tokens", "content_post_revisions", "content_post_tags", "content_posts", "content_tags", "content_categories", "content_assets", "rate_limit", "verification", "session", "account", "user_profiles", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
+    'TRUNCATE TABLE "event_outbox", "projects", "public_profiles", "site_configs", "llm_call_logs", "llm_use_case_configs", "llm_providers", "content_preview_tokens", "content_post_revisions", "content_post_published_tags", "content_post_draft_tags", "content_posts", "content_tags", "content_categories", "assets", "rate_limit", "verification", "session", "account", "user_profiles", "user_role_bindings", "roles", "application_auth_methods", "applications", "user" RESTART IDENTITY CASCADE',
   )
 
   await seedAccessRecords()

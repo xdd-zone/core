@@ -17,7 +17,7 @@ describe('assets service', () => {
 
     await expect(service.deleteAsset('asset-id')).rejects.toMatchObject({
       code: BizCode.BIZ_RULE_VIOLATION,
-      message: '素材正在被文章使用，先移除引用再删除',
+      message: '素材正在被内容使用，先移除引用再删除',
       status: 409,
     } satisfies Partial<AppError>)
   })
@@ -43,7 +43,7 @@ describe('assets service', () => {
       'user-id',
     )
 
-    expect(asset.fileUrl).toBe(`http://localhost:7788/rpc/content/assets/${asset.id}/file`)
+    expect(asset.fileUrl).toBe(`http://localhost:7788/rpc/assets/${asset.id}/file`)
     expect(asset.url).toBeNull()
     expect(repository.createAsset).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -85,13 +85,13 @@ describe('assets service', () => {
     )
   })
 
-  it('旧的相对素材 URL 会转成当前 Momo 文件 URL 返回', async () => {
+  it('相对素材 URL 会按当前 Momo 地址返回', async () => {
     const repository = createRepository({
       listAssets: vi.fn(async () => [
         {
           ...createAssetRecord(),
           id: 'legacy-asset-id',
-          url: '/rpc/content/assets/legacy-asset-id/file',
+          url: '/rpc/assets/legacy-asset-id/file',
         },
       ]),
       countAssets: vi.fn(async () => 1),
@@ -100,8 +100,8 @@ describe('assets service', () => {
 
     const result = await service.listAssets({ page: 1, pageSize: 24 })
 
-    expect(result.assets[0]?.fileUrl).toBe('http://localhost:7788/rpc/content/assets/legacy-asset-id/file')
-    expect(result.assets[0]?.url).toBe('/rpc/content/assets/legacy-asset-id/file')
+    expect(result.assets[0]?.fileUrl).toBe('http://localhost:7788/rpc/assets/legacy-asset-id/file')
+    expect(result.assets[0]?.url).toBe('/rpc/assets/legacy-asset-id/file')
   })
 })
 
@@ -150,9 +150,10 @@ function createAssetRecord() {
 
 function createAssetReferenceRecord(): AssetReferenceRecord {
   return {
-    postId: 'post-id',
-    postSlug: 'post-slug',
-    postTitle: 'Post title',
-    relation: 'cover',
+    relation: 'draft-cover',
+    targetId: 'post-id',
+    targetSlug: 'post-slug',
+    targetTitle: 'Post title',
+    targetType: 'post',
   }
 }

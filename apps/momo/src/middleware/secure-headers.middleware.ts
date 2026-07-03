@@ -9,7 +9,7 @@ export function registerSecureHeaders(app: Hono<HonoEnv>, env: MomoEnv): void {
     c.res.headers.set('cross-origin-resource-policy', 'cross-origin')
   })
 
-  app.use('/rpc/content/assets/:id/file', async (c, next) => {
+  app.use('/rpc/assets/:id/file', async (c, next) => {
     await next()
     c.res.headers.set('cross-origin-resource-policy', 'cross-origin')
   })

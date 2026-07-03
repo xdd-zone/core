@@ -129,7 +129,7 @@ export function PostList() {
   const columns = useMemo<TableProps<PostSummary>['columns']>(
     () => [
       {
-        dataIndex: 'title',
+        dataIndex: ['draft', 'title'],
         title: t('content.posts.table.title'),
         render: (title: string, post) => (
           <div className="min-w-0">
@@ -139,7 +139,7 @@ export function PostList() {
         ),
       },
       {
-        dataIndex: 'slug',
+        dataIndex: ['draft', 'slug'],
         title: t('content.posts.table.slug'),
         render: (slug: string) => <span className="font-mono text-xs">{slug}</span>,
       },
@@ -150,16 +150,16 @@ export function PostList() {
         render: (value: PostStatus) => <Tag color={getStatusColor(value)}>{getStatusLabel(value, t)}</Tag>,
       },
       {
-        dataIndex: 'category',
+        dataIndex: ['draft', 'category'],
         title: t('content.posts.table.category'),
         width: 160,
-        render: (category: PostSummary['category']) => (category ? <Tag>{category.name}</Tag> : '-'),
+        render: (category: PostSummary['draft']['category']) => (category ? <Tag>{category.name}</Tag> : '-'),
       },
       {
-        dataIndex: 'tags',
+        dataIndex: ['draft', 'tags'],
         title: t('content.posts.table.tags'),
         width: 220,
-        render: (tags: PostSummary['tags']) => (
+        render: (tags: PostSummary['draft']['tags']) => (
           <div className="flex flex-wrap gap-1">
             {tags.length > 0 ? tags.map((tag) => <Tag key={tag.id}>{tag.name}</Tag>) : '-'}
           </div>
@@ -172,7 +172,7 @@ export function PostList() {
         render: formatDateTime,
       },
       {
-        dataIndex: 'publishedAt',
+        dataIndex: ['published', 'publishedAt'],
         title: t('content.posts.table.publishedAt'),
         width: 180,
         render: formatDateTime,
@@ -203,11 +203,13 @@ export function PostList() {
   const handleCreate = useCallback(async () => {
     const values = await form.validateFields()
     const payload: CreatePostRequest = {
-      categoryId: values.categoryId || null,
-      slug: values.slug,
-      source: toInitialSource(values.title),
-      tagIds: values.tagIds ?? [],
-      title: values.title,
+      draft: {
+        categoryId: values.categoryId || null,
+        slug: values.slug,
+        source: toInitialSource(values.title),
+        tagIds: values.tagIds ?? [],
+        title: values.title,
+      },
     }
     const response = await createPostMutation.mutateAsync(payload)
 

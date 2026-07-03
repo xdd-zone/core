@@ -11,10 +11,10 @@ export function filterContentPosts(posts: PostSummary[], filter: PostListFilter)
   return posts.filter((post) => {
     const matchesKeyword =
       normalizedKeyword.length === 0 ||
-      post.title.toLowerCase().includes(normalizedKeyword) ||
-      post.slug.toLowerCase().includes(normalizedKeyword) ||
-      (post.category?.name.toLowerCase().includes(normalizedKeyword) ?? false) ||
-      post.tags.some((tag) => tag.name.toLowerCase().includes(normalizedKeyword))
+      post.draft.title.toLowerCase().includes(normalizedKeyword) ||
+      post.draft.slug.toLowerCase().includes(normalizedKeyword) ||
+      (post.draft.category?.name.toLowerCase().includes(normalizedKeyword) ?? false) ||
+      post.draft.tags.some((tag) => tag.name.toLowerCase().includes(normalizedKeyword))
     const matchesStatus = filter.status === 'all' || post.status === filter.status
 
     return matchesKeyword && matchesStatus

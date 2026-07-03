@@ -10,7 +10,13 @@ import type {
   UpdateTagInput,
 } from '../types/taxonomy.types'
 import { and, eq, inArray, ne, sql } from 'drizzle-orm'
-import { contentCategories, contentPosts, contentPostTags, contentTags } from '#momo/infra/db/schema/index'
+import {
+  contentCategories,
+  contentPostDraftTags,
+  contentPostPublishedTags,
+  contentPosts,
+  contentTags,
+} from '#momo/infra/db/schema/index'
 
 const CONTENT_CATEGORIES_SLUG_UNIQUE = 'content_categories_slug_unique'
 const CONTENT_TAGS_SLUG_UNIQUE = 'content_tags_slug_unique'
@@ -86,7 +92,7 @@ export function createTaxonomyRepository(db: DbClient) {
         postCount: sql<number>`count(${contentPosts.id})::int`.as('post_count'),
       })
       .from(contentCategories)
-      .leftJoin(contentPosts, eq(contentCategories.id, contentPosts.categoryId))
+      .leftJoin(contentPosts, eq(contentCategories.id, contentPosts.draftCategoryId))
       .groupBy(contentCategories.id)
       .orderBy(contentCategories.name)
 
@@ -105,7 +111,7 @@ export function createTaxonomyRepository(db: DbClient) {
       .from(contentCategories)
       .leftJoin(
         contentPosts,
-        and(eq(contentCategories.id, contentPosts.categoryId), eq(contentPosts.status, 'published')),
+        and(eq(contentCategories.id, contentPosts.publishedCategoryId), eq(contentPosts.status, 'published')),
       )
       .groupBy(contentCategories.id)
       .orderBy(contentCategories.name)
@@ -158,7 +164,7 @@ export function createTaxonomyRepository(db: DbClient) {
     const [result] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(contentPosts)
-      .where(eq(contentPosts.categoryId, categoryId))
+      .where(eq(contentPosts.draftCategoryId, categoryId))
 
     return result?.count ?? 0
   }
@@ -221,11 +227,11 @@ export function createTaxonomyRepository(db: DbClient) {
   async function listTagsWithCount(): Promise<TagWithCount[]> {
     const rows = await db
       .select({
-        postCount: sql<number>`count(${contentPostTags.postId})::int`.as('post_count'),
+        postCount: sql<number>`count(${contentPostDraftTags.postId})::int`.as('post_count'),
         tag: contentTags,
       })
       .from(contentTags)
-      .leftJoin(contentPostTags, eq(contentTags.id, contentPostTags.tagId))
+      .leftJoin(contentPostDraftTags, eq(contentTags.id, contentPostDraftTags.tagId))
       .groupBy(contentTags.id)
       .orderBy(contentTags.name)
 
@@ -268,19 +274,19 @@ export function createTaxonomyRepository(db: DbClient) {
   async function countPostsByTag(tagId: string): Promise<number> {
     const [result] = await db
       .select({ count: sql<number>`count(*)::int` })
-      .from(contentPostTags)
-      .where(eq(contentPostTags.tagId, tagId))
+      .from(contentPostDraftTags)
+      .where(eq(contentPostDraftTags.tagId, tagId))
 
     return result?.count ?? 0
   }
 
   async function setPostTags(postId: string, tagIds: string[]): Promise<void> {
     await db.transaction(async (tx) => {
-      await tx.delete(contentPostTags).where(eq(contentPostTags.postId, postId))
+      await tx.delete(contentPostDraftTags).where(eq(contentPostDraftTags.postId, postId))
 
       if (tagIds.length > 0) {
         const now = new Date()
-        await tx.insert(contentPostTags).values(
+        await tx.insert(contentPostDraftTags).values(
           tagIds.map((tagId) => ({
             createdAt: now,
             postId,
@@ -294,9 +300,9 @@ export function createTaxonomyRepository(db: DbClient) {
   async function getPostTags(postId: string): Promise<ContentTagRecord[]> {
     const rows = await db
       .select({ tag: contentTags })
-      .from(contentPostTags)
-      .innerJoin(contentTags, eq(contentPostTags.tagId, contentTags.id))
-      .where(eq(contentPostTags.postId, postId))
+      .from(contentPostDraftTags)
+      .innerJoin(contentTags, eq(contentPostDraftTags.tagId, contentTags.id))
+      .where(eq(contentPostDraftTags.postId, postId))
       .orderBy(contentTags.name)
 
     return rows.map((row) => row.tag)
@@ -309,12 +315,48 @@ export function createTaxonomyRepository(db: DbClient) {
 
     const rows = await db
       .select({
-        postId: contentPostTags.postId,
+        postId: contentPostDraftTags.postId,
         tag: contentTags,
       })
-      .from(contentPostTags)
-      .innerJoin(contentTags, eq(contentPostTags.tagId, contentTags.id))
-      .where(inArray(contentPostTags.postId, postIds))
+      .from(contentPostDraftTags)
+      .innerJoin(contentTags, eq(contentPostDraftTags.tagId, contentTags.id))
+      .where(inArray(contentPostDraftTags.postId, postIds))
+      .orderBy(contentTags.name)
+
+    const map = new Map<string, ContentTagRecord[]>()
+    for (const row of rows) {
+      const tags = map.get(row.postId) ?? []
+      tags.push(row.tag)
+      map.set(row.postId, tags)
+    }
+
+    return map
+  }
+
+  async function getPublishedPostTags(postId: string): Promise<ContentTagRecord[]> {
+    const rows = await db
+      .select({ tag: contentTags })
+      .from(contentPostPublishedTags)
+      .innerJoin(contentTags, eq(contentPostPublishedTags.tagId, contentTags.id))
+      .where(eq(contentPostPublishedTags.postId, postId))
+      .orderBy(contentTags.name)
+
+    return rows.map((row) => row.tag)
+  }
+
+  async function getPublishedPostTagsByPostIds(postIds: string[]): Promise<Map<string, ContentTagRecord[]>> {
+    if (postIds.length === 0) {
+      return new Map()
+    }
+
+    const rows = await db
+      .select({
+        postId: contentPostPublishedTags.postId,
+        tag: contentTags,
+      })
+      .from(contentPostPublishedTags)
+      .innerJoin(contentTags, eq(contentPostPublishedTags.tagId, contentTags.id))
+      .where(inArray(contentPostPublishedTags.postId, postIds))
       .orderBy(contentTags.name)
 
     const map = new Map<string, ContentTagRecord[]>()
@@ -340,6 +382,8 @@ export function createTaxonomyRepository(db: DbClient) {
     getCategoryBySlug,
     getPostTags,
     getPostTagsByPostIds,
+    getPublishedPostTags,
+    getPublishedPostTagsByPostIds,
     getTagById,
     getTagBySlug,
     listCategories,

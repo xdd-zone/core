@@ -1,9 +1,9 @@
 import type { InferSelectModel } from 'drizzle-orm'
-import type { contentCategories, contentPostTags, contentTags } from '#momo/infra/db/schema/index'
+import type { contentCategories, contentPostDraftTags, contentTags } from '#momo/infra/db/schema/index'
 
 export type ContentCategoryRecord = InferSelectModel<typeof contentCategories>
 export type ContentTagRecord = InferSelectModel<typeof contentTags>
-export type ContentPostTagRecord = InferSelectModel<typeof contentPostTags>
+export type ContentPostTagRecord = InferSelectModel<typeof contentPostDraftTags>
 
 export interface CreateCategoryInput {
   createdBy: string

@@ -6,7 +6,7 @@
 
 - `apps/momo` 通过 `better-auth` 配置了 GitHub 登录。
 - `apps/momo` 通过 `better-auth` 配置了 Google 登录。
-- `apps/momo` 有本地文件存储和腾讯云 COS 驱动。内容模块通过 `POST /rpc/content/assets/images` 上传图片素材。
+- `apps/momo` 有本地文件存储和腾讯云 COS 驱动。素材模块通过 `POST /rpc/assets/images` 上传图片素材。
 - `apps/momo` 有禁用搜索驱动和 Meilisearch 搜索驱动，公开搜索接口是 `GET /rpc/bobo/search?q=关键词`。
 - 登录、OAuth callback 和 session cookie 由 `/api/auth/*` 处理。
 

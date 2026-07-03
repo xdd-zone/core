@@ -7,48 +7,66 @@ import { ignoreAntdUploadRequest } from '@fifa/features/content/utils/upload'
 
 const posts: PostSummary[] = [
   {
-    category: {
-      description: null,
-      id: 'category-1',
-      name: 'Notes',
-      slug: 'notes',
-    },
-    coverAssetId: null,
     createdAt: '2026-01-01T00:00:00.000Z',
-    draftSlug: 'hello-world',
-    draftTitle: 'Hello World',
-    excerpt: null,
+    draft: {
+      category: {
+        description: null,
+        id: 'category-1',
+        name: 'Notes',
+        slug: 'notes',
+      },
+      coverAssetId: null,
+      excerpt: null,
+      slug: 'hello-world',
+      tags: [],
+      title: 'Hello World',
+    },
     id: 'post-1',
-    publishedAt: null,
-    publishedSlug: null,
-    publishedTitle: null,
-    slug: 'hello-world',
+    published: {
+      category: null,
+      coverAssetId: null,
+      excerpt: null,
+      publishedAt: null,
+      slug: null,
+      tags: [],
+      title: null,
+    },
     status: 'draft',
-    tags: [],
-    title: 'Hello World',
     updatedAt: '2026-01-01T00:00:00.000Z',
   },
   {
-    category: null,
-    coverAssetId: null,
     createdAt: '2026-01-02T00:00:00.000Z',
-    draftSlug: 'theme-preview',
-    draftTitle: 'Theme Preview',
-    excerpt: null,
+    draft: {
+      category: null,
+      coverAssetId: null,
+      excerpt: null,
+      slug: 'theme-preview',
+      tags: [
+        {
+          id: 'tag-1',
+          name: 'Theme',
+          slug: 'theme',
+        },
+      ],
+      title: 'Theme Preview',
+    },
     id: 'post-2',
-    publishedAt: '2026-01-03T00:00:00.000Z',
-    publishedSlug: 'theme-preview',
-    publishedTitle: 'Theme Preview',
-    slug: 'theme-preview',
+    published: {
+      category: null,
+      coverAssetId: null,
+      excerpt: null,
+      publishedAt: '2026-01-03T00:00:00.000Z',
+      slug: 'theme-preview',
+      tags: [
+        {
+          id: 'tag-1',
+          name: 'Theme',
+          slug: 'theme',
+        },
+      ],
+      title: 'Theme Preview',
+    },
     status: 'published',
-    tags: [
-      {
-        id: 'tag-1',
-        name: 'Theme',
-        slug: 'theme',
-      },
-    ],
-    title: 'Theme Preview',
     updatedAt: '2026-01-03T00:00:00.000Z',
   },
 ]
@@ -73,18 +91,20 @@ describe('content 工具函数', () => {
   })
 
   it('按 Bobo 地址、文章 ID 和 token 拼预览地址', () => {
-    expect(buildBoboPreviewUrl('post-1', 'token-1')).toBe('http://localhost:3000/preview/posts/post-1?token=token-1')
+    expect(buildBoboPreviewUrl('post', 'post-1', 'token-1')).toBe(
+      'http://localhost:3000/preview/post/post-1?token=token-1',
+    )
   })
 
   it('bobo 地址带路径前缀时保留前缀', () => {
-    expect(buildBoboPreviewUrl('post-1', 'token-1', 'https://example.xdd.ink/bobo')).toBe(
-      'https://example.xdd.ink/bobo/preview/posts/post-1?token=token-1',
+    expect(buildBoboPreviewUrl('post', 'post-1', 'token-1', 'https://example.xdd.ink/bobo')).toBe(
+      'https://example.xdd.ink/bobo/preview/post/post-1?token=token-1',
     )
   })
 
   it('按目标类型拼通用预览地址', () => {
     expect(buildBoboTargetPreviewUrl('projects', 'project-1', 'token-1', 'https://example.xdd.ink/bobo')).toBe(
-      'https://example.xdd.ink/bobo/preview/projects/project-1?token=token-1',
+      'https://example.xdd.ink/bobo/preview/project/project-1?token=token-1',
     )
   })
 

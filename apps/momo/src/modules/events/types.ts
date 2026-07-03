@@ -12,6 +12,7 @@ export interface ContentPostPublishedPayload {
 }
 
 export interface ContentPostArchivedPayload {
+  eventId: string
   postId: string
   publishedSlug: string | null
 }
@@ -25,6 +26,7 @@ export interface ProjectPublishedPayload {
 }
 
 export interface ProjectArchivedPayload {
+  eventId: string
   projectId: string
   publishedSlug: string | null
 }

@@ -32,10 +32,11 @@ export const AssetListResponseSchema = z.object({
 })
 
 export const AssetReferenceSchema = z.object({
-  postId: z.string(),
-  postSlug: z.string(),
-  postTitle: z.string(),
-  relation: z.enum(['cover', 'draft-source', 'published-source']),
+  relation: z.enum(['draft-cover', 'published-cover', 'draft-source', 'published-source']),
+  targetId: z.string(),
+  targetSlug: z.string(),
+  targetTitle: z.string(),
+  targetType: z.enum(['post', 'project']),
 })
 
 export const AssetDetailResponseSchema = z.object({

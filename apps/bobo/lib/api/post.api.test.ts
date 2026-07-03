@@ -54,12 +54,12 @@ describe('post api', () => {
     })
   })
 
-  it('预览文章请求保持 no-store', async () => {
-    const { getPreviewPost } = await import('./post.api')
+  it('预览请求保持 no-store', async () => {
+    const { getPreview } = await import('./preview.api')
 
-    await getPreviewPost('token-1')
+    await getPreview('token-1')
 
-    expect(mocks.get).toHaveBeenCalledWith('/rpc/content/previews/token-1', {
+    expect(mocks.get).toHaveBeenCalledWith('/rpc/previews/token-1', {
       init: {
         cache: 'no-store',
       },

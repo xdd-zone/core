@@ -68,8 +68,8 @@ export function createProjectsRoute(runtime: MomoRuntime) {
       },
     )
     .post('/rpc/projects/:id/archive', createRequirePermission(runtime, 'projects.edit'), async (c) => {
-      const project = await service.archiveProject(c.req.param('id'), c.var.user!.id)
-      return c.json(createSuccessResponse({ project }, createMeta(c.var.requestId)))
+      const result = await service.archiveProject(c.req.param('id'), c.var.user!.id)
+      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
     })
     .get('/rpc/bobo/projects', async (c) => {
       const projects = await service.listPublicProjects()

@@ -9,29 +9,39 @@ import type {
   SavePostDraftRequest,
 } from '@xdd-zone/contracts'
 import type { MomoRuntime } from '#momo/bootstrap'
+import type { AssetsRepository } from '#momo/modules/assets/index'
 import type { EventsService } from '#momo/modules/events/index'
 import type { LlmService } from '#momo/modules/llm/index'
 import type { ContentRepository } from '../repositories/content.repository'
 import type { TaxonomyRepository } from '../repositories/taxonomy.repository'
 import type { ContentPostRecord } from '../types/content.types'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { BizCode } from '@xdd-zone/contracts'
 import { createLlmService } from '#momo/modules/llm/index'
 import { AppError } from '#momo/shared/app-error'
 
-import { toPostDetail, toPostSummary } from '../content.presenter'
+import { toPostDetail, toPostSummary, toPreviewTokenResponse } from '../content.presenter'
 import { findUnknownMdxComponents, MDX_COMPONENTS } from '../mdx-components'
 import { ContentAssetNotFoundError, ContentSlugConflictError } from '../repositories/content.repository'
-import { createPreviewService } from './preview.service'
+
+const PREVIEW_TOKEN_TTL_MS = 30 * 60 * 1000
 
 export function createContentService(
   runtime: MomoRuntime,
   repository: ContentRepository,
   taxonomyRepository: TaxonomyRepository,
+  assetsRepository: AssetsRepository,
   llmService?: LlmService,
   eventsService?: EventsService,
 ) {
-  const previewService = createPreviewService(repository, taxonomyRepository)
+  function readCreateDraft(input: CreatePostRequest) {
+    return input.draft
+  }
+
+  function readSaveDraft(input: SavePostDraftRequest) {
+    return input.draft
+  }
+
   async function listPosts(): Promise<PostSummary[]> {
     const posts = await repository.listPosts()
     return enrichPostsWithTaxonomy(posts)
@@ -48,39 +58,42 @@ export function createContentService(
       ? (await getRequiredRevisionById(post.draftRevisionId, '文章草稿版本不存在')).source
       : ''
 
-    const [category, tags] = await Promise.all([
-      post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
+    const [draftCategory, draftTags, publishedCategory, publishedTags] = await Promise.all([
+      post.draftCategoryId ? taxonomyRepository.getCategoryById(post.draftCategoryId) : Promise.resolve(null),
       taxonomyRepository.getPostTags(id),
+      post.publishedCategoryId ? taxonomyRepository.getCategoryById(post.publishedCategoryId) : Promise.resolve(null),
+      taxonomyRepository.getPublishedPostTags(id),
     ])
 
-    return toPostDetail(post, source, category ?? null, tags)
+    return toPostDetail(post, source, draftCategory ?? null, draftTags, publishedCategory ?? null, publishedTags)
   }
 
   async function createPost(input: CreatePostRequest, userId: string): Promise<PostDetail> {
-    const duplicate = await repository.findPostBySlug(input.slug)
+    const draft = readCreateDraft(input)
+    const duplicate = await repository.findPostBySlug(draft.slug)
     if (duplicate) {
       throw new AppError(BizCode.CONTENT_SLUG_CONFLICT, 'slug 已存在', 409)
     }
 
-    await ensureCoverAssetExists(input.coverAssetId)
-    await ensureCategoryExists(input.categoryId)
-    await ensureTagsExist(input.tagIds)
-    assertKnownMdxComponents(input.source)
+    await ensureCoverAssetExists(draft.coverAssetId)
+    await ensureCategoryExists(draft.categoryId)
+    await ensureTagsExist(draft.tagIds)
+    assertKnownMdxComponents(draft.source)
 
     const id = randomUUID()
     const revisionId = randomUUID()
 
     const post = await runContentRepositoryAction(() =>
       repository.createPost({
-        categoryId: input.categoryId,
-        coverAssetId: input.coverAssetId,
-        excerpt: input.excerpt,
+        categoryId: draft.categoryId,
+        coverAssetId: draft.coverAssetId,
+        excerpt: draft.excerpt,
         id,
         revisionId,
-        slug: input.slug,
-        source: input.source,
-        tagIds: input.tagIds,
-        title: input.title,
+        slug: draft.slug,
+        source: draft.source,
+        tagIds: draft.tagIds,
+        title: draft.title,
         userId,
       }),
     )
@@ -89,12 +102,14 @@ export function createContentService(
       throw new AppError(BizCode.SYSTEM_INTERNAL_ERROR, '保存文章失败', 500)
     }
 
-    const [category, tags] = await Promise.all([
-      post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
+    const [draftCategory, draftTags, publishedCategory, publishedTags] = await Promise.all([
+      post.draftCategoryId ? taxonomyRepository.getCategoryById(post.draftCategoryId) : Promise.resolve(null),
       taxonomyRepository.getPostTags(id),
+      post.publishedCategoryId ? taxonomyRepository.getCategoryById(post.publishedCategoryId) : Promise.resolve(null),
+      taxonomyRepository.getPublishedPostTags(id),
     ])
 
-    return toPostDetail(post, input.source, category ?? null, tags)
+    return toPostDetail(post, draft.source, draftCategory ?? null, draftTags, publishedCategory ?? null, publishedTags)
   }
 
   async function generatePostMetaSuggestion(
@@ -117,36 +132,37 @@ export function createContentService(
   }
 
   async function saveDraft(id: string, input: SavePostDraftRequest, userId: string): Promise<PostDetail> {
+    const draft = readSaveDraft(input)
     const current = await repository.getPostById(id)
     if (!current) {
       throw new AppError(BizCode.COMMON_NOT_FOUND, '文章不存在', 404)
     }
 
-    const nextSlug = input.slug ?? current.slug
-    const duplicate = nextSlug === current.slug ? undefined : await repository.findPostBySlug(nextSlug, id)
+    const nextSlug = draft.slug ?? current.draftSlug
+    const duplicate = nextSlug === current.draftSlug ? undefined : await repository.findPostBySlug(nextSlug, id)
     if (duplicate) {
       throw new AppError(BizCode.CONTENT_SLUG_CONFLICT, 'slug 已存在', 409)
     }
 
-    const source = input.source ?? (await getDraftSource(current))
-    await ensureCoverAssetExists(input.coverAssetId)
-    await ensureCategoryExists(input.categoryId)
-    await ensureTagsExist(input.tagIds)
+    const source = draft.source ?? (await getDraftSource(current))
+    await ensureCoverAssetExists(draft.coverAssetId)
+    await ensureCategoryExists(draft.categoryId)
+    await ensureTagsExist(draft.tagIds)
     assertKnownMdxComponents(source)
 
     const revisionId = randomUUID()
 
     const post = await runContentRepositoryAction(() =>
       repository.saveDraft({
-        categoryId: input.categoryId,
-        coverAssetId: input.coverAssetId,
-        excerpt: input.excerpt,
+        categoryId: draft.categoryId,
+        coverAssetId: draft.coverAssetId,
+        excerpt: draft.excerpt,
         id,
         revisionId,
-        slug: input.slug,
+        slug: draft.slug,
         source,
-        tagIds: input.tagIds,
-        title: input.title,
+        tagIds: draft.tagIds,
+        title: draft.title,
         userId,
       }),
     )
@@ -155,12 +171,14 @@ export function createContentService(
       throw new AppError(BizCode.COMMON_NOT_FOUND, '文章不存在', 404)
     }
 
-    const [category, tags] = await Promise.all([
-      post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
+    const [draftCategory, draftTags, publishedCategory, publishedTags] = await Promise.all([
+      post.draftCategoryId ? taxonomyRepository.getCategoryById(post.draftCategoryId) : Promise.resolve(null),
       taxonomyRepository.getPostTags(id),
+      post.publishedCategoryId ? taxonomyRepository.getCategoryById(post.publishedCategoryId) : Promise.resolve(null),
+      taxonomyRepository.getPublishedPostTags(id),
     ])
 
-    return toPostDetail(post, source, category ?? null, tags)
+    return toPostDetail(post, source, draftCategory ?? null, draftTags, publishedCategory ?? null, publishedTags)
   }
 
   async function publishPost(id: string, userId: string): Promise<{ post: PostDetail; warnings?: OperationWarning[] }> {
@@ -185,9 +203,15 @@ export function createContentService(
       throw new AppError(BizCode.SYSTEM_INTERNAL_ERROR, '文章草稿版本不存在', 500)
     }
 
-    const [category, tags] = await Promise.all([
-      result.post.categoryId ? taxonomyRepository.getCategoryById(result.post.categoryId) : Promise.resolve(null),
+    const [draftCategory, draftTags, publishedCategory, publishedTags] = await Promise.all([
+      result.post.draftCategoryId
+        ? taxonomyRepository.getCategoryById(result.post.draftCategoryId)
+        : Promise.resolve(null),
       taxonomyRepository.getPostTags(id),
+      result.post.publishedCategoryId
+        ? taxonomyRepository.getCategoryById(result.post.publishedCategoryId)
+        : Promise.resolve(null),
+      taxonomyRepository.getPublishedPostTags(id),
     ])
 
     const warnings = eventsService?.handleContentPostPublished
@@ -201,22 +225,53 @@ export function createContentService(
       : []
 
     return {
-      post: toPostDetail(result.post, result.revision.source, category ?? null, tags),
+      post: toPostDetail(
+        result.post,
+        result.revision.source,
+        draftCategory ?? null,
+        draftTags,
+        publishedCategory ?? null,
+        publishedTags,
+      ),
       warnings: warnings.length > 0 ? warnings : undefined,
     }
   }
 
   async function createPreviewToken(id: string, userId: string): Promise<PreviewTokenResponse> {
-    return previewService.createPostPreviewToken(id, userId)
+    const post = await repository.getPostById(id)
+    if (!post) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '文章不存在', 404)
+    }
+
+    if (!post.draftRevisionId) {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, '没有可预览的草稿', 409)
+    }
+
+    const token = randomUUID().replaceAll('-', '')
+    const expiresAt = new Date(Date.now() + PREVIEW_TOKEN_TTL_MS)
+
+    await repository.createPreviewToken({
+      createdBy: userId,
+      expiresAt,
+      id: randomUUID(),
+      targetId: id,
+      targetType: 'post',
+      tokenHash: hashToken(token),
+    })
+
+    return toPreviewTokenResponse({
+      expiresAt,
+      targetId: id,
+      targetType: 'post',
+      token,
+    })
   }
 
-  async function getPreviewPost(token: string) {
-    return previewService.getPreviewPost(token)
-  }
-
-  async function archivePost(id: string, userId: string): Promise<PostDetail> {
+  async function archivePost(id: string, userId: string): Promise<{ post: PostDetail; warnings?: OperationWarning[] }> {
+    const eventId = randomUUID()
     const post = await runContentRepositoryAction(() =>
       repository.archivePost({
+        eventId,
         postId: id,
         userId,
       }),
@@ -225,18 +280,35 @@ export function createContentService(
       throw new AppError(BizCode.COMMON_NOT_FOUND, '文章不存在', 404)
     }
 
-    const [category, tags, source] = await Promise.all([
-      post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
+    const [draftCategory, draftTags, publishedCategory, publishedTags, source] = await Promise.all([
+      post.draftCategoryId ? taxonomyRepository.getCategoryById(post.draftCategoryId) : Promise.resolve(null),
       taxonomyRepository.getPostTags(id),
-      post.draftRevisionId ? getRequiredRevisionById(post.draftRevisionId, '文章草稿版本不存在') : Promise.resolve(null),
+      post.publishedCategoryId ? taxonomyRepository.getCategoryById(post.publishedCategoryId) : Promise.resolve(null),
+      taxonomyRepository.getPublishedPostTags(id),
+      post.draftRevisionId
+        ? getRequiredRevisionById(post.draftRevisionId, '文章草稿版本不存在')
+        : Promise.resolve(null),
     ])
 
-    await eventsService?.handleContentPostArchived({
-      postId: post.id,
-      publishedSlug: post.publishedSlug,
-    })
+    const warnings = eventsService?.handleContentPostArchived
+      ? await eventsService.handleContentPostArchived({
+          eventId,
+          postId: post.id,
+          publishedSlug: post.publishedSlug,
+        })
+      : []
 
-    return toPostDetail(post, source?.source ?? '', category ?? null, tags)
+    return {
+      post: toPostDetail(
+        post,
+        source?.source ?? '',
+        draftCategory ?? null,
+        draftTags,
+        publishedCategory ?? null,
+        publishedTags,
+      ),
+      warnings: warnings.length > 0 ? warnings : undefined,
+    }
   }
 
   function getMdxComponents() {
@@ -267,7 +339,7 @@ export function createContentService(
       return
     }
 
-    const asset = await repository.getAssetById(coverAssetId)
+    const asset = await assetsRepository.getAssetById(coverAssetId)
 
     if (!asset) {
       throw new AppError(BizCode.COMMON_NOT_FOUND, '素材不存在', 404)
@@ -308,12 +380,16 @@ export function createContentService(
     }
 
     const postIds = posts.map((p) => p.id)
-    const categoryIdMap = await repository.getCategoriesByPostIds(postIds)
-    const uniqueCategoryIds = [...new Set(categoryIdMap.values())]
+    const [categoryIdMap, publishedCategoryIdMap] = await Promise.all([
+      repository.getCategoriesByPostIds(postIds),
+      repository.getPublishedCategoriesByPostIds(postIds),
+    ])
+    const uniqueCategoryIds = [...new Set([...categoryIdMap.values(), ...publishedCategoryIdMap.values()])]
 
-    const [categories, tagsMap] = await Promise.all([
+    const [categories, tagsMap, publishedTagsMap] = await Promise.all([
       Promise.all(uniqueCategoryIds.map((id) => taxonomyRepository.getCategoryById(id))),
       taxonomyRepository.getPostTagsByPostIds(postIds),
+      taxonomyRepository.getPublishedPostTagsByPostIds(postIds),
     ])
 
     const categoryMap = new Map(categories.filter((c): c is NonNullable<typeof c> => !!c).map((c) => [c.id, c]))
@@ -321,9 +397,12 @@ export function createContentService(
     return posts.map((post) => {
       const categoryId = categoryIdMap.get(post.id)
       const category = categoryId ? (categoryMap.get(categoryId) ?? null) : null
+      const publishedCategoryId = publishedCategoryIdMap.get(post.id)
+      const publishedCategory = publishedCategoryId ? (categoryMap.get(publishedCategoryId) ?? null) : null
       const tags = tagsMap.get(post.id) ?? []
+      const publishedTags = publishedTagsMap.get(post.id) ?? []
 
-      return toPostSummary(post, category, tags)
+      return toPostSummary(post, category, tags, publishedCategory, publishedTags)
     })
   }
 
@@ -333,7 +412,6 @@ export function createContentService(
     generatePostMetaSuggestion,
     getMdxComponents,
     getPostById,
-    getPreviewPost,
     archivePost,
     listPosts,
     publishPost,
@@ -363,6 +441,10 @@ async function runContentRepositoryAction<T>(action: () => Promise<T>): Promise<
 
     throw error
   }
+}
+
+function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex')
 }
 
 export function normalizePostSlug(value: string): string {

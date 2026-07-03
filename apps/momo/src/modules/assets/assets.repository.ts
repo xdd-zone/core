@@ -2,11 +2,11 @@ import type { SQL } from 'drizzle-orm'
 import type { DbClient } from '#momo/infra/db/client'
 import type { AssetRecord, AssetReferenceRecord, CreateAssetInput, UpdateAssetInput } from './types'
 import { and, desc, eq, ilike, sql } from 'drizzle-orm'
-import { contentAssets, contentPostRevisions, contentPosts } from '#momo/infra/db/schema/index'
+import { assets, contentPostRevisions, contentPosts, projects } from '#momo/infra/db/schema/index'
 
 export function createAssetsRepository(db: DbClient) {
   async function getAssetById(id: string): Promise<AssetRecord | undefined> {
-    const [asset] = await db.select().from(contentAssets).where(eq(contentAssets.id, id)).limit(1)
+    const [asset] = await db.select().from(assets).where(eq(assets.id, id)).limit(1)
     return asset
   }
 
@@ -19,8 +19,8 @@ export function createAssetsRepository(db: DbClient) {
     const whereClause = buildAssetWhereClause(options)
     const query = db
       .select()
-      .from(contentAssets)
-      .orderBy(desc(contentAssets.createdAt), desc(contentAssets.id))
+      .from(assets)
+      .orderBy(desc(assets.createdAt), desc(assets.id))
       .limit(options.limit)
       .offset(options.offset)
 
@@ -29,14 +29,14 @@ export function createAssetsRepository(db: DbClient) {
 
   async function countAssets(options: { keyword?: string; mimeType?: string }): Promise<number> {
     const whereClause = buildAssetWhereClause(options)
-    const query = db.select({ count: sql<number>`count(*)::int` }).from(contentAssets)
+    const query = db.select({ count: sql<number>`count(*)::int` }).from(assets)
     const [result] = whereClause ? await query.where(whereClause) : await query
     return result?.count ?? 0
   }
 
   async function createAsset(input: CreateAssetInput): Promise<AssetRecord> {
     const now = new Date()
-    await db.insert(contentAssets).values({
+    await db.insert(assets).values({
       alt: input.alt ?? null,
       createdAt: now,
       createdBy: input.createdBy,
@@ -49,25 +49,25 @@ export function createAssetsRepository(db: DbClient) {
       url: input.url ?? null,
     })
 
-    const [asset] = await db.select().from(contentAssets).where(eq(contentAssets.id, input.id)).limit(1)
+    const [asset] = await db.select().from(assets).where(eq(assets.id, input.id)).limit(1)
     return asset as AssetRecord
   }
 
   async function updateAsset(input: UpdateAssetInput): Promise<AssetRecord | undefined> {
     const [asset] = await db
-      .update(contentAssets)
+      .update(assets)
       .set({
         alt: input.alt,
         updatedAt: input.updatedAt,
       })
-      .where(eq(contentAssets.id, input.id))
+      .where(eq(assets.id, input.id))
       .returning()
 
     return asset
   }
 
   async function deleteAsset(id: string): Promise<AssetRecord | undefined> {
-    const [asset] = await db.delete(contentAssets).where(eq(contentAssets.id, id)).returning()
+    const [asset] = await db.delete(assets).where(eq(assets.id, id)).returning()
     return asset
   }
 
@@ -77,16 +77,56 @@ export function createAssetsRepository(db: DbClient) {
       return []
     }
 
-    const coverRefs = await db
+    const draftCoverRefs = await db
       .select({
-        postId: contentPosts.id,
-        postSlug: contentPosts.slug,
-        postTitle: contentPosts.title,
-        relation: sql<'cover'>`'cover'`.as('relation'),
+        relation: sql<'draft-cover'>`'draft-cover'`.as('relation'),
+        targetId: contentPosts.id,
+        targetSlug: contentPosts.draftSlug,
+        targetTitle: contentPosts.draftTitle,
+        targetType: sql<'post'>`'post'`.as('target_type'),
       })
       .from(contentPosts)
-      .where(eq(contentPosts.coverAssetId, id))
+      .where(eq(contentPosts.draftCoverAssetId, id))
 
+    const publishedCoverRefs = await db
+      .select({
+        relation: sql<'published-cover'>`'published-cover'`.as('relation'),
+        targetId: contentPosts.id,
+        targetSlug: contentPosts.publishedSlug,
+        targetTitle: contentPosts.publishedTitle,
+        targetType: sql<'post'>`'post'`.as('target_type'),
+      })
+      .from(contentPosts)
+      .where(and(eq(contentPosts.status, 'published'), eq(contentPosts.publishedCoverAssetId, id)))
+
+    const projectDraftCoverRefs = await db
+      .select({
+        relation: sql<'draft-cover'>`'draft-cover'`.as('relation'),
+        targetId: projects.id,
+        targetSlug: projects.draftSlug,
+        targetTitle: projects.draftTitle,
+        targetType: sql<'project'>`'project'`.as('target_type'),
+      })
+      .from(projects)
+      .where(eq(projects.draftCoverAssetId, id))
+
+    const projectPublishedCoverRefs = await db
+      .select({
+        relation: sql<'published-cover'>`'published-cover'`.as('relation'),
+        targetId: projects.id,
+        targetSlug: projects.publishedSlug,
+        targetTitle: projects.publishedTitle,
+        targetType: sql<'project'>`'project'`.as('target_type'),
+      })
+      .from(projects)
+      .where(and(eq(projects.status, 'published'), eq(projects.publishedCoverAssetId, id)))
+
+    const coverRefs = [
+      ...draftCoverRefs,
+      ...publishedCoverRefs,
+      ...projectDraftCoverRefs,
+      ...projectPublishedCoverRefs,
+    ]
     const sourceUrls = [...new Set([asset.url, fileUrl].filter((url): url is string => Boolean(url)))]
 
     if (sourceUrls.length === 0) {
@@ -100,10 +140,11 @@ export function createAssetsRepository(db: DbClient) {
 
     const draftRefs = await db
       .select({
-        postId: contentPosts.id,
-        postSlug: contentPosts.slug,
-        postTitle: contentPosts.title,
         relation: sql<'draft-source'>`'draft-source'`.as('relation'),
+        targetId: contentPosts.id,
+        targetSlug: contentPosts.draftSlug,
+        targetTitle: contentPosts.draftTitle,
+        targetType: sql<'post'>`'post'`.as('target_type'),
       })
       .from(contentPosts)
       .innerJoin(contentPostRevisions, eq(contentPosts.draftRevisionId, contentPostRevisions.id))
@@ -111,10 +152,11 @@ export function createAssetsRepository(db: DbClient) {
 
     const publishedRefs = await db
       .select({
-        postId: contentPosts.id,
-        postSlug: contentPosts.slug,
-        postTitle: contentPosts.title,
         relation: sql<'published-source'>`'published-source'`.as('relation'),
+        targetId: contentPosts.id,
+        targetSlug: contentPosts.publishedSlug,
+        targetTitle: contentPosts.publishedTitle,
+        targetType: sql<'post'>`'post'`.as('target_type'),
       })
       .from(contentPosts)
       .innerJoin(contentPostRevisions, eq(contentPosts.publishedRevisionId, contentPostRevisions.id))
@@ -139,11 +181,11 @@ function buildAssetWhereClause(options: { keyword?: string; mimeType?: string })
 
   if (options.keyword) {
     const keyword = `%${options.keyword}%`
-    conditions.push(sql`(${contentAssets.fileName} ilike ${keyword} or ${contentAssets.alt} ilike ${keyword})`)
+    conditions.push(sql`(${assets.fileName} ilike ${keyword} or ${assets.alt} ilike ${keyword})`)
   }
 
   if (options.mimeType) {
-    conditions.push(ilike(contentAssets.mimeType, `${options.mimeType}%`))
+    conditions.push(ilike(assets.mimeType, `${options.mimeType}%`))
   }
 
   return conditions.length > 0 ? and(...conditions) : undefined

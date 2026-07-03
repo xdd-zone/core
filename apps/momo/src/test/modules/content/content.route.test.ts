@@ -109,14 +109,16 @@ describe('content 路由', () => {
     expect(created.status).toBe(201)
     const createdData = expectOkData(created.body)
     PostDetailResponseSchema.parse(createdData)
-    expect(createdData.post.slug).toBe('hello-content')
+    expect(createdData.post.draft.slug).toBe('hello-content')
     const postId = createdData.post.id
 
     const draftResponse = await momoApp.request(`/rpc/content/posts/${postId}/draft`, {
       body: JSON.stringify({
-        excerpt: 'draft excerpt',
-        source: '# Hello draft',
-        title: 'Hello Draft',
+        draft: {
+          excerpt: 'draft excerpt',
+          source: '# Hello draft',
+          title: 'Hello Draft',
+        },
       }),
       headers: jsonHeaders(ownerCookie),
       method: 'PATCH',
@@ -126,7 +128,7 @@ describe('content 路由', () => {
     expect(draftResponse.status).toBe(200)
     const draftData = expectOkData(draftBody)
     PostDetailResponseSchema.parse(draftData)
-    expect(draftData.post.title).toBe('Hello Draft')
+    expect(draftData.post.draft.title).toBe('Hello Draft')
     expect(draftData.post.source).toBe('# Hello draft')
 
     const tokenResponse = await momoApp.request(`/rpc/content/posts/${postId}/preview-token`, {
@@ -142,7 +144,7 @@ describe('content 路由', () => {
     PreviewTokenResponseSchema.parse(tokenData)
     expect(tokenData.token).toEqual(expect.any(String))
 
-    const previewResponse = await momoApp.request(`/rpc/content/previews/${tokenData.token}`)
+    const previewResponse = await momoApp.request(`/rpc/previews/${tokenData.token}`)
     const previewBody = (await previewResponse.json()) as ApiResponse<PreviewPostResponse>
 
     expect(previewResponse.status).toBe(200)
@@ -241,6 +243,33 @@ describe('content 路由', () => {
     expect(tags.tags.some((item) => item.slug === 'typescript')).toBe(true)
   })
 
+  it('归档文章副作用失败时响应带 warnings', async () => {
+    const created = await createPost({
+      slug: 'archive-warning-post',
+      source: '# Archive warning post',
+      title: 'Archive Warning Post',
+    })
+    const postId = expectOkData(created.body).post.id
+
+    const publishResponse = await momoApp.request(`/rpc/content/posts/${postId}/publish`, {
+      headers: { cookie: ownerCookie },
+      method: 'POST',
+    })
+    expect(publishResponse.status).toBe(200)
+
+    const archiveResponse = await momoApp.request(`/rpc/content/posts/${postId}/archive`, {
+      headers: { cookie: ownerCookie },
+      method: 'POST',
+    })
+    const archiveBody = (await archiveResponse.json()) as ApiResponse<PostDetailResponse>
+
+    expect(archiveResponse.status).toBe(200)
+    const archiveData = expectOkData(archiveBody)
+    PostDetailResponseSchema.parse(archiveData)
+    expect(archiveData.post.status).toBe('archived')
+    expect(archiveData.warnings?.[0]?.code).toBe('content.post.archive.side_effect_failed')
+  })
+
   it('创建文章带标签时返回文章包含标签', async () => {
     const tag = await createTag('TypeScript', 'typescript-create')
 
@@ -253,7 +282,7 @@ describe('content 路由', () => {
 
     expect(created.status).toBe(201)
     const data = expectOkData(created.body)
-    expect(data.post.tags.map((item) => item.id)).toEqual([tag.id])
+    expect(data.post.draft.tags.map((item) => item.id)).toEqual([tag.id])
   })
 
   it('保存草稿时 tagIds 保留 undefined、空数组和替换语义', async () => {
@@ -268,28 +297,28 @@ describe('content 路由', () => {
     const postId = expectOkData(created.body).post.id
 
     const keepResponse = await momoApp.request(`/rpc/content/posts/${postId}/draft`, {
-      body: JSON.stringify({ source: '# Keep tags' }),
+      body: JSON.stringify({ draft: { source: '# Keep tags' } }),
       headers: jsonHeaders(ownerCookie),
       method: 'PATCH',
     })
     const keepData = expectOkData((await keepResponse.json()) as ApiResponse<PostDetailResponse>)
-    expect(keepData.post.tags.map((item) => item.id)).toEqual([firstTag.id])
+    expect(keepData.post.draft.tags.map((item) => item.id)).toEqual([firstTag.id])
 
     const clearResponse = await momoApp.request(`/rpc/content/posts/${postId}/draft`, {
-      body: JSON.stringify({ source: '# Clear tags', tagIds: [] }),
+      body: JSON.stringify({ draft: { source: '# Clear tags', tagIds: [] } }),
       headers: jsonHeaders(ownerCookie),
       method: 'PATCH',
     })
     const clearData = expectOkData((await clearResponse.json()) as ApiResponse<PostDetailResponse>)
-    expect(clearData.post.tags).toEqual([])
+    expect(clearData.post.draft.tags).toEqual([])
 
     const replaceResponse = await momoApp.request(`/rpc/content/posts/${postId}/draft`, {
-      body: JSON.stringify({ source: '# Replace tags', tagIds: [secondTag.id] }),
+      body: JSON.stringify({ draft: { source: '# Replace tags', tagIds: [secondTag.id] } }),
       headers: jsonHeaders(ownerCookie),
       method: 'PATCH',
     })
     const replaceData = expectOkData((await replaceResponse.json()) as ApiResponse<PostDetailResponse>)
-    expect(replaceData.post.tags.map((item) => item.id)).toEqual([secondTag.id])
+    expect(replaceData.post.draft.tags.map((item) => item.id)).toEqual([secondTag.id])
   })
 
   it('创建文章传不存在的 tag id 时不会写入文章和 revision', async () => {
@@ -301,7 +330,7 @@ describe('content 路由', () => {
       tagIds: ['missing-tag'],
       title: 'Missing Tag',
     })
-    const postRows = await getDb().select().from(contentPosts).where(eq(contentPosts.slug, 'missing-tag-post'))
+    const postRows = await getDb().select().from(contentPosts).where(eq(contentPosts.draftSlug, 'missing-tag-post'))
     const afterRevisions = await getDb().select().from(contentPostRevisions)
 
     expect(response.status).toBe(404)
@@ -326,9 +355,11 @@ describe('content 路由', () => {
 
     const response = await momoApp.request(`/rpc/content/posts/${postId}/draft`, {
       body: JSON.stringify({
-        coverAssetId: null,
-        excerpt: null,
-        source: '# Cleared',
+        draft: {
+          coverAssetId: null,
+          excerpt: null,
+          source: '# Cleared',
+        },
       }),
       headers: jsonHeaders(ownerCookie),
       method: 'PATCH',
@@ -338,8 +369,8 @@ describe('content 路由', () => {
     expect(response.status).toBe(200)
     const data = expectOkData(body)
     PostDetailResponseSchema.parse(data)
-    expect(data.post.coverAssetId).toBeNull()
-    expect(data.post.excerpt).toBeNull()
+    expect(data.post.draft.coverAssetId).toBeNull()
+    expect(data.post.draft.excerpt).toBeNull()
   })
 
   it('创建文章时 coverAssetId 不存在会返回 404', async () => {
@@ -365,7 +396,9 @@ describe('content 路由', () => {
 
     const response = await momoApp.request(`/rpc/content/posts/${postId}/draft`, {
       body: JSON.stringify({
-        coverAssetId: 'missing-asset',
+        draft: {
+          coverAssetId: 'missing-asset',
+        },
       }),
       headers: jsonHeaders(ownerCookie),
       method: 'PATCH',
@@ -459,14 +492,29 @@ describe('content 路由', () => {
     await getDb()
       .update(contentPreviewTokens)
       .set({ expiresAt: new Date(Date.now() - 1000) })
-      .where(eq(contentPreviewTokens.postId, postId))
+      .where(eq(contentPreviewTokens.targetId, postId))
 
-    const response = await momoApp.request(`/rpc/content/previews/${tokenBody.ok ? tokenBody.data.token : ''}`)
+    const response = await momoApp.request(`/rpc/previews/${tokenBody.ok ? tokenBody.data.token : ''}`)
     const body = (await response.json()) as ApiResponse<never>
 
     expect(response.status).toBe(401)
     expect(body.ok).toBe(false)
     expect(!body.ok && body.error.code).toBe(BizCode.CONTENT_PREVIEW_TOKEN_EXPIRED)
+  })
+
+  it('旧内容素材和旧内容预览读取路径不存在', async () => {
+    const assetResponse = await momoApp.request('/rpc/content/assets', {
+      headers: { cookie: ownerCookie },
+    })
+    const uploadResponse = await momoApp.request('/rpc/content/assets/images', {
+      headers: { cookie: ownerCookie },
+      method: 'POST',
+    })
+    const previewResponse = await momoApp.request('/rpc/content/previews/token-1')
+
+    expect(assetResponse.status).toBe(404)
+    expect(uploadResponse.status).toBe(404)
+    expect(previewResponse.status).toBe(404)
   })
 
   it('素材可以列表、读取详情、读取文件、更新说明和删除', async () => {
@@ -475,7 +523,7 @@ describe('content 路由', () => {
     const firstAssetData = expectOkData(firstAsset.body)
     const secondAssetData = expectOkData(secondAsset.body)
 
-    const listResponse = await momoApp.request('/rpc/content/assets?page=1&pageSize=10', {
+    const listResponse = await momoApp.request('/rpc/assets?page=1&pageSize=10', {
       headers: {
         cookie: ownerCookie,
       },
@@ -489,7 +537,7 @@ describe('content 路由', () => {
       (listData as { assets: Array<{ id: string }> }).assets.some((asset) => asset.id === firstAssetData.asset.id),
     ).toBe(true)
 
-    const detailResponse = await momoApp.request(`/rpc/content/assets/${firstAssetData.asset.id}`, {
+    const detailResponse = await momoApp.request(`/rpc/assets/${firstAssetData.asset.id}`, {
       headers: {
         cookie: ownerCookie,
       },
@@ -501,12 +549,12 @@ describe('content 路由', () => {
     AssetDetailResponseSchema.parse(detailData)
     expect((detailData as { asset: { id: string } }).asset.id).toBe(firstAssetData.asset.id)
 
-    const fileResponse = await momoApp.request(`/rpc/content/assets/${firstAssetData.asset.id}/file`)
+    const fileResponse = await momoApp.request(`/rpc/assets/${firstAssetData.asset.id}/file`)
     expect(fileResponse.status).toBe(200)
     expect(fileResponse.headers.get('content-type')).toBe('image/png')
     expect(fileResponse.headers.get('cross-origin-resource-policy')).toBe('cross-origin')
 
-    const updateResponse = await momoApp.request(`/rpc/content/assets/${firstAssetData.asset.id}`, {
+    const updateResponse = await momoApp.request(`/rpc/assets/${firstAssetData.asset.id}`, {
       body: JSON.stringify({ alt: 'cover alt' }),
       headers: jsonHeaders(ownerCookie),
       method: 'PATCH',
@@ -526,7 +574,7 @@ describe('content 路由', () => {
     })
     expect(post.status).toBe(201)
 
-    const rejectDeleteResponse = await momoApp.request(`/rpc/content/assets/${firstAssetData.asset.id}`, {
+    const rejectDeleteResponse = await momoApp.request(`/rpc/assets/${firstAssetData.asset.id}`, {
       headers: {
         cookie: ownerCookie,
       },
@@ -538,7 +586,7 @@ describe('content 路由', () => {
     expect(rejectDeleteBody.ok).toBe(false)
     expect(!rejectDeleteBody.ok && rejectDeleteBody.error.code).toBe(BizCode.BIZ_RULE_VIOLATION)
 
-    const deleteResponse = await momoApp.request(`/rpc/content/assets/${secondAssetData.asset.id}`, {
+    const deleteResponse = await momoApp.request(`/rpc/assets/${secondAssetData.asset.id}`, {
       headers: {
         cookie: ownerCookie,
       },
@@ -551,14 +599,14 @@ describe('content 路由', () => {
     DeleteAssetResponseSchema.parse(deleteData)
     expect((deleteData as { assetId: string }).assetId).toBe(secondAssetData.asset.id)
 
-    const afterDeleteResponse = await momoApp.request(`/rpc/content/assets/${secondAssetData.asset.id}`, {
+    const afterDeleteResponse = await momoApp.request(`/rpc/assets/${secondAssetData.asset.id}`, {
       headers: { cookie: ownerCookie },
     })
     expect(afterDeleteResponse.status).toBe(404)
   })
 
   it('未登录请求素材接口被拒绝', async () => {
-    const response = await momoApp.request('/rpc/content/assets')
+    const response = await momoApp.request('/rpc/assets')
     const body = (await response.json()) as ApiResponse<never>
 
     expect(response.status).toBe(401)
@@ -569,7 +617,7 @@ describe('content 路由', () => {
     const user = await createCredentialUser({ email: 'asset-normal@example.com', name: 'Normal User' })
     const cookie = await signInByEmail(momoApp, user.email)
 
-    const response = await momoApp.request('/rpc/content/assets', { headers: { cookie } })
+    const response = await momoApp.request('/rpc/assets', { headers: { cookie } })
     const body = (await response.json()) as ApiResponse<never>
 
     expect(response.status).toBe(403)
@@ -587,7 +635,7 @@ describe('content 路由', () => {
       title: 'URL In Draft',
     })
 
-    const response = await momoApp.request(`/rpc/content/assets/${assetData.asset.id}`, {
+    const response = await momoApp.request(`/rpc/assets/${assetData.asset.id}`, {
       headers: { cookie: ownerCookie },
       method: 'DELETE',
     })
@@ -595,6 +643,94 @@ describe('content 路由', () => {
 
     expect(response.status).toBe(409)
     expect(!body.ok && body.error.code).toBe(BizCode.BIZ_RULE_VIOLATION)
+  })
+
+  it('素材被发布封面或项目封面引用时不能删除', async () => {
+    const postPublishedCover = expectOkData((await uploadImage('post-published-cover.png')).body).asset
+    const projectDraftCover = expectOkData((await uploadImage('project-draft-cover.png')).body).asset
+    const projectPublishedCover = expectOkData((await uploadImage('project-published-cover.png')).body).asset
+
+    const post = await createPost({
+      coverAssetId: postPublishedCover.id,
+      slug: 'published-cover-post',
+      source: '# Published Cover Post',
+      title: 'Published Cover Post',
+    })
+    const postId = expectOkData(post.body).post.id
+
+    const publishPostResponse = await momoApp.request(`/rpc/content/posts/${postId}/publish`, {
+      headers: { cookie: ownerCookie },
+      method: 'POST',
+    })
+    expect(publishPostResponse.status).toBe(200)
+
+    const project = await createProject({
+      coverAssetId: projectDraftCover.id,
+      slug: 'cover-project',
+      title: 'Cover Project',
+    })
+    const projectId = project.id
+
+    const draftCoverDetailResponse = await momoApp.request(`/rpc/assets/${projectDraftCover.id}`, {
+      headers: { cookie: ownerCookie },
+    })
+    const draftCoverDetail = AssetDetailResponseSchema.parse(
+      expectOkData((await draftCoverDetailResponse.json()) as ApiResponse<unknown>),
+    )
+    expect(draftCoverDetail.references).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relation: 'draft-cover',
+          targetId: projectId,
+          targetType: 'project',
+        }),
+      ]),
+    )
+
+    const saveProjectDraftResponse = await momoApp.request(`/rpc/projects/${projectId}/draft`, {
+      body: JSON.stringify({
+        draft: {
+          coverAssetId: projectPublishedCover.id,
+        },
+      }),
+      headers: jsonHeaders(ownerCookie),
+      method: 'PATCH',
+    })
+    expect(saveProjectDraftResponse.status).toBe(200)
+
+    const publishProjectResponse = await momoApp.request(`/rpc/projects/${projectId}/publish`, {
+      headers: { cookie: ownerCookie },
+      method: 'POST',
+    })
+    expect(publishProjectResponse.status).toBe(200)
+
+    const publishedCoverDetailResponse = await momoApp.request(`/rpc/assets/${projectPublishedCover.id}`, {
+      headers: { cookie: ownerCookie },
+    })
+    const publishedCoverDetail = AssetDetailResponseSchema.parse(
+      expectOkData((await publishedCoverDetailResponse.json()) as ApiResponse<unknown>),
+    )
+    expect(publishedCoverDetail.references).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relation: 'published-cover',
+          targetId: projectId,
+          targetType: 'project',
+        }),
+      ]),
+    )
+
+    const rejectPostCoverDelete = await momoApp.request(`/rpc/assets/${postPublishedCover.id}`, {
+      headers: { cookie: ownerCookie },
+      method: 'DELETE',
+    })
+    const rejectProjectCoverDelete = await momoApp.request(`/rpc/assets/${projectPublishedCover.id}`, {
+      headers: { cookie: ownerCookie },
+      method: 'DELETE',
+    })
+
+    expect(rejectPostCoverDelete.status).toBe(409)
+    expect(rejectProjectCoverDelete.status).toBe(409)
   })
 
   it('上传图片会保存素材记录', async () => {
@@ -605,7 +741,7 @@ describe('content 路由', () => {
     ImageAssetResponseSchema.parse(data)
     expect(data.asset.mimeType).toBe('image/png')
     expect(data.asset.size).toBe(8)
-    expect(data.asset.fileUrl).toBe(`http://localhost:7788/rpc/content/assets/${data.asset.id}/file`)
+    expect(data.asset.fileUrl).toBe(`http://localhost:7788/rpc/assets/${data.asset.id}/file`)
     expect(data.asset.url).toBeNull()
   })
 
@@ -645,10 +781,12 @@ describe('content 路由', () => {
 
     const draftResponse = await momoApp.request(`/rpc/content/posts/${postId}/draft`, {
       body: JSON.stringify({
-        excerpt: '草稿摘要',
-        slug: 'draft-slug',
-        source: '# Draft',
-        title: 'Draft Title',
+        draft: {
+          excerpt: '草稿摘要',
+          slug: 'draft-slug',
+          source: '# Draft',
+          title: 'Draft Title',
+        },
       }),
       headers: jsonHeaders(ownerCookie),
       method: 'PATCH',
@@ -680,9 +818,9 @@ describe('content 路由', () => {
   })
 })
 
-async function createPost(input: CreatePostRequest) {
+async function createPost(input: CreatePostRequest['draft']) {
   const response = await momoApp.request('/rpc/content/posts', {
-    body: JSON.stringify(input),
+    body: JSON.stringify({ draft: input }),
     headers: jsonHeaders(ownerCookie),
     method: 'POST',
   })
@@ -698,7 +836,7 @@ async function uploadImage(fileName: string) {
   const form = new FormData()
   form.set('file', new File([Buffer.from('png-data')], fileName, { type: 'image/png' }))
 
-  const response = await momoApp.request('/rpc/content/assets/images', {
+  const response = await momoApp.request('/rpc/assets/images', {
     body: form,
     headers: {
       cookie: ownerCookie,
@@ -715,6 +853,20 @@ async function uploadImage(fileName: string) {
     body,
     status: response.status,
   }
+}
+
+async function createProject(input: { coverAssetId?: string | null; slug: string; title: string }) {
+  const response = await momoApp.request('/rpc/projects', {
+    body: JSON.stringify({
+      draft: input,
+    }),
+    headers: jsonHeaders(ownerCookie),
+    method: 'POST',
+  })
+  const body = (await response.json()) as ApiResponse<{ project: { id: string } }>
+
+  expect(response.status).toBe(201)
+  return expectOkData(body).project
 }
 
 async function createTag(name: string, slug: string): Promise<{ id: string }> {

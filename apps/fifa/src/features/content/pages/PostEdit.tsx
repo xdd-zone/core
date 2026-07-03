@@ -5,6 +5,7 @@ import type { TabsProps } from 'antd'
 
 import { useAssetsQuery, useUploadAssetImageMutation } from '@fifa/api/assets'
 import {
+  useArchiveContentPostMutation,
   useContentCategoriesQuery,
   useContentPostMetaSuggestionStatusQuery,
   useContentPostQuery,
@@ -23,7 +24,17 @@ import { ignoreAntdUploadRequest } from '@fifa/features/content/utils/upload'
 import { useTabBarStore } from '@fifa/stores'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
 import { Alert, App, Button, Form, Input, Modal, Select, Space, Tabs, Tag, Tooltip, Upload } from 'antd'
-import { ExternalLink, ImagePlus, PackagePlus, RefreshCw, Save, Send, SquareArrowOutUpRight, Wand2 } from 'lucide-react'
+import {
+  Archive,
+  ExternalLink,
+  ImagePlus,
+  PackagePlus,
+  RefreshCw,
+  Save,
+  Send,
+  SquareArrowOutUpRight,
+  Wand2,
+} from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -125,25 +136,27 @@ function hasRevalidateWarning(warnings: string[]) {
 
 function toFormValue(post: PostDetail): PostEditFormValue {
   return {
-    categoryId: post.category?.id ?? undefined,
-    coverAssetId: post.coverAssetId ?? '',
-    excerpt: post.excerpt ?? '',
-    slug: post.slug,
+    categoryId: post.draft.category?.id ?? undefined,
+    coverAssetId: post.draft.coverAssetId ?? '',
+    excerpt: post.draft.excerpt ?? '',
+    slug: post.draft.slug,
     source: post.source,
-    tagIds: post.tags.map((tag) => tag.id),
-    title: post.title,
+    tagIds: post.draft.tags.map((tag) => tag.id),
+    title: post.draft.title,
   }
 }
 
 function toDraftPayload(values: PostEditFormValue): SavePostDraftRequest {
   return {
-    categoryId: values.categoryId || null,
-    coverAssetId: values.coverAssetId?.trim() ? values.coverAssetId.trim() : null,
-    excerpt: values.excerpt?.trim() ? values.excerpt.trim() : null,
-    slug: values.slug.trim(),
-    source: values.source,
-    tagIds: values.tagIds ?? [],
-    title: values.title.trim(),
+    draft: {
+      categoryId: values.categoryId || null,
+      coverAssetId: values.coverAssetId?.trim() ? values.coverAssetId.trim() : null,
+      excerpt: values.excerpt?.trim() ? values.excerpt.trim() : null,
+      slug: values.slug.trim(),
+      source: values.source,
+      tagIds: values.tagIds ?? [],
+      title: values.title.trim(),
+    },
   }
 }
 
@@ -184,6 +197,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
   const [previewUrl, setPreviewUrl] = useState('')
   const [selection, setSelection] = useState<TextSelection>({ end: 0, start: 0 })
   const [lastPublishWarnings, setLastPublishWarnings] = useState<string[]>([])
+  const [lastWarningSource, setLastWarningSource] = useState<'archive' | 'publish' | 'retry'>('publish')
   const postQuery = useContentPostQuery(postId)
   const categoriesQuery = useContentCategoriesQuery()
   const tagsQuery = useContentTagsQuery()
@@ -191,6 +205,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
   const saveDraftMutation = useSaveContentPostDraftMutation(postId)
   const previewTokenMutation = useCreateContentPreviewTokenMutation(postId)
   const publishMutation = usePublishContentPostMutation(postId)
+  const archiveMutation = useArchiveContentPostMutation(postId)
   const metaSuggestionStatusQuery = useContentPostMetaSuggestionStatusQuery()
   const metaSuggestionMutation = useGenerateContentPostMetaSuggestionMutation()
   const uploadImageMutation = useUploadAssetImageMutation()
@@ -237,8 +252,8 @@ function PostEditContent({ postId }: PostEditContentProps) {
     loadedPostIdRef.current = post.id
   }, [form, post])
 
-  const postSlug = post?.slug ?? ''
-  const postTitle = post?.title ?? ''
+  const postSlug = post?.draft.slug ?? ''
+  const postTitle = post?.draft.title ?? ''
 
   useEffect(() => {
     if (!postTitle) {
@@ -397,7 +412,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
       return
     }
 
-    setPreviewUrl(buildBoboPreviewUrl(savedPost.id, tokenResponse.data.token))
+    setPreviewUrl(buildBoboPreviewUrl('post', savedPost.id, tokenResponse.data.token))
   }, [message, previewTokenMutation, saveDraft])
 
   const handleOpenPreview = useCallback(() => {
@@ -434,6 +449,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
         setDirty(false)
         const warnings = normalizePublishWarnings(response.data.warnings)
         setLastPublishWarnings(warnings)
+        setLastWarningSource('publish')
 
         if (warnings.length > 0) {
           message.warning(t('content.postEdit.publishWarningToast'))
@@ -445,6 +461,44 @@ function PostEditContent({ postId }: PostEditContentProps) {
     })
   }, [dirty, message, modal, publishMutation, saveDraft, t])
 
+  const handleArchive = useCallback(() => {
+    modal.confirm({
+      title: t('content.postEdit.archiveConfirmTitle'),
+      content: dirty ? t('content.postEdit.archiveDirtyConfirmMessage') : t('content.postEdit.archiveConfirmMessage'),
+      okText: t('content.postEdit.archive'),
+      okButtonProps: { danger: true },
+      cancelText: t('content.postEdit.cancel'),
+      onOk: async () => {
+        if (dirty) {
+          const savedPost = await saveDraft()
+
+          if (!savedPost) {
+            return
+          }
+        }
+
+        const response = await archiveMutation.mutateAsync()
+
+        if (!response.ok) {
+          message.error(response.error.message)
+          return
+        }
+
+        setDirty(false)
+        const warnings = normalizePublishWarnings(response.data.warnings)
+        setLastPublishWarnings(warnings)
+        setLastWarningSource('archive')
+
+        if (warnings.length > 0) {
+          message.warning(t('content.postEdit.archiveWarningToast'))
+          return
+        }
+
+        message.success(t('content.postEdit.archiveSuccess'))
+      },
+    })
+  }, [archiveMutation, dirty, message, modal, saveDraft, t])
+
   const handleRetrySiteCache = useCallback(async () => {
     const response = await retryOutboxMutation.mutateAsync()
 
@@ -455,6 +509,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
 
     const warnings = normalizePublishWarnings(response.data.warnings)
     setLastPublishWarnings(warnings)
+    setLastWarningSource('retry')
 
     if (warnings.length > 0) {
       message.warning(t('content.postEdit.retryCacheWarningToast'))
@@ -754,7 +809,7 @@ function PostEditContent({ postId }: PostEditContentProps) {
   return (
     <div className="space-y-5">
       <FifaPageHeader
-        title={post?.title ?? t('content.postEdit.editPost')}
+        title={post?.draft.title ?? t('content.postEdit.editPost')}
         description={t('content.postEdit.subtitle')}
         backLabel={t('content.postEdit.backToList')}
         onBack={() => void navigate({ to: '/content/posts' as never })}
@@ -785,6 +840,14 @@ function PostEditContent({ postId }: PostEditContentProps) {
                 onClick={() => void handleRetrySiteCache()}
               >
                 {t('content.postEdit.retrySiteCache')}
+              </Button>
+              <Button
+                danger
+                icon={<Archive className="size-4" />}
+                loading={archiveMutation.isPending}
+                onClick={handleArchive}
+              >
+                {t('content.postEdit.archive')}
               </Button>
               <Button
                 icon={<Send className="size-4" />}
@@ -825,7 +888,11 @@ function PostEditContent({ postId }: PostEditContentProps) {
               </ul>
             </div>
           }
-          message={t('content.postEdit.publishWarningsTitle')}
+          message={
+            lastWarningSource === 'archive'
+              ? t('content.postEdit.archiveWarningsTitle')
+              : t('content.postEdit.publishWarningsTitle')
+          }
           onClose={() => setLastPublishWarnings([])}
           showIcon
           type="warning"

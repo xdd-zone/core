@@ -22,5 +22,5 @@ function resolveAssetFileUrl(asset: AssetRecord, momoPublicBaseUrl: string): str
     return asset.url
   }
 
-  return `${momoPublicBaseUrl.replace(/\/+$/, '')}/rpc/content/assets/${asset.id}/file`
+  return `${momoPublicBaseUrl.replace(/\/+$/, '')}/rpc/assets/${asset.id}/file`
 }

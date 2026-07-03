@@ -2,20 +2,17 @@ import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
 import { zValidator } from '@hono/zod-validator'
 import {
-  AssetListQuerySchema,
-  BizCode,
   CreateCategoryRequestSchema,
   CreatePostRequestSchema,
   CreateTagRequestSchema,
   GeneratePostMetaRequestSchema,
   SavePostDraftRequestSchema,
-  UpdateAssetRequestSchema,
   UpdateCategoryRequestSchema,
   UpdateTagRequestSchema,
 } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 import { getDb } from '#momo/infra/db/client'
-import { createAssetsRepository, createAssetsService } from '#momo/modules/assets/index'
+import { createAssetsRepository } from '#momo/modules/assets/index'
 import { createRequirePermission } from '#momo/modules/auth/index'
 import { createEventsRepository, createEventsService } from '#momo/modules/events/index'
 import { createLlmConfigRepository, createLlmService } from '#momo/modules/llm/index'
@@ -35,8 +32,14 @@ export function createContentRoute(runtime: MomoRuntime) {
   const llmRepository = createLlmConfigRepository(getDb())
   const llmService = createLlmService(runtime, llmRepository)
   const eventsService = createEventsService(runtime, createEventsRepository(getDb()))
-  const service = createContentService(runtime, repository, taxonomyRepository, llmService, eventsService)
-  const assetsService = createAssetsService(runtime, createAssetsRepository(getDb()))
+  const service = createContentService(
+    runtime,
+    repository,
+    taxonomyRepository,
+    createAssetsRepository(getDb()),
+    llmService,
+    eventsService,
+  )
   const taxonomyService = createTaxonomyService(taxonomyRepository)
 
   return new Hono<HonoEnv>()
@@ -44,21 +47,6 @@ export function createContentRoute(runtime: MomoRuntime) {
       const posts = await service.listPosts()
       return c.json(createSuccessResponse({ posts }, createMeta(c.var.requestId)))
     })
-    .get(
-      '/rpc/content/assets',
-      createRequirePermission(runtime, 'content.asset.read'),
-      zValidator('query', AssetListQuerySchema, (result) => {
-        if (result.success) {
-          return
-        }
-        const failure = createValidationFailure(result.error)
-        throw new AppError(failure.code, failure.message, 400, failure.details)
-      }),
-      async (c) => {
-        const result = await assetsService.listAssets(c.req.valid('query'))
-        return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
-      },
-    )
     .post(
       '/rpc/content/posts/meta-suggestion',
       createRequirePermission(runtime, 'content.post.edit'),
@@ -97,14 +85,6 @@ export function createContentRoute(runtime: MomoRuntime) {
       const post = await service.getPostById(c.req.param('id'))
       return c.json(createSuccessResponse({ post }, createMeta(c.var.requestId)))
     })
-    .get('/rpc/content/assets/:id', createRequirePermission(runtime, 'content.asset.read'), async (c) => {
-      const result = await assetsService.getAssetById(c.req.param('id'))
-      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
-    })
-    .get('/rpc/content/assets/:id/file', async (c) => {
-      const response = await assetsService.openAssetFile(c.req.param('id'))
-      return response
-    })
     .patch(
       '/rpc/content/posts/:id/draft',
       createRequirePermission(runtime, 'content.post.edit'),
@@ -133,45 +113,11 @@ export function createContentRoute(runtime: MomoRuntime) {
       return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
     })
     .post('/rpc/content/posts/:id/archive', createRequirePermission(runtime, 'content.post.edit'), async (c) => {
-      const post = await service.archivePost(c.req.param('id'), c.var.user!.id)
-      return c.json(createSuccessResponse({ post }, createMeta(c.var.requestId)))
+      const result = await service.archivePost(c.req.param('id'), c.var.user!.id)
+      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
     })
     .get('/rpc/content/mdx-components', createRequirePermission(runtime, 'content.post.read'), async (c) => {
       return c.json(createSuccessResponse(service.getMdxComponents(), createMeta(c.var.requestId)))
-    })
-    .patch(
-      '/rpc/content/assets/:id',
-      createRequirePermission(runtime, 'content.asset.edit'),
-      zValidator('json', UpdateAssetRequestSchema, (result) => {
-        if (result.success) {
-          return
-        }
-        const failure = createValidationFailure(result.error)
-        throw new AppError(failure.code, failure.message, 400, failure.details)
-      }),
-      async (c) => {
-        const asset = await assetsService.updateAsset(c.req.param('id'), c.req.valid('json'))
-        return c.json(createSuccessResponse({ asset }, createMeta(c.var.requestId)))
-      },
-    )
-    .delete('/rpc/content/assets/:id', createRequirePermission(runtime, 'content.asset.delete'), async (c) => {
-      const result = await assetsService.deleteAsset(c.req.param('id'))
-      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
-    })
-    .post('/rpc/content/assets/images', createRequirePermission(runtime, 'content.asset.upload'), async (c) => {
-      const form = await c.req.formData()
-      const file = form.get('file')
-
-      if (!(file instanceof File)) {
-        throw new AppError(BizCode.COMMON_INVALID_REQUEST, '缺少上传文件', 400)
-      }
-
-      const asset = await assetsService.uploadImage(file, c.var.user!.id)
-      return c.json(createSuccessResponse({ asset }, createMeta(c.var.requestId)), 201)
-    })
-    .get('/rpc/content/previews/:token', async (c) => {
-      const result = await service.getPreviewPost(c.req.param('token'))
-      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
     })
     .get('/rpc/content/categories', createRequirePermission(runtime, 'content.category.read'), async (c) => {
       const categories = await taxonomyService.listCategories()

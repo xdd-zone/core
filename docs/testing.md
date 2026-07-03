@@ -59,11 +59,11 @@ apps/fifa/src/test/
 ```text
 apps/bobo/
 ├── app/
-│   ├── (preview)/preview/posts/[postId]/page.test.tsx
+│   ├── (preview)/preview/[targetType]/[targetId]/page.test.tsx
 │   └── (site)/writing/[slug]/page.test.tsx
 ├── components/content/rich-content-renderer.test.tsx
 └── lib/
-    ├── content/preview-post.test.ts
+    ├── content/preview.test.ts
     └── http.test.ts
 ```
 

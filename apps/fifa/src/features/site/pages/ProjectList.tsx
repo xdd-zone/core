@@ -2,6 +2,7 @@ import type { CreateProjectRequest, ProjectStatus, ProjectSummary, SaveProjectDr
 import type { TableProps } from 'antd'
 
 import {
+  useArchiveProjectMutation,
   useCreateProjectMutation,
   useCreateProjectPreviewTokenMutation,
   useProjectsQuery,
@@ -11,7 +12,7 @@ import {
 import { FifaPageHeader } from '@fifa/components/common'
 import { buildBoboTargetPreviewUrl } from '@fifa/features/content/utils/preview-url'
 import { App, Button, Form, Input, InputNumber, Modal, Table, Tag } from 'antd'
-import { Eye, FilePlus2, Pencil, Plus, RefreshCw, Send, Trash2 } from 'lucide-react'
+import { Archive, Eye, FilePlus2, Pencil, Plus, RefreshCw, Send, Trash2 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -53,30 +54,49 @@ function getStatusLabel(status: ProjectStatus, t: (key: string) => string) {
   return status
 }
 
+function readWarningText(warning: unknown) {
+  if (typeof warning === 'string') {
+    return warning.trim()
+  }
+
+  if (typeof warning !== 'object' || warning === null) {
+    return ''
+  }
+
+  const message = (warning as { message?: unknown }).message
+  return typeof message === 'string' ? message.trim() : ''
+}
+
+function normalizeOperationWarnings(warnings: unknown) {
+  return Array.isArray(warnings) ? warnings.map(readWarningText).filter((warning) => warning.length > 0) : []
+}
+
 function toFormValues(project?: ProjectSummary): ProjectFormValues {
   return {
-    coverAssetId: project?.coverAssetId ?? '',
-    description: project?.description ?? '',
-    links: project?.links ?? [],
-    order: project?.order ?? 0,
-    slug: project?.slug ?? '',
-    title: project?.title ?? '',
+    coverAssetId: project?.draft.coverAssetId ?? '',
+    description: project?.draft.description ?? '',
+    links: project?.draft.links ?? [],
+    order: project?.draft.order ?? 0,
+    slug: project?.draft.slug ?? '',
+    title: project?.draft.title ?? '',
   }
 }
 
 function toPayload(values: ProjectFormValues): CreateProjectRequest {
   return {
-    coverAssetId: values.coverAssetId.trim() ? values.coverAssetId.trim() : null,
-    description: values.description.trim() ? values.description.trim() : null,
-    links: (values.links ?? [])
-      .map((link) => ({
-        href: link.href.trim(),
-        label: link.label.trim(),
-      }))
-      .filter((link) => link.href && link.label),
-    order: values.order ?? 0,
-    slug: values.slug.trim(),
-    title: values.title.trim(),
+    draft: {
+      coverAssetId: values.coverAssetId.trim() ? values.coverAssetId.trim() : null,
+      description: values.description.trim() ? values.description.trim() : null,
+      links: (values.links ?? [])
+        .map((link) => ({
+          href: link.href.trim(),
+          label: link.label.trim(),
+        }))
+        .filter((link) => link.href && link.label),
+      order: values.order ?? 0,
+      slug: values.slug.trim(),
+      title: values.title.trim(),
+    },
   }
 }
 
@@ -89,6 +109,7 @@ export function ProjectList() {
   const saveDraftMutation = useSaveProjectDraftMutation()
   const previewTokenMutation = useCreateProjectPreviewTokenMutation()
   const publishMutation = usePublishProjectMutation()
+  const archiveMutation = useArchiveProjectMutation()
   const [editingProject, setEditingProject] = useState<ProjectSummary | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const projects = useMemo(() => (projectsQuery.data?.ok ? projectsQuery.data.data.projects : []), [projectsQuery.data])
@@ -111,11 +132,14 @@ export function ProjectList() {
     setDialogOpen(true)
   }, [form])
 
-  const openEditDialog = useCallback((project: ProjectSummary) => {
-    setEditingProject(project)
-    form.setFieldsValue(toFormValues(project))
-    setDialogOpen(true)
-  }, [form])
+  const openEditDialog = useCallback(
+    (project: ProjectSummary) => {
+      setEditingProject(project)
+      form.setFieldsValue(toFormValues(project))
+      setDialogOpen(true)
+    },
+    [form],
+  )
 
   const handleSave = async () => {
     const values = await form.validateFields()
@@ -138,40 +162,80 @@ export function ProjectList() {
     message.success(editingProject ? t('site.projects.saveSuccess') : t('site.projects.createSuccess'))
   }
 
-  const handlePublish = useCallback((project: ProjectSummary) => {
-    modal.confirm({
-      title: t('site.projects.publishConfirmTitle'),
-      content: t('site.projects.publishConfirmMessage', { title: project.title }),
-      okText: t('site.projects.publish'),
-      cancelText: t('site.projects.cancel'),
-      onOk: async () => {
-        const response = await publishMutation.mutateAsync(project.id)
+  const handlePublish = useCallback(
+    (project: ProjectSummary) => {
+      modal.confirm({
+        title: t('site.projects.publishConfirmTitle'),
+        content: t('site.projects.publishConfirmMessage', { title: project.draft.title }),
+        okText: t('site.projects.publish'),
+        cancelText: t('site.projects.cancel'),
+        onOk: async () => {
+          const response = await publishMutation.mutateAsync(project.id)
 
-        if (!response.ok) {
-          message.error(response.error.message)
-          return
-        }
+          if (!response.ok) {
+            message.error(response.error.message)
+            return
+          }
 
-        message.success(t('site.projects.publishSuccess'))
-      },
-    })
-  }, [message, modal, publishMutation, t])
+          message.success(t('site.projects.publishSuccess'))
+        },
+      })
+    },
+    [message, modal, publishMutation, t],
+  )
 
-  const handlePreview = useCallback(async (project: ProjectSummary) => {
-    const response = await previewTokenMutation.mutateAsync(project.id)
+  const handleArchive = useCallback(
+    (project: ProjectSummary) => {
+      modal.confirm({
+        title: t('site.projects.archiveConfirmTitle'),
+        content: t('site.projects.archiveConfirmMessage', { title: project.draft.title }),
+        okText: t('site.projects.archive'),
+        okButtonProps: { danger: true },
+        cancelText: t('site.projects.cancel'),
+        onOk: async () => {
+          const response = await archiveMutation.mutateAsync(project.id)
 
-    if (!response.ok) {
-      message.error(response.error.message)
-      return
-    }
+          if (!response.ok) {
+            message.error(response.error.message)
+            return
+          }
 
-    window.open(buildBoboTargetPreviewUrl('projects', project.id, response.data.token), '_blank', 'noopener,noreferrer')
-  }, [message, previewTokenMutation])
+          const warnings = normalizeOperationWarnings(response.data.warnings)
+
+          if (warnings.length > 0) {
+            message.warning(t('site.projects.archiveWarningToast'))
+            return
+          }
+
+          message.success(t('site.projects.archiveSuccess'))
+        },
+      })
+    },
+    [archiveMutation, message, modal, t],
+  )
+
+  const handlePreview = useCallback(
+    async (project: ProjectSummary) => {
+      const response = await previewTokenMutation.mutateAsync(project.id)
+
+      if (!response.ok) {
+        message.error(response.error.message)
+        return
+      }
+
+      window.open(
+        buildBoboTargetPreviewUrl('projects', project.id, response.data.token),
+        '_blank',
+        'noopener,noreferrer',
+      )
+    },
+    [message, previewTokenMutation],
+  )
 
   const columns = useMemo<TableProps<ProjectSummary>['columns']>(
     () => [
       {
-        dataIndex: 'title',
+        dataIndex: ['draft', 'title'],
         title: t('site.projects.table.title'),
         render: (title: string, project) => (
           <div className="min-w-0">
@@ -181,7 +245,7 @@ export function ProjectList() {
         ),
       },
       {
-        dataIndex: 'slug',
+        dataIndex: ['draft', 'slug'],
         title: t('site.projects.table.slug'),
         width: 180,
         render: (slug: string) => <span className="font-mono text-xs">{slug}</span>,
@@ -193,7 +257,7 @@ export function ProjectList() {
         render: (status: ProjectStatus) => <Tag color={getStatusColor(status)}>{getStatusLabel(status, t)}</Tag>,
       },
       {
-        dataIndex: 'order',
+        dataIndex: ['draft', 'order'],
         title: t('site.projects.table.order'),
         width: 100,
       },
@@ -204,7 +268,7 @@ export function ProjectList() {
         render: formatDateTime,
       },
       {
-        dataIndex: 'publishedAt',
+        dataIndex: ['published', 'publishedAt'],
         title: t('site.projects.table.publishedAt'),
         width: 180,
         render: formatDateTime,
@@ -212,7 +276,7 @@ export function ProjectList() {
       {
         key: 'actions',
         title: t('site.projects.table.actions'),
-        width: 300,
+        width: 360,
         render: (_, project) => (
           <div className="flex flex-wrap gap-2">
             <Button size="small" icon={<Pencil className="size-4" />} onClick={() => openEditDialog(project)}>
@@ -235,11 +299,29 @@ export function ProjectList() {
             >
               {t('site.projects.publish')}
             </Button>
+            <Button
+              danger
+              size="small"
+              icon={<Archive className="size-4" />}
+              loading={archiveMutation.isPending}
+              onClick={() => handleArchive(project)}
+            >
+              {t('site.projects.archive')}
+            </Button>
           </div>
         ),
       },
     ],
-    [handlePreview, handlePublish, openEditDialog, previewTokenMutation.isPending, publishMutation.isPending, t],
+    [
+      archiveMutation.isPending,
+      handleArchive,
+      handlePreview,
+      handlePublish,
+      openEditDialog,
+      previewTokenMutation.isPending,
+      publishMutation.isPending,
+      t,
+    ],
   )
 
   return (

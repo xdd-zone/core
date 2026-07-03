@@ -19,41 +19,41 @@ import {
 
 export type PostSummarySource = Pick<
   ContentPostRecord,
-  | 'coverAssetId'
   | 'createdAt'
+  | 'draftCategoryId'
   | 'draftCoverAssetId'
   | 'draftExcerpt'
   | 'draftSlug'
   | 'draftTitle'
-  | 'excerpt'
   | 'id'
   | 'publishedAt'
+  | 'publishedCategoryId'
+  | 'publishedCoverAssetId'
+  | 'publishedExcerpt'
   | 'publishedSlug'
   | 'publishedTitle'
-  | 'slug'
   | 'status'
-  | 'title'
   | 'updatedAt'
 >
 
 export type PostDetailSource = Pick<
   ContentPostRecord,
-  | 'coverAssetId'
   | 'createdAt'
+  | 'draftCategoryId'
   | 'draftCoverAssetId'
   | 'draftExcerpt'
   | 'draftRevisionId'
   | 'draftSlug'
   | 'draftTitle'
-  | 'excerpt'
   | 'id'
   | 'publishedAt'
+  | 'publishedCategoryId'
+  | 'publishedCoverAssetId'
+  | 'publishedExcerpt'
   | 'publishedRevisionId'
   | 'publishedSlug'
   | 'publishedTitle'
-  | 'slug'
   | 'status'
-  | 'title'
   | 'updatedAt'
 >
 
@@ -64,8 +64,6 @@ export type PostRevisionSource = Pick<
 
 export interface PreviewTokenSource {
   expiresAt: Date
-  postId?: string | null
-  revisionId?: string | null
   targetId: string
   targetType: 'post' | 'project' | 'site-page'
   token: string
@@ -73,24 +71,32 @@ export interface PreviewTokenSource {
 
 export function toPostSummary(
   post: PostSummarySource,
-  category: ContentCategoryRecord | null,
-  tags: ContentTagRecord[],
+  draftCategory: ContentCategoryRecord | null,
+  draftTags: ContentTagRecord[],
+  publishedCategory: ContentCategoryRecord | null,
+  publishedTags: ContentTagRecord[],
 ): PostSummary {
   const summary = {
-    category: category ? toCategorySummary(category) : null,
-    coverAssetId: post.draftCoverAssetId ?? post.coverAssetId,
     createdAt: toIsoString(post.createdAt),
-    draftSlug: post.draftSlug,
-    draftTitle: post.draftTitle,
-    excerpt: post.draftExcerpt ?? post.excerpt,
+    draft: {
+      category: draftCategory ? toCategorySummary(draftCategory) : null,
+      coverAssetId: post.draftCoverAssetId,
+      excerpt: post.draftExcerpt,
+      slug: post.draftSlug,
+      tags: draftTags.map((tag) => toTagSummary(tag)),
+      title: post.draftTitle,
+    },
     id: post.id,
-    publishedAt: toNullableIsoString(post.publishedAt),
-    publishedSlug: post.publishedSlug,
-    publishedTitle: post.publishedTitle,
-    slug: post.draftSlug,
+    published: {
+      category: publishedCategory ? toCategorySummary(publishedCategory) : null,
+      coverAssetId: post.publishedCoverAssetId,
+      excerpt: post.publishedExcerpt,
+      publishedAt: toNullableIsoString(post.publishedAt),
+      slug: post.publishedSlug,
+      tags: publishedTags.map((tag) => toTagSummary(tag)),
+      title: post.publishedTitle,
+    },
     status: post.status,
-    tags: tags.map((tag) => toTagSummary(tag)),
-    title: post.draftTitle,
     updatedAt: toIsoString(post.updatedAt),
   } satisfies PostSummary
 
@@ -100,11 +106,13 @@ export function toPostSummary(
 export function toPostDetail(
   post: PostDetailSource,
   source: string,
-  category: ContentCategoryRecord | null,
-  tags: ContentTagRecord[],
+  draftCategory: ContentCategoryRecord | null,
+  draftTags: ContentTagRecord[],
+  publishedCategory: ContentCategoryRecord | null,
+  publishedTags: ContentTagRecord[],
 ): PostDetail {
   const detail = {
-    ...toPostSummary(post, category, tags),
+    ...toPostSummary(post, draftCategory, draftTags, publishedCategory, publishedTags),
     draftRevisionId: post.draftRevisionId,
     publishedRevisionId: post.publishedRevisionId,
     source,
@@ -130,8 +138,6 @@ export function toPostRevision(revision: PostRevisionSource): PostRevision {
 export function toPreviewTokenResponse(input: PreviewTokenSource): PreviewTokenResponse {
   const response = {
     expiresAt: toIsoString(input.expiresAt),
-    postId: input.postId ?? null,
-    revisionId: input.revisionId ?? null,
     targetId: input.targetId,
     targetType: input.targetType,
     token: input.token,

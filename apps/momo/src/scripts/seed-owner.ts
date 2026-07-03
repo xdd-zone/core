@@ -6,9 +6,10 @@ import {
   applicationAuthMethods,
   applications,
   contentCategories,
+  contentPostDraftTags,
+  contentPostPublishedTags,
   contentPostRevisions,
   contentPosts,
-  contentPostTags,
   contentTags,
   llmUseCaseConfigs,
   roles,
@@ -353,42 +354,39 @@ async function ensureInitialContent(userId: string): Promise<void> {
     await tx
       .insert(contentPosts)
       .values({
-        categoryId,
         createdAt: now,
         createdBy: userId,
+        draftCategoryId: categoryId,
         draftExcerpt: initialContentConfig.post.excerpt,
         draftRevisionId: initialContentConfig.post.revisionId,
         draftSlug: initialContentConfig.post.slug,
         draftTitle: initialContentConfig.post.title,
-        excerpt: initialContentConfig.post.excerpt,
         id: initialContentConfig.post.id,
         publishedAt: now,
         publishedBy: userId,
+        publishedCategoryId: categoryId,
         publishedExcerpt: initialContentConfig.post.excerpt,
         publishedRevisionId: initialContentConfig.post.revisionId,
         publishedSlug: initialContentConfig.post.slug,
         publishedTitle: initialContentConfig.post.title,
-        slug: initialContentConfig.post.slug,
         status: 'published',
-        title: initialContentConfig.post.title,
         updatedAt: now,
         updatedBy: userId,
       })
       .onConflictDoUpdate({
-        target: contentPosts.slug,
+        target: contentPosts.draftSlug,
         set: {
-          categoryId,
+          draftCategoryId: categoryId,
           draftExcerpt: sql`excluded.draft_excerpt`,
           draftSlug: sql`excluded.draft_slug`,
           draftTitle: sql`excluded.draft_title`,
-          excerpt: sql`excluded.excerpt`,
           publishedAt: sql`coalesce(${contentPosts.publishedAt}, excluded.published_at)`,
           publishedBy: sql`coalesce(${contentPosts.publishedBy}, excluded.published_by)`,
+          publishedCategoryId: categoryId,
           publishedExcerpt: sql`excluded.published_excerpt`,
           publishedSlug: sql`excluded.published_slug`,
           publishedTitle: sql`excluded.published_title`,
           status: 'published',
-          title: sql`excluded.title`,
           updatedAt: now,
           updatedBy: userId,
         },
@@ -430,7 +428,18 @@ async function ensureInitialContent(userId: string): Promise<void> {
       .where(eq(contentPosts.id, postId))
 
     await tx
-      .insert(contentPostTags)
+      .insert(contentPostDraftTags)
+      .values(
+        tagIds.map((tagId) => ({
+          createdAt: now,
+          postId,
+          tagId,
+        })),
+      )
+      .onConflictDoNothing()
+
+    await tx
+      .insert(contentPostPublishedTags)
       .values(
         tagIds.map((tagId) => ({
           createdAt: now,
@@ -467,7 +476,11 @@ async function selectTagIdsBySlug(
 }
 
 async function selectPostIdBySlug(slug: string, db: Pick<ReturnType<typeof getDb>, 'select'>): Promise<string | null> {
-  const rows = await db.select({ id: contentPosts.id }).from(contentPosts).where(eq(contentPosts.slug, slug)).limit(1)
+  const rows = await db
+    .select({ id: contentPosts.id })
+    .from(contentPosts)
+    .where(eq(contentPosts.draftSlug, slug))
+    .limit(1)
 
   return rows[0]?.id ?? null
 }

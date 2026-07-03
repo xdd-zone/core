@@ -23,19 +23,20 @@ export function createProjectsRepository(db: DbClient) {
   }
 
   async function createProject(id: string, input: CreateProjectRequest, userId: string) {
+    const draft = input.draft
     const now = new Date()
     const [project] = await db
       .insert(projects)
       .values({
         createdAt: now,
         createdBy: userId,
-        draftCoverAssetId: input.coverAssetId ?? null,
-        draftDescription: input.description ?? null,
-        draftLinks: input.links ?? [],
-        draftSlug: input.slug,
-        draftTitle: input.title,
+        draftCoverAssetId: draft.coverAssetId ?? null,
+        draftDescription: draft.description ?? null,
+        draftLinks: draft.links ?? [],
+        draftSlug: draft.slug,
+        draftTitle: draft.title,
         id,
-        order: input.order ?? 0,
+        order: draft.order ?? 0,
         updatedAt: now,
         updatedBy: userId,
       })
@@ -47,16 +48,17 @@ export function createProjectsRepository(db: DbClient) {
   async function saveDraft(id: string, input: SaveProjectDraftRequest, userId: string) {
     const current = await getProjectById(id)
     if (!current) return undefined
+    const draft = input.draft
 
     const [project] = await db
       .update(projects)
       .set({
-        draftCoverAssetId: input.coverAssetId === undefined ? current.draftCoverAssetId : input.coverAssetId,
-        draftDescription: input.description === undefined ? current.draftDescription : input.description,
-        draftLinks: input.links ?? current.draftLinks,
-        draftSlug: input.slug ?? current.draftSlug,
-        draftTitle: input.title ?? current.draftTitle,
-        order: input.order ?? current.order,
+        draftCoverAssetId: draft.coverAssetId === undefined ? current.draftCoverAssetId : draft.coverAssetId,
+        draftDescription: draft.description === undefined ? current.draftDescription : draft.description,
+        draftLinks: draft.links ?? current.draftLinks,
+        draftSlug: draft.slug ?? current.draftSlug,
+        draftTitle: draft.title ?? current.draftTitle,
+        order: draft.order ?? current.order,
         updatedAt: new Date(),
         updatedBy: userId,
       })
@@ -113,18 +115,36 @@ export function createProjectsRepository(db: DbClient) {
     })
   }
 
-  async function archiveProject(id: string, userId: string) {
-    const [project] = await db
-      .update(projects)
-      .set({
-        status: 'archived',
-        updatedAt: new Date(),
-        updatedBy: userId,
-      })
-      .where(eq(projects.id, id))
-      .returning()
+  async function archiveProject(id: string, userId: string, eventId: string) {
+    return db.transaction(async (tx) => {
+      const now = new Date()
+      const [project] = await tx
+        .update(projects)
+        .set({
+          status: 'archived',
+          updatedAt: now,
+          updatedBy: userId,
+        })
+        .where(eq(projects.id, id))
+        .returning()
 
-    return project
+      if (!project) return undefined
+
+      await tx.insert(eventOutbox).values({
+        createdAt: now,
+        eventType: 'project.archived',
+        id: eventId,
+        nextRunAt: now,
+        payload: {
+          projectId: project.id,
+          publishedSlug: project.publishedSlug,
+        },
+        status: 'pending',
+        updatedAt: now,
+      })
+
+      return project
+    })
   }
 
   async function createPreviewToken(input: {
@@ -139,8 +159,6 @@ export function createProjectsRepository(db: DbClient) {
       createdBy: input.createdBy,
       expiresAt: input.expiresAt,
       id: input.id,
-      postId: null,
-      revisionId: null,
       targetId: input.targetId,
       targetType: 'project',
       tokenHash: input.tokenHash,

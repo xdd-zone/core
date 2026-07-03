@@ -8,6 +8,7 @@ const rpcMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@fifa/api/client', () => ({
+  momoBaseUrl: 'http://localhost:7788',
   momoClient: {
     rpc: {
       content: {
@@ -30,6 +31,7 @@ describe('content api 封装', () => {
     rpcMocks.createPost.mockReset()
     rpcMocks.listPosts.mockReset()
     rpcMocks.publishPost.mockReset()
+    vi.unstubAllGlobals()
   })
 
   it('读取文章列表时返回 Momo 统一响应', async () => {
@@ -56,23 +58,29 @@ describe('content api 封装', () => {
       ok: true,
       data: {
         post: {
-          category: null,
-          coverAssetId: null,
           createdAt: '2026-01-01T00:00:00.000Z',
+          draft: {
+            category: null,
+            coverAssetId: null,
+            excerpt: null,
+            slug: 'hello-world',
+            tags: [],
+            title: 'Hello World',
+          },
           draftRevisionId: 'revision-1',
-          draftSlug: 'hello-world',
-          draftTitle: 'Hello World',
-          excerpt: null,
           id: 'post-1',
-          publishedAt: null,
+          published: {
+            category: null,
+            coverAssetId: null,
+            excerpt: null,
+            publishedAt: null,
+            slug: null,
+            tags: [],
+            title: null,
+          },
           publishedRevisionId: null,
-          publishedSlug: null,
-          publishedTitle: null,
-          slug: 'hello-world',
           source: '# Hello World\n',
           status: 'draft',
-          tags: [],
-          title: 'Hello World',
           updatedAt: '2026-01-01T00:00:00.000Z',
         },
       },
@@ -82,9 +90,11 @@ describe('content api 封装', () => {
       },
     }
     const payload = {
-      slug: 'hello-world',
-      source: '# Hello World\n',
-      title: 'Hello World',
+      draft: {
+        slug: 'hello-world',
+        source: '# Hello World\n',
+        title: 'Hello World',
+      },
     }
     rpcMocks.createPost.mockResolvedValue({
       json: () => Promise.resolve(responseBody),
@@ -102,23 +112,29 @@ describe('content api 封装', () => {
       ok: true,
       data: {
         post: {
-          category: null,
-          coverAssetId: null,
           createdAt: '2026-01-01T00:00:00.000Z',
+          draft: {
+            category: null,
+            coverAssetId: null,
+            excerpt: null,
+            slug: 'hello-world',
+            tags: [],
+            title: 'Hello World',
+          },
           draftRevisionId: 'revision-1',
-          draftSlug: 'hello-world',
-          draftTitle: 'Hello World',
-          excerpt: null,
           id: 'post-1',
-          publishedAt: '2026-01-01T00:00:00.000Z',
+          published: {
+            category: null,
+            coverAssetId: null,
+            excerpt: null,
+            publishedAt: '2026-01-01T00:00:00.000Z',
+            slug: 'hello-world',
+            tags: [],
+            title: 'Hello World',
+          },
           publishedRevisionId: 'revision-1',
-          publishedSlug: 'hello-world',
-          publishedTitle: 'Hello World',
-          slug: 'hello-world',
           source: '# Hello World\n',
           status: 'published',
-          tags: [],
-          title: 'Hello World',
           updatedAt: '2026-01-01T00:00:00.000Z',
         },
         warnings: [
@@ -143,6 +159,62 @@ describe('content api 封装', () => {
       param: {
         id: 'post-1',
       },
+    })
+  })
+
+  it('归档文章时保留成功响应里的 warnings', async () => {
+    const responseBody: ApiResponse<PostDetailResponse> = {
+      ok: true,
+      data: {
+        post: {
+          createdAt: '2026-01-01T00:00:00.000Z',
+          draft: {
+            category: null,
+            coverAssetId: null,
+            excerpt: null,
+            slug: 'hello-world',
+            tags: [],
+            title: 'Hello World',
+          },
+          draftRevisionId: 'revision-1',
+          id: 'post-1',
+          published: {
+            category: null,
+            coverAssetId: null,
+            excerpt: null,
+            publishedAt: '2026-01-01T00:00:00.000Z',
+            slug: 'hello-world',
+            tags: [],
+            title: 'Hello World',
+          },
+          publishedRevisionId: 'revision-1',
+          source: '# Hello World\n',
+          status: 'archived',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+        warnings: [
+          {
+            code: 'content.post.archive.side_effect_failed',
+            message: '文章已归档，但 Bobo 缓存刷新或搜索索引删除失败。稍后可以重试刷新。',
+          },
+        ],
+      },
+      meta: {
+        requestId: 'request-1',
+        timestamp: '2026-01-01T00:00:00.000Z',
+      },
+    }
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => {
+      return new Response(JSON.stringify(responseBody))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { archiveContentPost } = await import('@fifa/api/content/posts.api')
+
+    await expect(archiveContentPost('post-1')).resolves.toEqual(responseBody)
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/rpc/content/posts/post-1/archive')
+    expect(fetchMock.mock.calls[0]?.[1]).toEqual({
+      credentials: 'include',
+      method: 'POST',
     })
   })
 })

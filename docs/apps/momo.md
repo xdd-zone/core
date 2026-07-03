@@ -30,7 +30,7 @@ Momo 保存个人站业务数据，并给 Fifa 和 Bobo 提供接口。
 - `content` 是文稿模块，不是所有站点内容的总称。
 - 站点配置、个人资料、项目、预览、搜索、发布任务和素材能力按 `site`、`profile`、`projects`、`preview`、`search`、`events`、`assets` 这类独立模块维护。
 - 管理端接口和公开接口可以共用 service、repository 和查询代码，但 route、响应 DTO 和 presenter 要分开。
-- 发布文章和项目会写 `event_outbox`，再刷新 Bobo cache tag，并按配置写搜索索引。刷新失败不回滚发布，接口响应会带 `warnings`。
+- 发布和归档文章、项目都会写 `event_outbox`，再刷新 Bobo cache tag，并按配置写入或删除搜索索引。处理失败不回滚接口主操作，响应会带 `warnings`。
 
 ## Auth 单 owner 模型
 
@@ -286,9 +286,9 @@ OWNER_DISPLAY_NAME
 
 `LOG_SQL` 只在开发环境生效。设成 `true` 时会打印 SQL 和 `paramsCount`，不会打印参数原值。
 
-`MOMO_PUBLIC_BASE_URL` 填 Momo 给浏览器访问的地址。内容图片用本地存储时，素材响应里的 `fileUrl` 会按这个地址拼 `/rpc/content/assets/:id/file`。本地开发通常填 `http://localhost:7788`。
+`MOMO_PUBLIC_BASE_URL` 填 Momo 给浏览器访问的地址。内容图片用本地存储时，素材响应里的 `fileUrl` 会按这个地址拼 `/rpc/assets/:id/file`。本地开发通常填 `http://localhost:7788`。
 
-`BOBO_BASE_URL` 和 `BOBO_REVALIDATE_SECRET` 要一起配置。发布文章后，Momo 用它们调用 Bobo 的 `POST /api/revalidate`。本地不需要主动刷新 Bobo cache 时，两个变量都留空。
+`BOBO_BASE_URL` 和 `BOBO_REVALIDATE_SECRET` 要一起配置。发布或归档文章和项目后，Momo 用它们调用 Bobo 的 `POST /api/revalidate`。本地不需要主动刷新 Bobo cache 时，两个变量都留空。
 
 `BETTER_AUTH_URL` 填 Momo 的对外地址，Momo 会按这个地址拼 `/api/auth`。本地开发通常填 `http://localhost:7788`。code-server Web IDE 里使用个人 dev 域名时，配置入口看 [code-server 内开发](../development/code-server.md)。`CORS_ORIGINS` 需要包含实际访问 Fifa 和 Bobo 的地址。
 
@@ -310,7 +310,7 @@ LLM 运行时只读取数据库配置。Provider 保存名称、OpenAI-compatibl
 
 文件存储驱动只保存图片。`save()` 允许 `image/avif`、`image/gif`、`image/jpeg`、`image/png` 和 `image/webp`，单个文件最大 `10 MiB`。调用 `save(file, { directory: 'avatars' })` 时，文件会保存到存储根目录下的 `avatars/` 子目录。`openFile()` 在本地存储时返回 `200` 和文件内容，在 COS 存储时返回 `302` 跳转地址。`stat()` 可以读取文件大小、MIME 和修改时间。
 
-内容素材响应里的 `fileUrl` 是浏览器可直接加载的图片地址。COS 配了 `COS_PUBLIC_BASE_URL` 时，`fileUrl` 使用 COS 地址；本地存储或 COS 未返回公开地址时，`fileUrl` 使用 `MOMO_PUBLIC_BASE_URL` 拼出的 Momo 文件接口地址。数据库里的 `content_assets.url` 只保存外部公开地址，本地存储时是 `null`。
+内容素材响应里的 `fileUrl` 是浏览器可直接加载的图片地址。COS 配了 `COS_PUBLIC_BASE_URL` 时，`fileUrl` 使用 COS 地址；本地存储或 COS 未返回公开地址时，`fileUrl` 使用 `MOMO_PUBLIC_BASE_URL` 拼出的 Momo 文件接口地址。数据库里的 `assets.url` 只保存外部公开地址，本地存储时是 `null`。
 
 请求里带了合法的 `X-Request-Id` 时，Momo 会使用这个值；没有传或格式不合法时，Momo 会生成新的 UUID。响应头会写回最终使用的 `X-Request-Id`。
 
@@ -614,7 +614,7 @@ apps/momo/src/modules/profile
 - `PATCH /rpc/fifa/profile`
   修改当前 `fifa.owner` 的显示名和头像地址。
 - `POST /rpc/fifa/profile/avatar`
-  上传当前 `fifa.owner` 的头像文件，单个文件最大 `2 MiB`。接口会把头像地址写入 `user_profiles.avatar_url`，并返回同一个头像地址。这个接口只保存文件，不写 `content_assets`。
+  上传当前 `fifa.owner` 的头像文件，单个文件最大 `2 MiB`。接口会把头像地址写入 `user_profiles.avatar_url`，并返回同一个头像地址。这个接口只保存文件，不写 `assets`。
 - `GET /rpc/fifa/profile/avatar/:storagePathToken`
   读取头像上传接口返回的本地头像文件。响应会带 `Cross-Origin-Resource-Policy: cross-origin`，允许 Fifa 从不同域名显示头像。COS 有公开地址时，头像会直接使用 COS 公开地址。
 
@@ -666,15 +666,15 @@ apps/momo/src/modules/content
 - `types/taxonomy.types.ts`
   放分类和标签 repository 的输入类型。
 - `services/content.service.ts`
-  处理创建文章、保存草稿、发布、生成预览 token、预览文章和上传图片。这里负责业务判断，返回 `PostDetail`、`PostSummary[]`、`ImageAsset` 这类资源对象。
+  处理创建文章、保存草稿、发布和生成预览 token。这里负责业务判断，返回 `PostDetail` 和 `PostSummary[]`。
 - `services/public-content.service.ts`
   读取个人站公开文章、公开分类和公开标签。
 - `services/taxonomy.service.ts`
   处理后台分类和标签的创建、读取、更新和删除。
 - `repositories/content.repository.ts`
-  读写 `content_posts`、`content_post_revisions`、`content_preview_tokens` 和 `content_assets`。这里只返回数据库 record 或明确的结果联合类型。
+  读写 `content_posts`、`content_post_revisions` 和 `content_preview_tokens`。这里只返回数据库 record 或明确的结果联合类型。
 - `repositories/taxonomy.repository.ts`
-  读写 `content_categories`、`content_tags`、`content_post_categories` 和 `content_post_tags`。
+  读写 `content_categories`、`content_tags`、`content_post_draft_tags` 和 `content_post_published_tags`。
 - `content.presenter.ts`
   把内容模块的数据库记录转成 `@xdd-zone/contracts` 的响应类型。日期转 ISO 字符串、响应 schema `parse()` 都在这里做。
 - `public-content.presenter.ts`
@@ -694,7 +694,7 @@ packages/contracts/src/content/content.contract.ts
 
 后台接口使用 `createRequirePermission()`。当前 `content.*` 权限都要求当前用户是 `fifa.owner`。素材管理新增 `content.asset.read`、`content.asset.edit` 和 `content.asset.delete`。
 
-个人站公开接口不检查登录态，只返回已发布文章。预览接口只检查 token，不检查 Fifa 登录态。`GET /rpc/content/assets/:id/file` 也不检查后台登录态，给文章正文和本地预览读取素材文件用。
+个人站公开接口不检查登录态，只返回已发布文章。预览接口只检查 token，不检查 Fifa 登录态。`GET /rpc/assets/:id/file` 也不检查后台登录态，给文章正文和本地预览读取素材文件用。
 
 当前接口：
 
@@ -706,15 +706,14 @@ packages/contracts/src/content/content.contract.ts
 - `POST /rpc/content/posts/:id/preview-token`
 - `POST /rpc/content/posts/:id/publish`
 - `POST /rpc/content/posts/:id/archive`
-- `GET /rpc/content/assets`
-- `GET /rpc/content/assets/:id`
-- `GET /rpc/content/assets/:id/file`
-- `PATCH /rpc/content/assets/:id`
-- `DELETE /rpc/content/assets/:id`
 - `GET /rpc/content/mdx-components`
-- `POST /rpc/content/assets/images`
-- `GET /rpc/content/previews/:token`
 - `GET /rpc/previews/:token`
+- `GET /rpc/assets`
+- `GET /rpc/assets/:id`
+- `GET /rpc/assets/:id/file`
+- `PATCH /rpc/assets/:id`
+- `DELETE /rpc/assets/:id`
+- `POST /rpc/assets/images`
 - `GET /rpc/bobo/content/posts`
 - `GET /rpc/bobo/content/posts/:slug`
 - `GET /rpc/bobo/content/categories`
@@ -735,8 +734,8 @@ apps/momo/src/infra/db/schema/content.schema.ts
 - `content_post_revisions`
   保存 MDX 源码快照。
 - `content_preview_tokens`
-  保存预览 token 的 SHA-256 hash、目标类型、目标 id 和过期时间。文章预览会额外保存文章 id 和版本 id；项目预览不写这两个字段。
-- `content_assets`
+  保存预览 token 的 SHA-256 hash、目标类型、目标 id 和过期时间。
+- `assets`
   保存图片素材的存储路径、文件名、MIME、大小、说明和时间戳。
 
 content 模块的数据按这个顺序走：

@@ -82,19 +82,13 @@ apps/momo/src/modules/events/events.route.ts
 | `POST` | `/rpc/content/posts/:id/preview-token` | 生成 30 分钟有效的预览 token |
 | `POST` | `/rpc/content/posts/:id/publish` | 发布当前草稿 revision |
 | `POST` | `/rpc/content/posts/:id/archive` | 归档文章，并从公开站点和搜索索引移除 |
-| `GET` | `/rpc/content/assets` | 素材列表 |
-| `GET` | `/rpc/content/assets/:id` | 素材详情和引用信息 |
-| `GET` | `/rpc/content/assets/:id/file` | 读取素材文件 |
-| `PATCH` | `/rpc/content/assets/:id` | 更新素材说明 |
-| `DELETE` | `/rpc/content/assets/:id` | 删除素材 |
 | `GET` | `/rpc/content/mdx-components` | MDX 组件清单 |
-| `POST` | `/rpc/content/assets/images` | 上传图片素材 |
-| `GET` | `/rpc/assets` | 独立素材列表，旧 content 路径仍可用 |
-| `GET` | `/rpc/assets/:id` | 独立素材详情和引用信息 |
-| `GET` | `/rpc/assets/:id/file` | 独立素材文件读取 |
-| `PATCH` | `/rpc/assets/:id` | 独立素材说明更新 |
-| `DELETE` | `/rpc/assets/:id` | 独立素材删除 |
-| `POST` | `/rpc/assets/images` | 独立图片素材上传 |
+| `GET` | `/rpc/assets` | 素材列表 |
+| `GET` | `/rpc/assets/:id` | 素材详情和引用信息 |
+| `GET` | `/rpc/assets/:id/file` | 读取素材文件 |
+| `PATCH` | `/rpc/assets/:id` | 更新素材说明 |
+| `DELETE` | `/rpc/assets/:id` | 删除素材 |
+| `POST` | `/rpc/assets/images` | 上传图片素材 |
 | `GET` | `/rpc/content/categories` | 后台分类列表 |
 | `POST` | `/rpc/content/categories` | 创建分类 |
 | `GET` | `/rpc/content/categories/:id` | 后台分类详情 |
@@ -105,7 +99,6 @@ apps/momo/src/modules/events/events.route.ts
 | `GET` | `/rpc/content/tags/:id` | 后台标签详情 |
 | `PATCH` | `/rpc/content/tags/:id` | 更新标签 |
 | `DELETE` | `/rpc/content/tags/:id` | 删除标签 |
-| `GET` | `/rpc/content/previews/:token` | 使用旧文章预览 token 读取文章 revision |
 | `GET` | `/rpc/previews/:token` | 使用通用预览 token 读取文章或项目预览数据 |
 | `GET` | `/rpc/bobo/content/posts` | 个人站文章列表，可按分类和标签筛选 |
 | `GET` | `/rpc/bobo/content/posts/:slug` | 个人站文章详情，只返回已发布文章 |

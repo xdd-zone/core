@@ -10,7 +10,7 @@
 - 文件名生成和 MIME 白名单放在 `apps/momo/src/infra/storage/media-file.ts`。
 - 存储路径校验放在 `apps/momo/src/infra/storage/storage-path.ts`。
 - `createRuntime()` 会创建 `runtime.storage`。
-- 当前没有 `modules/media`。图片素材接口放在 `apps/momo/src/modules/content/content.route.ts`。
+- 图片素材接口放在 `apps/momo/src/modules/assets/assets.route.ts`。
 
 ## 腾讯云基础概念
 
@@ -64,22 +64,22 @@ COS_SIGNED_URL_EXPIRES=600
 
 ## 当前图片素材接口
 
-当前文件存储由 content 模块调用：
+当前文件存储由 assets 模块调用：
 
-- `POST /rpc/content/assets/images`
+- `POST /rpc/assets/images`
   上传图片素材，需要 `content.asset.upload` 权限。
-- `GET /rpc/content/assets`
+- `GET /rpc/assets`
   读取素材列表，需要 `content.asset.read` 权限。
-- `GET /rpc/content/assets/:id`
+- `GET /rpc/assets/:id`
   读取素材详情，需要 `content.asset.read` 权限。
-- `GET /rpc/content/assets/:id/file`
+- `GET /rpc/assets/:id/file`
   读取素材文件，不检查后台登录态，给文章正文和预览页使用。
-- `PATCH /rpc/content/assets/:id`
+- `PATCH /rpc/assets/:id`
   更新素材说明，需要 `content.asset.edit` 权限。
-- `DELETE /rpc/content/assets/:id`
+- `DELETE /rpc/assets/:id`
   删除素材，需要 `content.asset.delete` 权限。
 
-上传请求用 `multipart/form-data`，字段名是 `file`。文件存入当前 `STORAGE_PROVIDER` 指定的驱动，素材记录写入 `content_assets` 表。
+上传请求用 `multipart/form-data`，字段名是 `file`。文件存入当前 `STORAGE_PROVIDER` 指定的驱动，素材记录写入 `assets` 表。
 
 ## 验证
 

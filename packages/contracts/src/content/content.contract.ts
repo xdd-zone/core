@@ -12,7 +12,7 @@ export const OperationWarningSchema = z.object({
 
 export const TaxonomySlugSchema = z.string().trim().min(1).max(160)
 
-export const ContentPostBaseSchema = z.object({
+export const ContentPostDraftInputSchema = z.object({
   categoryId: z.string().trim().min(1).nullable().optional(),
   coverAssetId: z.string().trim().min(1).nullable().optional(),
   excerpt: z.string().trim().max(500).nullable().optional(),
@@ -22,9 +22,15 @@ export const ContentPostBaseSchema = z.object({
   title: z.string().trim().min(1).max(160),
 })
 
-export const CreatePostRequestSchema = ContentPostBaseSchema
-export const SavePostDraftRequestSchema = ContentPostBaseSchema.partial().extend({
-  source: z.string().min(1).optional(),
+export const ContentPostBaseSchema = ContentPostDraftInputSchema
+
+export const CreatePostRequestSchema = z.object({
+  draft: ContentPostDraftInputSchema,
+})
+export const SavePostDraftRequestSchema = z.object({
+  draft: ContentPostDraftInputSchema.partial().extend({
+    source: z.string().min(1).optional(),
+  }),
 })
 
 export const GeneratePostMetaTargetSchema = z.enum(['slug', 'excerpt', 'title'])
@@ -71,21 +77,31 @@ export const TagSummarySchema = z.object({
   slug: z.string(),
 })
 
-export const PostSummarySchema = z.object({
+export const PostDraftSchema = z.object({
   category: CategorySummarySchema.nullable(),
   coverAssetId: z.string().nullable(),
-  createdAt: z.string(),
-  draftSlug: z.string(),
-  draftTitle: z.string(),
   excerpt: z.string().nullable(),
-  id: z.string(),
-  publishedAt: z.string().nullable(),
-  publishedSlug: z.string().nullable(),
-  publishedTitle: z.string().nullable(),
   slug: z.string(),
-  status: PostStatusSchema,
   tags: z.array(TagSummarySchema),
   title: z.string(),
+})
+
+export const PostPublishedSchema = z.object({
+  category: CategorySummarySchema.nullable(),
+  coverAssetId: z.string().nullable(),
+  excerpt: z.string().nullable(),
+  publishedAt: z.string().nullable(),
+  slug: z.string().nullable(),
+  tags: z.array(TagSummarySchema),
+  title: z.string().nullable(),
+})
+
+export const PostSummarySchema = z.object({
+  createdAt: z.string(),
+  draft: PostDraftSchema,
+  id: z.string(),
+  published: PostPublishedSchema,
+  status: PostStatusSchema,
   updatedAt: z.string(),
 })
 
@@ -140,8 +156,6 @@ export const PostDetailResponseSchema = z.object({
 
 export const PreviewTokenResponseSchema = z.object({
   expiresAt: z.string(),
-  postId: z.string().nullable().optional(),
-  revisionId: z.string().nullable().optional(),
   targetId: z.string(),
   targetType: PreviewTargetTypeSchema,
   token: z.string(),

@@ -42,10 +42,8 @@
   输出 RSS。当前输出公开文章和公开项目。
 - `apps/bobo/app/sitemap.ts`
   输出 sitemap，读取公开文章和公开项目。
-- `apps/bobo/app/(preview)/preview/posts/[postId]/page.tsx`
-  文章预览页，读取 `MOMO_BASE_URL` 指向的 Momo 预览接口。
 - `apps/bobo/app/(preview)/preview/[targetType]/[targetId]/page.tsx`
-  通用预览页，当前用于项目预览，URL 是 `/preview/projects/<id>`。
+  通用预览页，读取 `GET /rpc/previews/:token`。文章 URL 是 `/preview/post/<id>`，项目 URL 是 `/preview/project/<id>`。
 - `apps/bobo/app/api/revalidate/route.ts`
   接收 `POST /api/revalidate`，用 `BOBO_REVALIDATE_SECRET` 校验后刷新 Next cache tag 或 path。
 - `apps/bobo/app/(lab)/lab`

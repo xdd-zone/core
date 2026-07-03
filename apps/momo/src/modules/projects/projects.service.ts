@@ -9,7 +9,12 @@ import type {
 import type { EventsService } from '#momo/modules/events/index'
 import type { ProjectsRepository } from './projects.repository'
 import { createHash, randomUUID } from 'node:crypto'
-import { BizCode, PreviewTokenResponseSchema, ProjectSummarySchema, PublicProjectSummarySchema } from '@xdd-zone/contracts'
+import {
+  BizCode,
+  PreviewTokenResponseSchema,
+  ProjectSummarySchema,
+  PublicProjectSummarySchema,
+} from '@xdd-zone/contracts'
 import { AppError } from '#momo/shared/app-error'
 
 const PREVIEW_TOKEN_TTL_MS = 30 * 60 * 1000
@@ -45,7 +50,10 @@ export function createProjectsService(repository: ProjectsRepository, eventsServ
     return toProjectSummary(project)
   }
 
-  async function publishProject(id: string, userId: string): Promise<{ project: ProjectSummary; warnings?: OperationWarning[] }> {
+  async function publishProject(
+    id: string,
+    userId: string,
+  ): Promise<{ project: ProjectSummary; warnings?: OperationWarning[] }> {
     const eventId = randomUUID()
     const project = await repository.publishProject(id, userId, eventId)
     if (!project) throw new AppError(BizCode.COMMON_NOT_FOUND, '项目不存在', 404)
@@ -64,16 +72,26 @@ export function createProjectsService(repository: ProjectsRepository, eventsServ
     }
   }
 
-  async function archiveProject(id: string, userId: string): Promise<ProjectSummary> {
-    const project = await repository.archiveProject(id, userId)
+  async function archiveProject(
+    id: string,
+    userId: string,
+  ): Promise<{ project: ProjectSummary; warnings?: OperationWarning[] }> {
+    const eventId = randomUUID()
+    const project = await repository.archiveProject(id, userId, eventId)
     if (!project) throw new AppError(BizCode.COMMON_NOT_FOUND, '项目不存在', 404)
 
-    await eventsService?.handleProjectArchived({
-      projectId: project.id,
-      publishedSlug: project.publishedSlug,
-    })
+    const warnings = eventsService?.handleProjectArchived
+      ? await eventsService.handleProjectArchived({
+          eventId,
+          projectId: project.id,
+          publishedSlug: project.publishedSlug,
+        })
+      : []
 
-    return toProjectSummary(project)
+    return {
+      project: toProjectSummary(project),
+      warnings: warnings.length > 0 ? warnings : undefined,
+    }
   }
 
   async function createPreviewToken(id: string, userId: string): Promise<PreviewTokenResponse> {
@@ -93,8 +111,6 @@ export function createProjectsService(repository: ProjectsRepository, eventsServ
 
     return PreviewTokenResponseSchema.parse({
       expiresAt: expiresAt.toISOString(),
-      postId: null,
-      revisionId: null,
       targetId: id,
       targetType: 'project',
       token,
@@ -116,15 +132,24 @@ export function createProjectsService(repository: ProjectsRepository, eventsServ
 
 function toProjectSummary(project: ProjectRecord): ProjectSummary {
   return ProjectSummarySchema.parse({
-    coverAssetId: project.draftCoverAssetId,
-    description: project.draftDescription,
+    draft: {
+      coverAssetId: project.draftCoverAssetId,
+      description: project.draftDescription,
+      links: project.draftLinks,
+      order: project.order,
+      slug: project.draftSlug,
+      title: project.draftTitle,
+    },
     id: project.id,
-    links: project.draftLinks,
-    order: project.order,
-    publishedAt: project.publishedAt?.toISOString() ?? null,
-    slug: project.draftSlug,
+    published: {
+      coverAssetId: project.publishedCoverAssetId,
+      description: project.publishedDescription,
+      links: project.publishedLinks,
+      publishedAt: project.publishedAt?.toISOString() ?? null,
+      slug: project.publishedSlug,
+      title: project.publishedTitle,
+    },
     status: project.status,
-    title: project.draftTitle,
     updatedAt: project.updatedAt.toISOString(),
   })
 }
@@ -137,8 +162,8 @@ function toPublicProjectSummary(project: ProjectRecord): PublicProjectSummary {
     links: project.publishedLinks,
     order: project.order,
     publishedAt: project.publishedAt?.toISOString() ?? null,
-    slug: project.publishedSlug ?? project.draftSlug,
-    title: project.publishedTitle ?? project.draftTitle,
+    slug: project.publishedSlug!,
+    title: project.publishedTitle!,
     updatedAt: project.updatedAt.toISOString(),
   })
 }

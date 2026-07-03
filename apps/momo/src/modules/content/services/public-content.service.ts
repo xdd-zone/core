@@ -50,8 +50,8 @@ export function createPublicContentService(repository: ContentRepository, taxono
     }
 
     const [category, tags] = await Promise.all([
-      post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
-      taxonomyRepository.getPostTags(post.id),
+      post.publishedCategoryId ? taxonomyRepository.getCategoryById(post.publishedCategoryId) : Promise.resolve(null),
+      taxonomyRepository.getPublishedPostTags(post.id),
     ])
 
     return toPublicPostDetail(post, revision.source, category ?? null, tags)
@@ -73,12 +73,12 @@ export function createPublicContentService(repository: ContentRepository, taxono
     }
 
     const postIds = posts.map((post) => post.id)
-    const categoryIdMap = await repository.getCategoriesByPostIds(postIds)
+    const categoryIdMap = await repository.getPublishedCategoriesByPostIds(postIds)
     const uniqueCategoryIds = [...new Set(categoryIdMap.values())]
 
     const [categories, tagsMap] = await Promise.all([
       Promise.all(uniqueCategoryIds.map((id) => taxonomyRepository.getCategoryById(id))),
-      taxonomyRepository.getPostTagsByPostIds(postIds),
+      taxonomyRepository.getPublishedPostTagsByPostIds(postIds),
     ])
 
     const categoryMap = new Map(categories.filter((c): c is NonNullable<typeof c> => !!c).map((c) => [c.id, c]))

@@ -110,7 +110,7 @@ VITE_BOBO_BASE_URL=http://localhost:4399
 VITE_MOMO_BASE_URL=http://localhost:7788
 ```
 
-`VITE_BOBO_BASE_URL` 用来拼文章预览地址，格式是 `${VITE_BOBO_BASE_URL}/preview/posts/${postId}?token=${token}`。
+`VITE_BOBO_BASE_URL` 用来拼预览地址。文章格式是 `${VITE_BOBO_BASE_URL}/preview/post/${postId}?token=${token}`，项目格式是 `${VITE_BOBO_BASE_URL}/preview/project/${projectId}?token=${token}`。
 
 ## 开发前先看
 

@@ -31,8 +31,8 @@ export function createPreviewService(
   }
 
   async function getPostPreview(previewToken: PreviewTokenRecord) {
-    const postId = previewToken.targetId ?? previewToken.postId
-    if (!postId || !previewToken.revisionId) {
+    const postId = previewToken.targetId
+    if (!postId) {
       throw new AppError(BizCode.COMMON_NOT_FOUND, '预览目标不存在', 404)
     }
 
@@ -41,20 +41,33 @@ export function createPreviewService(
       throw new AppError(BizCode.COMMON_NOT_FOUND, '文章不存在', 404)
     }
 
-    const revision = await contentRepository.getRevisionById(previewToken.revisionId)
+    if (!post.draftRevisionId) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '预览目标不存在', 404)
+    }
+
+    const revision = await contentRepository.getRevisionById(post.draftRevisionId)
     if (!revision) {
       throw new AppError(BizCode.SYSTEM_INTERNAL_ERROR, '文章预览版本不存在', 500)
     }
 
     await contentRepository.markPreviewTokenUsed(previewToken.id)
 
-    const [category, tags] = await Promise.all([
-      post.categoryId ? taxonomyRepository.getCategoryById(post.categoryId) : Promise.resolve(null),
+    const [draftCategory, draftTags, publishedCategory, publishedTags] = await Promise.all([
+      post.draftCategoryId ? taxonomyRepository.getCategoryById(post.draftCategoryId) : Promise.resolve(null),
       taxonomyRepository.getPostTags(postId),
+      post.publishedCategoryId ? taxonomyRepository.getCategoryById(post.publishedCategoryId) : Promise.resolve(null),
+      taxonomyRepository.getPublishedPostTags(postId),
     ])
 
     return {
-      post: toPostDetail(post, revision.source, category ?? null, tags),
+      post: toPostDetail(
+        post,
+        revision.source,
+        draftCategory ?? null,
+        draftTags,
+        publishedCategory ?? null,
+        publishedTags,
+      ),
       revision: toPostRevision(revision),
       targetId: postId,
       targetType: 'post' as const,
@@ -75,15 +88,24 @@ export function createPreviewService(
 
     return {
       project: ProjectSummarySchema.parse({
-        coverAssetId: project.draftCoverAssetId,
-        description: project.draftDescription,
+        draft: {
+          coverAssetId: project.draftCoverAssetId,
+          description: project.draftDescription,
+          links: project.draftLinks,
+          order: project.order,
+          slug: project.draftSlug,
+          title: project.draftTitle,
+        },
         id: project.id,
-        links: project.draftLinks,
-        order: project.order,
-        publishedAt: project.publishedAt?.toISOString() ?? null,
-        slug: project.draftSlug,
+        published: {
+          coverAssetId: project.publishedCoverAssetId,
+          description: project.publishedDescription,
+          links: project.publishedLinks,
+          publishedAt: project.publishedAt?.toISOString() ?? null,
+          slug: project.publishedSlug,
+          title: project.publishedTitle,
+        },
         status: project.status,
-        title: project.draftTitle,
         updatedAt: project.updatedAt.toISOString(),
       }),
       targetId: previewToken.targetId,

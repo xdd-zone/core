@@ -130,19 +130,11 @@ pnpm seed:owner
 - `POST /rpc/content/posts/:id/publish`
   发布文章。发布成功后刷新 Bobo cache tag；刷新失败时发布仍然成功，响应里带 `warnings`。
 - `POST /rpc/content/posts/:id/archive`
-  归档文章。归档后公开文章接口不再返回它，并尝试删除搜索索引。
+  归档文章。归档后公开文章接口不再返回它，并尝试删除搜索索引；处理失败时响应里带 `warnings`。
 - `GET`、`PATCH`、`DELETE /rpc/assets/:id` 和 `GET /rpc/assets`
-  独立素材接口。旧的 `/rpc/content/assets/*` 继续保留。
+  素材接口。
 - `POST /rpc/assets/images`
-  通过独立素材接口上传图片。
-- `GET /rpc/content/assets`
-  返回素材列表。
-- `GET /rpc/content/assets/:id`
-  返回素材详情。
-- `POST /rpc/content/assets/images`
   上传图片素材。响应里的 `asset.fileUrl` 是浏览器可直接加载的图片地址。
-- `GET /rpc/content/assets/:id/file`
-  读取素材文件。
 - `GET /rpc/content/categories`
   返回后台分类列表。
 - `POST /rpc/content/categories`
@@ -184,7 +176,7 @@ pnpm seed:owner
 - `POST /rpc/projects/:id/preview-token`
   生成项目预览 token。
 - `POST /rpc/projects/:id/archive`
-  归档项目。归档后公开项目接口不再返回它，并尝试删除搜索索引。
+  归档项目。归档后公开项目接口不再返回它，并尝试删除搜索索引；处理失败时响应里带 `warnings`。
 - `GET /rpc/previews/:token`
   使用通用预览 token 读取文章或项目预览数据。旧文章预览路径仍然保留。
 - `GET /rpc/bobo/projects`
@@ -222,7 +214,7 @@ pnpm seed:owner
 - `STORAGE_PROVIDER`
   默认 `local`。设成 `cos` 时，需要配置腾讯云 COS 变量。
 - `BOBO_BASE_URL` 和 `BOBO_REVALIDATE_SECRET`
-  两个变量要一起配置。发布文章后，Momo 用它们调用 Bobo 的 `POST /api/revalidate`。
+  两个变量要一起配置。发布或归档文章和项目后，Momo 用它们调用 Bobo 的 `POST /api/revalidate`。
 
 旧的 `OPENAI_API_KEY` 不再被 Momo 直接读取。升级后进入 Fifa 的 LLM Provider 页面，编辑默认 Provider，重新填写 API Key 后再启用。
 
@@ -251,7 +243,7 @@ const response = await app.request('/health')
 - 缓存代码放在 `src/infra/cache`。本地 Redis 协议缓存使用 Valkey，地址是 `redis://localhost:56379`。
 - 搜索代码放在 `src/infra/search`。公开搜索接口是 `GET /rpc/bobo/search?q=关键词`。`SEARCH_PROVIDER=none` 时返回空结果；启用 Meilisearch 后，文章和项目发布会写入 `site` 索引。
 - LLM provider 调用代码放在 `src/infra/llm`。Provider、use case 和调用日志接口放在 `src/modules/llm`。内容模块通过 `POST /rpc/content/posts/meta-suggestion` 生成文章字段建议。调用日志会记录请求 ID、用户 ID 和文章 ID。
-- 文件存储代码放在 `src/infra/storage`。内容模块通过 `POST /rpc/content/assets/images` 保存图片素材。验证当前存储配置时，运行 `pnpm storage:test`。
+- 文件存储代码放在 `src/infra/storage`。素材模块通过 `POST /rpc/assets/images` 保存图片素材。验证当前存储配置时，运行 `pnpm storage:test`。
 
 更多说明看：
 

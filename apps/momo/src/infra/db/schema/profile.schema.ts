@@ -1,8 +1,8 @@
 import { relations } from 'drizzle-orm'
 import { boolean, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
+import { assets } from './assets.schema'
 import { user } from './auth.schema'
-import { contentAssets } from './content.schema'
 
 export const userProfiles = pgTable('user_profiles', {
   /** better-auth 的用户 id。 */
@@ -32,7 +32,7 @@ export const publicProfiles = pgTable('public_profiles', {
   /** 公开显示名。 */
   displayName: text('display_name').notNull(),
   /** 公开头像素材 id。 */
-  avatarAssetId: text('avatar_asset_id').references(() => contentAssets.id, { onDelete: 'set null' }),
+  avatarAssetId: text('avatar_asset_id').references(() => assets.id, { onDelete: 'set null' }),
   /** 公开简介。 */
   bio: text('bio'),
   /** 公开联系邮箱。 */

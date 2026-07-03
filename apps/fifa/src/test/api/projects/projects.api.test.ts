@@ -8,6 +8,7 @@ const rpcMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@fifa/api/client', () => ({
+  momoBaseUrl: 'http://localhost:7788',
   momoClient: {
     rpc: {
       projects: {
@@ -29,6 +30,7 @@ vi.mock('@fifa/api/client', () => ({
 describe('projects api 封装', () => {
   afterEach(() => {
     vi.clearAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('读取项目列表时调用 /rpc/projects', async () => {
@@ -52,25 +54,36 @@ describe('projects api 封装', () => {
 
   it('创建项目时传入请求体', async () => {
     const payload = {
-      description: null,
-      links: [],
-      order: 1,
-      slug: 'xdd-zone',
-      title: 'XDD Zone',
+      draft: {
+        description: null,
+        links: [],
+        order: 1,
+        slug: 'xdd-zone',
+        title: 'XDD Zone',
+      },
     }
     const responseBody: ApiResponse<ProjectResponse> = {
       ok: true,
       data: {
         project: {
-          coverAssetId: null,
-          description: null,
+          draft: {
+            coverAssetId: null,
+            description: null,
+            links: [],
+            order: 1,
+            slug: 'xdd-zone',
+            title: 'XDD Zone',
+          },
           id: 'project-1',
-          links: [],
-          order: 1,
-          publishedAt: null,
-          slug: 'xdd-zone',
+          published: {
+            coverAssetId: null,
+            description: null,
+            links: [],
+            publishedAt: null,
+            slug: null,
+            title: null,
+          },
           status: 'draft',
-          title: 'XDD Zone',
           updatedAt: '2026-01-01T00:00:00.000Z',
         },
       },
@@ -92,21 +105,32 @@ describe('projects api 封装', () => {
 
   it('保存项目草稿时传入项目 id 和请求体', async () => {
     const payload = {
-      title: 'XDD Zone Next',
+      draft: {
+        title: 'XDD Zone Next',
+      },
     }
     const responseBody: ApiResponse<ProjectResponse> = {
       ok: true,
       data: {
         project: {
-          coverAssetId: null,
-          description: null,
+          draft: {
+            coverAssetId: null,
+            description: null,
+            links: [],
+            order: 1,
+            slug: 'xdd-zone',
+            title: 'XDD Zone Next',
+          },
           id: 'project-1',
-          links: [],
-          order: 1,
-          publishedAt: null,
-          slug: 'xdd-zone',
+          published: {
+            coverAssetId: null,
+            description: null,
+            links: [],
+            publishedAt: null,
+            slug: null,
+            title: null,
+          },
           status: 'draft',
-          title: 'XDD Zone Next',
           updatedAt: '2026-01-01T00:00:00.000Z',
         },
       },
@@ -134,15 +158,24 @@ describe('projects api 封装', () => {
       ok: true,
       data: {
         project: {
-          coverAssetId: null,
-          description: null,
+          draft: {
+            coverAssetId: null,
+            description: null,
+            links: [],
+            order: 1,
+            slug: 'xdd-zone',
+            title: 'XDD Zone',
+          },
           id: 'project-1',
-          links: [],
-          order: 1,
-          publishedAt: '2026-01-01T00:00:00.000Z',
-          slug: 'xdd-zone',
+          published: {
+            coverAssetId: null,
+            description: null,
+            links: [],
+            publishedAt: '2026-01-01T00:00:00.000Z',
+            slug: 'xdd-zone',
+            title: 'XDD Zone',
+          },
           status: 'published',
-          title: 'XDD Zone',
           updatedAt: '2026-01-01T00:00:00.000Z',
         },
       },
@@ -161,6 +194,57 @@ describe('projects api 封装', () => {
       param: {
         id: 'project-1',
       },
+    })
+  })
+
+  it('归档项目时保留成功响应里的 warnings', async () => {
+    const responseBody: ApiResponse<ProjectResponse> = {
+      ok: true,
+      data: {
+        project: {
+          draft: {
+            coverAssetId: null,
+            description: null,
+            links: [],
+            order: 1,
+            slug: 'xdd-zone',
+            title: 'XDD Zone',
+          },
+          id: 'project-1',
+          published: {
+            coverAssetId: null,
+            description: null,
+            links: [],
+            publishedAt: '2026-01-01T00:00:00.000Z',
+            slug: 'xdd-zone',
+            title: 'XDD Zone',
+          },
+          status: 'archived',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+        warnings: [
+          {
+            code: 'project.archive.side_effect_failed',
+            message: '项目已归档，但 Bobo 缓存刷新或搜索索引删除失败。稍后可以重试刷新。',
+          },
+        ],
+      },
+      meta: {
+        requestId: 'request-1',
+        timestamp: '2026-01-01T00:00:00.000Z',
+      },
+    }
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => {
+      return new Response(JSON.stringify(responseBody))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { archiveProject } = await import('@fifa/api/projects/projects.api')
+
+    await expect(archiveProject('project-1')).resolves.toEqual(responseBody)
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/rpc/projects/project-1/archive')
+    expect(fetchMock.mock.calls[0]?.[1]).toEqual({
+      credentials: 'include',
+      method: 'POST',
     })
   })
 })

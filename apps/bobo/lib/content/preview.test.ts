@@ -18,15 +18,24 @@ describe('generic preview', () => {
         JSON.stringify({
           data: {
             project: {
-              coverAssetId: null,
-              description: '项目说明',
+              draft: {
+                coverAssetId: null,
+                description: '项目说明',
+                links: [],
+                order: 0,
+                slug: 'project-draft',
+                title: '项目草稿',
+              },
               id: 'project-1',
-              links: [],
-              order: 0,
-              publishedAt: null,
-              slug: 'project-draft',
+              published: {
+                coverAssetId: null,
+                description: null,
+                links: [],
+                publishedAt: null,
+                slug: null,
+                title: null,
+              },
               status: 'draft',
-              title: '项目草稿',
               updatedAt: '2026-07-02T08:00:00.000Z',
             },
             targetId: 'project-1',
@@ -43,8 +52,10 @@ describe('generic preview', () => {
 
     await expect(getGenericPreview('token-1')).resolves.toMatchObject({
       project: {
+        draft: {
+          title: '项目草稿',
+        },
         id: 'project-1',
-        title: '项目草稿',
       },
       targetId: 'project-1',
       targetType: 'project',

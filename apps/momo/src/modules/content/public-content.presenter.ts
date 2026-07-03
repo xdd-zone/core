@@ -20,15 +20,19 @@ export function toPublicPostSummary(
   category: ContentCategoryRecord | null,
   tags: ContentTagRecord[],
 ): PublicPostSummary {
+  if (!post.publishedSlug || !post.publishedTitle) {
+    throw new Error('公开文章缺少发布字段')
+  }
+
   const summary = {
     category: category ? toPublicCategory(category) : null,
     coverAssetId: post.publishedCoverAssetId,
     excerpt: post.publishedExcerpt,
     id: post.id,
     publishedAt: toNullableIsoString(post.publishedAt),
-    slug: post.publishedSlug ?? post.slug,
+    slug: post.publishedSlug,
     tags: tags.map((tag) => toPublicTag(tag)),
-    title: post.publishedTitle ?? post.title,
+    title: post.publishedTitle,
     updatedAt: toIsoString(post.updatedAt),
   } satisfies PublicPostSummary
 

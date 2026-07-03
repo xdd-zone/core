@@ -1,14 +1,9 @@
 import type { InferSelectModel } from 'drizzle-orm'
-import type { contentAssets, contentPostRevisions, contentPosts, contentPreviewTokens } from '#momo/infra/db/schema/index'
+import type { contentPostRevisions, contentPosts, contentPreviewTokens } from '#momo/infra/db/schema/index'
 
 export type ContentPostRecord = InferSelectModel<typeof contentPosts>
 export type ContentRevisionRecord = InferSelectModel<typeof contentPostRevisions>
 export type ContentPreviewTokenRecord = InferSelectModel<typeof contentPreviewTokens>
-
-export type ContentAssetRecord = Pick<
-  InferSelectModel<typeof contentAssets>,
-  'alt' | 'createdAt' | 'fileName' | 'id' | 'mimeType' | 'size' | 'storagePath' | 'updatedAt' | 'url'
->
 
 export interface CreateContentPostInput {
   categoryId?: string | null
@@ -43,6 +38,7 @@ export interface PublishContentPostInput {
 }
 
 export interface ArchiveContentPostInput {
+  eventId: string
   postId: string
   userId: string
 }
@@ -68,8 +64,6 @@ export interface CreateContentPreviewTokenInput {
   createdBy: string
   expiresAt: Date
   id: string
-  postId?: string | null
-  revisionId?: string | null
   targetId: string
   targetType: 'post' | 'project' | 'site-page'
   tokenHash: string

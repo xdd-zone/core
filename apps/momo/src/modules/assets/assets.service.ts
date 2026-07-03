@@ -1,4 +1,10 @@
-import type { AssetDetailResponse, AssetListResponse, AssetReference, ImageAsset, UpdateAssetRequest } from '@xdd-zone/contracts'
+import type {
+  AssetDetailResponse,
+  AssetListResponse,
+  AssetReference,
+  ImageAsset,
+  UpdateAssetRequest,
+} from '@xdd-zone/contracts'
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { AssetsRepository } from './assets.repository'
 import type { AssetReferenceRecord } from './types'
@@ -107,7 +113,7 @@ export function createAssetsService(runtime: MomoRuntime, repository: AssetsRepo
     const references = await repository.findAssetReferences(id, buildAssetFileUrl(id))
 
     if (references.length > 0) {
-      throw new AppError(BizCode.BIZ_RULE_VIOLATION, '素材正在被文章使用，先移除引用再删除', 409, {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, '素材正在被内容使用，先移除引用再删除', 409, {
         references,
       })
     }
@@ -123,7 +129,7 @@ export function createAssetsService(runtime: MomoRuntime, repository: AssetsRepo
   }
 
   function buildAssetFileUrl(assetId: string): string {
-    return `${runtime.env.MOMO_PUBLIC_BASE_URL.replace(/\/+$/, '')}/rpc/content/assets/${assetId}/file`
+    return `${runtime.env.MOMO_PUBLIC_BASE_URL.replace(/\/+$/, '')}/rpc/assets/${assetId}/file`
   }
 
   return {
@@ -138,10 +144,11 @@ export function createAssetsService(runtime: MomoRuntime, repository: AssetsRepo
 
 function toAssetReference(reference: AssetReferenceRecord): AssetReference {
   return {
-    postId: reference.postId,
-    postSlug: reference.postSlug,
-    postTitle: reference.postTitle,
     relation: reference.relation,
+    targetId: reference.targetId,
+    targetSlug: reference.targetSlug ?? '',
+    targetTitle: reference.targetTitle ?? '',
+    targetType: reference.targetType,
   }
 }
 

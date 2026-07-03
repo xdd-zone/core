@@ -14,10 +14,12 @@ vi.mock('#momo/infra/db/client', () => ({
 }))
 
 vi.mock('#momo/modules/auth/index', () => ({
-  createRequirePermission: vi.fn(() => async (c: { set: (key: string, value: unknown) => void }, next: () => Promise<void>) => {
-    c.set('user', { id: 'user-id' })
-    await next()
-  }),
+  createRequirePermission: vi.fn(
+    () => async (c: { set: (key: string, value: unknown) => void }, next: () => Promise<void>) => {
+      c.set('user', { id: 'user-id' })
+      await next()
+    },
+  ),
 }))
 
 vi.mock('#momo/modules/site/site.repository', () => ({

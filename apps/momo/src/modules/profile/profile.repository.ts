@@ -77,8 +77,7 @@ export function createProfileRepository(db: DbClient) {
       .update(publicProfiles)
       .set({
         avatarAssetId: input.avatarAssetId === undefined ? current.avatarAssetId : input.avatarAssetId,
-        availableForWork:
-          input.availableForWork === undefined ? current.availableForWork : input.availableForWork,
+        availableForWork: input.availableForWork === undefined ? current.availableForWork : input.availableForWork,
         bio: input.bio === undefined ? current.bio : input.bio,
         contactEmail: input.contactEmail === undefined ? current.contactEmail : input.contactEmail,
         displayName: input.displayName ?? current.displayName,
