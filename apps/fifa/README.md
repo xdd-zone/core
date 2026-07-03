@@ -116,6 +116,6 @@ VITE_MOMO_BASE_URL=http://localhost:7788
 
 只要任务涉及页面、布局、导航或展示型组件，先看：
 
-1. `apps/fifa/design-context.md`
+1. [docs/apps/fifa-design.md](../../docs/apps/fifa-design.md)
 2. [docs/apps/fifa.md](../../docs/apps/fifa.md)
 3. [docs/topics/theme.md](../../docs/topics/theme.md)

@@ -38,7 +38,7 @@
 
 先读：
 
-- `apps/fifa/design-context.md`
+- `docs/apps/fifa-design.md`
 
 再用：
 
@@ -55,7 +55,7 @@
 
 顺序：
 
-1. 读 `apps/fifa/design-context.md`
+1. 读 `docs/apps/fifa-design.md`
 2. 用 `frontend-design`
 3. 用 `xdd-plain-docs`
 

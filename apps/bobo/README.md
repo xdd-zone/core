@@ -87,4 +87,5 @@ BOBO_REVALIDATE_SECRET=
 详细维护规则看：
 
 - [docs/apps/bobo.md](../../docs/apps/bobo.md)
+- [docs/apps/bobo-design.md](../../docs/apps/bobo-design.md)
 - [docs/topics/theme.md](../../docs/topics/theme.md)

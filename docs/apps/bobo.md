@@ -16,8 +16,9 @@
 
 1. 根目录 `AGENTS.md`
 2. `docs/apps/bobo.md`
-3. `apps/bobo/README.md`
-4. 当前要改的页面、组件或样式文件
+3. 改页面、组件或样式时看 `docs/apps/bobo-design.md`
+4. `apps/bobo/README.md`
+5. 当前要改的页面、组件或样式文件
 
 ## 目录
 
@@ -165,6 +166,7 @@ Momo 数据库里的业务数据为准。Bobo 的缓存、metadata、RSS 和 sit
 
 ## 样式规则
 
+- 页面、组件和视觉样式规则先看 `docs/apps/bobo-design.md`。
 - 全局样式入口只改 `apps/bobo/app/globals.css`。
 - 主题色走 `data-theme` 和 Tailwind 语义类名。
 - Bobo 使用 `@xdd-zone/catppuccin-theme/styles/bobo.css`。
@@ -206,6 +208,7 @@ Momo 数据库里的业务数据为准。Bobo 的缓存、metadata、RSS 和 sit
 - `AGENTS.md`
 - `README.md`
 - `docs/index.md`
+- `docs/apps/bobo-design.md`
 - `docs/development.md`
 - `docs/testing.md`
 - `docs/skills.md`

@@ -21,7 +21,7 @@
 
 只要任务涉及页面、布局、导航或展示型组件，先看：
 
-1. `apps/fifa/design-context.md`
+1. `docs/apps/fifa-design.md`
 2. `apps/fifa/README.md`
 3. 这份文档
 
@@ -295,6 +295,7 @@ DELETE /rpc/llm/call-logs/expired
 
 主题说明看：
 
+- [apps/fifa-design.md](./fifa-design.md)
 - [topics/theme.md](../topics/theme.md)
 
 相关文件：

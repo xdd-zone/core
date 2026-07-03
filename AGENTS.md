@@ -43,11 +43,11 @@
 - 文案要写清用途、位置、使用方式、输入输出和返回结果。
 - 同一任务里发现术语不统一、重复表达、风格不一致，只整理当前任务碰到的范围。
 
-### 3. 涉及 `apps/fifa` 的界面开发，先读设计上下文，再调用 `frontend-design`
+### 3. 涉及 `apps/fifa` 的界面开发，先读设计规范，再调用 `frontend-design`
 
 执行规则：
 
-1. 先看 `apps/fifa/design-context.md`
+1. 先看 `docs/apps/fifa-design.md`
 2. 再调用 `frontend-design`
 3. 再继续页面、布局、导航和展示型组件实现
 
@@ -73,7 +73,7 @@
 
 - 进了 `apps/momo` 但没先调 `xdd-honojs`，先补调。
 - 改了文档但没先调 `xdd-plain-docs`，先补调。
-- 改了 Fifa UI 但没先看 `apps/fifa/design-context.md`，先补看。
+- 改了 Fifa UI 但没先看 `docs/apps/fifa-design.md`，先补看。
 - 改了 Bobo UI 但没先看 `docs/apps/bobo.md`，先补看。
 
 ## 文档读取顺序
@@ -83,7 +83,7 @@
 1. 仓库根目录 `AGENTS.md`
 2. `docs/` 里和当前任务最相关的文档
 3. 目标包自己的 README
-4. 如果是 Fifa 界面任务，再读 `apps/fifa/design-context.md`
+4. 如果是 Fifa 界面任务，再读 `docs/apps/fifa-design.md`
 5. 如果是 Bobo 站点任务，再读 `docs/apps/bobo.md`
 
 常用入口：
@@ -286,7 +286,7 @@ pnpm type-check
 
 - 文档任务：`xdd-plain-docs`
 - Momo 任务：`xdd-honojs`
-- Fifa 界面任务：先读 `apps/fifa/design-context.md`，再用 `frontend-design`
-- Fifa 界面 + 文案任务：先读 `apps/fifa/design-context.md`，再用 `frontend-design`，最后用 `xdd-plain-docs`
+- Fifa 界面任务：先读 `docs/apps/fifa-design.md`，再用 `frontend-design`
+- Fifa 界面 + 文案任务：先读 `docs/apps/fifa-design.md`，再用 `frontend-design`，最后用 `xdd-plain-docs`
 - Bobo 界面任务：先读 `docs/apps/bobo.md`，再用 `frontend-design`
 - Bobo 界面 + 文案任务：先读 `docs/apps/bobo.md`，再用 `frontend-design`，最后用 `xdd-plain-docs`

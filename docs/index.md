@@ -31,8 +31,9 @@
 先看：
 
 1. [apps/fifa.md](./apps/fifa.md)
-2. [topics/theme.md](./topics/theme.md)
-3. [apps/fifa/README.md](../apps/fifa/README.md)
+2. 改页面、组件或样式时看 [apps/fifa-design.md](./apps/fifa-design.md)
+3. [topics/theme.md](./topics/theme.md)
+4. [apps/fifa/README.md](../apps/fifa/README.md)
 
 代码入口：
 
@@ -47,7 +48,8 @@
 先看：
 
 1. [apps/bobo.md](./apps/bobo.md)
-2. [apps/bobo/README.md](../apps/bobo/README.md)
+2. 改页面、组件或样式时看 [apps/bobo-design.md](./apps/bobo-design.md)
+3. [apps/bobo/README.md](../apps/bobo/README.md)
 
 代码入口：
 
@@ -107,6 +109,8 @@ docs/
 - [development/code-server.md](./development/code-server.md)：code-server Web IDE 里使用个人 dev 域名开发时的项目侧入口。
 - [packages.md](./packages.md)：共享包目录、包边界和检查命令。
 - [apps/momo.md](./apps/momo.md)：Momo 后端目录和新增接口规则。
+- [apps/fifa-design.md](./apps/fifa-design.md)：Fifa 页面、组件和样式设计规则。
 - [apps/bobo.md](./apps/bobo.md)：Bobo 个人站点目录、命令和维护规则。
+- [apps/bobo-design.md](./apps/bobo-design.md)：Bobo 页面、组件和样式设计规则。
 - [skills.md](./skills.md)：仓库常用技能顺序。
 - [faq.md](./faq.md)：当前常见问题。
