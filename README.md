@@ -64,7 +64,7 @@ XDD Zone Core 是一个面向个人站点的内容管理系统，使用 pnpm wor
 ## 技术栈
 
 - Node.js 22+
-- pnpm 10+
+- pnpm 使用根目录 `packageManager` 声明的版本
 - Turborepo 2
 - React 19 + Vite 8
 - Next.js 16
