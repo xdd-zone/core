@@ -200,6 +200,15 @@ pnpm exec prettier --check <改过的 md 文件>
 - 子包依赖优先写 `catalog:`、`catalog:react`、`catalog:vite`、`catalog:shiki` 或 `workspace:*`。
 - 不把包名改成 `web`、`admin`、`api`。
 
+## Commit Message
+
+- 默认使用 Conventional Commits 短格式：`<type>(<scope>)!: <subject>`。
+- `scope` 可选，只写当前项目的 `apps` 和 `packages` 名称，例如 `fifa`、`momo`、`bobo`、`contracts`、`catppuccin-theme`、`eslint-config`。
+- `subject` 用英文短句，首字母小写，不加句号，尽量控制在 50 字符以内。
+- 常用类型：`feat`、`fix`、`docs`、`style`、`refactor`、`perf`、`test`、`build`、`ci`、`chore`、`types`、`release`、`revert`。
+- 破坏旧用法时加 `!`，并在正文写 `BREAKING CHANGE:`。
+- 不添加 `Generated with ...`、`Co-authored-by ...` 等工具署名，除非用户明确要求。
+
 ## 构建与检查命令
 
 ### 根目录
