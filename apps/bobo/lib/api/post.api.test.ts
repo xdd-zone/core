@@ -20,6 +20,7 @@ describe('post api', () => {
 
     await getPublicPosts({
       categorySlug: 'notes',
+      page: 2,
       pageSize: 20,
       tagSlug: 'nextjs',
     })
@@ -33,6 +34,7 @@ describe('post api', () => {
       },
       query: {
         categorySlug: 'notes',
+        page: 2,
         pageSize: 20,
         tagSlug: 'nextjs',
       },

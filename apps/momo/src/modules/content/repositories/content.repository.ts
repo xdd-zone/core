@@ -129,45 +129,8 @@ export function createContentRepository(db: DbClient) {
   }
 
   async function listPublicPosts(input: ListPublicPostsInput = {}): Promise<ContentPostRecord[]> {
-    const conditions: SQL<unknown>[] = [eq(contentPosts.status, 'published')]
-
-    if (input.categorySlug) {
-      const [category] = await db
-        .select({ id: contentCategories.id })
-        .from(contentCategories)
-        .where(eq(contentCategories.slug, input.categorySlug))
-        .limit(1)
-
-      if (!category) {
-        return []
-      }
-
-      conditions.push(eq(contentPosts.publishedCategoryId, category.id))
-    }
-
-    if (input.tagSlug) {
-      const [tag] = await db
-        .select({ id: contentTags.id })
-        .from(contentTags)
-        .where(eq(contentTags.slug, input.tagSlug))
-        .limit(1)
-
-      if (!tag) {
-        return []
-      }
-
-      const postTagRows = await db
-        .select({ postId: contentPostPublishedTags.postId })
-        .from(contentPostPublishedTags)
-        .where(eq(contentPostPublishedTags.tagId, tag.id))
-
-      const postIds = postTagRows.map((row) => row.postId)
-      if (postIds.length === 0) {
-        return []
-      }
-
-      conditions.push(inArray(contentPosts.id, postIds))
-    }
+    const conditions = await buildPublicPostWhereConditions(input)
+    if (!conditions) return []
 
     const query = db
       .select()
@@ -185,6 +148,61 @@ export function createContentRepository(db: DbClient) {
     }
 
     return query
+  }
+
+  async function countPublicPosts(input: ListPublicPostsInput = {}): Promise<number> {
+    const conditions = await buildPublicPostWhereConditions(input)
+    if (!conditions) return 0
+
+    const [result] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(contentPosts)
+      .where(and(...conditions))
+    return result?.count ?? 0
+  }
+
+  async function buildPublicPostWhereConditions(input: ListPublicPostsInput): Promise<SQL<unknown>[] | undefined> {
+    const conditions: SQL<unknown>[] = [eq(contentPosts.status, 'published')]
+
+    if (input.categorySlug) {
+      const [category] = await db
+        .select({ id: contentCategories.id })
+        .from(contentCategories)
+        .where(eq(contentCategories.slug, input.categorySlug))
+        .limit(1)
+
+      if (!category) {
+        return undefined
+      }
+
+      conditions.push(eq(contentPosts.publishedCategoryId, category.id))
+    }
+
+    if (input.tagSlug) {
+      const [tag] = await db
+        .select({ id: contentTags.id })
+        .from(contentTags)
+        .where(eq(contentTags.slug, input.tagSlug))
+        .limit(1)
+
+      if (!tag) {
+        return undefined
+      }
+
+      const postTagRows = await db
+        .select({ postId: contentPostPublishedTags.postId })
+        .from(contentPostPublishedTags)
+        .where(eq(contentPostPublishedTags.tagId, tag.id))
+
+      const postIds = postTagRows.map((row) => row.postId)
+      if (postIds.length === 0) {
+        return undefined
+      }
+
+      conditions.push(inArray(contentPosts.id, postIds))
+    }
+
+    return conditions
   }
 
   async function saveDraft(input: SaveContentDraftInput): Promise<ContentPostRecord | undefined> {
@@ -491,6 +509,7 @@ export function createContentRepository(db: DbClient) {
   }
 
   return {
+    countPublicPosts,
     createPost,
     createPreviewToken,
     archivePost,

@@ -1,10 +1,13 @@
-import type { PublicProjectSummary } from '@xdd-zone/contracts'
+import type { PublicProjectListResponse, PublicProjectSummary } from '@xdd-zone/contracts'
 import { PublicProjectListResponseSchema, PublicProjectResponseSchema } from '@xdd-zone/contracts'
 import {
   getPublicProject as requestPublicProject,
   getPublicProjects as requestPublicProjects,
 } from '@/lib/api/projects.api'
 import { assertPublicCmsData, PublicCmsError } from '@/lib/public-cms-error'
+
+const PROJECT_PAGE_SIZE = 8
+const PROJECT_FULL_LIST_PAGE_SIZE = 50
 
 export const FALLBACK_PUBLIC_PROJECTS = [
   {
@@ -54,13 +57,23 @@ export const FALLBACK_PUBLIC_PROJECTS = [
 ] satisfies PublicProjectSummary[]
 
 export async function getPublicProjects(): Promise<PublicProjectSummary[]> {
-  const body = await requestPublicProjects()
+  return (await getPublicProjectList({ pageSize: PROJECT_FULL_LIST_PAGE_SIZE })).projects
+}
+
+export async function getPublicProjectList({
+  page = 1,
+  pageSize = PROJECT_PAGE_SIZE,
+}: {
+  page?: number
+  pageSize?: number
+} = {}): Promise<PublicProjectListResponse> {
+  const body = await requestPublicProjects({ page, pageSize })
 
   if (!body.ok) {
     throw new PublicCmsError('request-failed', body.error.message || 'Momo 公开项目接口暂时不可用。', body.error.code)
   }
 
-  return assertPublicCmsData(body.data, PublicProjectListResponseSchema, 'Momo 返回的公开项目列表格式不正确。').projects
+  return assertPublicCmsData(body.data, PublicProjectListResponseSchema, 'Momo 返回的公开项目列表格式不正确。')
 }
 
 export async function getPublicProject(slug: string): Promise<PublicProjectSummary> {
@@ -78,5 +91,25 @@ export async function getPublicProjectsOrFallback(): Promise<PublicProjectSummar
     return await getPublicProjects()
   } catch {
     return FALLBACK_PUBLIC_PROJECTS
+  }
+}
+
+export async function getPublicProjectListOrFallback(page: number): Promise<PublicProjectListResponse> {
+  try {
+    return await getPublicProjectList({ page })
+  } catch {
+    const total = FALLBACK_PUBLIC_PROJECTS.length
+    const totalPages = Math.ceil(total / PROJECT_PAGE_SIZE)
+    const start = (Math.max(1, page) - 1) * PROJECT_PAGE_SIZE
+
+    return {
+      hasNextPage: page < totalPages,
+      hasPreviousPage: totalPages > 0 && page > 1,
+      page,
+      pageSize: PROJECT_PAGE_SIZE,
+      projects: FALLBACK_PUBLIC_PROJECTS.slice(start, start + PROJECT_PAGE_SIZE),
+      total,
+      totalPages,
+    }
   }
 }

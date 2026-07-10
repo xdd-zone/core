@@ -19,12 +19,14 @@ function publicPostInit(slug: string) {
 
 export function getPublicPosts(filters: {
   categorySlug?: string
+  page?: number
   tagSlug?: string
   pageSize?: number
 }): Promise<ApiResponse<PublicPostListResponse>> {
   return http.get<PublicPostListResponse>('/rpc/bobo/content/posts', {
     query: {
       categorySlug: filters.categorySlug,
+      page: filters.page,
       tagSlug: filters.tagSlug,
       pageSize: filters.pageSize,
     },

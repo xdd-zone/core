@@ -2,6 +2,7 @@ import type {
   PublicCategoryListItem,
   PublicPostDetail,
   PublicPostListQuery,
+  PublicPostListResponse,
   PublicPostSummary,
   PublicTag,
 } from '@xdd-zone/contracts'
@@ -19,18 +20,29 @@ import {
 } from '../public-content.presenter'
 
 export function createPublicContentService(repository: ContentRepository, taxonomyRepository: TaxonomyRepository) {
-  async function listPosts(query: PublicPostListQuery): Promise<{ posts: PublicPostSummary[] }> {
+  async function listPosts(query: PublicPostListQuery): Promise<PublicPostListResponse> {
     const page = normalizePage(query.page)
     const pageSize = normalizePageSize(query.pageSize)
-    const posts = await repository.listPublicPosts({
+    const listInput = {
       categorySlug: normalizeText(query.categorySlug),
       limit: pageSize,
       offset: (page - 1) * pageSize,
       tagSlug: normalizeText(query.tagSlug),
-    })
+    }
+    const [posts, total] = await Promise.all([
+      repository.listPublicPosts(listInput),
+      repository.countPublicPosts(listInput),
+    ])
+    const totalPages = Math.ceil(total / pageSize)
 
     return {
+      hasNextPage: page < totalPages,
+      hasPreviousPage: totalPages > 0 && page > 1,
+      page,
+      pageSize,
       posts: await enrichPostsWithTaxonomy(posts),
+      total,
+      totalPages,
     }
   }
 

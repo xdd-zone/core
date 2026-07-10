@@ -17,8 +17,14 @@ function publicProjectInit(slug: string) {
   } as RequestInit
 }
 
-export function getPublicProjects(): Promise<ApiResponse<PublicProjectListResponse>> {
+export function getPublicProjects(
+  filters: { page?: number; pageSize?: number } = {},
+): Promise<ApiResponse<PublicProjectListResponse>> {
   return http.get<PublicProjectListResponse>('/rpc/bobo/projects', {
+    query: {
+      page: filters.page,
+      pageSize: filters.pageSize,
+    },
     init: publicProjectsInit,
   })
 }

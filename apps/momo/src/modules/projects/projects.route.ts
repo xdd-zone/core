@@ -1,7 +1,11 @@
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
 import { zValidator } from '@hono/zod-validator'
-import { CreateProjectRequestSchema, SaveProjectDraftRequestSchema } from '@xdd-zone/contracts'
+import {
+  CreateProjectRequestSchema,
+  PublicProjectListQuerySchema,
+  SaveProjectDraftRequestSchema,
+} from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 import { getDb } from '#momo/infra/db/client'
 import { createRequirePermission } from '#momo/modules/auth/index'
@@ -71,10 +75,18 @@ export function createProjectsRoute(runtime: MomoRuntime) {
       const result = await service.archiveProject(c.req.param('id'), c.var.user!.id)
       return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
     })
-    .get('/rpc/bobo/projects', async (c) => {
-      const projects = await service.listPublicProjects()
-      return c.json(createSuccessResponse({ projects }, createMeta(c.var.requestId)))
-    })
+    .get(
+      '/rpc/bobo/projects',
+      zValidator('query', PublicProjectListQuerySchema, (result) => {
+        if (result.success) return
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) => {
+        const result = await service.listPublicProjects(c.req.valid('query'))
+        return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
+      },
+    )
     .get('/rpc/bobo/projects/:slug', async (c) => {
       const project = await service.getPublicProject(c.req.param('slug'))
       return c.json(createSuccessResponse({ project }, createMeta(c.var.requestId)))

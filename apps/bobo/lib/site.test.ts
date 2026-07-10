@@ -87,8 +87,8 @@ describe('site domain', () => {
 
     mocks.getPublicSiteConfig.mockResolvedValue(ok({ site }))
     mocks.getPublicProfile.mockResolvedValue(ok({ profile }))
-    mocks.getPublicProjects.mockResolvedValue(ok({ projects: [project] }))
-    mocks.getPublicPosts.mockResolvedValue(ok({ posts: [post] }))
+    mocks.getPublicProjects.mockResolvedValue(ok(createProjectListResponse([project])))
+    mocks.getPublicPosts.mockResolvedValue(ok(createPostListResponse([post])))
 
     const data = await getHomePageData()
 
@@ -132,5 +132,29 @@ function fail(message: string) {
     },
     meta: { requestId: 'request-fail', timestamp: '2026-06-01T00:00:00.000Z' },
     ok: false,
+  }
+}
+
+function createPostListResponse(posts = [post]) {
+  return {
+    hasNextPage: false,
+    hasPreviousPage: false,
+    page: 1,
+    pageSize: 4,
+    posts,
+    total: posts.length,
+    totalPages: posts.length > 0 ? 1 : 0,
+  }
+}
+
+function createProjectListResponse(projects = [project]) {
+  return {
+    hasNextPage: false,
+    hasPreviousPage: false,
+    page: 1,
+    pageSize: 50,
+    projects,
+    total: projects.length,
+    totalPages: projects.length > 0 ? 1 : 0,
   }
 }

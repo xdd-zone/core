@@ -1,4 +1,10 @@
-import type { BizCodeValue, PublicCategoryListItem, PublicPostSummary, PublicTag } from '@xdd-zone/contracts'
+import type {
+  BizCodeValue,
+  PublicCategoryListItem,
+  PublicPostListResponse,
+  PublicPostSummary,
+  PublicTag,
+} from '@xdd-zone/contracts'
 import {
   PublicCategoryListResponseSchema,
   PublicPostListResponseSchema,
@@ -10,9 +16,11 @@ import { getPublicPost as requestPublicPost, getPublicPosts as requestPublicPost
 import { getPublicTags as requestPublicTags } from '@/lib/api/tag.api'
 
 const CATEGORY_MENU_POST_LIMIT = 5
+const WRITING_PAGE_SIZE = 10
 
 export interface PublicContentFilters {
   categorySlug?: string
+  page?: number
   tagSlug?: string
 }
 
@@ -22,20 +30,27 @@ export interface PublicCategoryMenuItem extends PublicCategoryListItem {
 
 export interface PublicWritingData {
   categories: PublicCategoryMenuItem[]
+  pagination: PublicListPagination
   posts: PublicPostSummary[]
   tags: PublicTag[]
 }
 
+export type PublicListPagination = Pick<
+  PublicPostListResponse,
+  'hasNextPage' | 'hasPreviousPage' | 'page' | 'pageSize' | 'total' | 'totalPages'
+>
+
 export async function getPublicWritingData(filters: PublicContentFilters = {}): Promise<PublicWritingData> {
-  const [posts, categories, tags] = await Promise.all([
-    fetchPublicPosts(filters),
+  const [postList, categories, tags] = await Promise.all([
+    fetchPublicPostList({ ...filters, pageSize: WRITING_PAGE_SIZE }),
     getPublicCategoryMenu(),
     fetchPublicTags(),
   ])
 
   return {
     categories,
-    posts,
+    pagination: toPagination(postList),
+    posts: postList.posts,
     tags,
   }
 }
@@ -82,6 +97,14 @@ async function fetchPublicPosts(
     pageSize?: number
   },
 ): Promise<PublicPostSummary[]> {
+  return (await fetchPublicPostList(filters)).posts
+}
+
+async function fetchPublicPostList(
+  filters: PublicContentFilters & {
+    pageSize?: number
+  },
+): Promise<PublicPostListResponse> {
   const body = await requestPublicPosts({
     ...filters,
     pageSize: filters.pageSize ?? 50,
@@ -101,7 +124,18 @@ async function fetchPublicPosts(
     throw new PublicContentError('invalid-response', 'Momo 返回的公开文章列表格式不正确。')
   }
 
-  return parsed.data.posts
+  return parsed.data
+}
+
+function toPagination(response: PublicPostListResponse): PublicListPagination {
+  return {
+    hasNextPage: response.hasNextPage,
+    hasPreviousPage: response.hasPreviousPage,
+    page: response.page,
+    pageSize: response.pageSize,
+    total: response.total,
+    totalPages: response.totalPages,
+  }
 }
 
 async function fetchPublicCategories(): Promise<PublicCategoryListItem[]> {

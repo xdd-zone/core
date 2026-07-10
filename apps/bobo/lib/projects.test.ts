@@ -32,12 +32,31 @@ describe('projects domain', () => {
     const { getPublicProjects } = await import('./projects')
 
     mocks.getPublicProjects.mockResolvedValue({
-      data: { projects: [project] },
+      data: createProjectListResponse([project]),
       meta: { requestId: 'request-1', timestamp: '2026-06-01T00:00:00.000Z' },
       ok: true,
     })
 
     await expect(getPublicProjects()).resolves.toEqual([project])
+    expect(mocks.getPublicProjects).toHaveBeenCalledWith({ page: 1, pageSize: 50 })
+  })
+
+  it('读取公开项目分页列表成功时返回完整分页数据', async () => {
+    const { getPublicProjectList } = await import('./projects')
+    const payload = {
+      ...createProjectListResponse([project]),
+      hasPreviousPage: true,
+      page: 2,
+    }
+
+    mocks.getPublicProjects.mockResolvedValue({
+      data: payload,
+      meta: { requestId: 'request-4', timestamp: '2026-06-01T00:00:00.000Z' },
+      ok: true,
+    })
+
+    await expect(getPublicProjectList({ page: 2 })).resolves.toEqual(payload)
+    expect(mocks.getPublicProjects).toHaveBeenCalledWith({ page: 2, pageSize: 8 })
   })
 
   it('公开项目列表返回错误时抛出错误信息', async () => {
@@ -72,3 +91,15 @@ describe('projects domain', () => {
     expect(mocks.getPublicProject).toHaveBeenCalledWith('project-1')
   })
 })
+
+function createProjectListResponse(projects = [project]) {
+  return {
+    hasNextPage: false,
+    hasPreviousPage: false,
+    page: 1,
+    pageSize: 8,
+    projects,
+    total: projects.length,
+    totalPages: projects.length > 0 ? 1 : 0,
+  }
+}

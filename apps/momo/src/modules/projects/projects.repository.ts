@@ -1,6 +1,6 @@
 import type { CreateProjectRequest, SaveProjectDraftRequest } from '@xdd-zone/contracts'
 import type { DbClient } from '#momo/infra/db/client'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 import { contentPreviewTokens, eventOutbox, projects } from '#momo/infra/db/schema/index'
 
 export function createProjectsRepository(db: DbClient) {
@@ -8,8 +8,22 @@ export function createProjectsRepository(db: DbClient) {
     return db.select().from(projects).orderBy(desc(projects.updatedAt))
   }
 
-  async function listPublicProjects() {
-    return db.select().from(projects).where(eq(projects.status, 'published')).orderBy(projects.order)
+  async function listPublicProjects(options: { limit: number; offset: number }) {
+    return db
+      .select()
+      .from(projects)
+      .where(eq(projects.status, 'published'))
+      .orderBy(projects.order)
+      .limit(options.limit)
+      .offset(options.offset)
+  }
+
+  async function countPublicProjects(): Promise<number> {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(projects)
+      .where(eq(projects.status, 'published'))
+    return result?.count ?? 0
   }
 
   async function getProjectById(id: string) {
@@ -167,6 +181,7 @@ export function createProjectsRepository(db: DbClient) {
 
   return {
     archiveProject,
+    countPublicProjects,
     createProject,
     createPreviewToken,
     getProjectById,

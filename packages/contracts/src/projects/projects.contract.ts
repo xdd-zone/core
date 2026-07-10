@@ -67,6 +67,11 @@ export const PublicProjectSummarySchema = z.object({
   updatedAt: z.string(),
 })
 
+export const PublicProjectListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  pageSize: z.coerce.number().int().positive().max(50).default(8),
+})
+
 export const ProjectListResponseSchema = z.object({
   projects: z.array(ProjectSummarySchema),
 })
@@ -77,7 +82,13 @@ export const ProjectResponseSchema = z.object({
 })
 
 export const PublicProjectListResponseSchema = z.object({
+  hasNextPage: z.boolean(),
+  hasPreviousPage: z.boolean(),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
   projects: z.array(PublicProjectSummarySchema),
+  total: z.number().int().nonnegative(),
+  totalPages: z.number().int().nonnegative(),
 })
 
 export const PublicProjectResponseSchema = z.object({
@@ -90,6 +101,7 @@ export type ProjectResponse = z.infer<typeof ProjectResponseSchema>
 export type ProjectStatus = z.infer<typeof ProjectStatusSchema>
 export type ProjectSummary = z.infer<typeof ProjectSummarySchema>
 export type PublicProjectListResponse = z.infer<typeof PublicProjectListResponseSchema>
+export type PublicProjectListQuery = z.infer<typeof PublicProjectListQuerySchema>
 export type PublicProjectResponse = z.infer<typeof PublicProjectResponseSchema>
 export type PublicProjectSummary = z.infer<typeof PublicProjectSummarySchema>
 export type SaveProjectDraftRequest = z.infer<typeof SaveProjectDraftRequestSchema>

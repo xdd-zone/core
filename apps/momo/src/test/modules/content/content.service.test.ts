@@ -1,3 +1,4 @@
+import type { OperationWarning } from '@xdd-zone/contracts'
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { AssetsRepository } from '#momo/modules/assets/index'
 import type { ContentRepository } from '#momo/modules/content/repositories/content.repository'
@@ -10,7 +11,7 @@ import type {
 import type { EventsService } from '#momo/modules/events/index'
 import type { ProjectsRepository } from '#momo/modules/projects/projects.repository'
 import type { AppError } from '#momo/shared/app-error'
-import { BizCode, OperationWarning } from '@xdd-zone/contracts'
+import { BizCode } from '@xdd-zone/contracts'
 import { describe, expect, it, vi } from 'vitest'
 import { createContentService } from '#momo/modules/content/services/content.service'
 import { createPreviewService } from '#momo/modules/preview/preview.service'

@@ -173,6 +173,14 @@ describe('content 路由', () => {
     const publicListData = expectOkData(publicListBody)
     const parsedPublicList = PublicPostListResponseSchema.parse(publicListData)
     expect(parsedPublicList.posts).toHaveLength(1)
+    expect(parsedPublicList).toMatchObject({
+      hasNextPage: false,
+      hasPreviousPage: false,
+      page: 1,
+      pageSize: 10,
+      total: 1,
+      totalPages: 1,
+    })
     expect(parsedPublicList.posts[0]).not.toHaveProperty('status')
 
     const publicResponse = await momoApp.request('/rpc/bobo/content/posts/hello-content')
@@ -228,6 +236,8 @@ describe('content 路由', () => {
     const parsedList = PublicPostListResponseSchema.parse(listData)
 
     expect(parsedList.posts.map((post) => post.slug)).toEqual(['public-filtered-post'])
+    expect(parsedList.total).toBe(1)
+    expect(parsedList.totalPages).toBe(1)
     expect(parsedList.posts[0].category?.slug).toBe('notes')
     expect(parsedList.posts[0].tags.map((item) => item.slug)).toEqual(['typescript'])
 

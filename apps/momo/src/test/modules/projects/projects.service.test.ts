@@ -5,6 +5,27 @@ import { describe, expect, it, vi } from 'vitest'
 import { createProjectsService } from '#momo/modules/projects/projects.service'
 
 describe('projects service', () => {
+  it('公开项目列表返回分页信息', async () => {
+    const repository = createRepository({
+      countPublicProjects: vi.fn(async () => 9),
+      listPublicProjects: vi.fn(async () => [createProjectRecord()]),
+    })
+    const service = createProjectsService(repository, createEventsService())
+
+    const result = await service.listPublicProjects({ page: 2, pageSize: 8 })
+
+    expect(repository.listPublicProjects).toHaveBeenCalledWith({ limit: 8, offset: 8 })
+    expect(result).toMatchObject({
+      hasNextPage: false,
+      hasPreviousPage: true,
+      page: 2,
+      pageSize: 8,
+      total: 9,
+      totalPages: 2,
+    })
+    expect(result.projects).toHaveLength(1)
+  })
+
   it('发布项目后调用项目发布事件处理', async () => {
     const repository = createRepository()
     const eventsService = createEventsService()
@@ -107,6 +128,7 @@ describe('projects service', () => {
 function createRepository(overrides: Partial<ProjectsRepository> = {}): ProjectsRepository {
   return {
     archiveProject: vi.fn(),
+    countPublicProjects: vi.fn(async () => 0),
     createProject: vi.fn(),
     createPreviewToken: vi.fn(),
     getProjectById: vi.fn(),

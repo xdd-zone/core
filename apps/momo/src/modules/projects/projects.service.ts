@@ -3,6 +3,8 @@ import type {
   OperationWarning,
   PreviewTokenResponse,
   ProjectSummary,
+  PublicProjectListQuery,
+  PublicProjectListResponse,
   PublicProjectSummary,
   SaveProjectDraftRequest,
 } from '@xdd-zone/contracts'
@@ -18,14 +20,33 @@ import {
 import { AppError } from '#momo/shared/app-error'
 
 const PREVIEW_TOKEN_TTL_MS = 30 * 60 * 1000
+const PUBLIC_PROJECT_LIST_DEFAULT_PAGE_SIZE = 8
+const PUBLIC_PROJECT_LIST_MAX_PAGE_SIZE = 50
 
 export function createProjectsService(repository: ProjectsRepository, eventsService?: EventsService) {
   async function listProjects(): Promise<ProjectSummary[]> {
     return (await repository.listProjects()).map(toProjectSummary)
   }
 
-  async function listPublicProjects(): Promise<PublicProjectSummary[]> {
-    return (await repository.listPublicProjects()).map(toPublicProjectSummary)
+  async function listPublicProjects(query: PublicProjectListQuery): Promise<PublicProjectListResponse> {
+    const page = normalizePage(query.page)
+    const pageSize = normalizePageSize(query.pageSize)
+    const offset = (page - 1) * pageSize
+    const [projects, total] = await Promise.all([
+      repository.listPublicProjects({ limit: pageSize, offset }),
+      repository.countPublicProjects(),
+    ])
+    const totalPages = Math.ceil(total / pageSize)
+
+    return {
+      hasNextPage: page < totalPages,
+      hasPreviousPage: totalPages > 0 && page > 1,
+      page,
+      pageSize,
+      projects: projects.map(toPublicProjectSummary),
+      total,
+      totalPages,
+    }
   }
 
   async function getProject(id: string): Promise<ProjectSummary> {
@@ -170,6 +191,22 @@ function toPublicProjectSummary(project: ProjectRecord): PublicProjectSummary {
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex')
+}
+
+function normalizePage(value: number | undefined): number {
+  if (!value || Number.isNaN(value)) {
+    return 1
+  }
+
+  return Math.max(1, Math.floor(value))
+}
+
+function normalizePageSize(value: number | undefined): number {
+  if (!value || Number.isNaN(value)) {
+    return PUBLIC_PROJECT_LIST_DEFAULT_PAGE_SIZE
+  }
+
+  return Math.min(PUBLIC_PROJECT_LIST_MAX_PAGE_SIZE, Math.max(1, Math.floor(value)))
 }
 
 type ProjectRecord = NonNullable<Awaited<ReturnType<ProjectsRepository['getProjectById']>>>

@@ -148,7 +148,7 @@ pnpm seed:owner
 - `GET`、`PATCH` 或 `DELETE /rpc/content/tags/:id`
   读取、更新或删除后台标签。
 - `GET /rpc/bobo/content/posts`
-  返回个人站公开文章列表。
+  返回个人站公开文章列表，支持 `page`、`pageSize`、`categorySlug` 和 `tagSlug`，响应里带分页字段。
 - `GET /rpc/bobo/content/posts/:slug`
   返回个人站公开文章详情。
 - `GET /rpc/bobo/content/categories`
@@ -180,7 +180,7 @@ pnpm seed:owner
 - `GET /rpc/previews/:token`
   使用通用预览 token 读取文章或项目预览数据。旧文章预览路径仍然保留。
 - `GET /rpc/bobo/projects`
-  返回公开项目列表。
+  返回公开项目列表，支持 `page` 和 `pageSize`，响应里带分页字段。
 - `GET /rpc/bobo/projects/:slug`
   返回公开项目详情。
 - `GET /rpc/bobo/search?q=关键词`

@@ -166,7 +166,13 @@ export const PublicPostResponseSchema = z.object({
 })
 
 export const PublicPostListResponseSchema = z.object({
+  hasNextPage: z.boolean(),
+  hasPreviousPage: z.boolean(),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
   posts: z.array(PublicPostSummarySchema),
+  total: z.number().int().nonnegative(),
+  totalPages: z.number().int().nonnegative(),
 })
 
 export const PublicCategoryListResponseSchema = z.object({

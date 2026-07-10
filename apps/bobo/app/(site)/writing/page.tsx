@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { Pagination } from '@/components/site/pagination'
 import { getPublicWritingData, PublicContentError } from '@/lib/content/public-content'
 
 interface WritingPageProps {
   searchParams: Promise<{
     category?: string | string[]
+    page?: string | string[]
     tag?: string | string[]
   }>
 }
@@ -18,11 +20,12 @@ export const metadata: Metadata = {
 export default async function WritingPage({ searchParams }: WritingPageProps) {
   const params = await searchParams
   const categorySlug = readParam(params.category)
+  const page = readPageParam(params.page)
   const tagSlug = readParam(params.tag)
 
   let data: Awaited<ReturnType<typeof getPublicWritingData>>
   try {
-    data = await getPublicWritingData({ categorySlug, tagSlug })
+    data = await getPublicWritingData({ categorySlug, page, tagSlug })
   } catch (error) {
     return <WritingErrorPage error={error} />
   }
@@ -85,6 +88,11 @@ export default async function WritingPage({ searchParams }: WritingPageProps) {
                 <p className="text-muted-foreground text-[0.95rem] max-w-120 mt-4">
                   {activeTag ? activeTag.name : '按发布时间排列，先看最新的一批。'}
                 </p>
+                {data.pagination.total > 0 ? (
+                  <p className="text-muted-foreground text-[0.85rem] mt-3 tabular-nums">
+                    第 {data.pagination.page} / {data.pagination.totalPages} 页，共 {data.pagination.total} 篇
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -134,15 +142,28 @@ export default async function WritingPage({ searchParams }: WritingPageProps) {
               </div>
             ) : (
               <div className="border-t border-border py-9">
-                <p className="text-muted-foreground">当前筛选下还没有公开文章。</p>
+                <p className="text-muted-foreground">
+                  {data.pagination.total > 0 ? '这一页没有公开文章。' : '当前筛选下还没有公开文章。'}
+                </p>
                 <Link
                   className="inline-flex mt-4 text-foreground underline decoration-ld-text/25 underline-offset-6"
-                  href="/writing"
+                  href={data.pagination.total > 0 ? buildPageHref({ categorySlug, page: 1, tagSlug }) : '/writing'}
                 >
-                  查看全部文稿
+                  {data.pagination.total > 0 ? '返回第一页' : '查看全部文稿'}
                 </Link>
               </div>
             )}
+
+            {data.pagination.total > 0 ? (
+              <Pagination
+                currentPage={data.pagination.page}
+                totalPages={data.pagination.totalPages}
+                hasNextPage={data.pagination.hasNextPage}
+                hasPreviousPage={data.pagination.hasPreviousPage}
+                nextHref={buildPageHref({ categorySlug, page: data.pagination.page + 1, tagSlug })}
+                previousHref={buildPageHref({ categorySlug, page: data.pagination.page - 1, tagSlug })}
+              />
+            ) : null}
           </div>
         </div>
       </section>
@@ -187,8 +208,22 @@ function buildFilterHref({ categorySlug, tagSlug }: { categorySlug?: string; tag
   return query ? `/writing?${query}` : '/writing'
 }
 
+function buildPageHref({ categorySlug, page, tagSlug }: { categorySlug?: string; page: number; tagSlug?: string }) {
+  const params = new URLSearchParams()
+  if (categorySlug) params.set('category', categorySlug)
+  if (tagSlug) params.set('tag', tagSlug)
+  if (page > 1) params.set('page', String(page))
+  const query = params.toString()
+  return query ? `/writing?${query}` : '/writing'
+}
+
 function readParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value
+}
+
+function readPageParam(value: string | string[] | undefined) {
+  const page = Number(readParam(value))
+  return Number.isFinite(page) && page > 0 ? Math.floor(page) : 1
 }
 
 function formatDate(value: string) {

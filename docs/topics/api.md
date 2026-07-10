@@ -100,7 +100,7 @@ apps/momo/src/modules/events/events.route.ts
 | `PATCH` | `/rpc/content/tags/:id` | 更新标签 |
 | `DELETE` | `/rpc/content/tags/:id` | 删除标签 |
 | `GET` | `/rpc/previews/:token` | 使用通用预览 token 读取文章或项目预览数据 |
-| `GET` | `/rpc/bobo/content/posts` | 个人站文章列表，可按分类和标签筛选 |
+| `GET` | `/rpc/bobo/content/posts?page=1&pageSize=10&categorySlug=notes&tagSlug=typescript` | 个人站文章列表，可按页码、分类和标签筛选，返回分页字段 |
 | `GET` | `/rpc/bobo/content/posts/:slug` | 个人站文章详情，只返回已发布文章 |
 | `GET` | `/rpc/bobo/content/categories` | 个人站分类列表，返回每个分类的已发布文章数量 |
 | `GET` | `/rpc/bobo/content/tags` | 个人站标签列表 |
@@ -117,7 +117,7 @@ apps/momo/src/modules/events/events.route.ts
 | `POST` | `/rpc/projects/:id/publish` | 发布项目 |
 | `POST` | `/rpc/projects/:id/preview-token` | 生成项目预览 token |
 | `POST` | `/rpc/projects/:id/archive` | 归档项目，并从公开站点和搜索索引移除 |
-| `GET` | `/rpc/bobo/projects` | 公开项目列表 |
+| `GET` | `/rpc/bobo/projects?page=1&pageSize=8` | 公开项目列表，返回分页字段 |
 | `GET` | `/rpc/bobo/projects/:slug` | 公开项目详情 |
 | `GET` | `/rpc/bobo/search?q=关键词` | 公开站点搜索，搜索未启用时返回空数组 |
 | `POST` | `/rpc/events/outbox/retry` | 处理 pending 或 failed outbox 任务，需要 fifa owner |
