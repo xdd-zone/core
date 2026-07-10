@@ -14,8 +14,9 @@
 - 内容模块，当前提供文章列表、创建、编辑、媒体库、分类和标签管理页。
 - 站点模块，当前提供站点配置、公开资料和项目管理页。
 - 系统设置模块，当前提供个人资料页和 LLM 配置页。
+- 系统运行模块，当前提供 Momo readiness 和 outbox 任务管理页。
 
-当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。当前站点模块接入了 Momo 的站点配置、公开资料和项目接口。当前系统设置模块接入了 Momo 的个人资料和 LLM 配置接口。
+当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。当前站点模块接入了 Momo 的站点配置、公开资料和项目接口。当前系统设置模块接入了 Momo 的个人资料和 LLM 配置接口。当前系统运行页接入了 readiness 和 outbox 查询、详情、单条重试接口。
 
 ## 开始改 UI 前先看
 
@@ -68,6 +69,7 @@ apps/fifa/src/
 - `/site/projects`
 - `/settings/profile`
 - `/settings/llm`
+- `/system/operations`
 - `/env-example`
 - `/ui-showcase`
 - `/markdown-example`
@@ -120,6 +122,7 @@ apps/fifa/src/api/rpc.ts
 apps/fifa/src/api/auth/sign-in.api.ts
 apps/fifa/src/api/auth/auth.query.ts
 apps/fifa/src/api/system/health.api.ts
+apps/fifa/src/api/system/readiness.api.ts
 apps/fifa/src/api/system/ping.api.ts
 apps/fifa/src/api/system/system.query.ts
 apps/fifa/src/api/system/index.ts
@@ -173,7 +176,7 @@ apps/fifa/src/api/llm/index.ts
 - `api/projects/*.api.ts`
   调 Momo 项目接口。页面不要直接 import `momoClient`。
 - `api/events/*.api.ts`
-  调 Momo outbox 重试接口。页面不要直接 import `momoClient`。
+  调 Momo outbox 列表、详情和重试接口。页面不要直接 import `momoClient`。
 - `api/llm/*.api.ts`
   调 Momo LLM 配置接口。页面不要直接 import `momoClient`。
 - `api/llm/llm.query.ts`
@@ -212,6 +215,7 @@ GET /rpc/fifa/profile
 PATCH /rpc/fifa/profile
 POST /rpc/fifa/profile/avatar
 GET /health
+GET /rpc/system/readiness
 POST /rpc/system/ping
 GET /rpc/content/posts
 POST /rpc/content/posts
@@ -241,6 +245,9 @@ POST /rpc/projects/:id/publish
 POST /rpc/projects/:id/preview-token
 POST /rpc/projects/:id/archive
 POST /rpc/events/outbox/retry
+GET /rpc/events/outbox
+GET /rpc/events/outbox/:eventId
+POST /rpc/events/outbox/:eventId/retry
 GET /rpc/content/categories
 POST /rpc/content/categories
 GET /rpc/content/categories/:id
@@ -273,12 +280,16 @@ DELETE /rpc/llm/call-logs/expired
   用 `useFifaAuthMeMutation()` 在登录成功后验证账号。顶栏头像菜单用 `useFifaAuthMeQuery()` 读取当前账号信息。
 - `GET /health`
   用 `useSystemHealthQuery()`，页面打开后自动请求，也可以点刷新按钮重新请求。
+- `GET /rpc/system/readiness`
+  用 `useSystemReadinessQuery()` 在系统运行页检查数据库、缓存、搜索和文件存储。
 - `POST /rpc/system/ping`
   用 `usePingSystemMutation()`，只在点击 Ping 按钮时发送。
 - content 文章、素材、分类和标签接口
   页面通过 `apps/fifa/src/api/content/content.query.ts` 里的 hooks 调用。
 - LLM 配置接口
   页面通过 `apps/fifa/src/api/llm/llm.query.ts` 里的 hooks 调用。
+- outbox 接口
+  页面通过 `apps/fifa/src/api/events/events.query.ts` 里的 hooks 调用。
 
 新增 Fifa 请求时按这个顺序写：
 

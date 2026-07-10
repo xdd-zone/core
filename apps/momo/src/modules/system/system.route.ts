@@ -3,20 +3,27 @@ import type { HonoEnv } from '#momo/shared/hono-env'
 import { zValidator } from '@hono/zod-validator'
 import { PingRequestSchema } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
+import { createRequireFifaOwner } from '#momo/modules/auth/index'
 import { AppError } from '#momo/shared/app-error'
 import { createMeta } from '#momo/shared/meta'
 import { createSuccessResponse } from '#momo/shared/response'
 import { createValidationFailure } from '#momo/shared/validator'
 
-import { getHealthStatus, getRootInfo, pingSystem } from './system.service'
+import { getHealthStatus, getReadinessStatus, getRootInfo, pingSystem } from './system.service'
 
 export function createSystemRoute(runtime: MomoRuntime) {
+  const requireOwner = createRequireFifaOwner(runtime)
+
   return new Hono<HonoEnv>()
     .get('/', (c) => {
       return c.json(createSuccessResponse(getRootInfo(), createMeta(c.var.requestId)))
     })
     .get('/health', (c) => {
       return c.json(createSuccessResponse(getHealthStatus(runtime.env), createMeta(c.var.requestId)))
+    })
+    .get('/rpc/system/readiness', requireOwner, async (c) => {
+      const result = await getReadinessStatus(runtime)
+      return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
     })
     .post(
       '/rpc/system/ping',

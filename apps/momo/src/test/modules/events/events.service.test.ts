@@ -5,6 +5,58 @@ import { describe, expect, it, vi } from 'vitest'
 import { createEventsService } from '#momo/modules/events/events.service'
 
 describe('events service', () => {
+  it('分页返回 outbox 记录且列表不包含 payload', async () => {
+    const event = createEventOutboxRecord({ payload: { secret: 'detail-only' } })
+    const repository = createRepository({
+      list: vi.fn(async () => ({ events: [event], total: 1 })),
+    })
+    const service = createEventsService(createRuntime(), repository)
+
+    const result = await service.listOutboxEvents({ page: 1, pageSize: 20 })
+
+    expect(result).toMatchObject({ page: 1, pageSize: 20, total: 1 })
+    expect(result.events[0]).not.toHaveProperty('payload')
+    expect(repository.list).toHaveBeenCalledWith({ page: 1, pageSize: 20 })
+  })
+
+  it('单条重试只处理指定记录', async () => {
+    const pending = createEventOutboxRecord({ eventType: 'system.test', status: 'failed' })
+    const done = createEventOutboxRecord({ eventType: 'system.test', status: 'done' })
+    const repository = createRepository({
+      findById: vi.fn().mockResolvedValueOnce(pending).mockResolvedValueOnce(done),
+    })
+    const service = createEventsService(createRuntime(), repository)
+
+    const result = await service.retryEvent('event-id')
+
+    expect(repository.markPending).toHaveBeenCalledWith('event-id')
+    expect(repository.markDone).toHaveBeenCalledWith('event-id')
+    expect(repository.listPending).not.toHaveBeenCalled()
+    expect(result.event.status).toBe('done')
+  })
+
+  it('读取不存在的 outbox 记录时返回 404 错误', async () => {
+    const service = createEventsService(createRuntime(), createRepository())
+
+    await expect(service.getOutboxEvent('missing')).rejects.toMatchObject({
+      message: '发布后任务不存在',
+      status: 404,
+    })
+  })
+
+  it('已完成的 outbox 记录不能重复重试', async () => {
+    const repository = createRepository({
+      findById: vi.fn(async () => createEventOutboxRecord({ status: 'done' })),
+    })
+    const service = createEventsService(createRuntime(), repository)
+
+    await expect(service.retryEvent('event-id')).rejects.toMatchObject({
+      message: '当前任务状态不能重试',
+      status: 409,
+    })
+    expect(repository.markPending).not.toHaveBeenCalled()
+  })
+
   it('处理 content.post.published 时刷新 Bobo 并写入搜索索引', async () => {
     const event = createEventOutboxRecord({
       eventType: 'content.post.published',
@@ -71,6 +123,8 @@ describe('events service', () => {
 
 function createRepository(overrides: Partial<EventsRepository> = {}): EventsRepository {
   return {
+    findById: vi.fn(async () => undefined),
+    list: vi.fn(async () => ({ events: [], total: 0 })),
     listPending: vi.fn(async () => []),
     markDone: vi.fn(),
     markFailed: vi.fn(),

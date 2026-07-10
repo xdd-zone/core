@@ -1,6 +1,7 @@
 import type {
   StorageDriver,
   StorageFileStat,
+  StorageHealthResult,
   StorageOpenFileOptions,
   StorageSaveOptions,
   StorageSaveResult,
@@ -27,6 +28,7 @@ export interface CosStorageClient {
   putObject: (params: COS.PutObjectParams) => Promise<unknown>
   deleteObject: (params: COS.DeleteObjectParams) => Promise<unknown>
   getObjectUrl: (params: COS.GetObjectUrlParams) => string
+  headBucket: (params: COS.HeadBucketParams) => Promise<unknown>
   headObject: (params: COS.HeadObjectParams) => Promise<COS.HeadObjectResult>
 }
 
@@ -66,6 +68,18 @@ export class CosStorage implements StorageDriver {
         SecretId: config.secretId,
         SecretKey: config.secretKey,
       })
+  }
+
+  async health(): Promise<StorageHealthResult> {
+    try {
+      await this.client.headBucket({
+        Bucket: this.config.bucket,
+        Region: this.config.region,
+      })
+      return { status: 'available' }
+    } catch (error) {
+      handleCosError(error)
+    }
   }
 
   async save(file: File, options?: StorageSaveOptions): Promise<StorageSaveResult> {

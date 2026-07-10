@@ -9,6 +9,7 @@ export {
 export type {
   StorageDriver,
   StorageFileStat,
+  StorageHealthResult,
   StorageOpenFileOptions,
   StorageSaveOptions,
   StorageSaveResult,

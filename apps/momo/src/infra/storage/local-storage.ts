@@ -1,10 +1,12 @@
 import type {
   StorageDriver,
   StorageFileStat,
+  StorageHealthResult,
   StorageOpenFileOptions,
   StorageSaveOptions,
   StorageSaveResult,
 } from './storage.types'
+import { constants } from 'node:fs'
 import { access, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { BizCode } from '@xdd-zone/contracts'
@@ -29,6 +31,12 @@ function resolveAndValidatePath(rootDir: string, storagePath: string): string {
 /** 本地文件存储驱动 */
 export class LocalStorage implements StorageDriver {
   constructor(private readonly rootDir: string) {}
+
+  async health(): Promise<StorageHealthResult> {
+    await mkdir(this.rootDir, { recursive: true })
+    await access(this.rootDir, constants.R_OK | constants.W_OK)
+    return { status: 'available' }
+  }
 
   async save(file: File, options?: StorageSaveOptions): Promise<StorageSaveResult> {
     validateMediaFile(file)

@@ -965,9 +965,12 @@ apps/momo/src/modules/system/
 
 - `GET /`
 - `GET /health`
+- `GET /rpc/system/readiness`
 - `POST /rpc/system/ping`
 
-`system` 模块不直接访问数据库。需要读取运行环境时，由 route 从 `runtime.env` 传给 service，不在 service 里直接调用 `getMomoEnv()`。
+`GET /health` 只返回进程存活状态，不访问外部资源。`GET /rpc/system/readiness` 只允许 `fifa.owner` 调用，会检查 PostgreSQL、缓存、搜索和文件存储。单项检查失败时接口仍返回结果，并把总状态设成 `degraded`。
+
+`system` service 可以通过参数接收 runtime 和数据库 client，用于 readiness 检查。不要在 service 里直接调用 `getMomoEnv()`。
 
 ## 中间件
 
@@ -1056,6 +1059,8 @@ apps/momo/src/infra/logger.ts
 ```
 
 这里创建 Pino logger。`createRuntime()` 调用它，把 logger 放进 `runtime`，请求日志和未处理异常日志都从 `runtime.logger` 写出。开发环境默认使用 `info`，未处理异常会记录 stack。生产和测试环境不记录 stack。需要 SQL 日志时把 `LOG_SQL` 设成 `true`，日志只打印 SQL 和参数数量，不打印参数原值。Better Auth 的日志也走这里，错误只记录名称、消息和 code，不打印 stack 和请求参数。
+
+Pino 日志写到标准输出。部署环境负责日志保存和查询。Momo 当前不提供本地日志文件读取接口，也不把每条 HTTP 日志写进 PostgreSQL。Fifa 的系统运行页只读取 readiness 和已经持久化的 outbox 任务。
 
 业务模块不能在 route 里直接创建数据库连接。需要读写数据库时，先写 repository，再由 service 调用 repository。
 

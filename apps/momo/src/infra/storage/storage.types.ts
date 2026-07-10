@@ -29,8 +29,15 @@ export interface StorageFileStat {
   lastModified?: Date
 }
 
+/** 存储服务状态 */
+export interface StorageHealthResult {
+  status: string
+}
+
 /** 存储驱动统一接口 */
 export interface StorageDriver {
+  /** 检查存储根目录或 bucket 是否可访问 */
+  health: () => Promise<StorageHealthResult>
   /** 保存文件，返回存储路径和文件名 */
   save: (file: File, options?: StorageSaveOptions) => Promise<StorageSaveResult>
   /** 打开文件，返回 Response。本地返回 200 和文件内容，COS 返回 302 跳转 */

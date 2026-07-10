@@ -1,4 +1,10 @@
-import type { OperationWarning } from '@xdd-zone/contracts'
+import type {
+  EventOutboxDetailResponse,
+  EventOutboxListQuery,
+  EventOutboxListResponse,
+  OperationWarning,
+  RetryEventOutboxResponse,
+} from '@xdd-zone/contracts'
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { EventsRepository } from './events.repository'
 import type {
@@ -8,8 +14,25 @@ import type {
   ProjectArchivedPayload,
   ProjectPublishedPayload,
 } from './types'
+import { BizCode } from '@xdd-zone/contracts'
+import { AppError } from '#momo/shared/app-error'
+import { toEventOutboxDetail, toEventOutboxListItem } from './events.presenter'
 
 export function createEventsService(runtime: MomoRuntime, repository: EventsRepository) {
+  async function getOutboxEvent(id: string): Promise<EventOutboxDetailResponse> {
+    return { event: toEventOutboxDetail(await requireEvent(id)) }
+  }
+
+  async function listOutboxEvents(input: EventOutboxListQuery): Promise<EventOutboxListResponse> {
+    const result = await repository.list(input)
+    return {
+      events: result.events.map(toEventOutboxListItem),
+      page: input.page,
+      pageSize: input.pageSize,
+      total: result.total,
+    }
+  }
+
   async function runEventTask(
     eventId: string,
     task: () => Promise<void>,
@@ -161,8 +184,27 @@ export function createEventsService(runtime: MomoRuntime, repository: EventsRepo
     }
   }
 
-  async function retryEvent(id: string): Promise<void> {
+  async function retryEvent(id: string): Promise<RetryEventOutboxResponse> {
+    const event = await requireEvent(id)
+
+    if (event.status !== 'pending' && event.status !== 'failed') {
+      throw new AppError(BizCode.BIZ_RULE_VIOLATION, '当前任务状态不能重试', 409)
+    }
+
     await repository.markPending(id)
+    const warnings = await handleEvent({
+      ...event,
+      errorMessage: null,
+      nextRunAt: new Date(),
+      status: 'pending',
+      updatedAt: new Date(),
+    })
+    const updatedEvent = await requireEvent(id)
+
+    return {
+      event: toEventOutboxDetail(updatedEvent),
+      warnings,
+    }
   }
 
   async function handleEvent(event: EventOutboxRecord): Promise<OperationWarning[]> {
@@ -192,11 +234,23 @@ export function createEventsService(runtime: MomoRuntime, repository: EventsRepo
     return []
   }
 
+  async function requireEvent(id: string): Promise<EventOutboxRecord> {
+    const event = await repository.findById(id)
+
+    if (!event) {
+      throw new AppError(BizCode.COMMON_NOT_FOUND, '发布后任务不存在', 404)
+    }
+
+    return event
+  }
+
   return {
+    getOutboxEvent,
     handleContentPostArchived,
     handleContentPostPublished,
     handleProjectArchived,
     handleProjectPublished,
+    listOutboxEvents,
     retryEvent,
     retryPending,
   }

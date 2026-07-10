@@ -55,6 +55,7 @@ apps/momo/src/modules/events/events.route.ts
 | `GET` | `/` | 服务名称和状态 |
 | `GET` | `/health` | 健康检查状态 |
 | `POST` | `/rpc/system/ping` | Momo ping 结果 |
+| `GET` | `/rpc/system/readiness` | PostgreSQL、缓存、搜索和文件存储状态，需要 fifa owner |
 | `GET` | `/rpc/fifa/auth/me` | 当前 fifa 用户 |
 | `GET` | `/rpc/fifa/profile` | 当前 fifa owner 的个人资料和账号绑定状态 |
 | `PATCH` | `/rpc/fifa/profile` | 修改当前 fifa owner 的显示名和头像地址 |
@@ -123,6 +124,9 @@ apps/momo/src/modules/events/events.route.ts
 | `GET` | `/rpc/bobo/projects/:slug` | 公开项目详情 |
 | `GET` | `/rpc/bobo/search?q=关键词` | 公开站点搜索，搜索未启用时返回空数组 |
 | `POST` | `/rpc/events/outbox/retry` | 处理 pending 或 failed outbox 任务，需要 fifa owner |
+| `GET` | `/rpc/events/outbox` | outbox 任务列表，需要 fifa owner |
+| `GET` | `/rpc/events/outbox/:eventId` | 单条 outbox 任务和 payload，需要 fifa owner |
+| `POST` | `/rpc/events/outbox/:eventId/retry` | 立即重试指定 outbox 任务，需要 fifa owner |
 
 公开邮箱注册被禁用：
 

@@ -9,7 +9,7 @@ Momo 保存个人站业务数据，并给 Fifa 后台和 Bobo 公开站点提供
 - 启动 Node HTTP 服务。
 - 创建运行时 app，给测试和包导出使用。
 - 提供统一响应格式、请求日志、CORS、安全响应头、请求体大小限制和超时处理。
-- 提供系统接口和认证接口。
+- 提供 liveness、readiness、系统接口和认证接口。
 - 提供内容接口，包含文章草稿、发布、预览 token、公开文章、分类、标签和图片素材。
 - 提供站点配置、公开个人资料、项目、站点搜索和 outbox 重试接口。
 - 使用 Better Auth 处理登录、登出、OAuth callback 和 session cookie。
@@ -82,7 +82,9 @@ pnpm seed:owner
 - `GET /`
   返回服务名称和状态。
 - `GET /health`
-  返回健康检查状态。
+  返回进程存活状态，不检查外部依赖。
+- `GET /rpc/system/readiness`
+  检查 PostgreSQL、缓存、搜索和文件存储，需要 Fifa owner。
 - `POST /rpc/system/ping`
   接收 `{ "name": "fifa" }`，返回 `pong, fifa`。
 - `/api/auth/*`
@@ -187,6 +189,12 @@ pnpm seed:owner
   返回公开站点搜索结果。搜索未启用时返回空数组。
 - `POST /rpc/events/outbox/retry`
   处理 pending 或 failed outbox 任务，需要 Fifa owner。
+- `GET /rpc/events/outbox`
+  分页读取 outbox 任务，可按状态和事件类型筛选，需要 Fifa owner。
+- `GET /rpc/events/outbox/:eventId`
+  读取单条 outbox 任务和 payload，需要 Fifa owner。
+- `POST /rpc/events/outbox/:eventId/retry`
+  立即重试指定 outbox 任务，需要 Fifa owner。
 
 ## 环境变量
 
@@ -244,6 +252,7 @@ const response = await app.request('/health')
 - 搜索代码放在 `src/infra/search`。公开搜索接口是 `GET /rpc/bobo/search?q=关键词`。`SEARCH_PROVIDER=none` 时返回空结果；启用 Meilisearch 后，文章和项目发布会写入 `site` 索引。
 - LLM provider 调用代码放在 `src/infra/llm`。Provider、use case 和调用日志接口放在 `src/modules/llm`。内容模块通过 `POST /rpc/content/posts/meta-suggestion` 生成文章字段建议。调用日志会记录请求 ID、用户 ID 和文章 ID。
 - 文件存储代码放在 `src/infra/storage`。素材模块通过 `POST /rpc/assets/images` 保存图片素材。验证当前存储配置时，运行 `pnpm storage:test`。
+- Pino 运行日志继续写到标准输出，由部署环境负责保存和查询。Momo 当前不读取本地日志文件，也不把每条请求日志写入 PostgreSQL。
 
 更多说明看：
 

@@ -22,6 +22,18 @@ describe('local 存储', () => {
     await rm(tmpDir, { recursive: true, force: true })
   })
 
+  describe('health 检查', () => {
+    it('存储目录可读写时返回 available', async () => {
+      await expect(storage.health()).resolves.toEqual({ status: 'available' })
+    })
+
+    it('目录不存在时会创建目录', async () => {
+      const nestedStorage = new LocalStorage(join(tmpDir, 'health', 'nested'))
+
+      await expect(nestedStorage.health()).resolves.toEqual({ status: 'available' })
+    })
+  })
+
   describe('save 文件', () => {
     it('write 文件并返回 storagePath', async () => {
       const file = createTestFile('photo.png', 'png-data', 'image/png')

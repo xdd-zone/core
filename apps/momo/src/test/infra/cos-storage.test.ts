@@ -20,6 +20,7 @@ function createMockClient(): CosStorageClient {
     putObject: vi.fn().mockResolvedValue({}),
     deleteObject: vi.fn().mockResolvedValue({}),
     getObjectUrl: vi.fn().mockReturnValue('https://signed.example.com/media/file.png'),
+    headBucket: vi.fn().mockResolvedValue({}),
     headObject: vi.fn().mockResolvedValue({
       ETag: '"etag"',
       headers: {
@@ -40,6 +41,18 @@ describe('cos 存储', () => {
 
   beforeEach(() => {
     client = createMockClient()
+  })
+
+  describe('health 检查', () => {
+    it('bucket 可访问时返回 available', async () => {
+      const storage = new CosStorage(createConfig(), client)
+
+      await expect(storage.health()).resolves.toEqual({ status: 'available' })
+      expect(client.headBucket).toHaveBeenCalledWith({
+        Bucket: 'examplebucket-1250000000',
+        Region: 'ap-shanghai',
+      })
+    })
   })
 
   describe('save 文件', () => {
