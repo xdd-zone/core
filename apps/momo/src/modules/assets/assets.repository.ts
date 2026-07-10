@@ -121,12 +121,7 @@ export function createAssetsRepository(db: DbClient) {
       .from(projects)
       .where(and(eq(projects.status, 'published'), eq(projects.publishedCoverAssetId, id)))
 
-    const coverRefs = [
-      ...draftCoverRefs,
-      ...publishedCoverRefs,
-      ...projectDraftCoverRefs,
-      ...projectPublishedCoverRefs,
-    ]
+    const coverRefs = [...draftCoverRefs, ...publishedCoverRefs, ...projectDraftCoverRefs, ...projectPublishedCoverRefs]
     const sourceUrls = [...new Set([asset.url, fileUrl].filter((url): url is string => Boolean(url)))]
 
     if (sourceUrls.length === 0) {
