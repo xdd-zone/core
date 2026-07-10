@@ -1,0 +1,33 @@
+{
+  "id": "00-bootstrap-guidelines",
+  "name": "00-bootstrap-guidelines",
+  "title": "Bootstrap Guidelines",
+  "description": "Fill in project development guidelines for AI agents",
+  "status": "in_progress",
+  "dev_type": "docs",
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "xidongdong-153",
+  "assignee": "xidongdong-153",
+  "createdAt": "2026-07-10",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": null,
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    ".trellis/spec/bobo/",
+    ".trellis/spec/fifa/",
+    ".trellis/spec/momo/",
+    ".trellis/spec/catppuccin-theme/",
+    ".trellis/spec/contracts/",
+    ".trellis/spec/eslint-config/"
+  ],
+  "notes": "First-time setup task created by trellis init (frontend project)",
+  "meta": {}
+}
