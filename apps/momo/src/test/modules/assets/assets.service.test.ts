@@ -94,7 +94,7 @@ describe('assets service', () => {
           url: '/rpc/assets/legacy-asset-id/file',
         },
       ]),
-      countAssets: vi.fn(async () => 1),
+      findAssetReferences: vi.fn(async () => []),
     })
     const service = createAssetsService(createRuntime(), repository)
 
@@ -103,11 +103,43 @@ describe('assets service', () => {
     expect(result.assets[0]?.fileUrl).toBe('http://localhost:7788/rpc/assets/legacy-asset-id/file')
     expect(result.assets[0]?.url).toBe('/rpc/assets/legacy-asset-id/file')
   })
+
+  it('清理时只删除仍未被引用的素材', async () => {
+    const unused = createAssetRecord()
+    const referenced = {
+      ...createAssetRecord(),
+      id: 'referenced-asset-id',
+      size: 12,
+      storagePath: 'content/images/referenced.png',
+    }
+    let referencedChecks = 0
+    const repository = createRepository({
+      deleteAsset: vi.fn(async (id) => (id === unused.id ? unused : undefined)),
+      findAssetReferences: vi.fn(async (id) => {
+        if (id !== referenced.id) {
+          return []
+        }
+
+        referencedChecks += 1
+        return referencedChecks > 2 ? [createAssetReferenceRecord()] : []
+      }),
+      listAssets: vi.fn(async () => [unused, referenced]),
+    })
+    const runtime = createRuntime()
+    const service = createAssetsService(runtime, repository)
+
+    await expect(service.previewCleanup({ referenceStatus: 'all' })).resolves.toEqual({ total: 2, totalSize: 20 })
+    await expect(service.cleanupAssets({ referenceStatus: 'all' })).resolves.toEqual({
+      deleted: 1,
+      releasedSize: unused.size,
+      skipped: 1,
+    })
+    expect(runtime.storage.remove).toHaveBeenCalledWith(unused.storagePath)
+  })
 })
 
 function createRepository(overrides: Partial<AssetsRepository> = {}): AssetsRepository {
   return {
-    countAssets: vi.fn(),
     createAsset: vi.fn(),
     deleteAsset: vi.fn(),
     findAssetReferences: vi.fn(),
@@ -125,7 +157,7 @@ function createRuntime(storageOverrides: Partial<MomoRuntime['storage']> = {}): 
     },
     storage: {
       openFile: vi.fn(),
-      remove: vi.fn(),
+      remove: vi.fn(async () => undefined),
       save: vi.fn(),
       ...storageOverrides,
     },

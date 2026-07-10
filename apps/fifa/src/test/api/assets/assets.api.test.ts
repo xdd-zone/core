@@ -46,13 +46,18 @@ describe('assets api 封装', () => {
     })
     const { listAssets } = await import('@fifa/api/assets/assets.api')
 
-    await expect(listAssets({ keyword: 'cover', page: 1, pageSize: 24 })).resolves.toEqual(responseBody)
+    await expect(listAssets({ keyword: 'cover', page: 1, pageSize: 24, referenceStatus: 'all' })).resolves.toEqual(
+      responseBody,
+    )
     expect(rpcMocks.listAssets).toHaveBeenCalledWith({
       query: {
         keyword: 'cover',
         mimeType: undefined,
         page: '1',
         pageSize: '24',
+        createdFrom: undefined,
+        createdTo: undefined,
+        referenceStatus: 'all',
       },
     })
   })

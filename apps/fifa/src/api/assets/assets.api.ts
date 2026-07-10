@@ -1,4 +1,7 @@
 import type {
+  AssetCleanupPreviewResponse,
+  AssetCleanupRequest,
+  AssetCleanupResponse,
   AssetDetailResponse,
   AssetListQuery,
   AssetListResponse,
@@ -14,13 +17,24 @@ export function listAssets(query: AssetListQuery) {
   return readMomoJson<AssetListResponse>(
     momoClient.rpc.assets.$get({
       query: {
+        createdFrom: query.createdFrom,
+        createdTo: query.createdTo,
         keyword: query.keyword,
         mimeType: query.mimeType,
         page: String(query.page),
         pageSize: String(query.pageSize),
+        referenceStatus: query.referenceStatus,
       },
     }),
   )
+}
+
+export function previewAssetCleanup(payload: AssetCleanupRequest) {
+  return readMomoJson<AssetCleanupPreviewResponse>(momoClient.rpc.assets.cleanup.preview.$post({ json: payload }))
+}
+
+export function cleanupAssets(payload: AssetCleanupRequest) {
+  return readMomoJson<AssetCleanupResponse>(momoClient.rpc.assets.cleanup.$post({ json: payload }))
 }
 
 export function getAsset(id: string) {

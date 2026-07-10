@@ -1,7 +1,15 @@
 import type { AssetListQuery, UpdateAssetRequest } from '@xdd-zone/contracts'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { deleteAsset, getAsset, listAssets, updateAsset, uploadAssetImage } from './assets.api'
+import {
+  cleanupAssets,
+  deleteAsset,
+  getAsset,
+  listAssets,
+  previewAssetCleanup,
+  updateAsset,
+  uploadAssetImage,
+} from './assets.api'
 
 export const assetQueryKeys = {
   all: ['assets'] as const,
@@ -47,6 +55,21 @@ export function useDeleteAssetMutation() {
     mutationFn: (id: string) => deleteAsset(id),
     onSuccess: async (_response, id) => {
       await queryClient.invalidateQueries({ queryKey: assetQueryKeys.asset(id) })
+      await queryClient.invalidateQueries({ queryKey: assetQueryKeys.assets() })
+    },
+  })
+}
+
+export function useAssetCleanupPreviewMutation() {
+  return useMutation({ mutationFn: previewAssetCleanup })
+}
+
+export function useCleanupAssetsMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: cleanupAssets,
+    onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: assetQueryKeys.assets() })
     },
   })

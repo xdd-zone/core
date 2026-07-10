@@ -7,11 +7,11 @@ export type AssetRecord = Pick<
 >
 
 export interface AssetReferenceRecord {
-  relation: 'draft-cover' | 'published-cover' | 'draft-source' | 'published-source'
+  relation: 'avatar' | 'draft-cover' | 'published-cover' | 'draft-source' | 'published-source'
   targetId: string
   targetSlug: string | null
   targetTitle: string | null
-  targetType: 'post' | 'project'
+  targetType: 'post' | 'profile' | 'project'
 }
 
 export type CreateAssetInput = Pick<AssetRecord, 'alt' | 'fileName' | 'mimeType' | 'size' | 'storagePath' | 'url'> & {

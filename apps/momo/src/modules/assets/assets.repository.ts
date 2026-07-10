@@ -2,7 +2,7 @@ import type { SQL } from 'drizzle-orm'
 import type { DbClient } from '#momo/infra/db/client'
 import type { AssetRecord, AssetReferenceRecord, CreateAssetInput, UpdateAssetInput } from './types'
 import { and, desc, eq, ilike, sql } from 'drizzle-orm'
-import { assets, contentPostRevisions, contentPosts, projects } from '#momo/infra/db/schema/index'
+import { assets, contentPostRevisions, contentPosts, projects, publicProfiles } from '#momo/infra/db/schema/index'
 
 export function createAssetsRepository(db: DbClient) {
   async function getAssetById(id: string): Promise<AssetRecord | undefined> {
@@ -11,27 +11,15 @@ export function createAssetsRepository(db: DbClient) {
   }
 
   async function listAssets(options: {
+    createdFrom?: Date
+    createdTo?: Date
     keyword?: string
     mimeType?: string
-    offset: number
-    limit: number
   }): Promise<AssetRecord[]> {
     const whereClause = buildAssetWhereClause(options)
-    const query = db
-      .select()
-      .from(assets)
-      .orderBy(desc(assets.createdAt), desc(assets.id))
-      .limit(options.limit)
-      .offset(options.offset)
+    const query = db.select().from(assets).orderBy(desc(assets.createdAt), desc(assets.id))
 
     return whereClause ? query.where(whereClause) : query
-  }
-
-  async function countAssets(options: { keyword?: string; mimeType?: string }): Promise<number> {
-    const whereClause = buildAssetWhereClause(options)
-    const query = db.select({ count: sql<number>`count(*)::int` }).from(assets)
-    const [result] = whereClause ? await query.where(whereClause) : await query
-    return result?.count ?? 0
   }
 
   async function createAsset(input: CreateAssetInput): Promise<AssetRecord> {
@@ -121,7 +109,24 @@ export function createAssetsRepository(db: DbClient) {
       .from(projects)
       .where(and(eq(projects.status, 'published'), eq(projects.publishedCoverAssetId, id)))
 
-    const coverRefs = [...draftCoverRefs, ...publishedCoverRefs, ...projectDraftCoverRefs, ...projectPublishedCoverRefs]
+    const avatarRefs = await db
+      .select({
+        relation: sql<'avatar'>`'avatar'`.as('relation'),
+        targetId: publicProfiles.id,
+        targetSlug: sql<string | null>`null`.as('target_slug'),
+        targetTitle: publicProfiles.displayName,
+        targetType: sql<'profile'>`'profile'`.as('target_type'),
+      })
+      .from(publicProfiles)
+      .where(eq(publicProfiles.avatarAssetId, id))
+
+    const coverRefs = [
+      ...draftCoverRefs,
+      ...publishedCoverRefs,
+      ...projectDraftCoverRefs,
+      ...projectPublishedCoverRefs,
+      ...avatarRefs,
+    ]
     const sourceUrls = [...new Set([asset.url, fileUrl].filter((url): url is string => Boolean(url)))]
 
     if (sourceUrls.length === 0) {
@@ -161,7 +166,6 @@ export function createAssetsRepository(db: DbClient) {
   }
 
   return {
-    countAssets,
     createAsset,
     deleteAsset,
     findAssetReferences,
@@ -171,7 +175,12 @@ export function createAssetsRepository(db: DbClient) {
   }
 }
 
-function buildAssetWhereClause(options: { keyword?: string; mimeType?: string }): SQL<unknown> | undefined {
+function buildAssetWhereClause(options: {
+  createdFrom?: Date
+  createdTo?: Date
+  keyword?: string
+  mimeType?: string
+}): SQL<unknown> | undefined {
   const conditions: SQL<unknown>[] = []
 
   if (options.keyword) {
@@ -181,6 +190,14 @@ function buildAssetWhereClause(options: { keyword?: string; mimeType?: string })
 
   if (options.mimeType) {
     conditions.push(ilike(assets.mimeType, `${options.mimeType}%`))
+  }
+
+  if (options.createdFrom) {
+    conditions.push(sql`${assets.createdAt} >= ${options.createdFrom}`)
+  }
+
+  if (options.createdTo) {
+    conditions.push(sql`${assets.createdAt} <= ${options.createdTo}`)
   }
 
   return conditions.length > 0 ? and(...conditions) : undefined

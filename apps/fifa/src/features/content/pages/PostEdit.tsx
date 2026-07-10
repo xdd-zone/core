@@ -212,8 +212,11 @@ function PostEditContent({ postId }: PostEditContentProps) {
   const retryOutboxMutation = useRetryEventsOutboxMutation()
   const [assetPickerOpen, setAssetPickerOpen] = useState(false)
   const [pickerKeyword, setPickerKeyword] = useState('')
-  const sidebarQuery = useAssetsQuery({ page: 1, pageSize: 12 })
-  const pickerQuery = useAssetsQuery({ keyword: pickerKeyword, page: 1, pageSize: 24 }, { enabled: assetPickerOpen })
+  const sidebarQuery = useAssetsQuery({ page: 1, pageSize: 12, referenceStatus: 'all' })
+  const pickerQuery = useAssetsQuery(
+    { keyword: pickerKeyword, page: 1, pageSize: 24, referenceStatus: 'all' },
+    { enabled: assetPickerOpen },
+  )
 
   const post = postQuery.data?.ok ? postQuery.data.data.post : undefined
   const loadError = postQuery.data && !postQuery.data.ok ? postQuery.data.error.message : undefined

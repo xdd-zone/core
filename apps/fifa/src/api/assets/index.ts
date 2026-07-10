@@ -1,8 +1,18 @@
-export { deleteAsset, getAsset, listAssets, updateAsset, uploadAssetImage } from './assets.api'
+export {
+  cleanupAssets,
+  deleteAsset,
+  getAsset,
+  listAssets,
+  previewAssetCleanup,
+  updateAsset,
+  uploadAssetImage,
+} from './assets.api'
 export {
   assetQueryKeys,
+  useAssetCleanupPreviewMutation,
   useAssetQuery,
   useAssetsQuery,
+  useCleanupAssetsMutation,
   useDeleteAssetMutation,
   useUpdateAssetMutation,
   useUploadAssetImageMutation,

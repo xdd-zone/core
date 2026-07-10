@@ -1,10 +1,17 @@
-import type { ImageAsset } from '@xdd-zone/contracts'
+import type { AssetCleanupRequest, AssetListItem, ImageAsset } from '@xdd-zone/contracts'
 import type { TableProps } from 'antd'
 
-import { useAssetsQuery, useDeleteAssetMutation, useUpdateAssetMutation } from '@fifa/api/assets'
+import {
+  useAssetCleanupPreviewMutation,
+  useAssetsQuery,
+  useCleanupAssetsMutation,
+  useDeleteAssetMutation,
+  useUpdateAssetMutation,
+} from '@fifa/api/assets'
 import { FifaPageHeader } from '@fifa/components/common'
 import { useNavigate } from '@tanstack/react-router'
-import { App, Button, Input, Modal, Select, Table, Tag } from 'antd'
+import { App, Button, DatePicker, Input, Modal, Select, Table, Tag } from 'antd'
+import dayjs from 'dayjs'
 import { Copy, Pencil, RefreshCw, Search, Trash2 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -40,10 +47,21 @@ export function AssetList() {
   const navigate = useNavigate()
   const [keyword, setKeyword] = useState('')
   const [mimeType, setMimeType] = useState('')
+  const [referenceStatus, setReferenceStatus] = useState<'all' | 'referenced' | 'unreferenced'>('all')
+  const [createdFrom, setCreatedFrom] = useState<string | undefined>()
+  const [createdTo, setCreatedTo] = useState<string | undefined>()
   const [page, setPage] = useState(1)
   const [editAsset, setEditAsset] = useState<ImageAsset | null>(null)
   const [editAlt, setEditAlt] = useState('')
-  const query = useAssetsQuery({ keyword, mimeType: mimeType || undefined, page, pageSize })
+  const query = useAssetsQuery({
+    createdFrom,
+    createdTo,
+    keyword,
+    mimeType: mimeType || undefined,
+    page,
+    pageSize,
+    referenceStatus,
+  })
 
   const mimeOptions = useMemo(
     () => [
@@ -57,6 +75,8 @@ export function AssetList() {
     [t],
   )
   const deleteAssetMutation = useDeleteAssetMutation()
+  const cleanupPreviewMutation = useAssetCleanupPreviewMutation()
+  const cleanupAssetsMutation = useCleanupAssetsMutation()
   const updateAssetMutation = useUpdateAssetMutation()
 
   const assetsResponse = query.data?.ok ? query.data.data : undefined
@@ -104,8 +124,79 @@ export function AssetList() {
     [deleteAssetMutation, message, modal, query, t],
   )
 
-  const columns = useMemo<TableProps<ImageAsset>['columns']>(
+  const handleCleanup = useCallback(async () => {
+    const filters: AssetCleanupRequest = {
+      createdFrom,
+      createdTo,
+      keyword: keyword.trim() || undefined,
+      mimeType: mimeType || undefined,
+      referenceStatus,
+    }
+    const preview = await cleanupPreviewMutation.mutateAsync(filters)
+
+    if (!preview.ok) {
+      message.error(preview.error.message)
+      return
+    }
+
+    if (preview.data.total === 0) {
+      message.info(t('content.assets.cleanupEmpty'))
+      return
+    }
+
+    modal.confirm({
+      title: t('content.assets.cleanupConfirmTitle'),
+      content: t('content.assets.cleanupConfirmMessage', {
+        count: preview.data.total,
+        size: formatSize(preview.data.totalSize),
+      }),
+      okButtonProps: { danger: true },
+      okText: t('content.assets.cleanup'),
+      cancelText: t('content.assets.cancel'),
+      onOk: async () => {
+        const result = await cleanupAssetsMutation.mutateAsync(filters)
+        if (!result.ok) {
+          message.error(result.error.message)
+          return
+        }
+
+        message.success(
+          t('content.assets.cleanupSuccess', {
+            count: result.data.deleted,
+            size: formatSize(result.data.releasedSize),
+            skipped: result.data.skipped,
+          }),
+        )
+        await query.refetch()
+      },
+    })
+  }, [
+    cleanupAssetsMutation,
+    cleanupPreviewMutation,
+    createdFrom,
+    createdTo,
+    keyword,
+    message,
+    mimeType,
+    modal,
+    query,
+    referenceStatus,
+    t,
+  ])
+
+  const columns = useMemo<TableProps<AssetListItem>['columns']>(
     () => [
+      {
+        dataIndex: 'referenceCount',
+        title: t('content.assets.table.reference'),
+        width: 120,
+        render: (count: number) =>
+          count > 0 ? (
+            <Tag color="processing">{t('content.assets.referenced', { count })}</Tag>
+          ) : (
+            <Tag>{t('content.assets.unreferenced')}</Tag>
+          ),
+      },
       {
         dataIndex: 'fileName',
         title: t('content.assets.table.fileName'),
@@ -196,6 +287,14 @@ export function AssetList() {
             >
               {t('content.assets.refresh')}
             </Button>
+            <Button
+              danger
+              icon={<Trash2 className="size-4" />}
+              loading={cleanupPreviewMutation.isPending || cleanupAssetsMutation.isPending}
+              onClick={() => void handleCleanup()}
+            >
+              {t('content.assets.cleanup')}
+            </Button>
             <Button onClick={() => void navigate({ to: '/content/posts' as never })}>
               {t('content.assets.goBackPosts')}
             </Button>
@@ -205,7 +304,7 @@ export function AssetList() {
       />
 
       <section className="rounded-lg border border-border-subtle bg-surface">
-        <div className="grid gap-3 border-b border-border-subtle px-4 py-4 md:grid-cols-[minmax(240px,1fr)_180px]">
+        <div className="grid gap-3 border-b border-border-subtle px-4 py-4 md:grid-cols-[minmax(220px,1fr)_160px_160px_240px]">
           <Input
             allowClear
             prefix={<Search className="size-4 text-fg-muted" />}
@@ -224,13 +323,34 @@ export function AssetList() {
             }}
             value={mimeType}
           />
+          <Select
+            options={[
+              { label: t('content.assets.allReferences'), value: 'all' },
+              { label: t('content.assets.referencedFilter'), value: 'referenced' },
+              { label: t('content.assets.unreferencedFilter'), value: 'unreferenced' },
+            ]}
+            onChange={(value) => {
+              setPage(1)
+              setReferenceStatus(value)
+            }}
+            value={referenceStatus}
+          />
+          <DatePicker.RangePicker
+            allowEmpty={[true, true]}
+            onChange={(value) => {
+              setPage(1)
+              setCreatedFrom(value?.[0]?.format('YYYY-MM-DD'))
+              setCreatedTo(value?.[1]?.format('YYYY-MM-DD'))
+            }}
+            value={[createdFrom ? dayjs(createdFrom) : null, createdTo ? dayjs(createdTo) : null]}
+          />
         </div>
 
         {loadError ? (
           <div className="border-b border-border-subtle px-4 py-3 text-sm text-danger">{loadError}</div>
         ) : null}
 
-        <Table<ImageAsset>
+        <Table<AssetListItem>
           columns={columns}
           dataSource={assets}
           loading={query.isLoading}

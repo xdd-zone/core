@@ -1,7 +1,7 @@
 import type { MomoRuntime } from '#momo/bootstrap'
 import type { HonoEnv } from '#momo/shared/hono-env'
 import { zValidator } from '@hono/zod-validator'
-import { AssetListQuerySchema, BizCode, UpdateAssetRequestSchema } from '@xdd-zone/contracts'
+import { AssetCleanupRequestSchema, AssetListQuerySchema, BizCode, UpdateAssetRequestSchema } from '@xdd-zone/contracts'
 import { Hono } from 'hono'
 import { getDb } from '#momo/infra/db/client'
 import { createRequirePermission } from '#momo/modules/auth/index'
@@ -30,6 +30,32 @@ export function createAssetsRoute(runtime: MomoRuntime) {
         const result = await service.listAssets(c.req.valid('query'))
         return c.json(createSuccessResponse(result, createMeta(c.var.requestId)))
       },
+    )
+    .post(
+      '/rpc/assets/cleanup/preview',
+      createRequirePermission(runtime, 'content.asset.delete'),
+      zValidator('json', AssetCleanupRequestSchema, (result) => {
+        if (result.success) {
+          return
+        }
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) =>
+        c.json(createSuccessResponse(await service.previewCleanup(c.req.valid('json')), createMeta(c.var.requestId))),
+    )
+    .post(
+      '/rpc/assets/cleanup',
+      createRequirePermission(runtime, 'content.asset.delete'),
+      zValidator('json', AssetCleanupRequestSchema, (result) => {
+        if (result.success) {
+          return
+        }
+        const failure = createValidationFailure(result.error)
+        throw new AppError(failure.code, failure.message, 400, failure.details)
+      }),
+      async (c) =>
+        c.json(createSuccessResponse(await service.cleanupAssets(c.req.valid('json')), createMeta(c.var.requestId))),
     )
     .get('/rpc/assets/:id', createRequirePermission(runtime, 'content.asset.read'), async (c) => {
       const result = await service.getAssetById(c.req.param('id'))

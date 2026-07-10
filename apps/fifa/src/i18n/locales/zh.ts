@@ -76,7 +76,13 @@ export default {
   content: {
     assets: {
       allTypes: '全部类型',
+      allReferences: '全部引用状态',
       cancel: '取消',
+      cleanup: '清理未引用素材',
+      cleanupConfirmMessage: '将删除当前筛选条件中的 {{count}} 个未引用素材，共 {{size}}。删除后无法恢复。',
+      cleanupConfirmTitle: '清理未引用素材',
+      cleanupEmpty: '当前筛选条件下没有可清理的素材',
+      cleanupSuccess: '已删除 {{count}} 个素材，释放 {{size}}；跳过 {{skipped}} 个',
       copyAddress: '复制地址',
       copyAddressSuccess: '图片地址已复制',
       delete: '删除',
@@ -90,6 +96,8 @@ export default {
       emptyText: '暂无素材',
       goBackPosts: '回到文章',
       refresh: '刷新',
+      referenced: '已引用 {{count}} 次',
+      referencedFilter: '已引用',
       save: '保存',
       saveAltSuccess: '说明已保存',
       searchPlaceholder: '搜索文件名、说明或路径',
@@ -103,9 +111,12 @@ export default {
         createdAt: '上传时间',
         fileName: '文件',
         mimeType: '类型',
+        reference: '引用',
         size: '大小',
       },
       title: '媒体库',
+      unreferenced: '未引用',
+      unreferencedFilter: '未引用',
     },
     postEdit: {
       ai: {

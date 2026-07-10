@@ -84,6 +84,8 @@ apps/momo/src/modules/events/events.route.ts
 | `POST` | `/rpc/content/posts/:id/archive` | 归档文章，并从公开站点和搜索索引移除 |
 | `GET` | `/rpc/content/mdx-components` | MDX 组件清单 |
 | `GET` | `/rpc/assets` | 素材列表 |
+| `POST` | `/rpc/assets/cleanup/preview` | 统计当前筛选条件下未引用素材的数量和文件大小 |
+| `POST` | `/rpc/assets/cleanup` | 删除当前筛选条件下未引用的素材 |
 | `GET` | `/rpc/assets/:id` | 素材详情和引用信息 |
 | `GET` | `/rpc/assets/:id/file` | 读取素材文件 |
 | `PATCH` | `/rpc/assets/:id` | 更新素材说明 |

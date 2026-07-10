@@ -222,6 +222,8 @@ POST /rpc/content/posts/:id/publish
 POST /rpc/content/posts/:id/archive
 GET /rpc/content/mdx-components
 GET /rpc/assets
+POST /rpc/assets/cleanup/preview
+POST /rpc/assets/cleanup
 GET /rpc/assets/:id
 GET /rpc/assets/:id/file
 PATCH /rpc/assets/:id

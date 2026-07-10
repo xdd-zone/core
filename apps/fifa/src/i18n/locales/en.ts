@@ -76,7 +76,14 @@ export default {
   content: {
     assets: {
       allTypes: 'All Types',
+      allReferences: 'All Reference States',
       cancel: 'Cancel',
+      cleanup: 'Clean Unreferenced Assets',
+      cleanupConfirmMessage:
+        'Delete {{count}} unreferenced assets in the current filters ({{size}}). This cannot be undone.',
+      cleanupConfirmTitle: 'Clean Unreferenced Assets',
+      cleanupEmpty: 'No unreferenced assets match the current filters',
+      cleanupSuccess: 'Deleted {{count}} assets and released {{size}}; skipped {{skipped}}',
       copyAddress: 'Copy Address',
       copyAddressSuccess: 'Image address copied',
       delete: 'Delete',
@@ -90,6 +97,8 @@ export default {
       emptyText: 'No assets',
       goBackPosts: 'Back to Posts',
       refresh: 'Refresh',
+      referenced: 'Referenced {{count}} times',
+      referencedFilter: 'Referenced',
       save: 'Save',
       saveAltSuccess: 'Alt text saved',
       searchPlaceholder: 'Search by filename, alt, or path',
@@ -103,9 +112,12 @@ export default {
         createdAt: 'Uploaded At',
         fileName: 'File',
         mimeType: 'Type',
+        reference: 'References',
         size: 'Size',
       },
       title: 'Media Library',
+      unreferenced: 'Unreferenced',
+      unreferencedFilter: 'Unreferenced',
     },
     postEdit: {
       ai: {
