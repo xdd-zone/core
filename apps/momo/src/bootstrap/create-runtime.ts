@@ -1,6 +1,7 @@
 import type { Logger } from 'pino'
 import type { BoboRevalidateClient } from '#momo/infra/bobo'
 import type { CacheDriver } from '#momo/infra/cache'
+import type { LogReader } from '#momo/infra/logs'
 import type { SearchDriver } from '#momo/infra/search'
 import type { StorageDriver } from '#momo/infra/storage/storage.types'
 import type { MomoEnv } from '#momo/shared/env'
@@ -8,6 +9,7 @@ import { resolve } from 'node:path'
 import { DisabledBoboRevalidateClient, HttpBoboRevalidateClient } from '#momo/infra/bobo'
 import { MemoryCache, RedisCache } from '#momo/infra/cache'
 import { createChildLogger, createLogger } from '#momo/infra/logger'
+import { DisabledLogReader, LokiLogReader } from '#momo/infra/logs'
 import { DisabledSearch, MeilisearchSearch } from '#momo/infra/search'
 import { CosStorage } from '#momo/infra/storage/cos-storage'
 import { LocalStorage } from '#momo/infra/storage/local-storage'
@@ -18,6 +20,7 @@ export interface MomoRuntime {
   cache: CacheDriver
   env: ReturnType<typeof getMomoEnv>
   logger: Logger
+  logs: LogReader
   search: SearchDriver
   storage: StorageDriver
 }
@@ -119,6 +122,24 @@ function createBoboRevalidateClient(env: MomoEnv, logger: Logger): BoboRevalidat
   )
 }
 
+function createLogReader(env: MomoEnv): LogReader {
+  if (env.LOG_READER_PROVIDER === 'none') {
+    return new DisabledLogReader()
+  }
+
+  if (!env.LOKI_URL) {
+    throw new Error('LOG_READER_PROVIDER=loki 时，LOKI_URL 必须配置')
+  }
+
+  return new LokiLogReader({
+    password: env.LOKI_PASSWORD,
+    tenantId: env.LOKI_TENANT_ID,
+    timeoutMs: env.LOG_QUERY_TIMEOUT_MS,
+    url: env.LOKI_URL,
+    username: env.LOKI_USERNAME,
+  })
+}
+
 export function createRuntime(): MomoRuntime {
   const env = getMomoEnv()
   const logger = createLogger(env)
@@ -128,6 +149,7 @@ export function createRuntime(): MomoRuntime {
     cache: createCacheDriver(env, logger),
     env,
     logger,
+    logs: createLogReader(env),
     search: createSearchDriver(env, logger),
     storage: createStorageDriver(env, logger),
   }

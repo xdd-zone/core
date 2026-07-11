@@ -39,6 +39,8 @@ describe('momo 环境变量', () => {
       ),
     ).toEqual({
       APP_ENV: 'production',
+      APP_INSTANCE_ID: undefined,
+      APP_RELEASE: undefined,
       BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       BETTER_AUTH_URL: 'https://api.xdd.zone',
       CACHE_DEFAULT_TTL_SECONDS: 300,
@@ -65,7 +67,13 @@ describe('momo 环境变量', () => {
       COS_SIGNED_URL_EXPIRES: 600,
       LOCAL_STORAGE_DIR: undefined,
       LOG_LEVEL: 'info',
+      LOG_QUERY_TIMEOUT_MS: 5000,
+      LOG_READER_PROVIDER: 'none',
       LOG_SQL: false,
+      LOKI_PASSWORD: undefined,
+      LOKI_TENANT_ID: undefined,
+      LOKI_URL: undefined,
+      LOKI_USERNAME: undefined,
       PORT: 8080,
       SEARCH_PROVIDER: 'none',
       STORAGE_PROVIDER: 'local',
@@ -95,6 +103,60 @@ describe('momo 环境变量', () => {
         LOG_SQL: true,
       }),
     )
+  })
+
+  it('日志读取默认关闭', () => {
+    expect(getMomoEnv(baseEnv())).toEqual(
+      expect.objectContaining({
+        LOG_QUERY_TIMEOUT_MS: 5000,
+        LOG_READER_PROVIDER: 'none',
+        LOKI_URL: undefined,
+      }),
+    )
+  })
+
+  it('loki 日志读取配置会被解析', () => {
+    expect(
+      getMomoEnv(
+        baseEnv({
+          APP_INSTANCE_ID: 'momo-1',
+          APP_RELEASE: 'release-1',
+          LOG_QUERY_TIMEOUT_MS: '8000',
+          LOG_READER_PROVIDER: 'loki',
+          LOKI_PASSWORD: 'password',
+          LOKI_TENANT_ID: 'tenant-1',
+          LOKI_URL: 'http://localhost:53100',
+          LOKI_USERNAME: 'momo',
+        }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        APP_INSTANCE_ID: 'momo-1',
+        APP_RELEASE: 'release-1',
+        LOG_QUERY_TIMEOUT_MS: 8000,
+        LOG_READER_PROVIDER: 'loki',
+        LOKI_PASSWORD: 'password',
+        LOKI_TENANT_ID: 'tenant-1',
+        LOKI_URL: 'http://localhost:53100',
+        LOKI_USERNAME: 'momo',
+      }),
+    )
+  })
+
+  it('loki 日志读取缺少 URL 时抛错', () => {
+    expect(() => getMomoEnv(baseEnv({ LOG_READER_PROVIDER: 'loki' }))).toThrow()
+  })
+
+  it('loki 用户名和密码必须同时配置', () => {
+    expect(() =>
+      getMomoEnv(
+        baseEnv({
+          LOG_READER_PROVIDER: 'loki',
+          LOKI_URL: 'http://localhost:53100',
+          LOKI_USERNAME: 'momo',
+        }),
+      ),
+    ).toThrow()
   })
 
   it('缓存配置会把空 URL 当作未设置', () => {

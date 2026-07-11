@@ -1,8 +1,8 @@
 {
-  "id": "momo-system-operations",
-  "name": "momo-system-operations",
-  "title": "Momo system operations and log planning",
-  "description": "",
+  "id": "momo-log-viewer",
+  "name": "momo-log-viewer",
+  "title": "Momo 日志查看",
+  "description": "在 Fifa 系统运行页查询 Momo 的结构化运行日志，Momo 通过受限 LogReader 读取 Loki。",
   "status": "in_progress",
   "dev_type": null,
   "scope": "packages/contracts,apps/momo,apps/fifa,docs",
@@ -18,8 +18,8 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": ["07-10-momo-log-viewer"],
-  "parent": null,
+  "children": [],
+  "parent": "07-10-momo-system-operations",
   "relatedFiles": [],
   "notes": "",
   "meta": {}

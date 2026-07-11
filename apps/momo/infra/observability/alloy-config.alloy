@@ -1,0 +1,57 @@
+logging {
+  level = "info"
+}
+
+discovery.docker "local" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "momo" {
+  targets = discovery.docker.local.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    regex         = "momo"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    replacement   = "$1"
+    target_label  = "container"
+  }
+}
+
+loki.source.docker "momo" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.momo.output
+  labels     = { service = "momo" }
+  forward_to = [loki.process.momo.receiver]
+}
+
+loki.process "momo" {
+  stage.json {
+    expressions = {
+      env     = "env",
+      module  = "module",
+      service = "service",
+    }
+  }
+
+  stage.labels {
+    values = {
+      env     = "",
+      module  = "",
+      service = "",
+    }
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

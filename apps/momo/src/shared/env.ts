@@ -9,6 +9,8 @@ const optionalUrlSchema = z.preprocess((value) => (value === '' ? undefined : va
 const momoEnvSchema = z
   .object({
     APP_ENV: z.enum(['development', 'test', 'production']),
+    APP_INSTANCE_ID: optionalStringSchema,
+    APP_RELEASE: optionalStringSchema,
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: z.string().url(),
     BOBO_BASE_URL: optionalUrlSchema,
@@ -38,6 +40,8 @@ const momoEnvSchema = z
     MEILI_INDEX_PREFIX: z.string().min(1).default('momo'),
     MOMO_PUBLIC_BASE_URL: z.string().url(),
     LOG_LEVEL: logLevelSchema.optional(),
+    LOG_QUERY_TIMEOUT_MS: z.coerce.number().int().positive().max(30_000).default(5000),
+    LOG_READER_PROVIDER: z.enum(['none', 'loki']).default('none'),
     LOG_SQL: z.preprocess((value) => {
       if (value === undefined) {
         return false
@@ -53,6 +57,10 @@ const momoEnvSchema = z
 
       return value
     }, z.boolean()),
+    LOKI_PASSWORD: optionalStringSchema,
+    LOKI_TENANT_ID: optionalStringSchema,
+    LOKI_URL: optionalUrlSchema,
+    LOKI_USERNAME: optionalStringSchema,
     PORT: z.coerce.number().int().min(1).max(65535),
     SEARCH_PROVIDER: z.enum(['none', 'meilisearch']).default('none'),
     STORAGE_PROVIDER: z.enum(['local', 'cos']).default('local'),
@@ -90,6 +98,22 @@ const momoEnvSchema = z
       })
     }
 
+    if (env.LOG_READER_PROVIDER === 'loki' && !env.LOKI_URL) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'LOG_READER_PROVIDER=loki 时，LOKI_URL 必须配置',
+        path: ['LOKI_URL'],
+      })
+    }
+
+    if ((env.LOKI_USERNAME && !env.LOKI_PASSWORD) || (!env.LOKI_USERNAME && env.LOKI_PASSWORD)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'LOKI_USERNAME 和 LOKI_PASSWORD 必须同时配置',
+        path: ['LOKI_USERNAME'],
+      })
+    }
+
     if (Buffer.from(env.LLM_SECRET_KEY, 'base64').length !== 32) {
       ctx.addIssue({
         code: 'custom',
@@ -116,6 +140,8 @@ export type MomoEnv = z.infer<typeof momoEnvSchema>
 export function getMomoEnv(source: NodeJS.ProcessEnv = process.env): MomoEnv {
   return momoEnvSchema.parse({
     APP_ENV: source.APP_ENV,
+    APP_INSTANCE_ID: source.APP_INSTANCE_ID,
+    APP_RELEASE: source.APP_RELEASE,
     BETTER_AUTH_SECRET: source.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: source.BETTER_AUTH_URL,
     BOBO_BASE_URL: source.BOBO_BASE_URL,
@@ -136,7 +162,13 @@ export function getMomoEnv(source: NodeJS.ProcessEnv = process.env): MomoEnv {
     MEILI_INDEX_PREFIX: source.MEILI_INDEX_PREFIX,
     MOMO_PUBLIC_BASE_URL: source.MOMO_PUBLIC_BASE_URL,
     LOG_LEVEL: source.LOG_LEVEL,
+    LOG_QUERY_TIMEOUT_MS: source.LOG_QUERY_TIMEOUT_MS,
+    LOG_READER_PROVIDER: source.LOG_READER_PROVIDER,
     LOG_SQL: source.LOG_SQL,
+    LOKI_PASSWORD: source.LOKI_PASSWORD,
+    LOKI_TENANT_ID: source.LOKI_TENANT_ID,
+    LOKI_URL: source.LOKI_URL,
+    LOKI_USERNAME: source.LOKI_USERNAME,
     PORT: source.PORT,
     SEARCH_PROVIDER: source.SEARCH_PROVIDER,
     STORAGE_PROVIDER: source.STORAGE_PROVIDER,

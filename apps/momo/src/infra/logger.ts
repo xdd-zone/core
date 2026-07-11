@@ -6,11 +6,28 @@ import { getStringProperty } from '#momo/shared/object-utils'
 export type MomoLogger = Pick<Logger, 'debug' | 'error' | 'info' | 'warn'>
 type BetterAuthLogLevel = 'debug' | 'error' | 'info' | 'warn'
 
-export const LOGGER_REDACT_PATHS = ['authorization', 'cookie', 'password', 'secret', 'token', 'clientSecret']
+export const LOGGER_REDACT_PATHS = [
+  'authorization',
+  'cookie',
+  'password',
+  'secret',
+  'token',
+  'clientSecret',
+  'headers.authorization',
+  'headers.cookie',
+  'req.headers.authorization',
+  'req.headers.cookie',
+  '*.password',
+  '*.secret',
+  '*.token',
+  '*.clientSecret',
+]
 
 export function createLogger(env: MomoEnv): Logger {
   const base = {
     env: env.APP_ENV,
+    instance: env.APP_INSTANCE_ID,
+    release: env.APP_RELEASE,
     service: 'momo',
   }
   const redact = {
@@ -93,6 +110,10 @@ export function createErrorLogFields(error: Error | undefined, options: { includ
   }
 }
 
+export function truncateLogText(value: string, maxLength = 2000): string {
+  return value.length > maxLength ? `${value.slice(0, maxLength)}...` : value
+}
+
 function getCause(error: Error): Error | undefined {
   const cause = error.cause
 
@@ -104,8 +125,10 @@ function getCause(error: Error): Error | undefined {
 }
 
 function sanitizeErrorMessage(message: string): string {
-  return message
-    .split('\n')
-    .filter((line) => !line.trimStart().startsWith('params:'))
-    .join('\n')
+  return truncateLogText(
+    message
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('params:'))
+      .join('\n'),
+  )
 }

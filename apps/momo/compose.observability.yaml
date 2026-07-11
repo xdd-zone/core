@@ -1,0 +1,31 @@
+services:
+  loki:
+    image: grafana/loki:3.7.3
+    container_name: xdd-momo-loki
+    command: -config.file=/etc/loki/config.yaml
+    ports:
+      - '127.0.0.1:53100:3100'
+    volumes:
+      - ./infra/observability/loki-config.yaml:/etc/loki/config.yaml:ro
+      - momo-loki-data:/loki
+
+  alloy:
+    image: grafana/alloy:v1.17.1
+    container_name: xdd-momo-alloy
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    depends_on:
+      - loki
+    ports:
+      - '127.0.0.1:51234:12345'
+    volumes:
+      - ./infra/observability/alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - momo-alloy-data:/var/lib/alloy/data
+
+volumes:
+  momo-alloy-data:
+  momo-loki-data:

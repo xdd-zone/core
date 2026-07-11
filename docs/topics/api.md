@@ -55,7 +55,8 @@ apps/momo/src/modules/events/events.route.ts
 | `GET` | `/` | 服务名称和状态 |
 | `GET` | `/health` | 健康检查状态 |
 | `POST` | `/rpc/system/ping` | Momo ping 结果 |
-| `GET` | `/rpc/system/readiness` | PostgreSQL、缓存、搜索和文件存储状态，需要 fifa owner |
+| `GET` | `/rpc/system/readiness` | PostgreSQL、缓存、搜索、文件存储和日志服务状态，需要 fifa owner |
+| `GET` | `/rpc/system/logs` | Momo 结构化运行日志，需要 fifa owner，最长查询 24 小时，单次最多 200 条 |
 | `GET` | `/rpc/fifa/auth/me` | 当前 fifa 用户 |
 | `GET` | `/rpc/fifa/profile` | 当前 fifa owner 的个人资料和账号绑定状态 |
 | `PATCH` | `/rpc/fifa/profile` | 修改当前 fifa owner 的显示名和头像地址 |

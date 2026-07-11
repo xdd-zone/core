@@ -28,7 +28,7 @@ export class RedisCache implements CacheDriver {
     logger?: MomoLogger,
   ) {
     this.client.on?.('error', (error) => {
-      logger?.error({ event: 'cache.redis.error', message: error.message }, 'Redis 缓存连接异常')
+      logger?.error({ errorMessage: error.message, event: 'cache.redis.error' }, 'Redis 缓存连接异常')
     })
   }
 

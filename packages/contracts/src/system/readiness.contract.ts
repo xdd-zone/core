@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const SYSTEM_READINESS_COMPONENT_VALUES = ['database', 'cache', 'search', 'storage'] as const
+export const SYSTEM_READINESS_COMPONENT_VALUES = ['database', 'cache', 'search', 'storage', 'logging'] as const
 
 export const SystemReadinessComponentSchema = z.enum(SYSTEM_READINESS_COMPONENT_VALUES)
 export const SystemReadinessCheckStatusSchema = z.enum(['ready', 'disabled', 'error'])

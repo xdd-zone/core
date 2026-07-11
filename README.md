@@ -291,6 +291,10 @@ pnpm dev:bobo
   公开项目详情。
 - `/rpc/bobo/search`
   公开站点搜索。
+- `/rpc/system/readiness`
+  检查 Momo 数据库、缓存、搜索、文件存储和日志服务。
+- `/rpc/system/logs`
+  查询 Momo 结构化运行日志，需要 Fifa owner。
 - `/rpc/events/outbox/retry`
   处理 pending outbox 任务。
 

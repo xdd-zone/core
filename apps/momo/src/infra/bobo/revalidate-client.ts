@@ -1,4 +1,5 @@
 import type { MomoLogger } from '#momo/infra/logger'
+import { truncateLogText } from '#momo/infra/logger'
 
 export interface BoboRevalidateInput {
   paths?: string[]
@@ -40,7 +41,7 @@ export class HttpBoboRevalidateClient implements BoboRevalidateClient {
       this.logger?.warn(
         {
           event: 'bobo.revalidate.failed',
-          responseBody: text,
+          responseBody: truncateLogText(text),
           status: response.status,
         },
         'Bobo 缓存刷新失败',

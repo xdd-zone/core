@@ -70,7 +70,7 @@ apps/momo/src/
 - `middleware`
   request context、请求日志、CORS 这类通用 middleware。
 - `infra`
-  数据库、文件存储和第三方 SDK 的连接代码。
+  数据库、文件存储、日志查询和第三方 SDK 的连接代码。
 - `shared`
   错误类型、环境变量读取、Hono 类型、响应 meta 和校验辅助函数。
 - `test`
@@ -146,6 +146,11 @@ apps/momo/src/
 │   └── timing.middleware.ts
 ├── infra/
 │   ├── logger.ts
+│   ├── logs/
+│   │   ├── index.ts
+│   │   ├── log-reader.ts
+│   │   ├── disabled-log-reader.ts
+│   │   └── loki-log-reader.ts
 │   ├── cache.ts
 │   ├── search.ts
 │   ├── cache/
@@ -236,9 +241,17 @@ apps/momo/src/shared/env.ts
 
 ```text
 APP_ENV
+APP_RELEASE
+APP_INSTANCE_ID
 PORT
 LOG_LEVEL
 LOG_SQL
+LOG_READER_PROVIDER
+LOG_QUERY_TIMEOUT_MS
+LOKI_URL
+LOKI_USERNAME
+LOKI_PASSWORD
+LOKI_TENANT_ID
 MOMO_PUBLIC_BASE_URL
 BOBO_BASE_URL
 BOBO_REVALIDATE_SECRET
@@ -286,6 +299,10 @@ OWNER_DISPLAY_NAME
 
 `LOG_SQL` 只在开发环境生效。设成 `true` 时会打印 SQL 和 `paramsCount`，不会打印参数原值。
 
+`APP_RELEASE` 和 `APP_INSTANCE_ID` 是可选日志字段。Docker 部署时可以分别写发布版本和容器实例名，Fifa 日志详情会显示这两个值。
+
+`LOG_READER_PROVIDER` 控制运行日志查询。默认值是 `none`，不会连接日志服务。设成 `loki` 时必须配置 `LOKI_URL`。`LOKI_USERNAME` 和 `LOKI_PASSWORD` 必须同时配置或同时留空，`LOKI_TENANT_ID` 用于需要 `X-Scope-OrgID` 的 Loki。`LOG_QUERY_TIMEOUT_MS` 默认是 `5000` 毫秒。
+
 `MOMO_PUBLIC_BASE_URL` 填 Momo 给浏览器访问的地址。内容图片用本地存储时，素材响应里的 `fileUrl` 会按这个地址拼 `/rpc/assets/:id/file`。本地开发通常填 `http://localhost:7788`。
 
 `BOBO_BASE_URL` 和 `BOBO_REVALIDATE_SECRET` 要一起配置。发布或归档文章和项目后，Momo 用它们调用 Bobo 的 `POST /api/revalidate`。本地不需要主动刷新 Bobo cache 时，两个变量都留空。
@@ -325,13 +342,13 @@ apps/momo/src/bootstrap
 当前文件：
 
 - `create-runtime.ts`
-  读取 `shared/env.ts`，创建 logger、cache、search 和 storage，返回 `MomoRuntime`。
+  读取 `shared/env.ts`，创建 logger、cache、search、storage 和 LogReader，返回 `MomoRuntime`。
 - `create-app.ts`
   创建 `new Hono<HonoEnv>()`，注册全局中间件、错误处理、404 和一级路由。
 - `index.ts`
   统一导出 `createRuntime()`、`createMomoApp()` 和 `MomoRuntime`。
 
-`MomoRuntime` 当前有 `env`、`logger`、`cache`、`search`、`storage` 和 `boboRevalidate`。后续如果加数据库或其他外部资源，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
+`MomoRuntime` 当前有 `env`、`logger`、`logs`、`cache`、`search`、`storage` 和 `boboRevalidate`。后续如果加数据库或其他外部资源，也从 `create-runtime.ts` 创建，再通过 `runtime` 传给 route、service 或 repository。
 
 不要把 env、db、cache 写进 `c.var`。`c.var` 只放当前请求的数据。
 
@@ -376,9 +393,7 @@ apps/momo/src/routes/index.ts
 
 ```ts
 export function createRoutes(runtime: MomoRuntime) {
-  return new Hono<HonoEnv>()
-    .route('/', createAuthRoute(runtime))
-    .route('/', createSystemRoute(runtime))
+  return new Hono<HonoEnv>().route('/', createAuthRoute(runtime)).route('/', createSystemRoute(runtime))
 }
 
 export type MomoRpcType = ReturnType<typeof createRoutes>
@@ -951,7 +966,7 @@ modules/auth/
 
 ## system 模块
 
-`system` 模块放服务自检接口。
+`system` 模块放服务自检和运行日志查询接口。
 
 后续文件：
 
@@ -966,9 +981,12 @@ apps/momo/src/modules/system/
 - `GET /`
 - `GET /health`
 - `GET /rpc/system/readiness`
+- `GET /rpc/system/logs`
 - `POST /rpc/system/ping`
 
-`GET /health` 只返回进程存活状态，不访问外部资源。`GET /rpc/system/readiness` 只允许 `fifa.owner` 调用，会检查 PostgreSQL、缓存、搜索和文件存储。单项检查失败时接口仍返回结果，并把总状态设成 `degraded`。
+`GET /health` 只返回进程存活状态，不访问外部资源。`GET /rpc/system/readiness` 只允许 `fifa.owner` 调用，会检查 PostgreSQL、缓存、搜索、文件存储和日志服务。单项检查失败时接口仍返回结果，并把总状态设成 `degraded`。
+
+`GET /rpc/system/logs` 只允许 `fifa.owner` 调用。接口接受相对时间范围或 ISO 起止时间，以及最低级别、module、event、requestId、path、状态码、最小耗时和 cursor。最长查询 24 小时，单次最多返回 200 条。route 不接受任意 LogQL。
 
 `system` service 可以通过参数接收 runtime 和数据库 client，用于 readiness 检查。不要在 service 里直接调用 `getMomoEnv()`。
 
@@ -1052,15 +1070,16 @@ apps/momo/src/infra/db
 
 这里放数据库 client、schema 和 migrations。
 
-日志封装放在：
+日志输出和查询放在：
 
 ```text
 apps/momo/src/infra/logger.ts
+apps/momo/src/infra/logs
 ```
 
-这里创建 Pino logger。`createRuntime()` 调用它，把 logger 放进 `runtime`，请求日志和未处理异常日志都从 `runtime.logger` 写出。开发环境默认使用 `info`，未处理异常会记录 stack。生产和测试环境不记录 stack。需要 SQL 日志时把 `LOG_SQL` 设成 `true`，日志只打印 SQL 和参数数量，不打印参数原值。Better Auth 的日志也走这里，错误只记录名称、消息和 code，不打印 stack 和请求参数。
+`infra/logger.ts` 创建 Pino logger。`createRuntime()` 调用它，把 logger 放进 `runtime`，请求日志和未处理异常日志都从 `runtime.logger` 写出。开发环境默认使用 `info`，未处理异常会记录 stack。生产和测试环境不记录 stack。需要 SQL 日志时把 `LOG_SQL` 设成 `true`，日志只打印 SQL 和参数数量，不打印参数原值。Better Auth 的日志也走这里，错误只记录名称、消息和 code，不打印 stack 和请求参数。
 
-Pino 日志写到标准输出。部署环境负责日志保存和查询。Momo 当前不提供本地日志文件读取接口，也不把每条 HTTP 日志写进 PostgreSQL。Fifa 的系统运行页只读取 readiness 和已经持久化的 outbox 任务。
+Pino 日志写到标准输出，不写入 PostgreSQL，也不读取本地日志文件。`infra/logs` 提供 `DisabledLogReader` 和 `LokiLogReader`。Momo 根据固定查询字段生成 LogQL，解析 Loki stream，并在返回 Fifa 前递归隐藏敏感字段和截断超长内容。Fifa 不直接保存 Loki 地址和凭证。
 
 业务模块不能在 route 里直接创建数据库连接。需要读写数据库时，先写 repository，再由 service 调用 repository。
 
@@ -1107,11 +1126,15 @@ MEILI_API_KEY=momo-meilisearch-development-master-key
 ```bash
 pnpm --filter @xdd-zone/momo local:up
 pnpm --filter @xdd-zone/momo local:down
+pnpm --filter @xdd-zone/momo logs:up
+pnpm --filter @xdd-zone/momo logs:down
 pnpm --filter @xdd-zone/momo db:generate
 pnpm --filter @xdd-zone/momo db:migrate
 pnpm --filter @xdd-zone/momo db:check
 pnpm --filter @xdd-zone/momo db:studio
 ```
+
+`logs:up` 使用 `apps/momo/compose.observability.yaml` 启动 Loki `3.7.3` 和 Alloy `v1.17.1`。Loki 数据保存在独立 volume，默认保留 7 天。Alloy 只采集 Docker Compose service 名为 `momo` 的容器。当前命令不会把本机直接运行的 `pnpm dev` 输出送到 Loki。
 
 新增表时，先在 `apps/momo/src/infra/db/schema/<module>.schema.ts` 写 schema，再从 `apps/momo/src/infra/db/schema/index.ts` 导出。
 

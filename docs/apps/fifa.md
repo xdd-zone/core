@@ -14,9 +14,9 @@
 - 内容模块，当前提供文章列表、创建、编辑、媒体库、分类和标签管理页。
 - 站点模块，当前提供站点配置、公开资料和项目管理页。
 - 系统设置模块，当前提供个人资料页和 LLM 配置页。
-- 系统运行模块，当前提供 Momo readiness 和 outbox 任务管理页。
+- 系统运行模块，当前提供 Momo readiness、outbox 任务和运行日志查询页。
 
-当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。当前站点模块接入了 Momo 的站点配置、公开资料和项目接口。当前系统设置模块接入了 Momo 的个人资料和 LLM 配置接口。当前系统运行页接入了 readiness 和 outbox 查询、详情、单条重试接口。
+当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。当前站点模块接入了 Momo 的站点配置、公开资料和项目接口。当前系统设置模块接入了 Momo 的个人资料和 LLM 配置接口。当前系统运行页接入了 readiness、outbox 和运行日志接口。
 
 ## 开始改 UI 前先看
 
@@ -158,7 +158,7 @@ apps/fifa/src/api/llm/index.ts
 - `api/auth/*.api.ts`
   调 Momo 的 Better Auth 接口。这里直接处理 HTTP 响应和 cookie。
 - `api/system/*.api.ts`
-  调 Momo RPC。页面不要直接 import `momoClient`。
+  调 Momo readiness 和运行日志 RPC。页面不要直接 import `momoClient`。
 - `api/system/system.query.ts`
   放 system 模块的 query key 和 hooks。页面不要手写 system query key。
 - `api/content/*.api.ts`
@@ -216,6 +216,7 @@ PATCH /rpc/fifa/profile
 POST /rpc/fifa/profile/avatar
 GET /health
 GET /rpc/system/readiness
+GET /rpc/system/logs
 POST /rpc/system/ping
 GET /rpc/content/posts
 POST /rpc/content/posts
@@ -281,7 +282,9 @@ DELETE /rpc/llm/call-logs/expired
 - `GET /health`
   用 `useSystemHealthQuery()`，页面打开后自动请求，也可以点刷新按钮重新请求。
 - `GET /rpc/system/readiness`
-  用 `useSystemReadinessQuery()` 在系统运行页检查数据库、缓存、搜索和文件存储。
+  用 `useSystemReadinessQuery()` 在系统运行页检查数据库、缓存、搜索、文件存储和日志服务。
+- `GET /rpc/system/logs`
+  用 `useSystemLogsInfiniteQuery()` 查询最近 15 分钟到 24 小时的 Momo 运行日志。页面用 cursor 加载更多，不拼 LogQL。
 - `POST /rpc/system/ping`
   用 `usePingSystemMutation()`，只在点击 Ping 按钮时发送。
 - content 文章、素材、分类和标签接口

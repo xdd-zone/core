@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createRuntime } from '#momo/bootstrap'
 import { MemoryCache, RedisCache } from '#momo/infra/cache'
+import { DisabledLogReader, LokiLogReader } from '#momo/infra/logs'
 import { DisabledSearch, MeilisearchSearch } from '#momo/infra/search'
 
 function stubBaseEnv() {
@@ -57,5 +58,23 @@ describe('runtime 创建', () => {
     const runtime = createRuntime()
 
     expect(runtime.search).toBeInstanceOf(MeilisearchSearch)
+  })
+
+  it('默认创建禁用日志 reader', () => {
+    stubBaseEnv()
+
+    const runtime = createRuntime()
+
+    expect(runtime.logs).toBeInstanceOf(DisabledLogReader)
+  })
+
+  it('log_reader_provider=loki 时创建 Loki reader', () => {
+    stubBaseEnv()
+    vi.stubEnv('LOG_READER_PROVIDER', 'loki')
+    vi.stubEnv('LOKI_URL', 'http://localhost:53100')
+
+    const runtime = createRuntime()
+
+    expect(runtime.logs).toBeInstanceOf(LokiLogReader)
   })
 })

@@ -17,6 +17,7 @@
 - 登录页会请求 Momo 的 `POST /api/auth/sign-in/email`。
 - 登录成功后会请求 Momo 的 `GET /rpc/fifa/auth/me`。
 - 内容模块会请求 Momo 的文章、素材、分类和标签接口。
+- 系统运行页会请求 Momo 的 readiness、outbox 和运行日志接口。
 
 还没接入权限页面。
 
@@ -73,6 +74,7 @@ src/
 - `/content/posts/$postId`
 - `/content/assets`
 - `/content/taxonomy`
+- `/system/operations`
 - `/env-example`
 - `/ui-showcase`
 - `/markdown-example`

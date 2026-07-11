@@ -10,6 +10,8 @@ import {
 
 const baseEnv: MomoEnv = {
   APP_ENV: 'test',
+  APP_INSTANCE_ID: undefined,
+  APP_RELEASE: undefined,
   BETTER_AUTH_SECRET: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
   BETTER_AUTH_URL: 'http://localhost:7788',
   CACHE_DEFAULT_TTL_SECONDS: 300,
@@ -36,7 +38,13 @@ const baseEnv: MomoEnv = {
   COS_SIGNED_URL_EXPIRES: 600,
   LOCAL_STORAGE_DIR: undefined,
   LOG_LEVEL: 'silent',
+  LOG_QUERY_TIMEOUT_MS: 5000,
+  LOG_READER_PROVIDER: 'none',
   LOG_SQL: false,
+  LOKI_PASSWORD: undefined,
+  LOKI_TENANT_ID: undefined,
+  LOKI_URL: undefined,
+  LOKI_USERNAME: undefined,
   PORT: 7788,
   SEARCH_PROVIDER: 'none',
   STORAGE_PROVIDER: 'local',
@@ -141,6 +149,25 @@ describe('momo 日志', () => {
   it('default 脱敏日志字段已定义', () => {
     expect(LOGGER_REDACT_PATHS).toEqual(
       expect.arrayContaining(['authorization', 'cookie', 'password', 'secret', 'token', 'clientSecret']),
+    )
+  })
+
+  it('logger base 带发布和实例字段', () => {
+    const logger = createLogger({
+      ...baseEnv,
+      APP_ENV: 'production',
+      APP_INSTANCE_ID: 'momo-1',
+      APP_RELEASE: 'release-1',
+      LOG_LEVEL: 'info',
+    })
+
+    expect(logger.bindings()).toEqual(
+      expect.objectContaining({
+        env: 'production',
+        instance: 'momo-1',
+        release: 'release-1',
+        service: 'momo',
+      }),
     )
   })
 })

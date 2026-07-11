@@ -10,6 +10,7 @@ Momo 保存个人站业务数据，并给 Fifa 后台和 Bobo 公开站点提供
 - 创建运行时 app，给测试和包导出使用。
 - 提供统一响应格式、请求日志、CORS、安全响应头、请求体大小限制和超时处理。
 - 提供 liveness、readiness、系统接口和认证接口。
+- 通过受限的 LogReader 查询 Loki 运行日志。
 - 提供内容接口，包含文章草稿、发布、预览 token、公开文章、分类、标签和图片素材。
 - 提供站点配置、公开个人资料、项目、站点搜索和 outbox 重试接口。
 - 使用 Better Auth 处理登录、登出、OAuth callback 和 session cookie。
@@ -35,6 +36,8 @@ pnpm dev
 pnpm test
 pnpm local:up
 pnpm local:down
+pnpm logs:up
+pnpm logs:down
 pnpm db:generate
 pnpm db:migrate
 pnpm db:check
@@ -73,7 +76,7 @@ pnpm seed:owner
 - `src/modules`
   放业务模块。当前有 `system`、`auth`、`content`、`assets`、`profile`、`site`、`projects`、`search`、`events` 和 `llm`。
 - `src/infra`
-  放 PostgreSQL、Drizzle、缓存、搜索和文件存储接入代码。
+  放 PostgreSQL、Drizzle、缓存、搜索、日志查询和文件存储接入代码。
 - `src/shared`
   放 Momo 内部共用的错误类型、环境变量读取、Hono 类型和响应 meta 生成函数。
 
@@ -84,7 +87,9 @@ pnpm seed:owner
 - `GET /health`
   返回进程存活状态，不检查外部依赖。
 - `GET /rpc/system/readiness`
-  检查 PostgreSQL、缓存、搜索和文件存储，需要 Fifa owner。
+  检查 PostgreSQL、缓存、搜索、文件存储和日志服务，需要 Fifa owner。
+- `GET /rpc/system/logs`
+  查询 Momo 结构化运行日志，需要 Fifa owner。最长查询 24 小时，单次最多返回 200 条。
 - `POST /rpc/system/ping`
   接收 `{ "name": "fifa" }`，返回 `pong, fifa`。
 - `/api/auth/*`
@@ -213,6 +218,10 @@ pnpm seed:owner
   控制日志级别，开发环境默认 `info`。
 - `LOG_SQL`
   设成 `true` 时打印 SQL 和参数数量，不打印参数原值。
+- `LOG_READER_PROVIDER`
+  默认 `none`。设成 `loki` 时，需要配置 `LOKI_URL`。
+- `LOG_QUERY_TIMEOUT_MS`
+  控制 Momo 查询日志服务的超时时间，默认 `5000` 毫秒。
 - `CACHE_PROVIDER`
   默认 `memory`。设成 `redis` 时，需要配置 `CACHE_URL`。
 - `SEARCH_PROVIDER`
@@ -246,13 +255,14 @@ import { app } from './src/app'
 const response = await app.request('/health')
 ```
 
-## 缓存、搜索、LLM 和文件存储
+## 缓存、搜索、日志、LLM 和文件存储
 
 - 缓存代码放在 `src/infra/cache`。本地 Redis 协议缓存使用 Valkey，地址是 `redis://localhost:56379`。
 - 搜索代码放在 `src/infra/search`。公开搜索接口是 `GET /rpc/bobo/search?q=关键词`。`SEARCH_PROVIDER=none` 时返回空结果；启用 Meilisearch 后，文章和项目发布会写入 `site` 索引。
 - LLM provider 调用代码放在 `src/infra/llm`。Provider、use case 和调用日志接口放在 `src/modules/llm`。内容模块通过 `POST /rpc/content/posts/meta-suggestion` 生成文章字段建议。调用日志会记录请求 ID、用户 ID 和文章 ID。
 - 文件存储代码放在 `src/infra/storage`。素材模块通过 `POST /rpc/assets/images` 保存图片素材。验证当前存储配置时，运行 `pnpm storage:test`。
-- Pino 运行日志继续写到标准输出，由部署环境负责保存和查询。Momo 当前不读取本地日志文件，也不把每条请求日志写入 PostgreSQL。
+- Pino 运行日志继续写到标准输出，不写入 PostgreSQL，也不读取本地日志文件。`LOG_READER_PROVIDER=loki` 时，Momo 通过 `GET /rpc/system/logs` 查询 Loki，并在返回 Fifa 前再次隐藏敏感字段。
+- `pnpm logs:up` 单独启动 Loki 和 Alloy，`pnpm logs:down` 停止它们。该命令不属于 `pnpm local:up`，Alloy 只采集 Docker Compose service 名为 `momo` 的容器。
 
 更多说明看：
 
