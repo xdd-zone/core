@@ -2,19 +2,19 @@
 
 ## Scope
 
-本设计分两阶段。
+本设计分两阶段，两阶段均已完成。
 
-第一阶段在当前任务实现：
+第一阶段由父任务直接实现：
 
 - Momo readiness 查询。
 - outbox 列表、详情和单条重试。
 - Fifa 系统运行页面。
 
-第二阶段只记录后续接法，不在当前任务实现：
+第二阶段由子任务 `07-10-momo-log-viewer` 实现：
 
-- 部署环境保存 Pino JSON 日志。
-- Momo 通过受限 reader 查询 Loki 或托管日志服务。
-- Fifa 增加通用日志表格。
+- 独立 Loki/Alloy Compose 保存 Docker 中的 Momo Pino JSON。
+- Momo 通过受限 `LogReader` 查询 Loki。
+- Fifa 增加运行日志 Tab、筛选、分页和详情 Drawer。
 
 ## Boundaries
 
@@ -25,6 +25,7 @@
 ```text
 packages/contracts/src/events/events.contract.ts
 packages/contracts/src/system/readiness.contract.ts
+packages/contracts/src/system/logs.contract.ts
 ```
 
 这里只放 Zod schema、请求类型和响应 DTO。
@@ -55,7 +56,7 @@ GET /health
 
 GET /rpc/system/readiness
   -> fifa.owner guard
-  -> 并行检查 database/cache/search/storage
+  -> 并行检查 database/cache/search/storage/logging
   -> 返回每项状态和总状态
 ```
 
@@ -67,6 +68,7 @@ GET /rpc/system/readiness
 - storage：给 `StorageDriver` 增加 `health()`。
   - local：创建根目录并检查读写权限。
   - COS：调用 `headBucket` 检查 bucket 访问权限。
+- logging：调用 `LogReader.health()`；未启用时返回 `disabled`，Loki 不可用时返回 `error`。
 
 单项检查捕获错误，只返回固定中文说明，不返回外部 SDK 原始响应。
 
@@ -86,10 +88,9 @@ apps/fifa/src/api/system/*
 页面结构：
 
 1. `FifaPageHeader`：标题、总状态、检查时间、刷新按钮。
-2. readiness 状态带：四项依赖按紧凑列表展示，不做大统计卡。
-3. outbox 工具栏：状态筛选、事件类型输入、刷新。
-4. outbox 表格：主要信息和单条操作。
-5. Drawer：错误原因、时间、payload。
+2. “依赖状态”Tab：五项依赖按紧凑列表展示，不做大统计卡。
+3. “后台任务”Tab：outbox 筛选、表格、详情和单条重试。
+4. “运行日志”Tab：时间范围、快捷筛选、文本筛选、日志表格和详情 Drawer。
 
 ## Data Flow
 
@@ -128,6 +129,18 @@ retry button
   -> invalidate outbox/readiness queries
 ```
 
+### Runtime logs
+
+```text
+Pino JSON stdout
+  -> Docker logs
+  -> Grafana Alloy
+  -> Loki
+  -> Momo LogReader
+  -> owner-only GET /rpc/system/logs
+  -> Fifa running logs tab
+```
+
 ## Security
 
 - 所有新增 RPC 接口使用 `createRequireFifaOwner()`。
@@ -145,20 +158,22 @@ retry button
 
 ## Phase 2 Log Reader
 
-后续部署环境确定后，再创建独立任务实现：
+子任务 `07-10-momo-log-viewer` 已按 VPS/Docker 基线实现：
 
 ```text
 Pino JSON stdout
-  -> Loki / deployment log service
+  -> Grafana Alloy
+  -> Loki
   -> Momo LogReader
   -> owner-only /rpc/system/logs
   -> Fifa /system/operations logs tab
 ```
 
-`LogReader` 只接受固定查询字段：时间范围、level、module、event、requestId、path 和 cursor。前端不能提交任意 LogQL。第一版只查询 `warn`、`error`、5xx 和慢请求。
+`LogReader` 只接受固定查询字段：时间范围、level、module、event、requestId、path、状态码、最小耗时和 cursor。前端不能提交任意 LogQL。日志读取默认关闭，`LOG_READER_PROVIDER=none` 时不影响 Momo 其他接口。
 
 ## Rollback
 
 - readiness 某个检查不稳定时，可以只移除该检查，不影响 `/health`。
 - outbox 新接口可以独立移除，原批量重试接口仍可使用。
 - Fifa 页面通过单独 route record 注册，移除 route record 即可隐藏入口。
+- `LOG_READER_PROVIDER=none` 可以关闭日志查询，不影响 readiness 的其他检查和 outbox 页面。

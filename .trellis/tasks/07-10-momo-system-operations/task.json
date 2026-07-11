@@ -1,8 +1,8 @@
 {
   "id": "momo-system-operations",
   "name": "momo-system-operations",
-  "title": "Momo system operations and log planning",
-  "description": "",
+  "title": "Momo 系统运行页",
+  "description": "在 Fifa 查看 Momo 依赖状态、outbox 后台任务和结构化运行日志。",
   "status": "in_progress",
   "dev_type": null,
   "scope": "packages/contracts,apps/momo,apps/fifa,docs",

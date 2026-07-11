@@ -77,6 +77,13 @@ pnpm lint
 pnpm format:check
 ```
 
+## 8. Runtime logs child task
+
+- 子任务 `07-10-momo-log-viewer` 增加日志 contracts、`LogReader`、owner-only 日志接口和 readiness `logging` 状态。
+- Fifa 系统运行页拆成“依赖状态”“后台任务”“运行日志”三个 Tab。
+- 新增独立 Loki/Alloy Compose 配置，不修改 `local:up`。
+- 补日志查询、分页、脱敏、错误映射和 Fifa API 测试。
+
 ## Risk Points
 
 - COS health 必须使用 `headBucket`，不能上传测试文件。
@@ -87,10 +94,11 @@ pnpm format:check
 
 ## Result
 
-- 第一阶段代码、测试和正式文档已完成。
-- Momo 测试：32 个文件，269 条通过。
-- Fifa 测试：14 个文件，43 条通过。
+- readiness、outbox 和运行日志两阶段代码、测试和正式文档已完成。
+- Momo 测试：34 个文件，287 条通过。
+- Fifa 测试：15 个文件，44 条通过。
 - `pnpm type-check`、`pnpm lint`、`pnpm format:check` 通过。
 - Fifa 生产构建通过。
-- 浏览器确认 `/system/operations` 未登录时跳转 `/login`。当前浏览器没有 Fifa 登录态，因此没有代替用户输入账号密码。
-- 第二阶段 Loki 或托管日志服务接入保留为后续独立任务。
+- 浏览器确认未登录跳转、三个 Tab、日志禁用提示、实际日志查询、详情脱敏、Request ID 筛选和 390px 窄屏表格横向滚动。
+- Docker Compose、Alloy `v1.17.1` 和 Loki `3.7.3` 配置校验通过。
+- 功能提交为 `d391350` 和 `6289ace`；日志子任务已归档。
