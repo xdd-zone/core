@@ -1,4 +1,4 @@
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
@@ -19,7 +19,7 @@ ENV VITE_APP_ENV=$VITE_APP_ENV
 ENV VITE_BOBO_BASE_URL=$VITE_BOBO_BASE_URL
 ENV VITE_MOMO_BASE_URL=$VITE_MOMO_BASE_URL
 
-RUN pnpm --filter @xdd-zone/fifa build
+RUN pnpm build:fifa
 
 FROM nginxinc/nginx-unprivileged:1.29-alpine
 

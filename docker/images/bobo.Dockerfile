@@ -1,4 +1,4 @@
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
@@ -10,9 +10,9 @@ WORKDIR /workspace
 COPY . .
 
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @xdd-zone/bobo build
+RUN pnpm build:bobo
 
-FROM node:22-alpine AS runtime
+FROM node:24-alpine AS runtime
 
 ENV NODE_ENV=production
 ENV PORT=4399

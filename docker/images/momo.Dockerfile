@@ -1,4 +1,4 @@
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
@@ -10,10 +10,10 @@ WORKDIR /workspace
 COPY . .
 
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @xdd-zone/momo build
-RUN pnpm --filter @xdd-zone/momo --prod deploy /app
+RUN pnpm build:momo
+RUN pnpm --filter @xdd-zone/momo --prod deploy --legacy /app
 
-FROM node:22-alpine AS runtime
+FROM node:24-alpine AS runtime
 
 ENV NODE_ENV=production
 

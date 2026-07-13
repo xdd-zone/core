@@ -6,6 +6,8 @@
 
 Docker 专用文件只放仓库根目录 `docker/`。不要在 `apps/*` 新增 Compose 文件或运行环境配置。
 
+Momo 和 Bobo 的构建与运行镜像、Fifa 的构建镜像统一使用 `node:24-alpine`。
+
 ## 2. 命令
 
 - 完整环境：`pnpm docker:up`。

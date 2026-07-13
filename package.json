@@ -16,7 +16,7 @@
     "url": "https://github.com/xdd-zone/core/issues"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "turbo run dev --filter=@xdd-zone/momo --filter=@xdd-zone/fifa --filter=@xdd-zone/bobo",

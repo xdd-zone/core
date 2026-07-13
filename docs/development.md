@@ -4,7 +4,7 @@
 
 ## 环境要求
 
-- Node.js 22+
+- Node.js 24 LTS+
 - pnpm 使用根目录 `packageManager` 声明的版本
 
 ## 安装依赖
