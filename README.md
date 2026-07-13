@@ -118,6 +118,17 @@ pnpm dev:momo
 pnpm dev:bobo
 ```
 
+### Docker 运行环境
+
+Docker 文件统一放在 `docker/`。先复制环境变量模板，再启动完整环境：
+
+```bash
+cp docker/.env.example docker/.env
+pnpm docker:up
+```
+
+默认服务都绑定在 `127.0.0.1`。外部反向代理或部署平台负责域名和 TLS。只给本机 `pnpm dev` 启动 PostgreSQL、Valkey、Meilisearch 时运行 `pnpm docker:deps:up`；日志服务按需运行 `pnpm docker:observability:up`。
+
 ### 3. 请求健康检查
 
 ```bash
@@ -149,6 +160,13 @@ pnpm dev
 pnpm dev:fifa
 pnpm dev:momo
 pnpm dev:bobo
+
+# Docker
+pnpm docker:up
+pnpm docker:down
+pnpm docker:deps:up
+pnpm docker:observability:up
+pnpm docker:logs
 
 # 构建
 pnpm build

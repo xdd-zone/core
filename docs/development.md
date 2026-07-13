@@ -125,6 +125,29 @@ pnpm dev
 
 域名、frp 和 Caddy 维护在个人目录，入口看 [code-server 内开发](./development/code-server.md)。
 
+## Docker 运行环境
+
+Docker 配置统一放在仓库根目录 `docker/`。`docker/.env.example` 是可提交的变量模板，实际使用 `docker/.env`，这个文件不会提交。部署平台可以用同名环境变量覆盖模板值。
+
+```bash
+cp docker/.env.example docker/.env
+
+# 启动完整环境：PostgreSQL、Valkey、Meilisearch、Momo、Fifa、Bobo
+pnpm docker:up
+
+# 只给本机 pnpm dev 启动依赖服务
+pnpm docker:deps:up
+
+# 按需启动 Loki 和 Alloy
+pnpm docker:observability:up
+
+# 停止服务或查看日志
+pnpm docker:down
+pnpm docker:logs
+```
+
+默认端口与开发端口一致，全部绑定在 `127.0.0.1`。Momo、Fifa、Bobo 的公网入口由外部反向代理或部署平台处理；仓库不提供域名和 TLS 配置。完整环境启动时先执行 Momo migration，migration 失败时 Momo 不会启动。
+
 ## 构建命令
 
 ```bash

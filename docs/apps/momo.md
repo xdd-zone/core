@@ -1089,8 +1089,8 @@ Momo 使用 PostgreSQL 和 Drizzle ORM。
 
 相关文件：
 
-- `apps/momo/compose.yaml`
-  本地 PostgreSQL、Valkey 和 Meilisearch Docker 配置。
+- `docker/compose.yaml`
+  PostgreSQL、Valkey、Meilisearch、Momo、Fifa、Bobo 和可选观测服务的 Docker 配置。
 - `apps/momo/drizzle.config.ts`
   Drizzle Kit 配置。这里指定 schema 入口和 migration 输出目录。
 - `apps/momo/src/infra/db/client.ts`
@@ -1124,17 +1124,17 @@ MEILI_API_KEY=momo-meilisearch-development-master-key
 常用命令：
 
 ```bash
-pnpm --filter @xdd-zone/momo local:up
-pnpm --filter @xdd-zone/momo local:down
-pnpm --filter @xdd-zone/momo logs:up
-pnpm --filter @xdd-zone/momo logs:down
+pnpm docker:deps:up
+pnpm docker:deps:down
+pnpm docker:observability:up
+pnpm docker:observability:down
 pnpm --filter @xdd-zone/momo db:generate
 pnpm --filter @xdd-zone/momo db:migrate
 pnpm --filter @xdd-zone/momo db:check
 pnpm --filter @xdd-zone/momo db:studio
 ```
 
-`logs:up` 使用 `apps/momo/compose.observability.yaml` 启动 Loki `3.7.3` 和 Alloy `v1.17.1`。Loki 数据保存在独立 volume，默认保留 7 天。Alloy 只采集 Docker Compose service 名为 `momo` 的容器。当前命令不会把本机直接运行的 `pnpm dev` 输出送到 Loki。
+`pnpm docker:observability:up` 使用 `docker/compose.yaml` 的 `observability` profile 启动 Loki `3.7.3` 和 Alloy `v1.17.1`。Loki 数据保存在独立 volume，默认保留 7 天。Alloy 只采集 Docker Compose service 名为 `momo` 的容器。本机直接运行的 `pnpm dev` 输出不会进入 Loki。
 
 新增表时，先在 `apps/momo/src/infra/db/schema/<module>.schema.ts` 写 schema，再从 `apps/momo/src/infra/db/schema/index.ts` 导出。
 
@@ -1323,7 +1323,7 @@ expect(response.status).toBe(200)
 postgres://momo:momo@localhost:55432/momo_test
 ```
 
-先运行 `pnpm --filter @xdd-zone/momo local:up`。测试会自动创建 `momo_test`，执行当前 migration，并清理这个测试库里的表。
+先运行 `pnpm docker:deps:up`。测试会自动创建 `momo_test`，执行当前 migration，并清理这个测试库里的表。
 
 ## 运行和检查
 

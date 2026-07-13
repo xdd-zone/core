@@ -148,7 +148,7 @@ expect(mockLogger.info).toHaveBeenCalled()
 - `it` 描述用中文或英文都行，和当前文件已有风格保持一致。
 - mock 只 mock 外部依赖（数据库、日志），不 mock 被测模块内部逻辑。
 - 测试之间不共享可变状态。
-- Momo 认证和内容接口测试读取 `apps/momo/.env.test`，使用 `momo_test` 数据库。先运行 `pnpm --filter @xdd-zone/momo local:up`，测试会自动创建 `momo_test`、执行 migration，并清理这个测试库里的表。
+- Momo 认证和内容接口测试读取 `apps/momo/.env.test`，使用 `momo_test` 数据库。先运行 `pnpm docker:deps:up`，测试会自动创建 `momo_test`、执行 migration，并清理这个测试库里的表。
 - Momo 测试通过 `apps/momo/vitest.config.ts` 关闭文件并行，避免多个数据库接口测试同时重建同一个测试库。
 - Fifa 测试读取 `apps/fifa/.env.test`。当前只测前端请求解析和路由权限判断，不需要启动 Momo。
 - Fifa 测试通过 `apps/fifa/vitest.config.ts` 配置 `@fifa` 路径别名和 Vitest 运行环境。

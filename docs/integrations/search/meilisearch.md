@@ -15,13 +15,13 @@
 本地 Docker 配置放在：
 
 ```text
-apps/momo/compose.yaml
+docker/compose.yaml
 ```
 
 启动服务：
 
 ```bash
-pnpm --filter @xdd-zone/momo local:up
+pnpm docker:deps:up
 ```
 
 Meilisearch 本地地址：

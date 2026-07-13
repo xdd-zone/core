@@ -7,6 +7,7 @@ const allowedDevOrigins =
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: allowedDevOrigins.length > 0 ? allowedDevOrigins : undefined,
+  output: 'standalone',
 }
 
 export default nextConfig

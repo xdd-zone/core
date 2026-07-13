@@ -1,0 +1,196 @@
+name: ${COMPOSE_PROJECT_NAME:-xdd-core}
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - ${APP_BIND_HOST}:${POSTGRES_HOST_PORT}:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    networks: [core]
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    healthcheck:
+      test: [CMD, valkey-cli, ping]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - ${APP_BIND_HOST}:${VALKEY_HOST_PORT}:6379
+    networks: [core]
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.46.1
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MEILI_API_KEY}
+    healthcheck:
+      test: [CMD-SHELL, wget -q -O /dev/null http://127.0.0.1:7700/health]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - ${APP_BIND_HOST}:${MEILISEARCH_HOST_PORT}:7700
+    volumes:
+      - meilisearch-data:/meili_data
+    networks: [core]
+
+  momo-migrate:
+    build:
+      context: ..
+      dockerfile: docker/images/momo.Dockerfile
+      target: build
+    command: pnpm --filter @xdd-zone/momo db:migrate:docker
+    environment: &momo-environment
+      APP_ENV: production
+      APP_INSTANCE_ID: momo
+      APP_RELEASE: docker
+      PORT: 7788
+      LOG_LEVEL: info
+      LOG_READER_PROVIDER: ${LOG_READER_PROVIDER}
+      LOKI_URL: ${LOKI_URL}
+      MOMO_PUBLIC_BASE_URL: ${MOMO_PUBLIC_BASE_URL}
+      BOBO_BASE_URL: http://bobo:4399
+      BOBO_REVALIDATE_SECRET: ${BOBO_REVALIDATE_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      DATABASE_URL: ${DATABASE_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${MOMO_PUBLIC_BASE_URL}
+      CACHE_PROVIDER: ${CACHE_PROVIDER}
+      CACHE_URL: ${CACHE_URL}
+      SEARCH_PROVIDER: ${SEARCH_PROVIDER}
+      MEILI_HOST: ${MEILI_HOST}
+      MEILI_API_KEY: ${MEILI_API_KEY}
+      LLM_SECRET_KEY: ${LLM_SECRET_KEY}
+      STORAGE_PROVIDER: local
+      LOCAL_STORAGE_DIR: /data/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [core]
+
+  momo:
+    image: ${MOMO_IMAGE}
+    build:
+      context: ..
+      dockerfile: docker/images/momo.Dockerfile
+    environment: *momo-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      momo-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:7788/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    ports:
+      - ${APP_BIND_HOST}:${MOMO_HOST_PORT}:7788
+    volumes:
+      - momo-media:/data/media
+    networks: [core]
+
+  fifa:
+    image: ${FIFA_IMAGE}
+    build:
+      context: ..
+      dockerfile: docker/images/fifa.Dockerfile
+      args:
+        VITE_APP_ENV: production
+        VITE_BOBO_BASE_URL: ${BOBO_PUBLIC_BASE_URL}
+        VITE_MOMO_BASE_URL: ${MOMO_PUBLIC_BASE_URL}
+    depends_on:
+      momo:
+        condition: service_healthy
+    ports:
+      - ${APP_BIND_HOST}:${FIFA_HOST_PORT}:8080
+    networks: [core]
+
+  bobo:
+    image: ${BOBO_IMAGE}
+    build:
+      context: ..
+      dockerfile: docker/images/bobo.Dockerfile
+    environment:
+      MOMO_BASE_URL: http://momo:7788
+      BOBO_REVALIDATE_SECRET: ${BOBO_REVALIDATE_SECRET}
+    depends_on:
+      momo:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:4399').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    ports:
+      - ${APP_BIND_HOST}:${BOBO_HOST_PORT}:4399
+    networks: [core]
+
+  loki:
+    image: grafana/loki:3.7.3
+    profiles: [observability]
+    command: -config.file=/etc/loki/config.yaml
+    ports:
+      - ${APP_BIND_HOST}:${LOKI_HOST_PORT}:3100
+    volumes:
+      - ./observability/loki-config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    networks: [core]
+
+  alloy:
+    image: grafana/alloy:v1.17.1
+    profiles: [observability]
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    depends_on:
+      loki:
+        condition: service_started
+    volumes:
+      - ./observability/alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-data:/var/lib/alloy/data
+    networks: [core]
+
+networks:
+  core:
+    name: xdd-core
+
+volumes:
+  postgres-data:
+    name: xdd-core-postgres-data
+  meilisearch-data:
+    name: xdd-core-meilisearch-data
+  momo-media:
+    name: xdd-core-momo-media
+  loki-data:
+    name: xdd-core-loki-data
+  alloy-data:
+    name: xdd-core-alloy-data

@@ -34,10 +34,6 @@ pnpm build:momo
 ```bash
 pnpm dev
 pnpm test
-pnpm local:up
-pnpm local:down
-pnpm logs:up
-pnpm logs:down
 pnpm db:generate
 pnpm db:migrate
 pnpm db:check
@@ -56,7 +52,7 @@ PORT=7788 pnpm dev
 创建 owner 账号：
 
 ```bash
-pnpm local:up
+pnpm --dir ../.. docker:deps:up
 pnpm db:migrate
 pnpm seed:owner
 ```
@@ -242,7 +238,7 @@ pnpm seed:owner
 `pnpm test` 会读取 `apps/momo/.env.test`，连接 `postgres://momo:momo@localhost:55432/momo_test`。第一次跑认证接口测试前，先运行：
 
 ```bash
-pnpm local:up
+pnpm --dir ../.. docker:deps:up
 ```
 
 测试会自动创建 `momo_test`，并只清理这个测试库里的表。
@@ -262,7 +258,7 @@ const response = await app.request('/health')
 - LLM provider 调用代码放在 `src/infra/llm`。Provider、use case 和调用日志接口放在 `src/modules/llm`。内容模块通过 `POST /rpc/content/posts/meta-suggestion` 生成文章字段建议。调用日志会记录请求 ID、用户 ID 和文章 ID。
 - 文件存储代码放在 `src/infra/storage`。素材模块通过 `POST /rpc/assets/images` 保存图片素材。验证当前存储配置时，运行 `pnpm storage:test`。
 - Pino 运行日志继续写到标准输出，不写入 PostgreSQL，也不读取本地日志文件。`LOG_READER_PROVIDER=loki` 时，Momo 通过 `GET /rpc/system/logs` 查询 Loki，并在返回 Fifa 前再次隐藏敏感字段。
-- `pnpm logs:up` 单独启动 Loki 和 Alloy，`pnpm logs:down` 停止它们。该命令不属于 `pnpm local:up`，Alloy 只采集 Docker Compose service 名为 `momo` 的容器。
+- `pnpm --dir ../.. docker:observability:up` 单独启动 Loki 和 Alloy，`pnpm --dir ../.. docker:observability:down` 停止它们。该命令不属于 `pnpm --dir ../.. docker:deps:up`，Alloy 只采集 Docker Compose service 名为 `momo` 的容器。
 
 更多说明看：
 
