@@ -105,3 +105,37 @@ Filled project-specific Trellis specs, corrected the default package, and update
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: 验证并修复 Docker Prod 部署
+
+**Date**: 2026-07-13
+**Task**: 验证并修复 Docker Prod 部署
+**Package**: bobo
+**Branch**: `main`
+
+### Summary
+
+修复 Momo migration 容器的 pnpm 无 TTY 失败、补齐生产必填环境变量、修正 Bobo standalone 启动路径和镜像环境文件排除；Node 24 Prod Compose 已启动，三个应用和 Loki/Alloy 均验证通过。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1fe7fa3` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
