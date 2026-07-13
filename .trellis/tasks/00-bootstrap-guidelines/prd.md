@@ -21,13 +21,13 @@ the rest conversationally.
 
 ## Status (update the checkboxes as you complete each item)
 
-- [ ] Fill guidelines for @xdd-zone/bobo
-- [ ] Fill guidelines for @xdd-zone/fifa
-- [ ] Fill guidelines for @xdd-zone/momo
-- [ ] Fill guidelines for @xdd-zone/catppuccin-theme
-- [ ] Fill guidelines for @xdd-zone/contracts
-- [ ] Fill guidelines for @xdd-zone/eslint-config
-- [ ] Add code examples
+- [x] Fill guidelines for @xdd-zone/bobo
+- [x] Fill guidelines for @xdd-zone/fifa
+- [x] Fill guidelines for @xdd-zone/momo
+- [x] Fill guidelines for @xdd-zone/catppuccin-theme
+- [x] Fill guidelines for @xdd-zone/contracts
+- [x] Fill guidelines for @xdd-zone/eslint-config
+- [x] Add code examples
 
 ---
 
