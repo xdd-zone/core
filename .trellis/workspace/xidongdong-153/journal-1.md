@@ -71,3 +71,37 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: Bootstrap Trellis specs
+
+**Date**: 2026-07-13
+**Task**: Bootstrap Trellis specs
+**Package**: bobo
+**Branch**: `main`
+
+### Summary
+
+Filled project-specific Trellis specs, corrected the default package, and updated managed configuration.
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ac8fb867054934c4ebb1fe16013b40f777b7048b` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
