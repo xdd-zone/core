@@ -14,13 +14,14 @@ Momo 和 Bobo 的构建与运行镜像、Fifa 的构建镜像统一使用 `node:
 - 本机开发依赖：`pnpm docker:deps:up`。
 - 观测服务：`pnpm docker:observability:up`。
 - Compose 校验：`docker compose --env-file docker/.env -f docker/compose.yaml config`。
-- Docker migration：`pnpm --filter @xdd-zone/momo db:migrate:docker`。
+- Docker migration：Compose 在 `/workspace/apps/momo` 直接运行 `./node_modules/.bin/drizzle-kit migrate`。
 
 ## 3. 配置约定
 
 - 提交 `docker/.env.example`，忽略 `docker/.env`。平台环境变量可覆盖同名值。
 - `VITE_*` 只在 Fifa 镜像构建时传入，不能包含密钥。
 - Momo、Bobo 的密钥和连接地址在 Compose `environment` 中运行时传入。
+- `.dockerignore` 必须匹配所有层级的 `.env` 和 `.env.*`；生产镜像中不得出现应用环境文件。
 - 默认容器地址使用 service hostname：PostgreSQL 是 `postgres`，缓存是 `valkey`，搜索是 `meilisearch`，Bobo 访问 Momo 使用 `http://momo:7788`。
 
 ## 4. 校验与失败

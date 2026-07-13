@@ -63,7 +63,6 @@
     "storage:test": "dotenv -e .env.development -- tsx --conditions=development src/scripts/test-storage.ts",
     "db:generate": "NODE_OPTIONS='--conditions=development' dotenv -e .env.development -- drizzle-kit generate",
     "db:migrate": "NODE_OPTIONS='--conditions=development' dotenv -e .env.development -- drizzle-kit migrate",
-    "db:migrate:docker": "drizzle-kit migrate",
     "db:check": "NODE_OPTIONS='--conditions=development' dotenv -e .env.development -- drizzle-kit check",
     "db:studio": "NODE_OPTIONS='--conditions=development' dotenv -e .env.development -- drizzle-kit studio",
     "clean": "rm -rf dist"

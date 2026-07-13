@@ -12,7 +12,7 @@ coverage
 apps/momo/storage
 .env
 .env.*
-!apps/momo/.env.test
-!apps/fifa/.env.test
+**/.env
+**/.env.*
 docker/.env
 docs/superpowers

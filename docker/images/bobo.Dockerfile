@@ -21,11 +21,11 @@ ENV HOSTNAME=0.0.0.0
 WORKDIR /app
 
 COPY --from=build --chown=node:node /workspace/apps/bobo/.next/standalone ./
-COPY --from=build --chown=node:node /workspace/apps/bobo/.next/static ./.next/static
-COPY --from=build --chown=node:node /workspace/apps/bobo/public ./public
+COPY --from=build --chown=node:node /workspace/apps/bobo/.next/static ./apps/bobo/.next/static
+COPY --from=build --chown=node:node /workspace/apps/bobo/public ./apps/bobo/public
 
 USER node
 
 EXPOSE 4399
 
-CMD ["node", "server.js"]
+CMD ["node", "apps/bobo/server.js"]
