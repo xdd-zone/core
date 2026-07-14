@@ -1,4 +1,5 @@
 import type { MomoAuth } from '#momo/modules/auth/auth.config'
+import { randomBytes } from 'node:crypto'
 import { and, eq, inArray, sql } from 'drizzle-orm'
 import { closeDb, configureDbClient, getDb } from '#momo/infra/db/client'
 import {
@@ -40,7 +41,7 @@ for (const [key, value] of Object.entries(localDefaults)) {
 interface OwnerSeedInput {
   displayName: string
   email: string
-  password: string
+  password?: string
 }
 
 const appRecords = [
@@ -147,33 +148,38 @@ async function main() {
   await ensureApplicationAuthMethods()
   await ensureRoles()
 
+  const existingOwner = await findOwnerUser()
+
+  if (existingOwner) {
+    ensureActiveUser(existingOwner)
+    await ensureCredentialAccount(existingOwner.id)
+    console.log(`owner 初始化检查已完成: ${existingOwner.email}`)
+    return
+  }
+
   const ownerUser = await ensureOwnerUser(owner, auth)
 
+  ensureActiveUser(ownerUser)
   await ensureCredentialAccount(ownerUser.id)
   await ensureUserRole(ownerUser.id, 'role_fifa_owner')
   await ensureUserRole(ownerUser.id, 'role_bobo_visitor')
   await ensureLlmUseCaseConfigs()
   await ensureInitialContent(ownerUser.id)
 
-  console.log(`owner seed 已完成: ${owner.email}`)
+  console.log(`owner seed 已完成: ${ownerUser.email}`)
+
+  if (ownerUser.generatedPassword) {
+    console.log(`XDD_OWNER_EMAIL=${ownerUser.email}`)
+    console.log(`XDD_OWNER_PASSWORD=${ownerUser.generatedPassword}`)
+  }
 }
 
 function readOwnerSeedInput(): OwnerSeedInput {
   return {
-    displayName: readRequiredEnv('OWNER_DISPLAY_NAME'),
-    email: readRequiredEnv('OWNER_EMAIL'),
-    password: readRequiredEnv('OWNER_PASSWORD'),
+    displayName: process.env.OWNER_DISPLAY_NAME?.trim() || 'Owner',
+    email: process.env.OWNER_EMAIL?.trim() || 'owner@xdd.zone',
+    password: process.env.OWNER_PASSWORD?.trim() || undefined,
   }
-}
-
-function readRequiredEnv(key: string): string {
-  const value = process.env[key]?.trim()
-
-  if (!value) {
-    throw new Error(`${key} 未设置`)
-  }
-
-  return value
 }
 
 async function ensureApplications(): Promise<void> {
@@ -214,39 +220,68 @@ async function ensureRoles(): Promise<void> {
     })
 }
 
-async function ensureOwnerUser(owner: OwnerSeedInput, auth: MomoAuth): Promise<{ id: string }> {
+interface OwnerUser {
+  email: string
+  generatedPassword?: string
+  id: string
+  status: string | null
+}
+
+async function ensureOwnerUser(owner: OwnerSeedInput, auth: MomoAuth): Promise<OwnerUser> {
   const existingUser = await findUserByEmail(owner.email)
 
   if (!existingUser) {
+    const generatedPassword = owner.password ? undefined : randomBytes(24).toString('base64url')
+    const password = owner.password ?? generatedPassword
+
+    if (!password) {
+      throw new Error('无法生成 owner 密码')
+    }
+
     const result = await auth.api.signUpEmail({
       body: {
         email: owner.email,
         name: owner.displayName,
-        password: owner.password,
+        password,
       },
     })
 
     return {
+      email: result.user.email,
+      ...(generatedPassword ? { generatedPassword } : {}),
       id: result.user.id,
+      status: 'active',
     }
   }
-
-  await getDb()
-    .update(user)
-    .set({
-      name: owner.displayName,
-      status: 'active',
-      updatedAt: new Date(),
-    })
-    .where(eq(user.id, existingUser.id))
 
   return existingUser
 }
 
-async function findUserByEmail(email: string): Promise<{ id: string } | null> {
-  const rows = await getDb().select({ id: user.id }).from(user).where(eq(user.email, email)).limit(1)
+async function findOwnerUser(): Promise<OwnerUser | null> {
+  const rows = await getDb()
+    .select({ email: user.email, id: user.id, status: user.status })
+    .from(userRoleBindings)
+    .innerJoin(user, eq(userRoleBindings.userId, user.id))
+    .where(and(eq(userRoleBindings.roleId, 'role_fifa_owner'), eq(userRoleBindings.status, 'active')))
+    .limit(1)
 
   return rows[0] ?? null
+}
+
+async function findUserByEmail(email: string): Promise<OwnerUser | null> {
+  const rows = await getDb()
+    .select({ email: user.email, id: user.id, status: user.status })
+    .from(user)
+    .where(eq(user.email, email))
+    .limit(1)
+
+  return rows[0] ?? null
+}
+
+function ensureActiveUser(ownerUser: OwnerUser): void {
+  if (ownerUser.status !== 'active') {
+    throw new Error(`owner 账号状态不是 active: ${ownerUser.email}`)
+  }
 }
 
 async function ensureCredentialAccount(userId: string): Promise<void> {

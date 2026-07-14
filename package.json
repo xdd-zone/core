@@ -24,7 +24,7 @@
     "dev:momo": "turbo run dev --filter=@xdd-zone/momo",
     "dev:fifa": "turbo run dev --filter=@xdd-zone/fifa",
     "dev:bobo": "turbo run dev --filter=@xdd-zone/bobo",
-    "docker:up": "docker compose --env-file docker/.env -f docker/compose.yaml up -d --build",
+    "docker:up": "./docker/deploy.sh",
     "docker:down": "docker compose --env-file docker/.env -f docker/compose.yaml down",
     "docker:deps:up": "docker compose --env-file docker/.env -f docker/compose.yaml up -d postgres valkey meilisearch",
     "docker:deps:down": "docker compose --env-file docker/.env -f docker/compose.yaml stop postgres valkey meilisearch",

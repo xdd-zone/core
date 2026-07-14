@@ -6,6 +6,15 @@ const optionalStringSchema = z.preprocess((value) => (value === '' ? undefined :
 
 const optionalUrlSchema = z.preprocess((value) => (value === '' ? undefined : value), z.string().url().optional())
 
+const optionalOAuthCredentialSchema = z.preprocess((value) => {
+  if (typeof value !== 'string') {
+    return value
+  }
+
+  const credential = value.trim()
+  return credential === '' || credential.startsWith('replace-with-') ? undefined : credential
+}, z.string().min(1).optional())
+
 const momoEnvSchema = z
   .object({
     APP_ENV: z.enum(['development', 'test', 'production']),
@@ -30,10 +39,10 @@ const momoEnvSchema = z
         .filter(Boolean)
     }, z.array(z.string().url()).min(1)),
     DATABASE_URL: z.string().url(),
-    GITHUB_CLIENT_ID: z.string().min(1),
-    GITHUB_CLIENT_SECRET: z.string().min(1),
-    GOOGLE_CLIENT_ID: z.string().min(1),
-    GOOGLE_CLIENT_SECRET: z.string().min(1),
+    GITHUB_CLIENT_ID: optionalOAuthCredentialSchema,
+    GITHUB_CLIENT_SECRET: optionalOAuthCredentialSchema,
+    GOOGLE_CLIENT_ID: optionalOAuthCredentialSchema,
+    GOOGLE_CLIENT_SECRET: optionalOAuthCredentialSchema,
     LLM_SECRET_KEY: z.string().min(1),
     MEILI_API_KEY: optionalStringSchema,
     MEILI_HOST: optionalUrlSchema,
@@ -74,6 +83,22 @@ const momoEnvSchema = z
     COS_SIGNED_URL_EXPIRES: z.coerce.number().int().min(60).default(600),
   })
   .superRefine((env, ctx) => {
+    if ((env.GITHUB_CLIENT_ID && !env.GITHUB_CLIENT_SECRET) || (!env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'GITHUB_CLIENT_ID 和 GITHUB_CLIENT_SECRET 必须同时配置',
+        path: ['GITHUB_CLIENT_ID'],
+      })
+    }
+
+    if ((env.GOOGLE_CLIENT_ID && !env.GOOGLE_CLIENT_SECRET) || (!env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'GOOGLE_CLIENT_ID 和 GOOGLE_CLIENT_SECRET 必须同时配置',
+        path: ['GOOGLE_CLIENT_ID'],
+      })
+    }
+
     if (env.CACHE_PROVIDER === 'redis' && !env.CACHE_URL) {
       ctx.addIssue({
         code: 'custom',

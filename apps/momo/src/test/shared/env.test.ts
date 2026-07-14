@@ -26,6 +26,55 @@ describe('momo 环境变量', () => {
     expect(() => getMomoEnv({ APP_ENV: 'development' })).toThrow()
   })
 
+  it('oauth 凭证全空时关闭 Provider', () => {
+    expect(
+      getMomoEnv(
+        baseEnv({
+          GITHUB_CLIENT_ID: '',
+          GITHUB_CLIENT_SECRET: '',
+          GOOGLE_CLIENT_ID: '',
+          GOOGLE_CLIENT_SECRET: '',
+        }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        GITHUB_CLIENT_ID: undefined,
+        GITHUB_CLIENT_SECRET: undefined,
+        GOOGLE_CLIENT_ID: undefined,
+        GOOGLE_CLIENT_SECRET: undefined,
+      }),
+    )
+  })
+
+  it('oauth 历史占位值按未配置处理', () => {
+    expect(
+      getMomoEnv(
+        baseEnv({
+          GITHUB_CLIENT_ID: 'replace-with-github-client-id',
+          GITHUB_CLIENT_SECRET: 'replace-with-github-client-secret',
+          GOOGLE_CLIENT_ID: 'replace-with-google-client-id',
+          GOOGLE_CLIENT_SECRET: 'replace-with-google-client-secret',
+        }),
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        GITHUB_CLIENT_ID: undefined,
+        GITHUB_CLIENT_SECRET: undefined,
+        GOOGLE_CLIENT_ID: undefined,
+        GOOGLE_CLIENT_SECRET: undefined,
+      }),
+    )
+  })
+
+  it.each([
+    { GITHUB_CLIENT_ID: 'github-client-id', GITHUB_CLIENT_SECRET: '' },
+    { GITHUB_CLIENT_ID: '', GITHUB_CLIENT_SECRET: 'github-client-secret' },
+    { GOOGLE_CLIENT_ID: 'google-client-id', GOOGLE_CLIENT_SECRET: '' },
+    { GOOGLE_CLIENT_ID: '', GOOGLE_CLIENT_SECRET: 'google-client-secret' },
+  ])('oauth 只配置一半时抛错', (overrides) => {
+    expect(() => getMomoEnv(baseEnv(overrides))).toThrow()
+  })
+
   it('comma 分隔的 CORS 来源会被解析', () => {
     expect(
       getMomoEnv(

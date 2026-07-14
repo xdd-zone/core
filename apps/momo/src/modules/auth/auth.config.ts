@@ -63,14 +63,22 @@ export function createMomoAuth(runtime: Pick<MomoRuntime, 'env' | 'logger'>) {
     },
     secret: runtime.env.BETTER_AUTH_SECRET,
     socialProviders: {
-      github: {
-        clientId: runtime.env.GITHUB_CLIENT_ID,
-        clientSecret: runtime.env.GITHUB_CLIENT_SECRET,
-      },
-      google: {
-        clientId: runtime.env.GOOGLE_CLIENT_ID,
-        clientSecret: runtime.env.GOOGLE_CLIENT_SECRET,
-      },
+      ...(runtime.env.GITHUB_CLIENT_ID && runtime.env.GITHUB_CLIENT_SECRET
+        ? {
+            github: {
+              clientId: runtime.env.GITHUB_CLIENT_ID,
+              clientSecret: runtime.env.GITHUB_CLIENT_SECRET,
+            },
+          }
+        : {}),
+      ...(runtime.env.GOOGLE_CLIENT_ID && runtime.env.GOOGLE_CLIENT_SECRET
+        ? {
+            google: {
+              clientId: runtime.env.GOOGLE_CLIENT_ID,
+              clientSecret: runtime.env.GOOGLE_CLIENT_SECRET,
+            },
+          }
+        : {}),
     },
     trustedOrigins: runtime.env.CORS_ORIGINS,
     user: {
