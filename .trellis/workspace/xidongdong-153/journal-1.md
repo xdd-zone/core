@@ -139,3 +139,38 @@ Filled project-specific Trellis specs, corrected the default package, and update
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: 完成 Docker 首次部署与更新流程
+
+**Date**: 2026-07-14
+**Task**: 完成 Docker 首次部署与更新流程
+**Package**: bobo
+**Branch**: `main`
+
+### Summary
+
+新增统一的 Docker 部署脚本，首次部署自动生成服务凭证并创建 owner；更新部署保留凭证、密码和 volume。OAuth 改为成对可选，补充失败检查、正式文档和 Momo Docker 规范，并通过完整质量门禁与隔离 Docker 首次、更新和失败场景验证。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0d2a909` | (see git log) |
+| `6acb18c` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
