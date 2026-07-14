@@ -117,13 +117,7 @@ pnpm dev:bobo
 - Bobo: `http://localhost:4399`
 - Health: `http://localhost:7788/health`
 
-code-server Web IDE 里如果要通过个人 dev 域名访问本机服务，也用同一套 `.env.development` 和同一个开发命令：
-
-```bash
-pnpm dev
-```
-
-域名、frp 和 Caddy 维护在个人目录，入口看 [code-server 内开发](./development/code-server.md)。
+code-server Web IDE 里如果要通过个人 dev 域名访问本机服务，也用同一套 `.env.development` 和 `pnpm dev`。dev 域名、frp 和 Caddy 的配置维护在个人目录 `~/Projects/code-server-frp-maintenance`，不在这个仓库里。
 
 ## Docker 运行环境
 
@@ -193,25 +187,7 @@ pnpm format
 - `apps/momo/src/infra/db/schema/<module>.schema.ts`
 - `packages/contracts/src/<module>`
 
-新增接口时按这个顺序处理：
-
-1. 在 `packages/contracts/src/<module>` 写请求 schema 和响应类型。
-2. 在 `apps/momo/src/modules/<module>/<module>.route.ts` 用链式写法注册路由。
-3. 需要模块内部类型时，添加或修改 `<module>.types.ts`。
-4. 需要业务判断时，添加或修改 `<module>.service.ts`。如果模块已经有 `services/` 目录，就放到 `services/` 里，并从 `services/index.ts` 导出。
-5. 需要数据库读写时，添加或修改 `<module>.repository.ts`。如果模块已经有 `repositories/` 目录，就放到 `repositories/` 里，并从 `repositories/index.ts` 导出。
-6. 需要新表或新字段时，修改 `apps/momo/src/infra/db/schema/<module>.schema.ts` 和 migration。
-7. 在 `apps/momo/src/routes/index.ts` 用 `route()` 挂载模块路由。
-8. 给 Momo 补接口测试。测试里要覆盖成功响应的 contract schema parse。
-9. 在 Fifa 的 `apps/fifa/src/api/<module>` 里写接口函数。接口函数内部通过 `momoClient.<path>.$get()` 或 `momoClient.<path>.$post()` 调 Momo，不手写接口 URL。
-10. 在 Fifa 的 `apps/fifa/src/api/<module>/<module>.query.ts` 写 TanStack Query hook。`GET` 接口用 `useQuery`，`POST` 接口用 `useMutation`。
-11. 页面只调用 hook，不直接 import `momoClient`，也不手写 query key。
-
-Momo 模块按 `contracts -> route -> types -> service -> repository -> schema` 的顺序整理类型。route 只处理 Hono 请求和响应包装，service 不接收 Hono `Context`，repository 不返回 API response DTO。具体规则看 [apps/momo.md](./apps/momo.md)。
-
-路由处理函数直接返回 Hono response，比如 `c.json(...)`。
-如果模块有 `services/index.ts`，route 从 `./services` 引入服务；如果模块有 `repositories/index.ts`，service 从 `./repositories` 引入 repository。
-Fifa 的 RPC 类型从 `@xdd-zone/momo/rpc` 引入，只使用 `import type`。
+新增接口的完整步骤和分层规则看 [apps/momo.md](./apps/momo.md) 的「新增接口」和「模块写法」，Fifa 侧的接口函数和 query hook 写法看 [apps/fifa.md](./apps/fifa.md) 的「Momo 请求」。
 
 改完后按范围跑：
 

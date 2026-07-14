@@ -135,6 +135,8 @@ apps/momo/src/modules/events/events.route.ts
 | ---- | ---- | ---- |
 | `POST` | `/api/auth/sign-up/email` | `403 AUTH.METHOD_NOT_ALLOWED` |
 
+旧路径 `/rpc/content/assets/*` 和 `/rpc/content/previews/:token` 已经移除。素材接口在 `/rpc/assets/*`，预览接口在 `/rpc/previews/:token`。
+
 ## 响应格式
 
 Momo 自己写的接口返回统一结构。
@@ -357,12 +359,4 @@ curl -i -X POST http://localhost:7788/api/auth/sign-up/email \
 
 ## 新增接口
 
-按模块新增 route 文件：
-
-```text
-apps/momo/src/modules/<module>/<module>.route.ts
-```
-
-再到 `apps/momo/src/routes/index.ts` 挂载。
-
-如果接口有请求体或返回体，先在 `packages/contracts/src/<module>` 增加 schema 和类型。Momo 给 Fifa 和 Bobo 用的接口都要有 contracts 类型；Momo 内部 service 类型和数据库 record 不放进 contracts。
+完整步骤看 [apps/momo.md](../apps/momo.md) 的「新增接口」。Momo 给 Fifa 和 Bobo 用的接口都要有 contracts 类型；Momo 内部 service 类型和数据库 record 不放进 contracts。

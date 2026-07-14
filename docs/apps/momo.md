@@ -201,20 +201,9 @@ apps/momo/src/
 
 这里调用 `createRuntime()`，再调用 `createMomoApp(runtime)`，最后用 `@hono/node-server` 的 `serve()` 监听端口。
 
-不要在这里写：
+不要在这里写路由、中间件、业务判断和数据库代码。
 
-- 路由。
-- 中间件。
-- 业务判断。
-- 数据库代码。
-
-`src/app.ts` 给测试和包导出使用。
-
-这里做这些事：
-
-- 调用 `createRuntime()`。
-- 调用 `createMomoApp(runtime)`。
-- 导出 `app` 和默认导出。
+`src/app.ts` 给测试和包导出使用。这里只调用 `createRuntime()` 和 `createMomoApp(runtime)`，再导出 `app` 和默认导出。
 
 不要把新的组装逻辑写回 `src/app.ts`。需要改 app 组装时，改 `src/bootstrap/create-app.ts`。
 
@@ -309,7 +298,7 @@ OWNER_DISPLAY_NAME
 
 `BOBO_BASE_URL` 和 `BOBO_REVALIDATE_SECRET` 要一起配置。发布或归档文章和项目后，Momo 用它们调用 Bobo 的 `POST /api/revalidate`。本地不需要主动刷新 Bobo cache 时，两个变量都留空。
 
-`BETTER_AUTH_URL` 填 Momo 的对外地址，Momo 会按这个地址拼 `/api/auth`。本地开发通常填 `http://localhost:7788`。code-server Web IDE 里使用个人 dev 域名时，配置入口看 [code-server 内开发](../development/code-server.md)。`CORS_ORIGINS` 需要包含实际访问 Fifa 和 Bobo 的地址。
+`BETTER_AUTH_URL` 填 Momo 的对外地址，Momo 会按这个地址拼 `/api/auth`。本地开发通常填 `http://localhost:7788`。code-server Web IDE 里使用个人 dev 域名时，填实际的 Momo 域名。`CORS_ORIGINS` 需要包含实际访问 Fifa 和 Bobo 的地址。
 
 GitHub 和 Google OAuth 默认关闭。每个 Provider 的 client ID 和 client secret 都留空时，Momo 只启用 email/password；两个值都填写后启用对应 Provider。只填其中一个会让环境变量校验失败。
 
@@ -492,13 +481,7 @@ modules/<module>/
 
 `<module>.route.ts` 写 Hono 路由、请求校验、调用 service、返回 Hono response。
 
-这里可以引入：
-
-- `hono`
-- `@hono/zod-validator`
-- `@xdd-zone/contracts`
-- 同目录的 service
-- `shared` 里的通用函数和错误类型
+这里可以引入 `hono`、`@hono/zod-validator`、`@xdd-zone/contracts`、同目录的 service，以及 `shared` 里的通用函数和错误类型。
 
 路由处理函数直接返回 `c.json()`、`c.text()`、`c.redirect()` 这类 Hono response。
 
@@ -715,28 +698,7 @@ packages/contracts/src/content/content.contract.ts
 
 个人站公开接口不检查登录态，只返回已发布文章。预览接口只检查 token，不检查 Fifa 登录态。`GET /rpc/assets/:id/file` 也不检查后台登录态，给文章正文和本地预览读取素材文件用。
 
-当前接口：
-
-- `GET /rpc/content/posts`
-- `POST /rpc/content/posts`
-- `POST /rpc/content/posts/meta-suggestion`
-- `GET /rpc/content/posts/:id`
-- `PATCH /rpc/content/posts/:id/draft`
-- `POST /rpc/content/posts/:id/preview-token`
-- `POST /rpc/content/posts/:id/publish`
-- `POST /rpc/content/posts/:id/archive`
-- `GET /rpc/content/mdx-components`
-- `GET /rpc/previews/:token`
-- `GET /rpc/assets`
-- `GET /rpc/assets/:id`
-- `GET /rpc/assets/:id/file`
-- `PATCH /rpc/assets/:id`
-- `DELETE /rpc/assets/:id`
-- `POST /rpc/assets/images`
-- `GET /rpc/bobo/content/posts`
-- `GET /rpc/bobo/content/posts/:slug`
-- `GET /rpc/bobo/content/categories`
-- `GET /rpc/bobo/content/tags`
+接口路径和返回说明统一看 [topics/api.md](../topics/api.md)。
 
 内容表放在：
 
@@ -749,13 +711,17 @@ apps/momo/src/infra/db/schema/content.schema.ts
 当前包含：
 
 - `content_posts`
-  文章主记录，保存 slug、标题、状态、当前草稿版本和当前发布版本。
+  文章主记录。草稿和发布字段成对保存：`draft_slug` / `published_slug`、`draft_title` / `published_title`、`draft_excerpt` / `published_excerpt`、`draft_category_id` / `published_category_id`、`draft_cover_asset_id` / `published_cover_asset_id`、`draft_revision_id` / `published_revision_id`。
 - `content_post_revisions`
-  保存 MDX 源码快照。
+  保存 MDX 源码快照，正文源码在 `source` 字段。
+- `content_post_draft_tags` 和 `content_post_published_tags`
+  草稿和发布各自的文章标签关系。
 - `content_preview_tokens`
-  保存预览 token 的 SHA-256 hash、目标类型、目标 id 和过期时间。
+  保存预览 token 的 SHA-256 hash、目标类型、目标 id、过期时间、使用时间和创建人。
 - `assets`
   保存图片素材的存储路径、文件名、MIME、大小、说明和时间戳。
+
+保存草稿会新增一条 revision 并更新 `draft_revision_id`。发布时把当前草稿字段复制到 `published_*` 字段，草稿标签复制到发布标签关系表。
 
 content 模块的数据按这个顺序走：
 
@@ -817,20 +783,7 @@ apps/momo/src/infra/llm
 
 `infra/llm` 只负责调用模型服务并返回结构化 JSON。`modules/llm` 负责读取 use case 配置、拼 prompt、限制输入长度和校验模型返回值。内容模块调用 `modules/llm`，不直接调用 `infra/llm`。
 
-当前接口：
-
-- `GET /rpc/llm/providers`
-- `POST /rpc/llm/providers`
-- `PATCH /rpc/llm/providers/:providerId`
-- `DELETE /rpc/llm/providers/:providerId/api-key`
-- `POST /rpc/llm/providers/:providerId/test`
-- `GET /rpc/llm/use-cases`
-- `GET /rpc/llm/use-cases/:useCase/status`
-- `POST /rpc/llm/use-cases/:useCase/test`
-- `PATCH /rpc/llm/use-cases/:useCase`
-- `GET /rpc/llm/call-logs`
-- `GET /rpc/llm/call-logs/:logId`
-- `DELETE /rpc/llm/call-logs/expired`
+接口都在 `/rpc/llm/` 下，路径和返回说明统一看 [topics/api.md](../topics/api.md)。
 
 LLM 配置表放在：
 
@@ -972,7 +925,7 @@ modules/auth/
 
 `system` 模块放服务自检和运行日志查询接口。
 
-后续文件：
+当前文件：
 
 ```text
 apps/momo/src/modules/system/
@@ -980,13 +933,7 @@ apps/momo/src/modules/system/
 └── system.service.ts
 ```
 
-接口包括：
-
-- `GET /`
-- `GET /health`
-- `GET /rpc/system/readiness`
-- `GET /rpc/system/logs`
-- `POST /rpc/system/ping`
+接口路径统一看 [topics/api.md](../topics/api.md)。
 
 `GET /health` 只返回进程存活状态，不访问外部资源。`GET /rpc/system/readiness` 只允许 `fifa.owner` 调用，会检查 PostgreSQL、缓存、搜索、文件存储和日志服务。单项检查失败时接口仍返回结果，并把总状态设成 `degraded`。
 
@@ -1002,16 +949,7 @@ apps/momo/src/modules/system/
 apps/momo/src/middleware
 ```
 
-适合放这里的代码：
-
-- request id 生成和写入。
-- 请求开始时间写入。
-- 请求日志。
-- CORS。
-- 安全响应头。
-- 请求体大小限制。
-- 请求超时。
-- 开发环境的 `Server-Timing` 响应头。
+适合放这里的代码：request id 生成和写入、请求开始时间写入、请求日志、CORS、安全响应头、请求体大小限制、请求超时，以及开发环境的 `Server-Timing` 响应头。
 
 只被一个 route 使用一次的中间件，可以先放在对应的 `<module>.route.ts`。
 
@@ -1288,10 +1226,14 @@ app.ts
 
 1. 在 `packages/contracts/src/<module>` 添加请求 schema 和响应类型。
 2. 在 `apps/momo/src/modules/<module>/<module>.route.ts` 添加 Hono route。
-3. 需要业务判断时，添加或修改 `<module>.service.ts`。如果模块已经有 `services/` 目录，就放到 `services/` 里，并从 `services/index.ts` 导出。
-4. 需要数据库读写时，添加或修改 `<module>.repository.ts`。如果模块已经有 `repositories/` 目录，就放到 `repositories/` 里，并从 `repositories/index.ts` 导出。
-5. 在 `apps/momo/src/routes/index.ts` 挂载模块路由。
-6. 在 `apps/momo/src/test/<module>.test.ts` 添加接口测试。
+3. 需要模块内部类型时，添加或修改 `<module>.types.ts`。
+4. 需要业务判断时，添加或修改 `<module>.service.ts`。如果模块已经有 `services/` 目录，就放到 `services/` 里，并从 `services/index.ts` 导出。
+5. 需要数据库读写时，添加或修改 `<module>.repository.ts`。如果模块已经有 `repositories/` 目录，就放到 `repositories/` 里，并从 `repositories/index.ts` 导出。
+6. 需要新表或新字段时，修改 `apps/momo/src/infra/db/schema/<module>.schema.ts` 和 migration。
+7. 在 `apps/momo/src/routes/index.ts` 挂载模块路由。
+8. 在 `apps/momo/src/test/modules/<module>/` 添加接口测试，覆盖成功响应的 contract schema parse。
+
+Fifa 侧的接口函数和 query hook 按 [apps/fifa.md](./fifa.md) 的「Momo 请求」补。
 
 ## 测试
 

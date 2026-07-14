@@ -16,7 +16,14 @@
 - 系统设置模块，当前提供个人资料页和 LLM 配置页。
 - 系统运行模块，当前提供 Momo readiness、outbox 任务和运行日志查询页。
 
-当前登录页接入了 Momo 的邮箱密码登录接口。当前首页接入了 Momo 的健康检查和 ping 验证接口。当前内容模块接入了 Momo 的文章、素材、分类和标签接口。当前站点模块接入了 Momo 的站点配置、公开资料和项目接口。当前系统设置模块接入了 Momo 的个人资料和 LLM 配置接口。当前系统运行页接入了 readiness、outbox 和运行日志接口。
+这些页面已经接上 Momo 接口：
+
+- 登录页走邮箱密码登录。
+- 首页调健康检查和 ping 验证。
+- 内容模块调文章、素材、分类和标签接口。
+- 站点模块调站点配置、公开资料和项目接口。
+- 系统设置模块调个人资料和 LLM 配置接口。
+- 系统运行页调 readiness、outbox 和运行日志接口。
 
 ## 开始改 UI 前先看
 
@@ -158,29 +165,25 @@ apps/fifa/src/api/llm/index.ts
 - `api/auth/*.api.ts`
   调 Momo 的 Better Auth 接口。这里直接处理 HTTP 响应和 cookie。
 - `api/system/*.api.ts`
-  调 Momo readiness 和运行日志 RPC。页面不要直接 import `momoClient`。
-- `api/system/system.query.ts`
-  放 system 模块的 query key 和 hooks。页面不要手写 system query key。
+  调 Momo readiness 和运行日志 RPC。
 - `api/content/*.api.ts`
-  调 Momo content RPC。页面不要直接 import `momoClient`。
-- `api/content/content.query.ts`
-  放 content 模块的 query key 和 hooks。页面不要手写 content query key。
+  调 Momo content RPC。
 - `api/assets/*.api.ts`
-  调 Momo 独立素材接口。页面不要直接 import `momoClient`。
+  调 Momo 独立素材接口。
 - `api/profile/*.api.ts`
   调 Momo 的个人资料接口和 Better Auth 账号绑定接口。
-- `api/profile/profile.query.ts`
-  放 profile 模块的 query key 和 hooks。页面不要手写 profile query key。
 - `api/site/*.api.ts`
-  调 Momo 站点配置接口。页面不要直接 import `momoClient`。
+  调 Momo 站点配置接口。
 - `api/projects/*.api.ts`
-  调 Momo 项目接口。页面不要直接 import `momoClient`。
+  调 Momo 项目接口。
 - `api/events/*.api.ts`
-  调 Momo outbox 列表、详情和重试接口。页面不要直接 import `momoClient`。
+  调 Momo outbox 列表、详情和重试接口。
 - `api/llm/*.api.ts`
-  调 Momo LLM 配置接口。页面不要直接 import `momoClient`。
-- `api/llm/llm.query.ts`
-  放 LLM 配置的 query key 和 hooks。页面不要手写 LLM query key。
+  调 Momo LLM 配置接口。
+- `api/<module>/<module>.query.ts`
+  放对应模块的 query key 和 hooks。
+
+每个模块的规则一样：页面只调用 `<module>.query.ts` 里的 hooks，不直接 import `momoClient`，也不手写 query key。
 
 Fifa 通过环境变量读取 Momo 地址：
 
@@ -206,72 +209,7 @@ VITE_APP_ENV=development
 apps/fifa/.env.example
 ```
 
-当前登录页和首页会请求：
-
-```text
-POST /api/auth/sign-in/email
-GET /rpc/fifa/auth/me
-GET /rpc/fifa/profile
-PATCH /rpc/fifa/profile
-POST /rpc/fifa/profile/avatar
-GET /health
-GET /rpc/system/readiness
-GET /rpc/system/logs
-POST /rpc/system/ping
-GET /rpc/content/posts
-POST /rpc/content/posts
-GET /rpc/content/posts/:id
-PATCH /rpc/content/posts/:id/draft
-POST /rpc/content/posts/:id/preview-token
-POST /rpc/content/posts/:id/publish
-POST /rpc/content/posts/:id/archive
-GET /rpc/content/mdx-components
-GET /rpc/assets
-POST /rpc/assets/cleanup/preview
-POST /rpc/assets/cleanup
-GET /rpc/assets/:id
-GET /rpc/assets/:id/file
-PATCH /rpc/assets/:id
-DELETE /rpc/assets/:id
-POST /rpc/assets/images
-GET /rpc/profile/public
-PATCH /rpc/profile/public
-GET /rpc/site/config
-PATCH /rpc/site/config
-GET /rpc/projects
-POST /rpc/projects
-GET /rpc/projects/:id
-PATCH /rpc/projects/:id/draft
-POST /rpc/projects/:id/publish
-POST /rpc/projects/:id/preview-token
-POST /rpc/projects/:id/archive
-POST /rpc/events/outbox/retry
-GET /rpc/events/outbox
-GET /rpc/events/outbox/:eventId
-POST /rpc/events/outbox/:eventId/retry
-GET /rpc/content/categories
-POST /rpc/content/categories
-GET /rpc/content/categories/:id
-PATCH /rpc/content/categories/:id
-DELETE /rpc/content/categories/:id
-GET /rpc/content/tags
-POST /rpc/content/tags
-GET /rpc/content/tags/:id
-PATCH /rpc/content/tags/:id
-DELETE /rpc/content/tags/:id
-GET /rpc/llm/providers
-POST /rpc/llm/providers
-PATCH /rpc/llm/providers/:providerId
-DELETE /rpc/llm/providers/:providerId/api-key
-POST /rpc/llm/providers/:providerId/test
-GET /rpc/llm/use-cases
-GET /rpc/llm/use-cases/:useCase/status
-POST /rpc/llm/use-cases/:useCase/test
-PATCH /rpc/llm/use-cases/:useCase
-GET /rpc/llm/call-logs
-GET /rpc/llm/call-logs/:logId
-DELETE /rpc/llm/call-logs/expired
-```
+接口清单和返回说明统一看 [topics/api.md](../topics/api.md)。Fifa 调管理端 `/rpc/*` 接口、`/api/auth/*` 和 `/health`，不调 `/rpc/bobo/*` 公开接口。
 
 当前写法：
 
@@ -296,10 +234,11 @@ DELETE /rpc/llm/call-logs/expired
 
 新增 Fifa 请求时按这个顺序写：
 
-1. 在 `apps/fifa/src/api/<module>/<name>.api.ts` 写接口函数。
-2. 在 `apps/fifa/src/api/<module>/<module>.query.ts` 写 query key 和 hook。
+1. 在 `apps/fifa/src/api/<module>/<name>.api.ts` 写接口函数。函数内部通过 `momoClient.<path>.$get()` 或 `momoClient.<path>.$post()` 调 Momo，不手写接口 URL。
+2. 在 `apps/fifa/src/api/<module>/<module>.query.ts` 写 query key 和 hook。`GET` 接口用 `useQuery`，`POST` 接口用 `useMutation`。
 3. 页面只 import hook，不直接 import `momoClient`。
-4. `GET` 接口用 `useQuery`，`POST` 接口用 `useMutation`。
+
+Fifa 的 RPC 类型从 `@xdd-zone/momo/rpc` 引入，只使用 `import type`。
 
 ## 主题
 

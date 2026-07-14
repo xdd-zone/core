@@ -94,9 +94,7 @@ docs/
 ├── architecture.md
 ├── development.md
 ├── packages.md
-├── testing.md
-├── skills.md
-└── faq.md
+└── testing.md
 ```
 
 - `apps/` 放每个应用自己的说明。
@@ -106,11 +104,8 @@ docs/
 ## 其他文档
 
 - [testing.md](./testing.md)：测试目录设计、编写规则和检查命令。
-- [development/code-server.md](./development/code-server.md)：code-server Web IDE 里使用个人 dev 域名开发时的项目侧入口。
 - [packages.md](./packages.md)：共享包目录、包边界和检查命令。
 - [apps/momo.md](./apps/momo.md)：Momo 后端目录和新增接口规则。
 - [apps/fifa-design.md](./apps/fifa-design.md)：Fifa 页面、组件和样式设计规则。
 - [apps/bobo.md](./apps/bobo.md)：Bobo 个人站点目录、命令和维护规则。
 - [apps/bobo-design.md](./apps/bobo-design.md)：Bobo 页面、组件和样式设计规则。
-- [skills.md](./skills.md)：仓库常用技能顺序。
-- [faq.md](./faq.md)：当前常见问题。

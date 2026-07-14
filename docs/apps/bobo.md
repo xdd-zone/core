@@ -209,7 +209,6 @@ Momo 数据库里的业务数据为准。Bobo 的缓存、metadata、RSS 和 sit
 - `docs/apps/bobo-design.md`
 - `docs/development.md`
 - `docs/testing.md`
-- `docs/skills.md`
 - `apps/bobo/README.md`
 
 只改 Bobo 页面文案时，优先改对应页面文件，不需要改这些文档。
