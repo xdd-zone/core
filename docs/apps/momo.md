@@ -283,7 +283,7 @@ COS_KEY_PREFIX
 COS_SIGNED_URL_EXPIRES
 ```
 
-`seed:owner` 还会读取：
+`seed:owner` 还会读取这些可选变量：
 
 ```text
 OWNER_EMAIL
@@ -291,7 +291,9 @@ OWNER_PASSWORD
 OWNER_DISPLAY_NAME
 ```
 
-执行 `seed:owner` 时，脚本会同时写入默认应用、登录方式、角色、owner 账号、内容分类、内容标签和第一篇已发布文章。分类、标签和文章按 slug 复用已有记录，重复执行不会重复插入。
+`OWNER_EMAIL` 和 `OWNER_DISPLAY_NAME` 默认是 `owner@xdd.zone` 和 `Owner`。新建账号时，`OWNER_PASSWORD` 留空会自动生成 32 字符密码并输出一次；显式设置该变量仍可用于本机开发。已有 `fifa.owner` 时，脚本只检查账号状态和 Better Auth `credential` 记录，不修改密码或用户资料。
+
+首次创建 owner 时，脚本还会写入默认应用、登录方式、角色、内容分类、内容标签和第一篇已发布文章。Docker 部署在 migration 后执行这个脚本；初始化失败时 Momo 不会启动。
 
 `pnpm dev`、`pnpm auth:generate`、`pnpm seed:owner`、`pnpm storage:test` 和 `pnpm db:*` 会读取 `apps/momo/.env.development`。`pnpm test` 会读取 `apps/momo/.env.test`。
 
@@ -308,6 +310,8 @@ OWNER_DISPLAY_NAME
 `BOBO_BASE_URL` 和 `BOBO_REVALIDATE_SECRET` 要一起配置。发布或归档文章和项目后，Momo 用它们调用 Bobo 的 `POST /api/revalidate`。本地不需要主动刷新 Bobo cache 时，两个变量都留空。
 
 `BETTER_AUTH_URL` 填 Momo 的对外地址，Momo 会按这个地址拼 `/api/auth`。本地开发通常填 `http://localhost:7788`。code-server Web IDE 里使用个人 dev 域名时，配置入口看 [code-server 内开发](../development/code-server.md)。`CORS_ORIGINS` 需要包含实际访问 Fifa 和 Bobo 的地址。
+
+GitHub 和 Google OAuth 默认关闭。每个 Provider 的 client ID 和 client secret 都留空时，Momo 只启用 email/password；两个值都填写后启用对应 Provider。只填其中一个会让环境变量校验失败。
 
 `CACHE_PROVIDER` 控制缓存驱动。默认值是 `memory`，数据只存在当前 Node.js 进程里。设成 `redis` 时，需要配置 `CACHE_URL`，本地 Valkey 地址是 `redis://localhost:56379`。`CACHE_KEY_PREFIX` 默认是 `momo`，`CACHE_DEFAULT_TTL_SECONDS` 默认是 `300` 秒。
 

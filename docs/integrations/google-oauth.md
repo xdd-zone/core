@@ -1,6 +1,6 @@
 # Google OAuth 状态
 
-当前 Momo 已经在 `better-auth` 里配置 Google 登录。
+Momo 支持通过 `better-auth` 启用 Google 登录。Google OAuth 凭证留空时，只保留 email/password 登录。
 
 ## 代码位置
 
@@ -16,12 +16,12 @@
 ## 环境变量
 
 ```text
-GOOGLE_CLIENT_ID=replace-with-google-client-id
-GOOGLE_CLIENT_SECRET=replace-with-google-client-secret
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 BETTER_AUTH_URL=http://localhost:7788
 ```
 
-本地开发还要保证 `CORS_ORIGINS` 里包含前端地址。
+`GOOGLE_CLIENT_ID` 和 `GOOGLE_CLIENT_SECRET` 必须同时填写或同时留空。只填一个时 Momo 会拒绝启动。本地启用 Google 登录后，还要保证 `CORS_ORIGINS` 里包含前端地址。
 
 ## 获取 Google 配置
 

@@ -127,13 +127,11 @@ pnpm dev
 
 ## Docker 运行环境
 
-Docker 配置统一放在仓库根目录 `docker/`。`docker/.env.example` 是可提交的变量模板，实际使用 `docker/.env`，这个文件不会提交。部署平台可以用同名环境变量覆盖模板值。
+Docker 配置统一放在仓库根目录 `docker/`。首次部署和后续更新都执行 `docker/deploy.sh`：
 
 ```bash
-cp docker/.env.example docker/.env
-
 # 启动完整环境：PostgreSQL、Valkey、Meilisearch、Momo、Fifa、Bobo
-pnpm docker:up
+./docker/deploy.sh
 
 # 只给本机 pnpm dev 启动依赖服务
 pnpm docker:deps:up
@@ -146,7 +144,11 @@ pnpm docker:down
 pnpm docker:logs
 ```
 
-默认端口与开发端口一致，全部绑定在 `127.0.0.1`。Momo、Fifa、Bobo 的公网入口由外部反向代理或部署平台处理；仓库不提供域名和 TLS 配置。完整环境启动时先执行 Momo migration，migration 失败时 Momo 不会启动。
+脚本首次执行时从 `docker/.env.example` 创建 `docker/.env`，自动生成 PostgreSQL、Better Auth、Meilisearch、Bobo revalidate 和 LLM 加密密钥，并把文件权限设为 `0600`。owner 默认使用 `owner@xdd.zone` 和显示名 `Owner`；如需修改，在首次部署前设置 `OWNER_EMAIL` 或 `OWNER_DISPLAY_NAME`。启动成功后，终端会显示本次生成的服务凭证和 owner 一次性密码。
+
+更新时再次运行 `./docker/deploy.sh`。脚本保留现有 `.env`、owner 和具名 volume，每次仍会执行 migration 和 owner 检查。`pnpm docker:up` 只调用这个脚本。`pnpm docker:down` 不删除 volume。
+
+默认端口与开发端口一致，全部绑定在 `127.0.0.1`。Momo、Fifa、Bobo 的公网入口由外部反向代理或部署平台处理；仓库不提供域名和 TLS 配置。migration 或 owner 初始化失败时，Momo 不会启动。
 
 ## 构建命令
 

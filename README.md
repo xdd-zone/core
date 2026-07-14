@@ -120,14 +120,15 @@ pnpm dev:bobo
 
 ### Docker 运行环境
 
-Docker 文件统一放在 `docker/`。先复制环境变量模板，再启动完整环境：
+Docker 文件统一放在 `docker/`。首次部署和后续更新都执行同一个脚本：
 
 ```bash
-cp docker/.env.example docker/.env
-pnpm docker:up
+./docker/deploy.sh
 ```
 
-默认服务都绑定在 `127.0.0.1`。外部反向代理或部署平台负责域名和 TLS。只给本机 `pnpm dev` 启动 PostgreSQL、Valkey、Meilisearch 时运行 `pnpm docker:deps:up`；日志服务按需运行 `pnpm docker:observability:up`。
+首次执行会创建权限为 `0600` 的 `docker/.env`，生成服务凭证，并创建默认邮箱为 `owner@xdd.zone` 的 Fifa owner。服务启动后，终端会显示本次生成的服务凭证和 owner 一次性密码。再次执行会复用现有 `.env`、owner 和 Docker volume，不会重置密码或业务数据。`pnpm docker:up` 是同一个脚本的仓库内别名。
+
+默认服务都绑定在 `127.0.0.1`。外部反向代理或部署平台负责域名和 TLS。只给本机 `pnpm dev` 启动 PostgreSQL、Valkey、Meilisearch 时运行 `pnpm docker:deps:up`；日志服务按需运行 `pnpm docker:observability:up`。`pnpm docker:down` 只停止并删除容器，不删除业务 volume。
 
 ### 3. 请求健康检查
 

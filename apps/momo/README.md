@@ -57,7 +57,7 @@ pnpm db:migrate
 pnpm seed:owner
 ```
 
-`pnpm seed:owner` 会写入 owner 账号、默认应用、登录方式、角色、初始内容分类、标签和第一篇已发布文章。重复执行会复用已有记录。
+`pnpm seed:owner` 会写入 owner 账号、默认应用、登录方式、角色、初始内容分类、标签和第一篇已发布文章。`OWNER_PASSWORD` 留空时会生成并输出一次性密码。已有 `fifa.owner` 时只检查账号状态和密码登录记录，不修改密码或用户资料。
 
 ## 常改位置
 
