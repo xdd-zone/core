@@ -1,335 +1,137 @@
 # XDD Zone Core
 
-XDD Zone Core 是一个面向个人站点的内容管理系统，使用 pnpm workspace 和 Turborepo 维护前端控制台、Hono API 服务、公开个人站点、接口约定包和共享配置。
+一个面向个人站点的内容管理系统。用 pnpm workspace + Turborepo 把前端控制台（Fifa）、Hono API（Momo）、公开站点（Bobo）和共享包放在一个 monorepo 里。
 
-## 现在有哪些包
+---
 
-- `@xdd-zone/fifa`
-  前端控制台，放在 `apps/fifa`。
-- `@xdd-zone/momo`
-  Hono API 服务，放在 `apps/momo`。
-- `@xdd-zone/bobo`
-  个人站点，放在 `apps/bobo`。
-- `@xdd-zone/contracts`
-  Momo、Fifa 和 Bobo 共用的接口 schema、请求类型、响应类型和错误码，放在 `packages/contracts`。
-- `@xdd-zone/catppuccin-theme`
-  Fifa 和 Bobo 共用的 Catppuccin 主题，放在 `packages/catppuccin-theme`。
-- `@xdd-zone/eslint-config`
-  共享 ESLint / Prettier 配置，放在 `packages/eslint-config`。
+## 有哪些包
 
-## 仓库结构
+| 包名 | 位置 | 干嘛的 |
+| ---- | ---- | ---- |
+| `@xdd-zone/fifa` | `apps/fifa` | 前端控制台，写文章、管素材、配站点 |
+| `@xdd-zone/momo` | `apps/momo` | Hono API 服务，后台和公开接口都在这 |
+| `@xdd-zone/bobo` | `apps/bobo` | 公开个人站点，对外展示文章和项目 |
+| `@xdd-zone/contracts` | `packages/contracts` | 三端共用的接口 schema、类型和错误码 |
+| `@xdd-zone/catppuccin-theme` | `packages/catppuccin-theme` | Fifa 和 Bobo 共用的 Catppuccin 主题 |
+| `@xdd-zone/eslint-config` | `packages/eslint-config` | 共享 ESLint / Prettier 配置 |
 
-```text
-.
-├── apps/
-│   ├── fifa/
-│   ├── momo/
-│   └── bobo/
-├── docs/
-│   ├── apps/
-│   ├── topics/
-│   └── integrations/
-├── packages/
-│   ├── catppuccin-theme/
-│   ├── contracts/
-│   └── eslint-config/
-├── package.json
-├── turbo.json
-└── tsconfig.base.json
-```
-
-最常看的目录：
-
-- `apps/fifa/src/app/router`
-  前端路由类型、页面记录汇总和路由树。
-- `apps/fifa/src/app/navigation`
-  控制台菜单生成。
-- `apps/fifa/src/features`
-  Fifa 页面模块。
-- `apps/fifa/src/layout`
-  控制台整体布局。
-- `apps/momo/src/index.ts`
-  Node 服务启动入口。
-- `apps/momo/src/bootstrap`
-  Momo runtime、全局中间件、错误处理和路由组装。
-- `apps/momo/src/modules`
-  Momo 接口模块。
-- `packages/contracts`
-  Momo、Fifa 和 Bobo 共用的接口约定。
-- `packages/catppuccin-theme`
-  Fifa 和 Bobo 共用的 Catppuccin 主题。
-- `packages/eslint-config`
-  仓库共享的 ESLint / Prettier 配置。
+---
 
 ## 技术栈
 
-- Node.js 24 LTS+
-- pnpm 使用根目录 `packageManager` 声明的版本
-- Turborepo 2
-- React 19 + Vite 8
-- Next.js 16
-- Hono 4
-- TypeScript 5
-- ESLint 10 + Prettier 3
+- 运行环境：Node.js 24+ · pnpm 11 · Turborepo 2 · TypeScript 5
+- Fifa：React 19 + Vite 8
+- Momo：Hono 4
+- Bobo：Next.js 16
+- 工具链：ESLint 10 + Prettier 3
 
-## Monorepo 管理
+依赖版本统一写在根目录 `pnpm-workspace.yaml` 的 catalog，子包用 `catalog:` 和 `workspace:*` 引用。
 
-当前仓库用 pnpm 管理 workspace 和 catalog：
+---
 
-- workspace 范围写在根目录 `pnpm-workspace.yaml` 的 `packages`。
-- 公共依赖版本写在根目录 `pnpm-workspace.yaml` 的 `catalog` 和 `catalogs`。
-- 子包通过 `catalog:`、`catalog:react`、`catalog:vite`、`catalog:shiki` 引用统一版本。
-- 内部包通过 `workspace:*` 引用，例如 Momo、Fifa 和 Bobo 都可以引用 `@xdd-zone/contracts`。
-
-当前仓库用 Turborepo 管理任务：
-
-- 根目录脚本统一调用 `turbo run ...`。
-- `turbo.json` 定义 `dev`、`build`、`lint`、`format`、`type-check`、`test`、`clean`。
-- 单独运行某个包时，用包名过滤，比如 `--filter=@xdd-zone/fifa`。
-
-包名保持当前写法，不改成文章里的 `web`、`admin`、`api`。
-
-## 快速开始
-
-### 1. 安装依赖
+## 跑起来
 
 ```bash
 pnpm install
+pnpm dev          # 一次起三个服务
 ```
 
-### 2. 启动开发环境
+| 服务 | 地址 |
+| ---- | ---- |
+| Fifa | `http://localhost:2333` |
+| Momo | `http://localhost:7788` |
+| Bobo | `http://localhost:4399` |
+| Health | `http://localhost:7788/health` |
 
-```bash
-pnpm dev
-```
+只想起一个：`pnpm dev:fifa`、`pnpm dev:momo`、`pnpm dev:bobo`。
 
-默认地址：
-
-- Fifa: `http://localhost:2333`
-- Momo: `http://localhost:7788`
-- Bobo: `http://localhost:4399`
-- Health: `http://localhost:7788/health`
-
-如果只想启动一个包：
-
-```bash
-pnpm dev:fifa
-pnpm dev:momo
-pnpm dev:bobo
-```
-
-### Docker 运行环境
-
-Docker 文件统一放在 `docker/`。首次部署和后续更新都执行同一个脚本：
-
-```bash
-./docker/deploy.sh
-```
-
-首次执行会创建权限为 `0600` 的 `docker/.env`，生成服务凭证，并创建默认邮箱为 `owner@xdd.zone` 的 Fifa owner。服务启动后，终端会显示本次生成的服务凭证和 owner 一次性密码。再次执行会复用现有 `.env`、owner 和 Docker volume，不会重置密码或业务数据。`pnpm docker:up` 是同一个脚本的仓库内别名。
-
-默认服务都绑定在 `127.0.0.1`。外部反向代理或部署平台负责域名和 TLS。只给本机 `pnpm dev` 启动 PostgreSQL、Valkey、Meilisearch 时运行 `pnpm docker:deps:up`；日志服务按需运行 `pnpm docker:observability:up`。`pnpm docker:down` 只停止并删除容器，不删除业务 volume。
-
-### 3. 请求健康检查
+起完 Momo 后确认接口活着：
 
 ```bash
 curl http://localhost:7788/health
 ```
 
-当前返回：
-
-```json
-{
-  "ok": true,
-  "data": {
-    "env": "development",
-    "service": "momo",
-    "status": "ok"
-  },
-  "meta": {
-    "requestId": "uuid",
-    "timestamp": "2026-06-07T00:00:00.000Z"
-  }
-}
-```
-
-## 常用命令
+更多命令：
 
 ```bash
-# 开发
-pnpm dev
-pnpm dev:fifa
-pnpm dev:momo
-pnpm dev:bobo
-
-# Docker
-pnpm docker:up
-pnpm docker:down
-pnpm docker:deps:up
-pnpm docker:observability:up
-pnpm docker:logs
-
 # 构建
 pnpm build
 pnpm build:fifa
 pnpm build:momo
 pnpm build:bobo
 
-# 检查
-pnpm lint
-pnpm lint:fix
-pnpm format
-pnpm format:check
-pnpm type-check
-pnpm type-check:bobo
+# Docker
+pnpm docker:up        # 部署或更新，等同 ./docker/deploy.sh
+pnpm docker:down      # 停容器，保留数据 volume
+pnpm docker:deps:up   # 只起 PostgreSQL / Valkey / Meilisearch
+pnpm docker:logs
 
-# 清理子包构建产物
+# 检查
+pnpm type-check
+pnpm lint
+pnpm format:check
+
+# 清理构建产物
 pnpm clean
 ```
 
-## 代码放哪里
+---
 
-### 改前端页面
+## Docker 部署
 
-优先看这些位置：
-
-- `apps/fifa/src/features/<module>/pages`
-- `apps/fifa/src/features/<module>/routes.tsx`
-- `apps/fifa/src/app/router/records.ts`
-- `apps/fifa/src/layout`
-
-新增页面先放到对应模块的 `pages/` 目录，再写到同模块的 `routes.tsx`。
-如果新增了模块，把模块导出的路由记录加到 `apps/fifa/src/app/router/records.ts`。
-菜单从页面记录生成，已有菜单组通常不用改 `app/navigation/navigation.ts`。
-
-### 改后端接口
-
-优先看：
-
-- [docs/apps/momo.md](./docs/apps/momo.md)
-- `apps/momo/src/bootstrap/create-app.ts`
-- `apps/momo/src/routes/index.ts`
-- `apps/momo/src/modules/<module>/<module>.route.ts`
-
-新增接口按模块放到 `apps/momo/src/modules/<module>`，再到 `apps/momo/src/routes/index.ts` 挂载。
-Fifa 通过 `@xdd-zone/momo/rpc` 引入 Momo 的 RPC 类型，再用 `hono/client` 创建 RPC client。
-页面不要直接调 `momoClient`。Fifa 请求先写到 `apps/fifa/src/api/<module>/*.api.ts`，再在同模块的 `*.query.ts` 里写 TanStack Query hook。
-
-### 改个人站点
-
-优先看：
-
-- [docs/apps/bobo.md](./docs/apps/bobo.md)
-- `apps/bobo/app/layout.tsx`
-- `apps/bobo/app/(site)/page.tsx`
-- `apps/bobo/app/globals.css`
-
-开发时运行：
+Docker 文件放在 `docker/`。首次部署和后续更新都跑同一个脚本：
 
 ```bash
-pnpm dev:bobo
+./docker/deploy.sh    # 等同 pnpm docker:up
 ```
 
-## 当前接口范围
+首次执行会创建权限 `0600` 的 `docker/.env`，生成服务凭证，并建一个默认邮箱 `owner@xdd.zone` 的 Fifa owner。启动后终端会打出本次生成的凭证和 owner 一次性密码。再次执行复用现有 `.env`、owner 和 volume，不重置密码或数据。
 
-- `/`
-  返回服务名称和状态。
-- `/health`
-  返回健康检查状态。
-- `/rpc/system/ping`
-  返回 Momo ping 结果。
-- `/api/auth/*`
-  交给 `better-auth` 处理登录、登出、OAuth callback 和 session cookie。
-- `/rpc/fifa/auth/me`
-  返回当前 `fifa` 用户，要求当前用户有 `fifa.owner`。
-- `/rpc/bobo/auth/me`
-  返回当前 `bobo` 用户，未登录时返回 `user: null`。
-- `/rpc/content/posts`
-  后台文章列表和创建文章草稿。
-- `/rpc/content/posts/:id`
-  后台文章详情。
-- `/rpc/content/posts/:id/draft`
-  保存文章草稿。
-- `/rpc/content/posts/:id/preview-token`
-  生成文章预览 token。
-- `/rpc/content/posts/:id/publish`
-  发布文章。发布成功后会刷新 Bobo cache tag；刷新失败时响应带 `warnings`。
-- `/rpc/content/posts/:id/archive`
-  归档文章，并从公开站点和搜索索引移除；处理失败时响应带 `warnings`。
-- `/rpc/content/mdx-components`
-  返回 MDX 组件清单。
-- `/rpc/assets`
-  后台素材列表。
-- `/rpc/assets/:id`
-  后台素材详情、更新和删除。
-- `/rpc/assets/:id/file`
-  读取素材文件。
-- `/rpc/assets/images`
-  上传图片素材。响应里的 `asset.fileUrl` 是浏览器可直接加载的图片地址。
-- `/rpc/content/categories`
-  后台分类列表和创建分类。
-- `/rpc/content/categories/:id`
-  后台分类详情、更新和删除。
-- `/rpc/content/tags`
-  后台标签列表和创建标签。
-- `/rpc/content/tags/:id`
-  后台标签详情、更新和删除。
-- `/rpc/previews/:token`
-  使用通用预览 token 读取文章或项目预览数据。
-- `/rpc/bobo/content/posts`
-  公开文章列表。
-- `/rpc/bobo/content/posts/:slug`
-  公开文章详情。
-- `/rpc/bobo/content/categories`
-  公开分类列表，带已发布文章数量。
-- `/rpc/bobo/content/tags`
-  公开标签列表。
-- `/rpc/bobo/profile`
-  公开个人资料。
-- `/rpc/profile/public`
-  后台读取和修改公开个人资料。
-- `/rpc/site/config`
-  后台读取和修改 Bobo 站点配置。
-- `/rpc/bobo/site/config`
-  公开读取 Bobo 站点配置。
-- `/rpc/projects`
-  后台项目列表和创建项目草稿。
-- `/rpc/projects/:id`
-  后台项目详情。
-- `/rpc/projects/:id/draft`
-  保存项目草稿。
-- `/rpc/projects/:id/publish`
-  发布项目。
-- `/rpc/projects/:id/preview-token`
-  生成项目预览 token。
-- `/rpc/projects/:id/archive`
-  归档项目，并从公开站点和搜索索引移除。
-- `/rpc/bobo/projects`
-  公开项目列表。
-- `/rpc/bobo/projects/:slug`
-  公开项目详情。
-- `/rpc/bobo/search`
-  公开站点搜索。
-- `/rpc/system/readiness`
-  检查 Momo 数据库、缓存、搜索、文件存储和日志服务。
-- `/rpc/system/logs`
-  查询 Momo 结构化运行日志，需要 Fifa owner。
-- `/rpc/events/outbox/retry`
-  处理 pending outbox 任务。
+服务默认绑 `127.0.0.1`，域名和 TLS 交给外部反向代理。只给本机 `pnpm dev` 起依赖时用 `pnpm docker:deps:up`，日志服务按需 `pnpm docker:observability:up`。细节看 [docs/development.md](./docs/development.md)。
+
+---
+
+## 改哪里
+
+| 想改什么 | 先看这里 |
+| ---- | ---- |
+| 后端接口 | [docs/apps/momo.md](./docs/apps/momo.md) · `apps/momo/src/modules` |
+| 前端控制台 | [docs/apps/fifa.md](./docs/apps/fifa.md) · `apps/fifa/src/features` |
+| 个人站点 | [docs/apps/bobo.md](./docs/apps/bobo.md) · `apps/bobo/app` |
+| 接口约定 | `packages/contracts` |
+| 主题 | [docs/topics/theme.md](./docs/topics/theme.md) · `packages/catppuccin-theme` |
+
+新增接口按模块放到 `apps/momo/src/modules/<module>`，再到 `apps/momo/src/routes/index.ts` 挂载。Fifa 页面按模块放到 `apps/fifa/src/features/<module>`。完整规则在对应 docs 里。
+
+---
 
 ## 文档入口
 
-按任务读文档：
+先看 [docs/index.md](./docs/index.md)，它会告诉你按当前任务读哪几份。常用的：
 
-- 改开发流程，看 [docs/development.md](./docs/development.md)。
-- 改后端接口，看 [docs/apps/momo.md](./docs/apps/momo.md) 和 [docs/topics/api.md](./docs/topics/api.md)。
-- 改前端页面，看 [docs/apps/fifa.md](./docs/apps/fifa.md) 和 [docs/topics/theme.md](./docs/topics/theme.md)。
-- 改个人站点，看 [docs/apps/bobo.md](./docs/apps/bobo.md)。
+| 文档 | 讲什么 |
+| ---- | ---- |
+| [docs/development.md](./docs/development.md) | 本地开发、端口、Docker 部署 |
+| [docs/architecture.md](./docs/architecture.md) | 整体架构和模块边界 |
+| [docs/topics/api.md](./docs/topics/api.md) | 完整接口清单和响应格式 |
+| [docs/apps/momo.md](./docs/apps/momo.md) | Momo 后端目录和新增接口规则 |
+| [docs/apps/fifa.md](./docs/apps/fifa.md) | Fifa 控制台开发规则 |
+| [docs/apps/bobo.md](./docs/apps/bobo.md) | Bobo 个人站点开发规则 |
 
-## 提交前最小检查
+接口清单以 [docs/topics/api.md](./docs/topics/api.md) 为准，README 不再单独维护。AI 代理在这个仓库干活，先读 [AGENTS.md](./AGENTS.md)。
+
+---
+
+## 提交前检查
 
 ```bash
 pnpm format:check
 pnpm lint
 pnpm type-check
 ```
+
+---
+
+## 许可
+
+本仓库使用 MIT 许可。
